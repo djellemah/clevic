@@ -1,0 +1,91 @@
+<ui version="4.0" >
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow" >
+  <property name="windowModality" >
+   <enum>Qt::ApplicationModal</enum>
+  </property>
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Times</string>
+  </property>
+  <widget class="QWidget" name="centralwidget" >
+   <layout class="QVBoxLayout" >
+    <item>
+     <widget class="QTableView" name="table" >
+      <property name="alternatingRowColors" >
+       <bool>true</bool>
+      </property>
+      <property name="sortingEnabled" >
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile" >
+    <property name="title" >
+     <string>File</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuEdit" >
+    <property name="title" >
+     <string>Edit</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuTable" >
+    <property name="title" >
+     <string>Table</string>
+    </property>
+    <addaction name="actionProjects" />
+    <addaction name="actionInvoices" />
+    <addaction name="actionClients" />
+    <addaction name="actionTimes" />
+   </widget>
+   <addaction name="menuFile" />
+   <addaction name="menuEdit" />
+   <addaction name="menuTable" />
+  </widget>
+  <widget class="QStatusBar" name="statusbar" />
+  <action name="actionProjects" >
+   <property name="checkable" >
+    <bool>false</bool>
+   </property>
+   <property name="text" >
+    <string>Projects</string>
+   </property>
+  </action>
+  <action name="actionInvoices" >
+   <property name="text" >
+    <string>Invoices</string>
+   </property>
+  </action>
+  <action name="actionClients" >
+   <property name="text" >
+    <string>Clients</string>
+   </property>
+  </action>
+  <action name="actionTimes" >
+   <property name="text" >
+    <string>Times</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

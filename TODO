@@ -1,0 +1,53 @@
+project field tab not working
+
+implement save on window close?, or whatever
+keyboard search by selected column, or everything if no column selected
+
+checkbox for booleans
+completion for distinct column values
+add year if not specified, with 6 months on either side range
+value formatting not in model
+copy a field from a mouse-selection (ctrl-b maybe)
+smart copy, to insert a most-likely value
+hiding of fields
+
+project/invoice/activity editing
+turn on/off smart filters
+filtering by various things
+highlighting by various things
+cut and paste (in model and csv format)
+paste of "common" records with different dates
+sorting by header
+
+deal with large datasets. Keep only indices and load entities as necessary
+
+refresh from db
+
+fix ctrl-' not working when text field already in edit mode. Make sure
+  tab press does the same as pressing enter, ie change mode away from editing
+
+better validation messages
+
+allow scroll viewport to centre when at end of dataset
+wrap description, and allow Access-style zooming
+warnings on overlap times
+warnings on large intervals
+moving of columns
+Ctrl-PgDn to last row in this column. Also extend selection
+
+maybe
+-----
+allow moving of rows
+discontiguous copying of entities/csv
+multi-row copying
+pasting of csv, into rectangular regions
+
+db
+--
+create entries_id_seq
+not null default nextval('entries_id_seq') for entries::id
+
+Done
+----
+17 16 instead of 17:16
+20 mar instead of 20-mar
