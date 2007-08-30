@@ -7,10 +7,10 @@ class EntryDelegate < Qt::ItemDelegate
     @editor_class = editor_class
   end
   
-  def editorEvent ( event, model, style_option_view_item, model_index ) 
-    puts "editorEvent: #{event.inspect}"
-    super
-  end
+  # This seems to catch the event that begins the edit process.
+  #~ def editorEvent ( event, model, style_option_view_item, model_index ) 
+    #~ super
+  #~ end
   
   def createEditor( parent_widget, style_option_view_item, model_index )
     @editor_class.new( parent_widget )

@@ -138,16 +138,12 @@ class EntryTableModel < Qt::AbstractTableModel
       
     when role == Qt::DisplayRole || role == Qt::EditRole
       raise "invalid column #{index.column}" if ( index.column < 0 || index.column >= columns.size )
+      
+      # boolean values generally don't have text next to them in this context
       return nil.to_variant if index.metadata.type == :boolean
       
       field_name = index.attribute_path
       value = index.gui_value
-
-      # default to the id for relations
-      # but don't set id for plain attributes
-      if value.class.ancestors.include?( ActiveRecord::Base ) && field_name.include?( '.' )
-        value = value.id
-      end
 
       # TODO formatting doesn't really belong here
       if value != nil
