@@ -3,7 +3,6 @@ project field tab not working
 implement save on window close?, or whatever
 keyboard search by selected column, or everything if no column selected
 
-checkbox for booleans
 completion for distinct column values
 add year if not specified, with 6 months on either side range
 value formatting not in model
@@ -51,3 +50,4 @@ Done
 ----
 17 16 instead of 17:16
 20 mar instead of 20-mar
+checkbox for booleans. Data and flags correctly? http://lists.trolltech.com/qt-interest/2007-06/thread00629-0.html

@@ -1,4 +1,37 @@
 # To emit focus out signals, because ComboBox stupidly doesn't.
+class EntryDelegate < Qt::ItemDelegate
+  def initialize( parent, field_name, editor_class )
+    super( parent )
+    @field_name = field_name
+    @editor_class = editor_class
+  end
+  
+  def editorEvent ( event, model, style_option_view_item, model_index ) 
+    puts "editorEvent: #{event.inspect}"
+    super
+  end
+  
+  def createEditor( parent_widget, style_option_view_item, model_index )
+    @editor_class.new( parent_widget )
+  end
+  
+  def setEditorData( editor, model_index )
+    editor.value = model_index.gui_value
+  end
+  
+  def setModelData( editor, abstract_item_model, model_index )
+    model_index.gui_value = editor.value
+  end
+  
+  def updateEditorGeometry( editor, style_option_view_item, model_index )
+    # figure out where to put the editor widget, taking into
+    # account the sizes of the headers
+    rect = style_option_view_item.rect
+    rect.set_width( editor.size_hint.width )
+    editor.set_geometry( rect )
+  end
+end
+
 class FocusComboBox < Qt::ComboBox
   signals 'focus_out_signal(QFocusEvent*, QKeyEvent*)'
   def focusOutEvent( event )
@@ -16,14 +49,15 @@ class FocusComboBox < Qt::ComboBox
 end
 
 # To edit a relation from an id and display a list of relevant entries
-class RelationalDelegate < Qt::ItemDelegate
+class RelationalDelegate < EntryDelegate
   def initialize( parent, model_class, field_name, options )
     @model_class = model_class
     @field_name = field_name
     @options = options
-    super( parent )
+    super( parent, field_name, FocusComboBox )
   end
-    
+  
+  # Create a ComboBox and fill it with the possible values
   def createEditor( parent_widget, style_option_view_item, model_index )
     editor = FocusComboBox.new( parent )
     @model_class.find( :all, @options ).each do |x|
@@ -76,6 +110,20 @@ class RelationalDelegate < Qt::ItemDelegate
   def entity_for_index( model_index )
     model_index.model.collection[model_index.row]
   end
+
+  def updateEditorGeometry( editor, style_option_view_item, model_index )
+    # figure out where to put the editor widget, taking into
+    # account the sizes of the headers
+    rect = style_option_view_item.rect
+    horizontal_header_rect = parent.horizontal_header.rect
+    vertical_header_rect = parent.vertical_header.rect
+    rect.translate( vertical_header_rect.width + 1, horizontal_header_rect.height + 1 )
+    
+    # ask the editor for how much space it wants
+    rect.set_width( editor.size_hint.width )
+    
+    editor.set_geometry( rect )
+  end
   
   def setEditorData( editor, model_index )
     value = entity_for_index( model_index )
@@ -93,19 +141,5 @@ class RelationalDelegate < Qt::ItemDelegate
       entry = entity_for_index( model_index )
       entry.send( "#{@model_class.name.underscore}=", obj )
     end
-  end
-  
-  def updateEditorGeometry( editor, style_option_view_item, model_index )
-    # figure out where to put the editor widget, taking into
-    # account the sizes of the headers
-    rect = style_option_view_item.rect
-    horizontal_header_rect = parent.horizontal_header.rect
-    vertical_header_rect = parent.vertical_header.rect
-    rect.translate( vertical_header_rect.width + 1, horizontal_header_rect.height + 1 )
-    
-    # allow space for combobox dropdown
-    rect.set_width( editor.size_hint.width )
-    
-    editor.set_geometry( rect )
   end
 end

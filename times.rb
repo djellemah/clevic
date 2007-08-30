@@ -3,8 +3,11 @@
 require 'Qt4'
 require 'active_table_model.rb'
 require 'models.rb'
-require 'relational_delegate.rb'
+require 'delegates.rb'
 require 'entry_table_view.rb'
+
+# turn off "Object#type deprecated" messages
+$VERBOSE=nil
 
 app = Qt::Application.new(ARGV)
 
@@ -28,7 +31,6 @@ table.resize_columns_to_contents
 
 table.relational_delegate( 'invoice', :conditions => "status = 'not sent'", :order => 'invoice_number' )
 table.relational_delegate( 'project', :conditions => "active = true", :order => 'lower(project)' )
-table.delegate( :charge, Qt::CheckBox )
 
 #~ table.showMaximized
 table.show

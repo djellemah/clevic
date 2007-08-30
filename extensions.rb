@@ -9,11 +9,62 @@ end
 # convenience methods
 module Qt
 
+  class CheckBox
+    def value
+      checkState == Qt::Checked
+    end
+    
+    def value=( obj )
+      # This seems backwards to me, but it works
+      setCheckState( ( obj ? Qt::Unchecked : Qt::Checked ) )
+    end
+  end
+  
+  class Enum
+    def to_variant
+      to_i.to_variant
+    end
+  end
+  
   # Because using Qt::ModelIndex.new the whole time is wasteful
   class ModelIndex
     def self.invalid
       @@invalid ||= ModelIndex.new
     end
+    
+    def gui_value
+      item = model.collection[row]
+      attributes = model.keys[column].split( /\./ )
+      attributes.inject( item ) do |value, att|
+        if value.nil?
+          nil
+        else
+          value.send( att.to_sym )
+        end
+      end
+    end
+    
+    def gui_value=( obj )
+      model.collection[row].send( "#{model.keys[column]}=", obj )
+    end
+    
+    def inspect
+      "Qt::ModelIndex {(#{row},#{column}) #{gui_value}}"
+    end
+    
+    def key
+      model.keys[column].to_sym
+    end
+    
+    def metadata
+      entity.column_for_attribute( key.to_sym )
+    end
+    
+    def entity
+      model.collection[row]
+    end
+
+  
   end
 
   # make keys easier to work with
@@ -61,5 +112,11 @@ module Qt
       key == eval( "Qt::Key_#{name.to_s.camelize}" )
     end
     
+  end
+  
+  class Variant
+    def self.invalid
+      Variant.new
+    end
   end
 end

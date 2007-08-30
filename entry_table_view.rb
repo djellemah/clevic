@@ -16,8 +16,7 @@ class EntryTableView < Qt::TableView
   
   def delegate( field, delegate_class )
     col = model.column_for_key( field )
-    attribute = model.attribute_for_key( field )
-    delegate = RelationalDelegate.new( self, field.classify.constantize, attribute, options )
+    delegate = delegate_class.new( self, field )
     set_item_delegate_for_column( col, delegate )
   end
   
