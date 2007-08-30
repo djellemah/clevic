@@ -1,7 +1,7 @@
 #! /usr/bin/ruby
 
 require 'Qt4'
-require 'active_table_model.rb'
+require 'entry_table_model.rb'
 require 'models.rb'
 require 'delegates.rb'
 require 'entry_table_view.rb'
@@ -19,7 +19,7 @@ entries = Entry.find(
 )
 entries.reverse!
 
-model = ActiveTableModel.new(
+model = EntryTableModel.new(
   entries,
   %w{date invoice.invoice_number project.project start end description module charge person}
 )

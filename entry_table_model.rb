@@ -1,17 +1,9 @@
 =begin
 This table model allows an ActiveRecord or ActiveResource to be used as a
-basis for a Qt::AbstractTableModel for viewing in a Qt::TableView. Example
-usage:
+basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
 
-app = Qt::Application.new(ARGV)
-agencies = TravelAgency.find(:all, :conditions => [:name => 'Another Agency'])
-model = ActiveTableModel.new(agencies)
-table = Qt::TableView.new
-table.model = model
-table.show
-app.exec
-
-Written by Richard Dale and Silvio Fonseca
+Initially written by Richard Dale and Silvio Fonseca. Extensively modified
+by John Anderson.
 
 =end
 
@@ -30,7 +22,7 @@ require 'extensions.rb'
   collection is the set of model objects
   
 =end
-class ActiveTableModel < Qt::AbstractTableModel
+class EntryTableModel < Qt::AbstractTableModel
   
   attr_accessor :collection, :columns, :attributes
   
