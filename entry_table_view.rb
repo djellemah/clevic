@@ -4,19 +4,17 @@ class EntryTableView < Qt::TableView
   def initialize( *args )
     super
     horizontal_header.movable = true
-    #~ set_vertical_header( IdVerticalHeader.new( Qt::Vertical, self ) )
   end
   
-  def relational_delegate( field, options )
-    col = model.column_for_key( field )
-    attribute = model.attribute_for_key( field )
-    delegate = RelationalDelegate.new( self, field.classify.constantize, attribute, options )
+  def relational_delegate( attribute, options )
+    col = model.attributes.index( attribute )
+    delegate = RelationalDelegate.new( self, model.columns[col], options )
     set_item_delegate_for_column( col, delegate )
   end
   
-  def delegate( field, delegate_class )
-    col = model.column_for_key( field )
-    delegate = delegate_class.new( self, field )
+  def delegate( attribute, delegate_class )
+    col = model.attributes.index( attribute )
+    delegate = delegate_class.new( self, attribute )
     set_item_delegate_for_column( col, delegate )
   end
   
@@ -68,7 +66,7 @@ class EntryTableView < Qt::TableView
     # copy the value from the row one above  
     when event.ctrl? && event.apostrophe?
       if current_index.row > 0
-        key = model.first_key( current_index.column )
+        key = current_index.attribute
         previous_item = model.collection[current_index.row - 1]
         current_item = model.collection[current_index.row]
         current_item.send( "#{key}=", previous_item.send( key ) )
@@ -78,26 +76,26 @@ class EntryTableView < Qt::TableView
     # copy the value from the previous row, one cell right
     when event.ctrl? && event.bracket_right?
       if current_index.row > 0 && current_index.column < model.column_count
-        key = model.first_key( current_index.column )
+        key = current_index.attribute
         previous_item = model.collection[current_index.row - 1]
         current_item = model.collection[current_index.row]
-        current_item.send( "#{key}=", previous_item.send( model.first_key( current_index.column + 1 ) ) )
+        current_item.send( "#{key}=", previous_item.send( model.attributes[ current_index.column + 1 ] ) )
         dataChanged( current_index, current_index )
       end
       
     # copy the value from the previous row, one cell left
     when event.ctrl? && event.bracket_left?
       if current_index.row > 0 && current_index.column > 0
-        key = model.first_key( current_index.column )
+        key = current_index.attribute
         previous_item = model.collection[current_index.row - 1]
         current_item = model.collection[current_index.row]
-        current_item.send( "#{key}=", previous_item.send( model.first_key( current_index.column - 1 ) ) )
+        current_item.send( "#{key}=", previous_item.send( model.attributes[ current_index.column - 1 ] ) )
         dataChanged( current_index, current_index )
       end
       
     # insert today's date in the current field
     when event.ctrl? && event.semicolon?
-      key = model.first_key( current_index.column )
+      key = current_index.attribute
       current_item = model.collection[current_index.row]
       current_item.send( "#{key}=", Time.now )
       dataChanged( current_index, current_index )
@@ -143,11 +141,6 @@ class EntryTableView < Qt::TableView
     super
   end
   
-  def value_at( model_index )
-    entity = model.collection[model_index.row]
-    model.value_for_key( entity, model.keys[model_index.column] )
-  end
-
   # these are mostly to see what methods are overridable
   def itemDelegate( model_index = nil )
     puts "itemDelegate for #{model_index.inspect}"

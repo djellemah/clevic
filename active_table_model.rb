@@ -19,69 +19,46 @@ require 'Qt4'
 require 'date'
 require 'extensions.rb'
 
-class ActiveTableModel < Qt::AbstractTableModel
-  attr_accessor :collection, :keys
+=begin
+  labels are the headings in the table view
   
-  def initialize(collection, columns=nil)
+  columns are the dotted attribute paths that specify how to get values from
+  the underlying ActiveRecord model
+  
+  attributes are the first-level of the columns
+  
+  collection is the set of model objects
+  
+=end
+class ActiveTableModel < Qt::AbstractTableModel
+  
+  attr_accessor :collection, :columns, :attributes
+  
+  def initialize( collection, columns = nil )
     super()
     @collection = collection
     if columns
       if columns.kind_of? Hash
-        @keys = columns.keys
+        @columns = columns.keys
         @labels = columns.values
       else
-        @keys = columns
+        @columns = columns
       end
     else
-      @keys = build_keys([], @collection.first.attributes)
+      @columns = build_columns([], @collection.first.attributes)
     end
-    @labels ||= @keys.collect { |k| k.split( /\./ )[0].humanize }
+    @labels ||= @columns.collect { |k| k.split( /\./ )[0].humanize }
+    @attributes = @columns.collect { |k| k.split( /\./ )[0].to_sym }
   end
   
-  def build_keys(keys, attrs, prefix="")
-    attrs.inject(keys) do |cols, a|
+  def build_columns( columns, attrs, prefix="" )
+    attrs.inject( columns ) do |cols, a|
       if a[1].respond_to? :attributes
         build_keys(cols, a[1].attributes, prefix + a[0] + ".")
       else
         cols << prefix + a[0]
       end
     end
-  end
-  
-    def value_for_key( item, field_name )
-      # is it a plain value or a relation?
-      field_path = field_name.split( /\./ )
-      
-      # recursively find the display value
-      value = item
-      field_path.each do |node|
-        new_value = value.send( node.to_sym )
-        if new_value.nil? && field_path.size > 1
-          break
-        end
-        value = new_value
-      end
-
-      value
-    end
-
-  def column_for_key( key )
-    @keys.each_with_index do |obj,i|
-      if obj.split( /\./ ).include?( key.to_s )
-        return i
-      end
-    end
-    raise "index not found for #{key.inspect}"
-  end
-  
-  def attribute_for_key( key )
-    @keys.each do |obj|
-      pieces = obj.split( /\./ )
-      if pieces.include?( key.to_s )
-        return pieces[1..-1].join('.')
-      end
-    end
-    raise "attribute not found for #{key.inspect}"
   end
   
   def add_new_item
@@ -117,12 +94,6 @@ class ActiveTableModel < Qt::AbstractTableModel
     end
   end
   
-  # return the first part of a possible dotted key name
-  def first_key( index )
-    key = keys[index]
-    key.split( /\./ )[0]
-  end
-  
   def rowCount( parent = nil )
     @collection.size
   end
@@ -132,11 +103,11 @@ class ActiveTableModel < Qt::AbstractTableModel
   end
   
   def columnCount( parent = nil )
-    @keys.size
+    columns.size
   end
   
   def column_count
-    @keys.size
+    columns.size
   end
   
   def headerData( section, orientation, role = Qt::DisplayRole )
@@ -146,7 +117,7 @@ class ActiveTableModel < Qt::AbstractTableModel
       when Qt::Horizontal
         @labels[section]
       when Qt::Vertical
-        @collection[section].id
+        collection[section].id
       else
         raise "unknown orientation: #{orientation}"
     end
@@ -174,11 +145,11 @@ class ActiveTableModel < Qt::AbstractTableModel
       end
       
     when role == Qt::DisplayRole || role == Qt::EditRole
-      raise "invalid column #{index.column}" if ( index.column < 0 || index.column >= @keys.size )
+      raise "invalid column #{index.column}" if ( index.column < 0 || index.column >= columns.size )
       return nil.to_variant if index.metadata.type == :boolean
       
-      field_name = keys[index.column].to_s
-      value = value_for_key( item, field_name )
+      field_name = index.attribute_path
+      value = index.gui_value
 
       # default to the id for relations
       # but don't set id for plain attributes
@@ -203,18 +174,14 @@ class ActiveTableModel < Qt::AbstractTableModel
     if index.valid?
       case role
       when Qt::EditRole
-        att = keys[index.column]
         # Don't allow the primary key to be changed
-        if att == 'id'
-          return false
-        end
-
-        item = @collection[index.row]
-        if (index.column < 0 || index.column >= @keys.size)
+        return false if index.attribute == :id
+        
+        if ( index.column < 0 || index.column >= columns.size )
           raise "invalid column #{index.column}" 
         end
         
-        type = item.column_for_attribute( att.to_sym ).type
+        type = index.metadata.type
         value = variant.value
         
         # modify some data
@@ -245,20 +212,23 @@ class ActiveTableModel < Qt::AbstractTableModel
           
         end
         
-        cmd = "item[:%s] = value" % att.to_s.gsub(/\./, "'].attributes['")
-        eval( cmd )
+        index.gui_value = value
         emit dataChanged( index, index )
-        return true
+        true
+        
       when Qt::CheckStateRole
         if index.metadata.type == :boolean
-          index.entity.toggle!( index.key.to_sym )
+          index.entity.toggle!( index.attribute )
         end
+        true
         
       else
         puts "role: #{role.inspect}"
+        true
+        
       end
     else
-      return false
+      false
     end
   end
 end

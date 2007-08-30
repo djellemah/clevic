@@ -26,15 +26,20 @@ module Qt
     end
   end
   
-  # Because using Qt::ModelIndex.new the whole time is wasteful
+  # This provides a bunch of methods to get easy access to the entity
+  # and it's values directly from the index without having to keep
+  # asking the model and jumping through other unncessary hoops
   class ModelIndex
+    
+    # Because using Qt::ModelIndex.new the whole time is wasteful
     def self.invalid
       @@invalid ||= ModelIndex.new
     end
     
+    # the value to be displayed in the gui for this index
     def gui_value
       item = model.collection[row]
-      attributes = model.keys[column].split( /\./ )
+      attributes = model.columns[column].split( /\./ )
       attributes.inject( item ) do |value, att|
         if value.nil?
           nil
@@ -44,30 +49,54 @@ module Qt
       end
     end
     
+    # set the value returned from the gui, as whatever the underlying
+    # entity wants it to be
     def gui_value=( obj )
-      model.collection[row].send( "#{model.keys[column]}=", obj )
+      model.collection[row].send( "#{model.columns[column]}=", obj )
     end
     
     def inspect
       "Qt::ModelIndex {(#{row},#{column}) #{gui_value}}"
     end
     
-    def key
-      model.keys[column].to_sym
+    # return the attribute of the underlying entity corresponding
+    # to the column of this index
+    def attribute
+      model.attributes[column]
     end
     
+    # fetch the value of the attribute, without following
+    # the full path. This will return a related entity for
+    # belongs_to or has_one relationships, or a plain value
+    # for model attributes
+    def attribute_value
+      entity.send( attribute )
+    end
+    
+    # set the value of the attribute, without following the
+    # full path
+    def attribute_value=( obj )
+      entity.send( "#{attribute.to_s}=", obj )
+    end
+    
+    # the dotted attribute path, same as a 'column' in the model
+    def attribute_path
+      model.columns[column]
+    end
+    
+    # the ActiveRecord column_for_attribute
     def metadata
-      entity.column_for_attribute( key.to_sym )
+      entity.column_for_attribute( attribute )
     end
     
+    # the underlying entity
     def entity
       model.collection[row]
     end
-
-  
+    
   end
 
-  # make keys easier to work with
+  # make keystrokes easier to work with
   class KeyEvent
     # override otherwise the new method_missing fails
     # to call the old_method_missing
@@ -116,7 +145,7 @@ module Qt
   
   class Variant
     def self.invalid
-      Variant.new
+      @@invalid ||= Variant.new
     end
   end
 end

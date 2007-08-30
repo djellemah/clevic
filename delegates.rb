@@ -1,5 +1,6 @@
 # To emit focus out signals, because ComboBox stupidly doesn't.
 class EntryDelegate < Qt::ItemDelegate
+  
   def initialize( parent, field_name, editor_class )
     super( parent )
     @field_name = field_name
@@ -33,7 +34,9 @@ class EntryDelegate < Qt::ItemDelegate
 end
 
 class FocusComboBox < Qt::ComboBox
+  
   signals 'focus_out_signal(QFocusEvent*, QKeyEvent*)'
+  
   def focusOutEvent( event )
     emit focus_out_signal( event, @key_event )
   end
@@ -49,32 +52,37 @@ class FocusComboBox < Qt::ComboBox
 end
 
 # To edit a relation from an id and display a list of relevant entries
+# attribute_path is the full dotted path to get from the entity in the
+# model to the values displayed in the combo box.
+# the ids of the ActiveRecord models are stored in the item data
+# and the item text is fetched from them using attribute_path
 class RelationalDelegate < EntryDelegate
-  def initialize( parent, model_class, field_name, options )
-    @model_class = model_class
-    @field_name = field_name
+
+  def initialize( parent, attribute_path, options )
+    attributes = attribute_path.split(/\./)
+    @model_class = attributes[0].classify.constantize
+    @attribute_path = attributes[1..-1].join('.')
     @options = options
-    super( parent, field_name, FocusComboBox )
+    super( parent, attribute_path, FocusComboBox )
   end
   
   # Create a ComboBox and fill it with the possible values
   def createEditor( parent_widget, style_option_view_item, model_index )
     editor = FocusComboBox.new( parent )
     @model_class.find( :all, @options ).each do |x|
-      editor.add_item( x[@field_name], x.id.to_variant )
+      editor.add_item( x[@attribute_path], x.id.to_variant )
     end
     
     # always add the current selection, if it isn't already there
     # and it makes sense. This is to make sure that if the list
     # is filtered, we always have the current value if the filter
     # excludes it
-    row_entity = entity_for_index( model_index )
-    if row_entity
-      item = row_entity.send( "#{@model_class.name.underscore}" )
+    if !model_index.nil?
+      item = model_index.attribute_value
       if item
         item_index = editor.find_data( item.id.to_variant )
         if item_index == -1
-          editor.add_item( item[@field_name], item.id.to_variant )
+          editor.add_item( item[@attribute_path], item.id.to_variant )
         end
       end
     end
@@ -106,11 +114,6 @@ class RelationalDelegate < EntryDelegate
     editor
   end
   
-  # return the object for this row
-  def entity_for_index( model_index )
-    model_index.model.collection[model_index.row]
-  end
-
   def updateEditorGeometry( editor, style_option_view_item, model_index )
     # figure out where to put the editor widget, taking into
     # account the sizes of the headers
@@ -125,21 +128,22 @@ class RelationalDelegate < EntryDelegate
     editor.set_geometry( rect )
   end
   
+  # send data to the editor
   def setEditorData( editor, model_index )
-    value = entity_for_index( model_index )
-    editor.current_index = editor.find_data( value.send( "#{@model_class.name.underscore}" ).id.to_variant )
+    editor.current_index = editor.find_data( model_index.attribute_value.id.to_variant )
     editor.line_edit.select_all
   end
   
+  # save the object in the model entity relationship
   def setModelData( editor, abstract_item_model, model_index )
     # fetch record id from editor item_data
-    id = editor.item_data( editor.current_index )
+    id = editor.item_data( editor.current_index ).to_int
     # get the entity it refers to, if there is one
-    obj = @model_class.find_by_id id.to_int
+    obj = @model_class.find_by_id( id )
     unless obj.nil?
       # save the belongs_to entity in the row model entity
-      entry = entity_for_index( model_index )
-      entry.send( "#{@model_class.name.underscore}=", obj )
+      entry = model_index.attribute_value = obj
     end
   end
+  
 end

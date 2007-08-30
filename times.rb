@@ -29,8 +29,8 @@ table.model = model
 table.sorting_enabled = true
 table.resize_columns_to_contents
 
-table.relational_delegate( 'invoice', :conditions => "status = 'not sent'", :order => 'invoice_number' )
-table.relational_delegate( 'project', :conditions => "active = true", :order => 'lower(project)' )
+table.relational_delegate( :invoice, :conditions => "status = 'not sent'", :order => 'invoice_number' )
+table.relational_delegate( :project, :conditions => "active = true", :order => 'lower(project)' )
 
 #~ table.showMaximized
 table.show
