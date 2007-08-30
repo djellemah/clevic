@@ -29,8 +29,13 @@ table.model = model
 table.sorting_enabled = true
 table.resize_columns_to_contents
 
+# fetch list from related tables
 table.relational_delegate( :invoice, :conditions => "status = 'not sent'", :order => 'invoice_number' )
 table.relational_delegate( :project, :conditions => "active = true", :order => 'lower(project)' )
+
+# fetch list from column
+table.delegate( :person, DistinctDelegate )
+table.delegate( :module, DistinctDelegate )
 
 #~ table.showMaximized
 table.show

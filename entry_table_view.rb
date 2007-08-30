@@ -12,9 +12,9 @@ class EntryTableView < Qt::TableView
     set_item_delegate_for_column( col, delegate )
   end
   
-  def delegate( attribute, delegate_class )
+  def delegate( attribute, delegate_class, options = nil )
     col = model.attributes.index( attribute )
-    delegate = delegate_class.new( self, attribute )
+    delegate = delegate_class.new( self, attribute, options )
     set_item_delegate_for_column( col, delegate )
   end
   
