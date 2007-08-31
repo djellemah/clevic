@@ -34,6 +34,11 @@ class Entry < ActiveRecord::Base
   belongs_to :invoice
   belongs_to :activity
   belongs_to :project
+  
+  #~ def initialize( *args )
+    #~ self.charge = true
+    #~ super
+  #~ end
 end
 
 class Project < ActiveRecord::Base

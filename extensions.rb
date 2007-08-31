@@ -2,7 +2,11 @@
 # Because Qt::Variant.new( obj ) is a PITA to type
 class Object
   def to_variant
-    return Qt::Variant.new( self )
+    begin
+      Qt::Variant.new( self )
+    rescue Exception => e
+      puts "error converting #{self.inspect} to variant"
+    end
   end
 end
 
@@ -30,7 +34,6 @@ module Qt
   # and it's values directly from the index without having to keep
   # asking the model and jumping through other unncessary hoops
   class ModelIndex
-    
     # Because using Qt::ModelIndex.new the whole time is wasteful
     def self.invalid
       @@invalid ||= ModelIndex.new

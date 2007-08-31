@@ -65,6 +65,11 @@ class ComboDelegate < Qt::ItemDelegate
   # Create a ComboBox and fill it with the possible values
   def createEditor( parent_widget, style_option_view_item, model_index )
     editor = FocusComboBox.new( parent )
+    
+    # create a nil entry
+    editor.add_item( '', nil.to_variant )
+    
+    # subclasses fill in the rest of the entries
     populate( editor, model_index )
     
     # allow prefix matching from the keyboard
@@ -74,17 +79,30 @@ class ComboDelegate < Qt::ItemDelegate
     editor.connect( SIGNAL( 'focus_out_signal(QFocusEvent*,QKeyEvent*)' ) ) do |event, key_event|
       # always returns Qt::OtherFocusReason
       #~ if event.reason == Qt::TabFocusReason
-      # set the current completion, if there is one. In other
-      # words, the key left with a tab (not an escape) and
-      # the data has actually changed
-      if ( 
+      if $debug
+        puts "editor.completer.completion_count: #{editor.completer.completion_count}"
+        puts "editor.completer.current_completion: #{editor.completer.current_completion}"
+        puts "editor.find_text( editor.completer.current_completion ): #{editor.find_text( editor.completer.current_completion )}"
+        puts "editor.current_text: #{editor.current_text}"
+        puts "editor.count: #{editor.count}"
+        #~ puts ": #{}"
+      end
+      
+      if editor.completer.completion_count == editor.count && editor.current_text == ''
+        editor.set_current_index( 0 )
+        setModelData( editor, parent.model, parent.current_index )
+      elsif ( 
         key_event != nil &&
         ( key_event.tab? || key_event.backtab? ) &&
         
         editor.completer.completion_count == 1 &&
         editor.find_text( editor.completer.current_completion ) != -1 &&
-        editor.completer.current_completion != editor.current_text
+        editor.completer.current_completion != model_index.gui_value
       )
+        # set the current completion, if there is one. In other
+        # words, the key left with a tab (not an escape) and
+        # the data has actually changed
+
         editor.set_current_index( editor.find_text( editor.completer.current_completion ) )
         # this doesn't work for some reason
         #~ emit commitData( editor )
@@ -142,7 +160,8 @@ class DistinctDelegate < ComboDelegate
   
   # save the object in the model entity relationship
   def setModelData( editor, abstract_item_model, model_index )
-    model_index.attribute_value = editor.item_text( editor.current_index )
+    item_data = editor.item_data( editor.current_index )
+    model_index.attribute_value = item_data.value
   end
 end
 
@@ -180,7 +199,6 @@ class RelationalDelegate < ComboDelegate
         end
       end
     end
-    
   end
   
   # send data to the editor
@@ -192,12 +210,16 @@ class RelationalDelegate < ComboDelegate
   # save the object in the model entity relationship
   def setModelData( editor, abstract_item_model, model_index )
     # fetch record id from editor item_data
-    id = editor.item_data( editor.current_index ).to_int
-    # get the entity it refers to, if there is one
-    obj = @model_class.find_by_id( id )
-    unless obj.nil?
-      # save the belongs_to entity in the row model entity
-      entry = model_index.attribute_value = obj
+    item_data = editor.item_data( editor.current_index )
+    if item_data.valid?
+      # get the entity it refers to, if there is one
+      obj = @model_class.find_by_id( item_data.to_int )
+      unless obj.nil?
+        # save the belongs_to entity in the row model entity
+        model_index.attribute_value = obj
+      end
+    else
+      model_index.attribute_value = nil
     end
   end
   
