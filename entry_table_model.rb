@@ -129,34 +129,40 @@ class EntryTableModel < Qt::AbstractTableModel
 
   # send data to UI
   def data( index, role = Qt::DisplayRole )
-    item = @collection[index.row]
-    return Qt::Variant.invalid if item.nil?
+    begin
+      item = @collection[index.row]
+      return Qt::Variant.invalid if item.nil?
 
-    case
-    when role == Qt::CheckStateRole
-      if index.metadata.type == :boolean
-        return ( index.gui_value ? Qt::Checked : Qt::Unchecked ).to_variant
-      end
-      
-    when role == Qt::DisplayRole || role == Qt::EditRole
-      raise "invalid column #{index.column}" if ( index.column < 0 || index.column >= columns.size )
-      
-      # boolean values generally don't have text next to them in this context
-      return nil.to_variant if index.metadata.type == :boolean
-      
-      field_name = index.attribute_path
-      value = index.gui_value
+      case
+      when role == Qt::CheckStateRole
+        if index.metadata.type == :boolean
+          return ( index.gui_value ? Qt::Checked : Qt::Unchecked ).to_variant
+        end
+        
+      when role == Qt::DisplayRole || role == Qt::EditRole
+        raise "invalid column #{index.column}" if ( index.column < 0 || index.column >= columns.size )
+        
+        # boolean values generally don't have text next to them in this context
+        return nil.to_variant if index.metadata.type == :boolean
+        
+        field_name = index.attribute_path
+        value = index.gui_value
 
-      # TODO formatting doesn't really belong here
-      if value != nil
-        value = value.strftime '%H:%M' if field_name == 'start' || field_name == 'end'
-        value = value.strftime '%d-%h-%y' if value != nil && field_name == 'date'
+        # TODO formatting doesn't really belong here
+        if value != nil
+          #~ value = value.strftime '%H:%M' if field_name == 'start' || field_name == 'end'
+          #~ value = value.strftime( '%d-%h-%y' ) if value != nil && field_name == 'date'
+        end
+      else
+        value = nil
       end
-    else
-      value = nil
+    
+      value.to_variant
+    rescue Exception => e
+      puts e.backtrace.join( "\n" )
+      puts "#{index.inspect} #{value.inspect} #{index.entity.inspect} #{e.message}"
+      nil.to_variant
     end
-  
-    return value.to_variant
   end
 
   # send data to model

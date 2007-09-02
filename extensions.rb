@@ -5,7 +5,19 @@ class Object
     begin
       Qt::Variant.new( self )
     rescue Exception => e
-      puts "error converting #{self.inspect} to variant"
+      puts "error converting #{self.inspect} to variant: #{e.message}"
+      nil.to_variant
+    end
+  end
+end
+
+class Date
+  def to_variant
+    begin
+      Qt::Variant.new( self.to_s )
+    rescue Exception => e
+      puts "error converting #{self.inspect} to variant: #{e.message}"
+      nil.to_variant
     end
   end
 end

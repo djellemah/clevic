@@ -38,8 +38,12 @@ pasting of csv, into rectangular regions
 
 db
 --
-create entries_id_seq
-not null default nextval('entries_id_seq') for entries::id
+alter table invoices rename column type to billing;
+alter table entries add primary key (id);
+alter table entries alter column id set not null
+select max(id) from entries;
+create sequence entries_id_seq start with 11694;
+alter table entries alter column id set default nextval('entries_id_seq');
 update entries set module = null where module = '';
 update entries set module = 'admin' where module = 'Admin';
 
