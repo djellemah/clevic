@@ -7,11 +7,6 @@ class EntryDelegate < Qt::ItemDelegate
     @editor_class = editor_class
   end
   
-  # This seems to catch the event that begins the edit process.
-  #~ def editorEvent ( event, model, style_option_view_item, model_index ) 
-    #~ super
-  #~ end
-  
   def createEditor( parent_widget, style_option_view_item, model_index )
     @editor_class.new( parent_widget )
   end
@@ -62,6 +57,12 @@ class ComboDelegate < Qt::ItemDelegate
   def populate( editor, model_index )
   end
   
+  # This seems to catch the event that begins the edit process.
+  def editorEvent ( event, model, style_option_view_item, model_index ) 
+    puts "editorEvent: #{event.inspect}"
+    super
+  end
+  
   # Create a ComboBox and fill it with the possible values
   def createEditor( parent_widget, style_option_view_item, model_index )
     editor = FocusComboBox.new( parent )
@@ -77,8 +78,6 @@ class ComboDelegate < Qt::ItemDelegate
 
     # pressing tab with a completion selects it
     editor.connect( SIGNAL( 'focus_out_signal(QFocusEvent*,QKeyEvent*)' ) ) do |event, key_event|
-      # always returns Qt::OtherFocusReason
-      #~ if event.reason == Qt::TabFocusReason
       if $debug
         puts "editor.completer.completion_count: #{editor.completer.completion_count}"
         puts "editor.completer.current_completion: #{editor.completer.current_completion}"
@@ -88,7 +87,10 @@ class ComboDelegate < Qt::ItemDelegate
         #~ puts ": #{}"
       end
       
+      #~ Could possibly connect to the closeEditor signal here and
+      #~ use Qt::AbstractItemDelegate::EndEditHint
       if editor.completer.completion_count == editor.count && editor.current_text == ''
+        # set value to nil
         editor.set_current_index( 0 )
         setModelData( editor, parent.model, parent.current_index )
       elsif ( 
@@ -109,6 +111,7 @@ class ComboDelegate < Qt::ItemDelegate
         setModelData( editor, parent.model, parent.current_index )
       end
     end
+    
     editor
   end
 
@@ -125,7 +128,7 @@ class ComboDelegate < Qt::ItemDelegate
     
     editor.set_geometry( rect )
   end
-  
+
 end
 
 # provide a list of all values in this field

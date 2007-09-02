@@ -25,7 +25,9 @@ require 'extensions.rb'
 class EntryTableModel < Qt::AbstractTableModel
   
   attr_accessor :collection, :columns, :attributes
-  
+  # the index where the error occurred, the incoming value, and the error message
+  signals 'data_error(QModelIndex, QVariant, QString)'
+
   def initialize( collection, columns = nil )
     super()
     @collection = collection
@@ -173,36 +175,41 @@ class EntryTableModel < Qt::AbstractTableModel
         value = variant.value
         
         # modify some data
-        case
-        when value.class.name == 'Qt::Date'
-          value = Date.new( value.year, value.month, value.day )
+        begin
+          case
+          when value.class.name == 'Qt::Date'
+            value = Date.new( value.year, value.month, value.day )
+            
+          when value.class.name == 'Qt::Time'
+            value = Time.new( value.hour, value.min, value.sec )
+            
+          # allow flexibility in entering dates. For example
+          # 16jun, 16-jun, 16 jun, 16 jun 2007 would be accepted here
+          # TODO need to be cleverer about which year to use
+          # for when you're entering 16dec and you're in the next
+          # year
+          when type == :date && value =~ %r{^(\d{2})[ /-]?(\w{3})$}
+            value = Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
           
-        when value.class.name == 'Qt::Time'
-          value = Time.new( value.hour, value.min, value.sec )
+          # this one is mostly to fix date strings that have come
+          # out of the db and been formatted
+          when type == :date && value =~ %r{^(\d{2})[ /-](\w{3})[ /-](\d{2})$}
+            value = Date.parse( "#$1 #$2 20#$3" )
           
-        # allow flexibility in entering dates. For example
-        # 16jun, 16-jun, 16 jun, 16 jun 2007 would be accepted here
-        # TODO need to be cleverer about which year to use
-        # for when you're entering 16dec and you're in the next
-        # year
-        when type == :date && value =~ %r{^(\d{2})[ /-]?(\w{3})$}
-          value = Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
-        
-        # this one is mostly to fix date strings that have come
-        # out of the db and been formatted
-        when type == :date && value =~ %r{^(\d{2})[ /-](\w{3})[ /-](\d{2})$}
-          value = Date.parse( "#$1 #$2 20#$3" )
-        
-        # allow lots of flexibility in entering times
-        # 01:17, 0117, 117, 1 17, are all accepted
-        when type == :time && value =~ %r{^(\d{1,2}).?(\d{2})$}
-          value = Time.parse( "#$1:#$2" )
+          # allow lots of flexibility in entering times
+          # 01:17, 0117, 117, 1 17, are all accepted
+          when type == :time && value =~ %r{^(\d{1,2}).?(\d{2})$}
+            value = Time.parse( "#$1:#$2" )
+            
+          end
           
+          index.gui_value = value
+          emit dataChanged( index, index )
+          true
+        rescue Exception => e
+          emit data_error( index, variant, e.message )
+          false
         end
-        
-        index.gui_value = value
-        emit dataChanged( index, index )
-        true
         
       when Qt::CheckStateRole
         if index.metadata.type == :boolean
