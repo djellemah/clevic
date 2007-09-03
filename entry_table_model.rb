@@ -92,7 +92,7 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   def save( index )
-    item = @collection[index.row]
+    item = collection[index.row]
     if item.changed?
       if item.valid?
         item.save
@@ -105,7 +105,7 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   def rowCount( parent = nil )
-    @collection.size
+    collection.size
   end
 
   def row_count
@@ -175,37 +175,34 @@ class EntryTableModel < Qt::AbstractTableModel
       
       value = nil
       case
-      when role == qt_display_role || role == qt_edit_role
-        #~ raise "invalid column #{index.column}" if ( index.column < 0 || index.column >= columns.size )
-        
-        # boolean values generally don't have text next to them in this context
-        return nil.to_variant if index.metadata.type == :boolean
-        
-        field_name = index.attribute_path
-        value = index.gui_value
-        # TODO formatting doesn't really belong here
-        if value != nil
-          value = value.strftime '%H:%M' if field_name == 'start' || field_name == 'end'
-          value = value.strftime( '%d-%h-%y' ) if field_name == 'date'
-          value = "%.2f" % value if field_name == 'amount'
-        end
-        
-      when role == qt_checkstate_role
-        if index.metadata.type == :boolean
-          return ( index.gui_value ? Qt::Checked : Qt::Unchecked ).to_variant
-        end
-        
-      when role == qt_text_alignment_role
-        value = 
-        case index.metadata.type
-          when :decimal
-            Qt::AlignRight
-          when :integer
-            Qt::AlignRight
-          when :boolean
-            Qt::AlignCenter
-        end
-        
+        when role == qt_display_role || role == qt_edit_role
+          # boolean values generally don't have text next to them in this context
+          return nil.to_variant if index.metadata.type == :boolean
+          
+          field_name = index.attribute_path
+          value = index.gui_value
+          # TODO formatting doesn't really belong here
+          if value != nil
+            value = value.strftime '%H:%M' if field_name == 'start' || field_name == 'end'
+            value = value.strftime( '%d-%h-%y' ) if field_name == 'date'
+            value = "%.2f" % value if field_name == 'amount'
+          end
+          
+        when role == qt_checkstate_role
+          if index.metadata.type == :boolean
+            value = ( index.gui_value ? Qt::Checked : Qt::Unchecked )
+          end
+          
+        when role == qt_text_alignment_role
+          value = 
+          case index.metadata.type
+            when :decimal
+              Qt::AlignRight
+            when :integer
+              Qt::AlignRight
+            when :boolean
+              Qt::AlignCenter
+          end
       end
       
       value.to_variant
@@ -234,30 +231,29 @@ class EntryTableModel < Qt::AbstractTableModel
         # modify some data
         begin
           case
-          when value.class.name == 'Qt::Date'
-            value = Date.new( value.year, value.month, value.day )
+            when value.class.name == 'Qt::Date'
+              value = Date.new( value.year, value.month, value.day )
+              
+            when value.class.name == 'Qt::Time'
+              value = Time.new( value.hour, value.min, value.sec )
+              
+            # allow flexibility in entering dates. For example
+            # 16jun, 16-jun, 16 jun, 16 jun 2007 would be accepted here
+            # TODO need to be cleverer about which year to use
+            # for when you're entering 16dec and you're in the next
+            # year
+            when type == :date && value =~ %r{^(\d{2})[ /-]?(\w{3})$}
+              value = Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
             
-          when value.class.name == 'Qt::Time'
-            value = Time.new( value.hour, value.min, value.sec )
+            # this one is mostly to fix date strings that have come
+            # out of the db and been formatted
+            when type == :date && value =~ %r{^(\d{2})[ /-](\w{3})[ /-](\d{2})$}
+              value = Date.parse( "#$1 #$2 20#$3" )
             
-          # allow flexibility in entering dates. For example
-          # 16jun, 16-jun, 16 jun, 16 jun 2007 would be accepted here
-          # TODO need to be cleverer about which year to use
-          # for when you're entering 16dec and you're in the next
-          # year
-          when type == :date && value =~ %r{^(\d{2})[ /-]?(\w{3})$}
-            value = Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
-          
-          # this one is mostly to fix date strings that have come
-          # out of the db and been formatted
-          when type == :date && value =~ %r{^(\d{2})[ /-](\w{3})[ /-](\d{2})$}
-            value = Date.parse( "#$1 #$2 20#$3" )
-          
-          # allow lots of flexibility in entering times
-          # 01:17, 0117, 117, 1 17, are all accepted
-          when type == :time && value =~ %r{^(\d{1,2}).?(\d{2})$}
-            value = Time.parse( "#$1:#$2" )
-            
+            # allow lots of flexibility in entering times
+            # 01:17, 0117, 117, 1 17, are all accepted
+            when type == :time && value =~ %r{^(\d{1,2}).?(\d{2})$}
+              value = Time.parse( "#$1:#$2" )
           end
           
           index.gui_value = value
