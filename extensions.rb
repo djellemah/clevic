@@ -1,3 +1,6 @@
+# need this here otherwise the definition of BigDecimal#to_variant
+# causes and error
+require 'bigdecimal'
 
 # Because Qt::Variant.new( obj ) is a PITA to type
 class Object
@@ -19,6 +22,12 @@ end
 class Date
   def to_variant
     self.to_s.to_variant
+  end
+end
+
+class BigDecimal
+  def to_variant
+    self.to_f.to_variant
   end
 end
 

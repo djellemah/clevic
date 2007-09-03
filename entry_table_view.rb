@@ -5,7 +5,6 @@ class EntryTableView < Qt::TableView
     super
     horizontal_header.movable = true
     sorting_enabled = true
-    resize_columns_to_contents
     # turn off "Object#type deprecated" messages
     $VERBOSE=nil
   end
@@ -58,6 +57,7 @@ class EntryTableView < Qt::TableView
   # setModel otherwise
   def model=( model )
     setModel( model )
+    #~ resize_columns_to_contents
   end
   
   def keyPressEvent( event )
@@ -152,8 +152,8 @@ class EntryTableView < Qt::TableView
       saved = model.save( previous_index )
       if !saved
         error_message = Qt::ErrorMessage.new( self )
-        error_message.show_message( "Errors with record" )
-        puts model.collection[previous_index.row].errors.join("\n")
+        msg = model.collection[previous_index.row].errors.join("\n")
+        error_message.show_message( msg )
         error_message.show
       end
     end

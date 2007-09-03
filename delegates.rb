@@ -28,28 +28,37 @@ class EntryDelegate < Qt::ItemDelegate
   end
 end
 
-class FocusComboBox < Qt::ComboBox
-  
-  signals 'focus_out_signal(QFocusEvent*, QKeyEvent*)'
-  
-  def focusOutEvent( event )
-    emit focus_out_signal( event, @key_event )
-  end
-
-  # make sure we save the last key press, so
-  # we know what caused the focus out
-  # so we know whether to save the partial completion or not
-  def event( ev )
-    # ev.type == Qt::Event::KeyPress doesn't work
-    @key_event = ev if ev.class == Qt::KeyEvent
-    super
-  end
-end
-
 class ComboDelegate < Qt::ItemDelegate
   
   def initialize( parent )
     super( parent )
+    
+    # make sure the values are correctly saved on exit
+    self.connect( SIGNAL( 'closeEditor ( QWidget*, QAbstractItemDelegate::EndEditHint )' ) ) do |editor, hint|
+      #~ puts "close editor #{editor.inspect} with #{hint}: #{hint_string(hint)}"
+      close_editor( editor, hint )
+    end
+  end
+  
+  def hint_string( hint )
+    hs = String.new
+    Qt::AbstractItemDelegate.constants.each do |x|
+      hs = x if eval( "Qt::AbstractItemDelegate::#{x}.to_i" ) == hint.to_i
+    end
+    hs
+  end
+    
+  def dump_editor_state( editor )
+    if false
+			puts "editor.completer.completion_count: #{editor.completer.completion_count}"
+			puts "editor.completer.current_completion: #{editor.completer.current_completion}"
+			puts "editor.find_text( editor.completer.current_completion ): #{editor.find_text( editor.completer.current_completion )}"
+			puts "editor.current_text: #{editor.current_text}"
+			puts "editor.count: #{editor.count}"
+			puts "editor.completer.current_row: #{editor.completer.current_row}"
+			#~ puts ": #{}"
+      puts
+		end
   end
   
   # descendants should override this to fill the combo box
@@ -57,62 +66,46 @@ class ComboDelegate < Qt::ItemDelegate
   def populate( editor, model_index )
   end
   
-  # This seems to catch the event that begins the edit process.
+  # This catches the event that begins the edit process.
+  # Not used at the moment
   def editorEvent ( event, model, style_option_view_item, model_index ) 
-    puts "editorEvent: #{event.inspect}"
     super
   end
   
   # Create a ComboBox and fill it with the possible values
   def createEditor( parent_widget, style_option_view_item, model_index )
-    editor = FocusComboBox.new( parent )
+    # save these for later
+    @current_index = model_index
+    @old_value = model_index.attribute_value
     
-    # create a nil entry
-    editor.add_item( '', nil.to_variant )
+    editor = Qt::ComboBox.new( parent )
     
     # subclasses fill in the rest of the entries
     populate( editor, model_index )
     
-    # allow prefix matching from the keyboard
-    editor.editable = true
-
-    # pressing tab with a completion selects it
-    editor.connect( SIGNAL( 'focus_out_signal(QFocusEvent*,QKeyEvent*)' ) ) do |event, key_event|
-      if $debug
-        puts "editor.completer.completion_count: #{editor.completer.completion_count}"
-        puts "editor.completer.current_completion: #{editor.completer.current_completion}"
-        puts "editor.find_text( editor.completer.current_completion ): #{editor.find_text( editor.completer.current_completion )}"
-        puts "editor.current_text: #{editor.current_text}"
-        puts "editor.count: #{editor.count}"
-        #~ puts ": #{}"
-      end
-      
-      #~ Could possibly connect to the closeEditor signal here and
-      #~ use Qt::AbstractItemDelegate::EndEditHint
-      if editor.completer.completion_count == editor.count && editor.current_text == ''
-        # set value to nil
-        editor.set_current_index( 0 )
-        setModelData( editor, parent.model, parent.current_index )
-      elsif ( 
-        key_event != nil &&
-        ( key_event.tab? || key_event.backtab? ) &&
-        
-        editor.completer.completion_count == 1 &&
-        editor.find_text( editor.completer.current_completion ) != -1 &&
-        editor.completer.current_completion != model_index.gui_value
-      )
-        # set the current completion, if there is one. In other
-        # words, the key left with a tab (not an escape) and
-        # the data has actually changed
-
-        editor.set_current_index( editor.find_text( editor.completer.current_completion ) )
-        # this doesn't work for some reason
-        #~ emit commitData( editor )
-        setModelData( editor, parent.model, parent.current_index )
-      end
+    # create a nil entry
+    if ( editor.find_data( nil.to_variant ) == -1 )
+      editor.add_item( '', nil.to_variant )
     end
     
+    # allow prefix matching from the keyboard
+    editor.editable = true
+    #~ editor.completer.model_sorting = Qt::Completer::CaseInsensitivelySortedModel
+    
     editor
+  end
+  
+  # make sure tab and backtab save data
+  def eventFilter( editor, event )
+    if event.class == Qt::KeyEvent
+      if event.tab? || event.backtab?
+        emit closeEditor( editor, Qt::AbstractItemDelegate::SubmitModelCache )
+      end
+    end
+    super
+  end
+
+  def close_editor( editor, hint )
   end
 
   def updateEditorGeometry( editor, style_option_view_item, model_index )
@@ -132,6 +125,7 @@ class ComboDelegate < Qt::ItemDelegate
 end
 
 # provide a list of all values in this field
+# and allow new values to be entered
 class DistinctDelegate < ComboDelegate
   
   def initialize( parent, attribute, options )
@@ -166,6 +160,24 @@ class DistinctDelegate < ComboDelegate
     item_data = editor.item_data( editor.current_index )
     model_index.attribute_value = item_data.value
   end
+  
+  # save the value in the field, depending on what exit happened
+  def close_editor( editor, hint )
+    dump_editor_state( editor )
+    
+		case hint
+      when Qt::AbstractItemDelegate::SubmitModelCache
+      if editor.completer.current_row == -1
+        @current_index.attribute_value = editor.current_text
+      else
+        @current_index.attribute_value = editor.completer.current_completion
+      end
+      
+      when Qt::AbstractItemDelegate::RevertModelCache
+        @current_index.attribute_value = @old_value
+    end
+  end
+
 end
 
 # To edit a relation from an id and display a list of relevant entries
@@ -177,9 +189,10 @@ class RelationalDelegate < ComboDelegate
 
   def initialize( parent, attribute_path, options )
     attributes = attribute_path.split(/\./)
-    @model_class = attributes[0].classify.constantize
+    @model_class = ( options[:class_name] || attributes[0].classify ).constantize
     @attribute_path = attributes[1..-1].join('.')
-    @options = options
+    @options = options.clone
+    @options.delete :class_name
     super( parent )
   end
   
@@ -226,4 +239,22 @@ class RelationalDelegate < ComboDelegate
     end
   end
   
+  # this doesn't save the entity to the db, it just
+  # manipulates values in the entity
+  def close_editor( editor, hint )
+		dump_editor_state( editor )
+		case hint
+      when Qt::AbstractItemDelegate::SubmitModelCache
+        if editor.completer.current_row == -1
+          @current_index.attribute_value = nil
+        else
+          editor.set_current_index( editor.find_text( editor.completer.current_completion ) )
+          setModelData( editor, parent.model, parent.current_index )
+        end
+        
+      when Qt::AbstractItemDelegate::RevertModelCache
+        @current_index.attribute_value = @old_value
+    end
+	end
+
 end

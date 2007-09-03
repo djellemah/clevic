@@ -162,11 +162,11 @@ class EntryTableModel < Qt::AbstractTableModel
         
         field_name = index.attribute_path
         value = index.gui_value
-
         # TODO formatting doesn't really belong here
         if value != nil
           value = value.strftime '%H:%M' if field_name == 'start' || field_name == 'end'
-          value = value.strftime( '%d-%h-%y' ) if value != nil && field_name == 'date'
+          value = value.strftime( '%d-%h-%y' ) if field_name == 'date'
+          value = "%.2f" % value if field_name == 'amount'
         end
       when role == qt_checkstate_role
         if index.metadata.type == :boolean
@@ -185,7 +185,7 @@ class EntryTableModel < Qt::AbstractTableModel
     end
   end
 
-  # send data to model
+  # data set from UI
   def setData( index, variant, role = Qt::EditRole )
     if index.valid?
       case role

@@ -5,44 +5,12 @@ require 'entry_table_model.rb'
 require 'delegates.rb'
 require 'entry_table_view.rb'
 
-# require AR
-require 'rubygems'
-require 'active_record'
-require 'active_record/dirty.rb'
-
-# connect to the database
-ActiveRecord::Base.establish_connection({
-  :adapter  => 'postgresql',
-  :database => 'accounts',
-  :username => 'accounts',
-  :password => ''
-})
-
-class Account < ActiveRecord::Base
-  # Actually, it isn't this that's causing the currval error
-  include ActiveRecord::Dirty
-  belongs_to :invoice
-  belongs_to :activity
-  belongs_to :project
-end
-
-class Project < ActiveRecord::Base
-  has_many :entries
-end
-
-class Activity < ActiveRecord::Base
-  has_many :entries
-end
-
-class Invoice < ActiveRecord::Base
-  has_many :entries
-end
+require 'accounts_models.rb'
 
 # last 100 entries in table
 entries = Entry.find(
   :all,
   :order => 'id desc'
-  #~ :limit => 100
 )
 entries.reverse!
 
@@ -51,20 +19,18 @@ app = Qt::Application.new( ARGV )
 table = EntryTableView.new
 table.model = EntryTableModel.new(
   entries,
-  %w{date invoice.invoice_number project.project start end description activity.activity module charge person}
+  %w{date description debit.name credit.name amount cheque_number active vat}
 )
 
 # fetch list from related tables
-table.relational_delegate( :invoice, :conditions => "status = 'not sent'", :order => 'invoice_number' )
-table.relational_delegate( :project, :conditions => "active = true", :order => 'lower(project)' )
-table.relational_delegate( :activity, :order => 'lower(activity)' )
+table.relational_delegate( :debit, :class_name => 'Account', :order => 'lower(name)' )
+table.relational_delegate( :credit, :class_name => 'Account', :order => 'lower(name)' )
 
 # fetch list from column
-table.delegate( :person, DistinctDelegate )
-table.delegate( :module, DistinctDelegate )
+table.delegate( :description, DistinctDelegate )
 
-table.showMaximized
-#~ table.show
+#~ table.showMaximized
+table.show
 
 begin
   app.exec
