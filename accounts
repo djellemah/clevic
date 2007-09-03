@@ -29,8 +29,24 @@ table.relational_delegate( :credit, :class_name => 'Account', :conditions => 'ac
 # fetch list from column
 table.delegate( :description, DistinctDelegate )
 
-#~ table.showMaximized
-table.show
+table.showMaximized
+table.minimum_width = 600
+
+table.auto_size_column( :date, '28-Dec-08' )
+table.auto_size_column( :description, '12345678901234567890123456' )
+table.auto_size_column( :debit, 'Leilani Member Loan' )
+table.auto_size_column( :credit, 'Leilani Member Loan' )
+table.auto_size_column( :amount, '100000.00' )
+table.auto_size_column( :cheque_number, '0000' )
+table.auto_size_column( :active, 'Active' )
+table.auto_size_column( :vat, 'VAT' )
+
+#~ table.create_model do |t|
+  #~ t.plain :date, :sample => '28-Dec-08'
+  #~ t.distinct :description, :sample => '12345678901234567890123456'
+  #~ t.plain :
+  #~ t.relational :debit, :sample => 'Leilani Member Loan', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+#~ end
 
 begin
   app.exec

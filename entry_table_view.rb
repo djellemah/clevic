@@ -9,6 +9,35 @@ class EntryTableView < Qt::TableView
     $VERBOSE=nil
   end
   
+  def auto_size_column( attribute, sample = nil )
+    col = model.attributes.index( attribute )
+    self.set_column_width( col, column_size( col, sample ).width )
+  end
+  
+  # mostly copied from qheaderview.cpp:2301
+  def column_size( col, data )
+    opt = Qt::StyleOptionHeader.new
+    #~ initStyleOption(&opt);
+    
+    # fetch font size
+    fnt = font
+    #~ fnt.bold = true
+    opt.fontMetrics = Qt::FontMetrics.new( fnt )
+    
+    # set data 
+    opt.text = data.to_s
+    
+    # icon size. Not needed
+    #~ variant = d->model->headerData(logicalIndex, d->orientation, Qt::DecorationRole);
+    #~ opt.icon = qvariant_cast<QIcon>(variant);
+    #~ if (opt.icon.isNull())
+        #~ opt.icon = qvariant_cast<QPixmap>(variant);
+    
+    size = Qt::Size.new( 100, 30 )
+    # final parameter could be header section
+    style.sizeFromContents( Qt::Style::CT_HeaderSection, opt, size );
+  end
+  
   def relational_delegate( attribute, options )
     col = model.attributes.index( attribute )
     delegate = RelationalDelegate.new( self, model.columns[col], options )
