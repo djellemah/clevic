@@ -17,6 +17,8 @@ require 'extensions.rb'
   columns are the dotted attribute paths that specify how to get values from
   the underlying ActiveRecord model
   
+  attribute_paths is the collection of columns, each split into components by .
+  
   attributes are the first-level of the columns
   
   collection is the set of model objects
@@ -24,7 +26,7 @@ require 'extensions.rb'
 =end
 class EntryTableModel < Qt::AbstractTableModel
   
-  attr_accessor :collection, :columns, :attributes
+  attr_accessor :collection, :columns, :attributes, :attribute_paths
   # the index where the error occurred, the incoming value, and the error message
   signals 'data_error(QModelIndex, QVariant, QString)'
 
@@ -43,6 +45,8 @@ class EntryTableModel < Qt::AbstractTableModel
     end
     @labels ||= @columns.collect { |k| k.split( /\./ )[0].humanize }
     @attributes = @columns.collect { |k| k.split( /\./ )[0].to_sym }
+    @attribute_paths = @columns.collect { |k| k.split( /\./ ) }
+    @metadatas = []
   end
   
   def build_columns( columns, attrs, prefix="" )
@@ -53,6 +57,12 @@ class EntryTableModel < Qt::AbstractTableModel
         cols << prefix + a[0]
       end
     end
+  end
+  
+  # cache metadata (ActiveRecord#column_for_attribute) because it't not going
+  # to change over the lifetime of the table
+  def metadata( column )
+    @metadatas[column] ||= collection[0].column_for_attribute( attributes[column] )
   end
   
   def add_new_item
@@ -105,8 +115,7 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   def headerData( section, orientation, role = Qt::DisplayRole )
-    invalid = Qt::Variant.new
-    return invalid unless role == Qt::DisplayRole
+    return Qt::Variant.invalid unless role == Qt::DisplayRole
     v = case orientation
       when Qt::Horizontal
         @labels[section]
@@ -121,26 +130,32 @@ class EntryTableModel < Qt::AbstractTableModel
   def flags( model_index )
     retval = Qt::ItemIsEditable | super( model_index )
     if model_index.metadata.type == :boolean
-      #~ retval = Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable
       retval = Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable
     end
     retval
   end
 
+  # cache these because the qt binding does them slowly
+  def qt_display_role
+    @qt_display_role ||= Qt::DisplayRole
+  end
+  
+  def qt_edit_role
+    @qt_edit_role ||= Qt::EditRole
+  end
+  
+  def qt_checkstate_role
+    @qt_checkstate_role ||= Qt::CheckStateRole
+  end
+  
   # send data to UI
   def data( index, role = Qt::DisplayRole )
     begin
-      item = @collection[index.row]
-      return Qt::Variant.invalid if item.nil?
+      return Qt::Variant.invalid if index.entity.nil?
 
       case
-      when role == Qt::CheckStateRole
-        if index.metadata.type == :boolean
-          return ( index.gui_value ? Qt::Checked : Qt::Unchecked ).to_variant
-        end
-        
-      when role == Qt::DisplayRole || role == Qt::EditRole
-        raise "invalid column #{index.column}" if ( index.column < 0 || index.column >= columns.size )
+      when role == qt_display_role || role == qt_edit_role
+        #~ raise "invalid column #{index.column}" if ( index.column < 0 || index.column >= columns.size )
         
         # boolean values generally don't have text next to them in this context
         return nil.to_variant if index.metadata.type == :boolean
@@ -150,9 +165,14 @@ class EntryTableModel < Qt::AbstractTableModel
 
         # TODO formatting doesn't really belong here
         if value != nil
-          #~ value = value.strftime '%H:%M' if field_name == 'start' || field_name == 'end'
-          #~ value = value.strftime( '%d-%h-%y' ) if value != nil && field_name == 'date'
+          value = value.strftime '%H:%M' if field_name == 'start' || field_name == 'end'
+          value = value.strftime( '%d-%h-%y' ) if value != nil && field_name == 'date'
         end
+      when role == qt_checkstate_role
+        if index.metadata.type == :boolean
+          return ( index.gui_value ? Qt::Checked : Qt::Unchecked ).to_variant
+        end
+        
       else
         value = nil
       end
@@ -213,6 +233,7 @@ class EntryTableModel < Qt::AbstractTableModel
           emit dataChanged( index, index )
           true
         rescue Exception => e
+          puts e.backtrace.join( "\n" )
           emit data_error( index, variant, e.message )
           false
         end

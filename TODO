@@ -47,6 +47,11 @@ alter table entries alter column id set default nextval('entries_id_seq');
 update entries set module = null where module = '';
 update entries set module = 'admin' where module = 'Admin';
 
+alter table projects rename active to old_active;
+alter table projects add column active boolean;
+update projects set active = ( old_active = 1 );
+alter table projects drop column old_active;
+
 Done
 ----
 17 16 instead of 17:16

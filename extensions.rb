@@ -3,8 +3,13 @@
 class Object
   def to_variant
     begin
-      Qt::Variant.new( self )
+      #~ unless frozen?
+        @variant ||= Qt::Variant.new( self )
+      #~ else
+        #~ Qt::Variant.new( self )
+      #~ end
     rescue Exception => e
+      puts e.backtrace.join( "\n" )
       puts "error converting #{self.inspect} to variant: #{e.message}"
       nil.to_variant
     end
@@ -13,12 +18,7 @@ end
 
 class Date
   def to_variant
-    begin
-      Qt::Variant.new( self.to_s )
-    rescue Exception => e
-      puts "error converting #{self.inspect} to variant: #{e.message}"
-      nil.to_variant
-    end
+    self.to_s.to_variant
   end
 end
 
@@ -54,12 +54,11 @@ module Qt
     # the value to be displayed in the gui for this index
     def gui_value
       item = model.collection[row]
-      attributes = model.columns[column].split( /\./ )
-      attributes.inject( item ) do |value, att|
+      model.attribute_paths[column].inject( item ) do |value, att|
         if value.nil?
           nil
         else
-          value.send( att.to_sym )
+          value.send( att )
         end
       end
     end
@@ -99,14 +98,15 @@ module Qt
       model.columns[column]
     end
     
-    # the ActiveRecord column_for_attribute
+    # returns the ActiveRecord column_for_attribute
     def metadata
-      entity.column_for_attribute( attribute )
+      # use the optimised version
+      model.metadata( column )
     end
     
     # the underlying entity
     def entity
-      model.collection[row]
+      @entity ||= model.collection[row]
     end
     
   end

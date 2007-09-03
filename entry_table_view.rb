@@ -4,6 +4,10 @@ class EntryTableView < Qt::TableView
   def initialize( *args )
     super
     horizontal_header.movable = true
+    sorting_enabled = true
+    resize_columns_to_contents
+    # turn off "Object#type deprecated" messages
+    $VERBOSE=nil
   end
   
   def relational_delegate( attribute, options )
@@ -134,6 +138,7 @@ class EntryTableView < Qt::TableView
       end
       super
     rescue Exception => e
+      puts e.backtrace.join( "\n" )
       error_message = Qt::ErrorMessage.new( self )
       error_message.show_message( "Error in #{current_index.attribute.to_s}: \"#{e.message}\"" )
       error_message.show
