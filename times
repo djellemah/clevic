@@ -40,22 +40,23 @@ end
 app = Qt::Application.new( ARGV )
 
 table = EntryTableView.new( Entry ).create_model do |t|
-  t.plain :date, :sample => '28-Dec-08'
-  t.relational :invoice, 'invoice_number', :sample => 'WWW000', :conditions => "status = 'not sent'", :order => 'invoice_number'
-  t.relational :project, 'project', :sample => 'Some Project', :conditions => 'active = true', :order => 'lower(project)'
-  t.plain :start, :sample => '00:00'
-  t.plain :end, :sample => '00:00'
-  t.plain :description, :sample => 'This is a long string designed to hold lots of data and description'
-  t.relational :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting'
-  t.distinct :module, :sample => 'Doing Stuff'
-  t.plain :charge, :sample => 'Charge'
-  t.distinct :person, :sample => 'Leilani'
+  t.plain       :date, :sample => '28-Dec-08'
+  t.relational  :invoice, 'invoice_number', :sample => 'WWW000', :conditions => "status = 'not sent'", :order => 'invoice_number'
+  t.relational  :project, 'project', :sample => 'Some Project', :conditions => 'active = true', :order => 'lower(project)'
+  t.plain       :start, :sample => '00:00'
+  t.plain       :end, :sample => '00:00'
+  t.plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
+  t.relational  :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting'
+  t.distinct    :module, :sample => 'Doing Stuff'
+  t.plain       :charge, :sample => 'Charge'
+  t.distinct    :person, :sample => 'Leilani'
   
   t.collection = Entry.find( :all, :order => 'date, start, id' )
 end
 
-table.showMaximized
-#~ table.show
+table.minimum_width = 600
+table.show
+#~ table.show_maximized
 
 begin
   app.exec

@@ -120,19 +120,6 @@ class EntryTableModel < Qt::AbstractTableModel
     columns.size
   end
   
-  def headerData( section, orientation, role = Qt::DisplayRole )
-    return Qt::Variant.invalid unless role == Qt::DisplayRole
-    v = case orientation
-      when Qt::Horizontal
-        @labels[section]
-      when Qt::Vertical
-        collection[section].id
-      else
-        raise "unknown orientation: #{orientation}"
-    end
-    return v.to_variant
-  end
-
   def flags( model_index )
     retval = Qt::ItemIsEditable | super( model_index )
     if model_index.metadata.type == :boolean
@@ -154,11 +141,39 @@ class EntryTableModel < Qt::AbstractTableModel
     @qt_checkstate_role ||= Qt::CheckStateRole
   end
   
+  def qt_text_alignment_role
+    @qt_text_alignment_role ||= Qt::TextAlignmentRole
+  end
+  
+  # values for horizontal and vertical headers
+  def headerData( section, orientation, role )
+    value = 
+    case role
+      when qt_display_role
+        case orientation
+          when Qt::Horizontal
+            @labels[section]
+          when Qt::Vertical
+            collection[section].id
+        end
+        
+      when qt_text_alignment_role
+        case orientation
+          when Qt::Vertical
+            Qt::AlignRight | Qt::AlignVCenter
+        end
+        
+    end
+      
+    return value.to_variant
+  end
+
   # send data to UI
   def data( index, role = Qt::DisplayRole )
     begin
       return Qt::Variant.invalid if index.entity.nil?
-
+      
+      value = nil
       case
       when role == qt_display_role || role == qt_edit_role
         #~ raise "invalid column #{index.column}" if ( index.column < 0 || index.column >= columns.size )
@@ -174,15 +189,25 @@ class EntryTableModel < Qt::AbstractTableModel
           value = value.strftime( '%d-%h-%y' ) if field_name == 'date'
           value = "%.2f" % value if field_name == 'amount'
         end
+        
       when role == qt_checkstate_role
         if index.metadata.type == :boolean
           return ( index.gui_value ? Qt::Checked : Qt::Unchecked ).to_variant
         end
         
-      else
-        value = nil
+      when role == qt_text_alignment_role
+        value = 
+        case index.metadata.type
+          when :decimal
+            Qt::AlignRight
+          when :integer
+            Qt::AlignRight
+          when :boolean
+            Qt::AlignCenter
+        end
+        
       end
-    
+      
       value.to_variant
     rescue Exception => e
       puts e.backtrace.join( "\n" )

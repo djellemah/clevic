@@ -10,20 +10,21 @@ require 'accounts_models.rb'
 app = Qt::Application.new( ARGV )
 
 table = EntryTableView.new( Entry ).create_model do |t|
-  t.plain :date, :sample => '28-Dec-08'
-  t.distinct :description, :sample => '12345678901234567890123456'
-  t.relational :debit, 'name', :sample => 'Leilani Member Loan', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
-  t.relational :credit, 'name', :sample => 'Leilani Member Loan', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
-  t.plain :amount, :sample => '100000.00'
-  t.plain :cheque_number, :sample => '0000'
-  t.plain :active, :sample => 'Active'
-  t.plain :vat, :sample => 'VAT', :label => 'VAT'
+  t.plain       :date, :sample => '28-Dec-08'
+  t.distinct    :description, :sample => '12345678901234567890123456'
+  t.relational  :debit, 'name', :sample => 'Leilani Member Loan', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+  t.relational  :credit, 'name', :sample => 'Leilani Member Loan', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+  t.plain       :amount, :sample => '100000.00'
+  t.plain       :cheque_number, :sample => '0000'
+  t.plain       :active, :sample => 'Active'
+  t.plain       :vat, :sample => 'VAT', :label => 'VAT'
   
   t.collection = Entry.find( :all, :order => 'date, id' )
 end
 
-table.showMaximized
 table.minimum_width = 600
+table.show
+#~ table.show_maximized
 
 begin
   app.exec
