@@ -23,8 +23,8 @@ table.model = EntryTableModel.new(
 )
 
 # fetch list from related tables
-table.relational_delegate( :debit, :class_name => 'Account', :order => 'lower(name)' )
-table.relational_delegate( :credit, :class_name => 'Account', :order => 'lower(name)' )
+table.relational_delegate( :debit, :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)' )
+table.relational_delegate( :credit, :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)' )
 
 # fetch list from column
 table.delegate( :description, DistinctDelegate )

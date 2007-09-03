@@ -61,6 +61,11 @@ class ComboDelegate < Qt::ItemDelegate
 		end
   end
   
+  # open the combo box, just like if f4 was pressed
+  def open
+    @editor.show_popup
+  end
+  
   # descendants should override this to fill the combo box
   # list with values
   def populate( editor, model_index )
@@ -78,21 +83,21 @@ class ComboDelegate < Qt::ItemDelegate
     @current_index = model_index
     @old_value = model_index.attribute_value
     
-    editor = Qt::ComboBox.new( parent )
+    @editor = Qt::ComboBox.new( parent )
     
     # subclasses fill in the rest of the entries
-    populate( editor, model_index )
+    populate( @editor, model_index )
     
     # create a nil entry
-    if ( editor.find_data( nil.to_variant ) == -1 )
-      editor.add_item( '', nil.to_variant )
+    if ( @editor.find_data( nil.to_variant ) == -1 )
+      @editor.add_item( '', nil.to_variant )
     end
     
     # allow prefix matching from the keyboard
-    editor.editable = true
-    #~ editor.completer.model_sorting = Qt::Completer::CaseInsensitivelySortedModel
+    @editor.editable = true
+    #~ @editor.completer.model_sorting = Qt::Completer::CaseInsensitivelySortedModel
     
-    editor
+    @editor
   end
   
   # make sure tab and backtab save data

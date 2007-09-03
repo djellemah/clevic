@@ -133,6 +133,12 @@ class EntryTableView < Qt::TableView
           return
         end
         
+      # f4 should open editor immediately
+      when event.f4?
+        edit( current_index, Qt::AbstractItemView::AllEditTriggers, event )
+        delegate = item_delegate( current_index )
+        delegate.open
+        
       else
         #~ puts event.inspect
       end
