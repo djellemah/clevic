@@ -133,8 +133,8 @@ end
 # and allow new values to be entered
 class DistinctDelegate < ComboDelegate
   
-  def initialize( parent, attribute, options )
-    @ar_model = parent.model.collection[0].class
+  def initialize( parent, attribute, model_class, options )
+    @ar_model = model_class
     @attribute = attribute
     @options = options
     super( parent )
@@ -193,11 +193,12 @@ end
 class RelationalDelegate < ComboDelegate
 
   def initialize( parent, attribute_path, options )
-    attributes = attribute_path.split(/\./)
-    @model_class = ( options[:class_name] || attributes[0].classify ).constantize
-    @attribute_path = attributes[1..-1].join('.')
+    @model_class = ( options[:class_name] || attribute_path[0].to_s.classify ).constantize
+    @attribute_path = attribute_path[1..-1].join('.')
     @options = options.clone
     @options.delete :class_name
+    @options.delete :sample
+    @options.delete :format
     super( parent )
   end
   

@@ -1,19 +1,27 @@
+require 'entry_builder.rb'
+
 # The view class, implementing neat shortcuts and other pleasantness
 class EntryTableView < Qt::TableView
+  attr_reader :model_class
   
-  def initialize( *args )
-    super
+  def initialize( model_class, *args )
+    @model_class = model_class
+    super()
     horizontal_header.movable = true
     sorting_enabled = true
     # turn off "Object#type deprecated" messages
     $VERBOSE=nil
   end
   
-  def auto_size_column( attribute, sample = nil )
+  def auto_size_attribute( attribute, sample )
     col = model.attributes.index( attribute )
     self.set_column_width( col, column_size( col, sample ).width )
   end
   
+  def auto_size_column( col, sample )
+    self.set_column_width( col, column_size( col, sample ).width )
+  end
+
   # mostly copied from qheaderview.cpp:2301
   def column_size( col, data )
     opt = Qt::StyleOptionHeader.new
@@ -36,6 +44,13 @@ class EntryTableView < Qt::TableView
     size = Qt::Size.new( 100, 30 )
     # final parameter could be header section
     style.sizeFromContents( Qt::Style::CT_HeaderSection, opt, size );
+  end
+  
+  def create_model( &block )
+    @builder = EntryBuilder.new( self )
+    yield( @builder )
+    @builder.build
+    self
   end
   
   def relational_delegate( attribute, options )
@@ -75,6 +90,7 @@ class EntryTableView < Qt::TableView
   def setModel( model )
     super
     fix_row_padding( 0 .. model.collection.size - 1 )
+    
     model.connect( SIGNAL( 'data_error(QModelIndex, QVariant, QString)' ) ) do |index,variant,msg|
       error_message = Qt::ErrorMessage.new( self )
       error_message.show_message( "Incorrect value '#{variant.value}' entered for field [#{index.attribute.to_s}].\nMessage was: #{msg}" )
@@ -86,7 +102,15 @@ class EntryTableView < Qt::TableView
   # setModel otherwise
   def model=( model )
     setModel( model )
-    #~ resize_columns_to_contents
+    resize
+  end
+  
+  # resize all fields based on heuristics rather
+  # than iterating through the entire data model
+  def resize
+    @builder.fields.each_with_index do |field, index|
+      auto_size_column( index, field.sample )
+    end
   end
   
   def keyPressEvent( event )

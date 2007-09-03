@@ -19,7 +19,6 @@ ActiveRecord::Base.establish_connection({
 })
 
 class Entry < ActiveRecord::Base
-  # Actually, it isn't this that's causing the currval error
   include ActiveRecord::Dirty
   belongs_to :invoice
   belongs_to :activity
@@ -38,30 +37,22 @@ class Invoice < ActiveRecord::Base
   has_many :entries
 end
 
-# last 100 entries in table
-entries = Entry.find(
-  :all,
-  :order => 'id desc'
-  #~ :limit => 100
-)
-entries.reverse!
-
 app = Qt::Application.new( ARGV )
 
-table = EntryTableView.new
-table.model = EntryTableModel.new(
-  entries,
-  %w{date invoice.invoice_number project.project start end description activity.activity module charge person}
-)
-
-# fetch list from related tables
-table.relational_delegate( :invoice, :conditions => "status = 'not sent'", :order => 'invoice_number' )
-table.relational_delegate( :project, :conditions => "active = true", :order => 'lower(project)' )
-table.relational_delegate( :activity, :order => 'lower(activity)' )
-
-# fetch list from column
-table.delegate( :person, DistinctDelegate )
-table.delegate( :module, DistinctDelegate )
+table = EntryTableView.new( Entry ).create_model do |t|
+  t.plain :date, :sample => '28-Dec-08'
+  t.relational :invoice, 'invoice_number', :sample => 'WWW000', :conditions => "status = 'not sent'", :order => 'invoice_number'
+  t.relational :project, 'project', :sample => 'Some Project', :conditions => 'active = true', :order => 'lower(project)'
+  t.plain :start, :sample => '00:00'
+  t.plain :end, :sample => '00:00'
+  t.plain :description, :sample => 'This is a long string designed to hold lots of data and description'
+  t.relational :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting'
+  t.distinct :module, :sample => 'Doing Stuff'
+  t.plain :charge, :sample => 'Charge'
+  t.distinct :person, :sample => 'Leilani'
+  
+  t.collection = Entry.find( :all, :order => 'date, start, id' )
+end
 
 table.showMaximized
 #~ table.show

@@ -7,46 +7,23 @@ require 'entry_table_view.rb'
 
 require 'accounts_models.rb'
 
-# last 100 entries in table
-entries = Entry.find(
-  :all,
-  :order => 'id desc'
-)
-entries.reverse!
-
 app = Qt::Application.new( ARGV )
 
-table = EntryTableView.new
-table.model = EntryTableModel.new(
-  entries,
-  %w{date description debit.name credit.name amount cheque_number active vat}
-)
-
-# fetch list from related tables
-table.relational_delegate( :debit, :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)' )
-table.relational_delegate( :credit, :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)' )
-
-# fetch list from column
-table.delegate( :description, DistinctDelegate )
+table = EntryTableView.new( Entry ).create_model do |t|
+  t.plain :date, :sample => '28-Dec-08'
+  t.distinct :description, :sample => '12345678901234567890123456'
+  t.relational :debit, 'name', :sample => 'Leilani Member Loan', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+  t.relational :credit, 'name', :sample => 'Leilani Member Loan', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+  t.plain :amount, :sample => '100000.00'
+  t.plain :cheque_number, :sample => '0000'
+  t.plain :active, :sample => 'Active'
+  t.plain :vat, :sample => 'VAT', :label => 'VAT'
+  
+  t.collection = Entry.find( :all, :order => 'date, id' )
+end
 
 table.showMaximized
 table.minimum_width = 600
-
-table.auto_size_column( :date, '28-Dec-08' )
-table.auto_size_column( :description, '12345678901234567890123456' )
-table.auto_size_column( :debit, 'Leilani Member Loan' )
-table.auto_size_column( :credit, 'Leilani Member Loan' )
-table.auto_size_column( :amount, '100000.00' )
-table.auto_size_column( :cheque_number, '0000' )
-table.auto_size_column( :active, 'Active' )
-table.auto_size_column( :vat, 'VAT' )
-
-#~ table.create_model do |t|
-  #~ t.plain :date, :sample => '28-Dec-08'
-  #~ t.distinct :description, :sample => '12345678901234567890123456'
-  #~ t.plain :
-  #~ t.relational :debit, :sample => 'Leilani Member Loan', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
-#~ end
 
 begin
   app.exec

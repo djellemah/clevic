@@ -12,11 +12,9 @@ ActiveRecord::Base.establish_connection({
 })
 
 class Entry < ActiveRecord::Base
-  # Actually, it isn't this that's causing the currval error
   include ActiveRecord::Dirty
   belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
-  belongs_to :project
 end
 
 class Account < ActiveRecord::Base

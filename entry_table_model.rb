@@ -26,27 +26,33 @@ require 'extensions.rb'
 =end
 class EntryTableModel < Qt::AbstractTableModel
   
-  attr_accessor :collection, :columns, :attributes, :attribute_paths
+  attr_accessor :collection, :columns, :attributes, :attribute_paths, :labels
+
   # the index where the error occurred, the incoming value, and the error message
   signals 'data_error(QModelIndex, QVariant, QString)'
 
-  def initialize( collection, columns = nil )
+  def initialize( collection = nil, columns = nil )
     super()
-    @collection = collection
-    if columns
-      if columns.kind_of? Hash
-        @columns = columns.keys
-        @labels = columns.values
-      else
-        @columns = columns
-      end
-    else
-      @columns = build_columns([], @collection.first.attributes)
-    end
-    @labels ||= @columns.collect { |k| k.split( /\./ )[0].humanize }
-    @attributes = @columns.collect { |k| k.split( /\./ )[0].to_sym }
-    @attribute_paths = @columns.collect { |k| k.split( /\./ ) }
     @metadatas = []
+    
+    if collection.class == EntryBuilder
+      @builder = collection
+    elsif collection
+      @collection = collection
+      if columns
+        if columns.kind_of? Hash
+          @columns = columns.keys
+          @labels = columns.values
+        else
+          @columns = columns
+        end
+      else
+        @columns = build_columns([], @collection.first.attributes)
+      end
+      @labels ||= @columns.collect { |k| k.split( /\./ )[0].humanize }
+      @attributes = @columns.collect { |k| k.split( /\./ )[0].to_sym }
+      @attribute_paths = @columns.collect { |k| k.split( /\./ ) }
+    end
   end
   
   def build_columns( columns, attrs, prefix="" )
