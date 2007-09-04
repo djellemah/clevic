@@ -242,8 +242,15 @@ class EntryTableModel < Qt::AbstractTableModel
             # TODO need to be cleverer about which year to use
             # for when you're entering 16dec and you're in the next
             # year
-            when type == :date && value =~ %r{^(\d{2})[ /-]?(\w{3})$}
+            when type == :date && value =~ %r{^(\d{1,2})[ /-]?(\w{3})$}
               value = Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
+            
+            # if a digit only is entered, fetch month and year from
+            # previous row
+            when type == :date && value =~ %r{^(\d{1,2})$}
+              previous_entity = collection[index.row - 1]
+              # year,month,day
+              value = Date.new( previous_entity.date.year, previous_entity.date.month, $1.to_i )
             
             # this one is mostly to fix date strings that have come
             # out of the db and been formatted
