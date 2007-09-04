@@ -33,7 +33,7 @@ class EntryTableView < Qt::TableView
   # mostly copied from qheaderview.cpp:2301
   def column_size( col, data )
     opt = Qt::StyleOptionHeader.new
-    #~ initStyleOption(&opt);
+    #~ initStyleOption( opt )
     
     # fetch font size
     fnt = font

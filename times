@@ -37,7 +37,7 @@ end
 
 app = Qt::Application.new( ARGV )
 
-table = EntryTableView.new( Entry ).create_model do |t|
+entries = EntryTableView.new( Entry ).create_model do |t|
   t.plain       :date, :sample => '28-Dec-08'
   t.relational  :invoice, 'invoice_number', :sample => 'WWW000', :conditions => "status = 'not sent'", :order => 'invoice_number'
   t.relational  :project, 'project', :sample => 'Some Project', :conditions => 'active = true', :order => 'lower(project)'
@@ -52,24 +52,24 @@ table = EntryTableView.new( Entry ).create_model do |t|
   t.collection = Entry.find( :all, :order => 'date, start, id' )
 end
 
-table.minimum_width = 600
-table.show
+entries.minimum_width = 600
+entries.show
 #~ table.show_maximized
 
-invoices = EntryTableView.new( Invoice ).create_model do |t|
-  t.plain :date
-  t.plain :client
-  t.plain :invoice_number
-  t.distinct :status
-  t.plain :billing
-  t.plain :quote_date
-  t.plain :quote_amount
-  t.plain :description
+#~ invoices = EntryTableView.new( Invoice ).create_model do |t|
+  #~ t.plain :date
+  #~ t.plain :client
+  #~ t.plain :invoice_number
+  #~ t.distinct :status
+  #~ t.plain :billing
+  #~ t.plain :quote_date
+  #~ t.plain :quote_amount
+  #~ t.plain :description
   
-  t.collection = Invoice.find( :all, :order => 'invoice_number' )
-end
+  #~ t.collection = Invoice.find( :all, :order => 'invoice_number' )
+#~ end
 
-invoices.show
+#~ invoices.show
 
 begin
   app.exec

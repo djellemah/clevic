@@ -4,9 +4,10 @@ require 'active_record'
 require 'active_record/dirty.rb'
 
 # connect to the database
+puts "using live database"
 ActiveRecord::Base.establish_connection({
   :adapter  => 'postgresql',
-  :database => 'racc',
+  :database => 'accounts',
   :username => 'panic',
   :password => ''
 })
