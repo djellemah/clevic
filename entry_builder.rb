@@ -1,4 +1,4 @@
-require 'pp'
+require 'entry_table_model.rb'
 require 'delegates.rb'
 
 class EntryField
@@ -6,7 +6,6 @@ class EntryField
   
   def initialize( attribute, options )
     @attribute = attribute
-    pp options
     options.each do |key,value|
       self.send( "#{key}=", value ) if respond_to?( key )
     end
@@ -38,17 +37,17 @@ class EntryBuilder
     @active_record_options = [ :conditions, :class_name, :order ]
   end
 
-  def plain( attribute, options )
+  def plain( attribute, options = {} )
     @fields << EntryField.new( attribute.to_sym, remove_finder_options( options ) )
   end
   
-  def distinct( attribute, options )
+  def distinct( attribute, options = {} )
     field = EntryField.new( attribute.to_sym, remove_finder_options( options ) )
     field.delegate = DistinctDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
     @fields << field
   end
 
-  def relational( attribute, path, options )
+  def relational( attribute, path, options = {} )
     field = EntryField.new( attribute.to_sym, remove_finder_options( options ) )
     field.path = path
     field.delegate = RelationalDelegate.new( @entry_table_view, field.attribute_path, options )

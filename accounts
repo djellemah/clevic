@@ -1,10 +1,6 @@
 #! /usr/bin/ruby
 
-require 'Qt4'
-require 'entry_table_model.rb'
-require 'delegates.rb'
 require 'entry_table_view.rb'
-
 require 'accounts_models.rb'
 
 app = Qt::Application.new( ARGV )

@@ -1,3 +1,4 @@
+require 'Qt4'
 require 'entry_builder.rb'
 
 # The view class, implementing neat shortcuts and other pleasantness
@@ -11,6 +12,13 @@ class EntryTableView < Qt::TableView
     sorting_enabled = true
     # turn off "Object#type deprecated" messages
     $VERBOSE=nil
+  end
+  
+  def create_model( &block )
+    @builder = EntryBuilder.new( self )
+    yield( @builder )
+    @builder.build
+    self
   end
   
   def auto_size_attribute( attribute, sample )
@@ -44,13 +52,6 @@ class EntryTableView < Qt::TableView
     size = Qt::Size.new( 100, 30 )
     # final parameter could be header section
     style.sizeFromContents( Qt::Style::CT_HeaderSection, opt, size );
-  end
-  
-  def create_model( &block )
-    @builder = EntryBuilder.new( self )
-    yield( @builder )
-    @builder.build
-    self
   end
   
   def relational_delegate( attribute, options )
@@ -109,7 +110,7 @@ class EntryTableView < Qt::TableView
   # than iterating through the entire data model
   def resize
     @builder.fields.each_with_index do |field, index|
-      auto_size_column( index, field.sample )
+      auto_size_column( index, field.sample ) unless field.sample.nil?
     end
   end
   

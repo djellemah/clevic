@@ -6,11 +6,11 @@ require 'bigdecimal'
 class Object
   def to_variant
     begin
-      #~ unless frozen?
+      unless frozen?
         @variant ||= Qt::Variant.new( self )
-      #~ else
-        #~ Qt::Variant.new( self )
-      #~ end
+      else
+        Qt::Variant.new( self )
+      end
     rescue Exception => e
       puts e.backtrace.join( "\n" )
       puts "error converting #{self.inspect} to variant: #{e.message}"

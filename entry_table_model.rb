@@ -169,7 +169,7 @@ class EntryTableModel < Qt::AbstractTableModel
   end
 
   # send data to UI
-  def data( index, role = Qt::DisplayRole )
+  def data( index, role = qt_display_role )
     begin
       return Qt::Variant.invalid if index.entity.nil?
       

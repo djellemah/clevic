@@ -1,8 +1,5 @@
 #! /usr/bin/ruby
 
-require 'Qt4'
-require 'entry_table_model.rb'
-require 'delegates.rb'
 require 'entry_table_view.rb'
 
 # require AR
@@ -34,6 +31,7 @@ class Activity < ActiveRecord::Base
 end
 
 class Invoice < ActiveRecord::Base
+  include ActiveRecord::Dirty
   has_many :entries
 end
 
@@ -57,6 +55,21 @@ end
 table.minimum_width = 600
 table.show
 #~ table.show_maximized
+
+invoices = EntryTableView.new( Invoice ).create_model do |t|
+  t.plain :date
+  t.plain :client
+  t.plain :invoice_number
+  t.distinct :status
+  t.plain :billing
+  t.plain :quote_date
+  t.plain :quote_amount
+  t.plain :description
+  
+  t.collection = Invoice.find( :all, :order => 'invoice_number' )
+end
+
+invoices.show
 
 begin
   app.exec
