@@ -1,5 +1,6 @@
 require 'Qt4'
 require 'entry_builder.rb'
+require 'fastercsv'
 
 # The view class, implementing neat shortcuts and other pleasantness
 class EntryTableView < Qt::TableView
@@ -114,6 +115,22 @@ class EntryTableView < Qt::TableView
     end
   end
   
+  def paste_to_index( top_left_index, csv_arr )
+    csv_arr.each_with_index do |row,row_index|
+      row.each_with_index do |field, field_index|
+        cell_index = model.create_index( top_left_index.row + row_index, top_left_index.column + field_index )
+        model.setData( cell_index, field.to_variant, Qt::PasteRole )
+      end
+      # save records to db
+      model.save( model.create_index( top_left_index.row + row_index, 0 ) )
+    end
+    
+    # make the gui refresh
+    bottom_right_index = model.create_index( top_left_index.row + csv_arr.size, top_left_index.column + csv_arr[0].size )
+    emit model.dataChanged( top_left_index, bottom_right_index )
+    emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
+  end
+  
   def keyPressEvent( event )
     # for some reason, trying to call another method inside
     # the being .. rescue block throws a superclass method not
@@ -193,12 +210,54 @@ class EntryTableView < Qt::TableView
         delegate = item_delegate( current_index )
         delegate.open
         
+      # copy currently selected data in csv format
+      when event.ctrl? && event.c?
+        text = String.new
+        selection_model.selection.each do |selection_range|
+          (selection_range.top..selection_range.bottom).each do |row|
+            row_ary = Array.new
+            selection_model.selected_indexes.each do |index|
+              row_ary << index.gui_value if index.row == row
+            end
+            text << row_ary.to_csv
+          end
+        end
+        Qt::Application::clipboard.text = text
+        return true
+        
+      when event.ctrl? && event.v?
+        text = Qt::Application::clipboard.text
+        arr = FasterCSV.parse( text )
+        
+        return true if selection_model.selection.size != 1
+        
+        selection_range = selection_model.selection[0]
+        selected_index = selection_model.selected_indexes[0]
+        
+        if selection_range.single_cell?
+          # only one cell selected, so paste like a spreadsheet
+          if text.empty?
+            # just clear the current selection
+            model.setData( selected_index, nil.to_variant )
+          else
+            paste_to_index( selected_index, arr )
+          end
+        else
+          return true if selection_range.height != arr.size
+          return true if selection_range.width != arr[0].size
+          
+          # size is the same, so do the paste
+          paste_to_index( selected_index, arr )
+        end
+        return true
+        
       else
         #~ puts event.inspect
       end
       super
     rescue Exception => e
       puts e.backtrace.join( "\n" )
+      puts e.message
       error_message = Qt::ErrorMessage.new( self )
       error_message.show_message( "Error in #{current_index.attribute.to_s}: \"#{e.message}\"" )
       error_message.show
@@ -208,7 +267,6 @@ class EntryTableView < Qt::TableView
   # save record whenever its row is exited
   def currentChanged( current_index, previous_index )
     if current_index.row != previous_index.row
-      #~ set_current_index( previous_index ) unless
       saved = model.save( previous_index )
       if !saved
         error_message = Qt::ErrorMessage.new( self )

@@ -121,9 +121,9 @@ class ComboDelegate < Qt::ItemDelegate
     vertical_header_rect = parent.vertical_header.rect
     rect.translate( vertical_header_rect.width + 1, horizontal_header_rect.height + 1 )
     
-    # ask the editor for how much space it wants
+    # ask the editor for how much space it wants, and set the editor
+    # to that size when it displays in the table
     rect.set_width( editor.size_hint.width )
-    
     editor.set_geometry( rect )
   end
 

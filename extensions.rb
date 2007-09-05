@@ -31,9 +31,26 @@ class BigDecimal
   end
 end
 
+module ActiveRecord
+  class Base
+    # recursively calls each entry in path_ary
+    def evaluate_path( path_ary )
+      path_ary.inject( self ) do |value, att|
+        if value.nil?
+          nil
+        else
+          value.send( att )
+        end
+      end
+    end
+  end
+end
+
 # convenience methods
 module Qt
 
+  PasteRole = UserRole + 1
+  
   class CheckBox
     def value
       checkState == Qt::Checked
@@ -51,6 +68,30 @@ module Qt
     end
   end
   
+  class ItemSelection
+    include Enumerable
+    
+    def each( &block )
+      index = 0
+      max = self.count
+      while index < max
+        yield( self.at( index ) )
+        index += 1
+      end
+    end
+    
+    def size
+      self.count
+    end
+    
+  end
+  
+  class ItemSelectionRange 
+    def single_cell?
+      self.top == self.bottom && self.left == self.right
+    end
+  end
+  
   # This provides a bunch of methods to get easy access to the entity
   # and it's values directly from the index without having to keep
   # asking the model and jumping through other unncessary hoops
@@ -62,20 +103,14 @@ module Qt
     
     # the value to be displayed in the gui for this index
     def gui_value
-      item = model.collection[row]
-      model.attribute_paths[column].inject( item ) do |value, att|
-        if value.nil?
-          nil
-        else
-          value.send( att )
-        end
-      end
+      entity.evaluate_path( attribute_path )
     end
     
     # set the value returned from the gui, as whatever the underlying
     # entity wants it to be
+    # TODO this will break for more than 2 objects in a path
     def gui_value=( obj )
-      model.collection[row].send( "#{model.columns[column]}=", obj )
+      model.collection[row].send( "#{model.dots[column]}=", obj )
     end
     
     def inspect
@@ -103,10 +138,14 @@ module Qt
     end
     
     # the dotted attribute path, same as a 'column' in the model
-    def attribute_path
-      model.columns[column]
+    def dotted_path
+      model.dots[column]
     end
     
+    def attribute_path
+      model.attribute_paths[column]
+    end
+
     # returns the ActiveRecord column_for_attribute
     def metadata
       # use the optimised version
@@ -116,6 +155,15 @@ module Qt
     # the underlying entity
     def entity
       @entity ||= model.collection[row]
+    end
+    
+    def <=>( other )
+      row_comp = self.row <=> other.row
+      if row_comp == 0
+        self.column <=> other.column
+      else
+        row_comp
+      end
     end
     
   end

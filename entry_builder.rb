@@ -2,7 +2,7 @@ require 'entry_table_model.rb'
 require 'delegates.rb'
 
 class EntryField
-  attr_accessor :attribute, :path, :sample, :format, :label, :delegate
+  attr_accessor :attribute, :path, :sample, :format, :label, :delegate, :class_name
   
   def initialize( attribute, options )
     @attribute = attribute
@@ -38,17 +38,17 @@ class EntryBuilder
   end
 
   def plain( attribute, options = {} )
-    @fields << EntryField.new( attribute.to_sym, remove_finder_options( options ) )
+    @fields << EntryField.new( attribute.to_sym, options )
   end
   
   def distinct( attribute, options = {} )
-    field = EntryField.new( attribute.to_sym, remove_finder_options( options ) )
+    field = EntryField.new( attribute.to_sym, options )
     field.delegate = DistinctDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
     @fields << field
   end
 
   def relational( attribute, path, options = {} )
-    field = EntryField.new( attribute.to_sym, remove_finder_options( options ) )
+    field = EntryField.new( attribute.to_sym, options )
     field.path = path
     field.delegate = RelationalDelegate.new( @entry_table_view, field.attribute_path, options )
     @fields << field
@@ -63,7 +63,7 @@ class EntryBuilder
   def build
     # build the model with all it's collections
     model = EntryTableModel.new( self )
-    model.columns = @fields.map {|x| x.column }
+    model.dots = @fields.map {|x| x.column }
     model.labels = @fields.map {|x| x.label }
     model.attributes = @fields.map {|x| x.attribute }
     model.attribute_paths = @fields.map { |x| x.attribute_path }
