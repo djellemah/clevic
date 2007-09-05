@@ -7,10 +7,12 @@ require 'rubygems'
 require 'active_record'
 require 'active_record/dirty.rb'
 
+puts "using test database" if ARGV.empty?
+
 # connect to the database
 ActiveRecord::Base.establish_connection({
   :adapter  => 'postgresql',
-  :database => 'timestest',
+  :database => ARGV[0] || 'timestest',
   :username => 'panic',
   :password => ''
 })
@@ -23,10 +25,12 @@ class Entry < ActiveRecord::Base
 end
 
 class Project < ActiveRecord::Base
+  include ActiveRecord::Dirty
   has_many :entries
 end
 
 class Activity < ActiveRecord::Base
+  include ActiveRecord::Dirty
   has_many :entries
 end
 
@@ -37,39 +41,56 @@ end
 
 app = Qt::Application.new( ARGV )
 
-entries = EntryTableView.new( Entry ).create_model do |t|
-  t.plain       :date, :sample => '28-Dec-08'
-  t.relational  :invoice, 'invoice_number', :sample => 'WWW000', :conditions => "status = 'not sent'", :order => 'invoice_number'
-  t.relational  :project, 'project', :sample => 'Some Project', :conditions => 'active = true', :order => 'lower(project)'
-  t.plain       :start, :sample => '00:00'
-  t.plain       :end, :sample => '00:00'
-  t.plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
-  t.relational  :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting'
-  t.distinct    :module, :sample => 'Doing Stuff'
-  t.plain       :charge, :sample => 'Charge'
-  t.distinct    :person, :sample => 'Leilani'
-  
-  t.collection = Entry.find( :all, :order => 'date, start, id' )
+def entries
+  EntryTableView.new( Entry ).create_model do |t|
+    t.plain       :date, :sample => '28-Dec-08'
+    t.relational  :invoice, 'invoice_number', :sample => 'WWW000', :conditions => "status = 'not sent'", :order => 'invoice_number'
+    t.relational  :project, 'project', :sample => 'Some Project', :conditions => 'active = true', :order => 'lower(project)'
+    t.plain       :start, :sample => '00:00'
+    t.plain       :end, :sample => '00:00'
+    t.plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
+    t.relational  :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting'
+    t.distinct    :module, :sample => 'Doing Stuff'
+    t.plain       :charge, :sample => 'Charge'
+    t.distinct    :person, :sample => 'Leilani'
+    
+    t.collection = Entry.find( :all, :order => 'date, start, id' )
+  end
 end
 
-entries.minimum_width = 600
-entries.show
-#~ table.show_maximized
+def invoices
+  EntryTableView.new( Invoice ).create_model do |t|
+    t.plain :date
+    t.plain :client
+    t.plain :invoice_number
+    t.distinct :status
+    t.plain :billing
+    t.plain :quote_date
+    t.plain :quote_amount
+    t.plain :description
+    
+    t.collection = Invoice.find( :all, :order => 'invoice_number' )
+  end
+end
 
-#~ invoices = EntryTableView.new( Invoice ).create_model do |t|
-  #~ t.plain :date
-  #~ t.plain :client
-  #~ t.plain :invoice_number
-  #~ t.distinct :status
-  #~ t.plain :billing
-  #~ t.plain :quote_date
-  #~ t.plain :quote_amount
-  #~ t.plain :description
-  
-  #~ t.collection = Invoice.find( :all, :order => 'invoice_number' )
-#~ end
+def projects
+  EntryTableView.new( Project ).create_model do |t|
+    t.plain :project
+    t.plain :description
+    t.plain :client
+    t.plain :rate
+    t.plain :active
+    
+    t.collection = Project.find( :all, :order => 'id' )
+  end
+end
 
-#~ invoices.show
+#~ table = projects
+#~ table = invoices
+table = entries
+
+table.minimum_width = 600
+table.show
 
 begin
   app.exec
