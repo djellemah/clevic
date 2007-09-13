@@ -3,6 +3,16 @@
 require 'entry_table_view.rb'
 require 'accounts_models.rb'
 
+# connect to the database
+ActiveRecord::Base.establish_connection({
+  :adapter  => 'postgresql',
+  :database => ARGV[0] || 'accounts_test',
+  :username => 'panic',
+  :password => ''
+})
+
+puts "using database #{ActiveRecord::Base.connection.raw_connection.db}"
+
 app = Qt::Application.new( ARGV )
 
 table = EntryTableView.new( Entry ).create_model do |t|
@@ -18,7 +28,7 @@ table = EntryTableView.new( Entry ).create_model do |t|
   t.collection = Entry.find( :all, :order => 'date, id' )
 end
 
-table.minimum_width = 600
+table.minimum_width = 800
 table.show
 #~ table.show_maximized
 

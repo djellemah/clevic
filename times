@@ -7,8 +7,6 @@ require 'rubygems'
 require 'active_record'
 require 'active_record/dirty.rb'
 
-puts "using test database" if ARGV.empty?
-
 # connect to the database
 ActiveRecord::Base.establish_connection({
   :adapter  => 'postgresql',
@@ -16,6 +14,8 @@ ActiveRecord::Base.establish_connection({
   :username => 'panic',
   :password => ''
 })
+
+puts "using database #{ActiveRecord::Base.connection.raw_connection.db}"
 
 class Entry < ActiveRecord::Base
   include ActiveRecord::Dirty
