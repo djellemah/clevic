@@ -10,6 +10,7 @@ class Entry < ActiveRecord::Base
 end
 
 class Account < ActiveRecord::Base
+  include ActiveRecord::Dirty
   has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
 end
