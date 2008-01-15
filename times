@@ -10,7 +10,8 @@ require 'active_record/dirty.rb'
 # connect to the database
 ActiveRecord::Base.establish_connection({
   :adapter  => 'postgresql',
-  :database => ARGV[0] || 'timestest',
+  :database => ARGV[0] || 'times',
+  :host => ARGV[1] || 'localhost',
   :username => 'panic',
   :password => ''
 })

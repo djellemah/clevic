@@ -6,8 +6,8 @@ require 'accounts_models.rb'
 # connect to the database
 ActiveRecord::Base.establish_connection({
   :adapter  => 'postgresql',
-#  :database => ARGV[0],
   :database => ARGV[0] || 'accounts',
+  :host => ARGV[1] || 'localhost',
   :username => 'panic',
   :password => ''
 })
