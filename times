@@ -10,8 +10,8 @@ require 'active_record/dirty.rb'
 # connect to the database
 ActiveRecord::Base.establish_connection({
   :adapter  => 'postgresql',
-  :database => ARGV[0] || 'times',
-  :host => ARGV[1] || 'localhost',
+  :database => ARGV[1] || 'times',
+  :host => ARGV[2] || 'localhost',
   :username => 'panic',
   :password => ''
 })
@@ -39,6 +39,8 @@ class Invoice < ActiveRecord::Base
   include ActiveRecord::Dirty
   has_many :entries
 end
+
+table_name = ARGV[0] || 'entries'
 
 app = Qt::Application.new( ARGV )
 
@@ -86,9 +88,8 @@ def projects
   end
 end
 
-#~ table = projects
-#~ table = invoices
-table = entries
+# must be one of the preceding function calls, or the eval will fail
+table = eval( "#{table_name}()" )
 
 table.minimum_width = 600
 table.show
