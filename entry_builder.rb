@@ -27,7 +27,10 @@ class EntryField
   end
   
 end
-  
+
+=begin
+  This is similar to the Rails migrations usage.
+=end
 class EntryBuilder
   attr_reader :fields
   
@@ -62,21 +65,26 @@ class EntryBuilder
   # this builder object
   def build
     # build the model with all it's collections
-    model = EntryTableModel.new( self )
-    model.dots = @fields.map {|x| x.column }
-    model.labels = @fields.map {|x| x.label }
-    model.attributes = @fields.map {|x| x.attribute }
-    model.attribute_paths = @fields.map { |x| x.attribute_path }
+    # using @model here because otherwise the view's
+    # reference to this very same model is mysteriously
+    # set to nil
+    @model = EntryTableModel.new( self )
+    @model.dots = @fields.map {|x| x.column }
+    @model.labels = @fields.map {|x| x.label }
+    @model.attributes = @fields.map {|x| x.attribute }
+    @model.attribute_paths = @fields.map { |x| x.attribute_path }
     
     # the data
-    model.collection = @collection
+    @model.collection = @collection
     
     # now set delegates
     @fields.each_with_index do |field, index|
       @entry_table_view.set_item_delegate_for_column( index, field.delegate )
     end
     
-    @entry_table_view.model = model
+    # give the built model back to the view class
+    # see above comment about @model
+    @entry_table_view.model = @model
   end
   
 protected

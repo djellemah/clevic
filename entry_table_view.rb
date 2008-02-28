@@ -6,13 +6,13 @@ require 'fastercsv'
 class EntryTableView < Qt::TableView
   attr_reader :model_class
   
-  def initialize( model_class, *args )
+  def initialize( model_class, parent, *args )
+    super( parent )
     @model_class = model_class
-    super()
     horizontal_header.movable = true
     sorting_enabled = true
     # turn off "Object#type deprecated" messages
-    $VERBOSE=nil
+    $VERBOSE = nil
   end
   
   def create_model( &block )

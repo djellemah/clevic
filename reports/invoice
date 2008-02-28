@@ -1,0 +1,52 @@
+#! /usr/bin/ruby
+
+require 'entry_table_view.rb'
+
+# require AR
+require 'rubygems'
+require 'active_record'
+require 'active_record/dirty.rb'
+require 'ruport'
+
+# connect to the database
+ActiveRecord::Base.establish_connection({
+  :adapter  => 'postgresql',
+  :database => ARGV[1] || 'times',
+  :host => ARGV[2] || 'localhost',
+  :username => 'panic',
+  :password => ''
+})
+
+puts "using database #{ActiveRecord::Base.connection.raw_connection.db}"
+
+class NiceEntry < ActiveRecord::Base
+  acts_as_reportable
+end
+
+report = NiceEntry.report_table(
+  :all,
+  :only       => %w{invoice_number project activity elapsed},
+  :conditions => "invoice_number = 'CIM013'"
+)
+
+grouping = Grouping( report, :by => "activity")
+
+grouped_by_activity = Table( %w{invoice_number project activity} )
+
+s = g.summary( :activity, :elapsed => lambda { |g| g.sigma("elapsed") } )
+                     
+grouped_by_activity.each do |name,group|
+  Grouping(group, :by => "rubygems_version").each do |vname,group|
+    rubygems_versions << { "platform"         => name, 
+                           "rubygems_version" => vname,
+                           "count"            => group.length }
+  end
+end
+
+sorted_table = rubygems_versions.sort_rows_by("count", :order => :descending)
+g = Grouping(sorted_table, :by => "platform")
+
+send_data g.to_pdf,
+  :type         => "application/pdf",
+  :disposition  => "inline",
+  :filename     => "report.pdf" 

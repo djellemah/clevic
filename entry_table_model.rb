@@ -49,6 +49,7 @@ class EntryTableModel < Qt::AbstractTableModel
     super()
     @metadatas = []
     @builder = builder
+    puts "self: #{self.inspect}"
   end
   
   def build_dots( dots, attrs, prefix="" )

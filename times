@@ -7,17 +7,50 @@ require 'rubygems'
 require 'active_record'
 require 'active_record/dirty.rb'
 
+require 'optparse'
+
+options = {}
+oparser = OptionParser.new
+oparser.on( '-h', '--host HOST', 'RDBMS host', String ) { |o| options[:host] = o }
+oparser.on( '-u', '--user USERNAME', String ) { |o| options[:user] = o }
+oparser.on( '-p', '--pass PASSWORD', String ) { |o| options[:password] = o }
+oparser.on( '-t', '--table TABLE', 'Table to display', String ) { |o| options[:table] = o }
+oparser.on( '-d', '--database DATABASE', 'Database name', String ) { |o| options[:database] = o }
+oparser.on( '-D', '-v', '--debug' ) { |o| options[:debug] = true }
+oparser.on( '-h', '-?', '--help' ) do |o|
+  puts oparser.to_s
+  exit( 0 )
+end
+
+args = oparser.parse( ARGV )
+
+if args.size > 0
+  options[:table] = args.shift
+end
+
+# Qt init. MUST come after options parsing, or Qt eats the options
+app = Qt::Application.new( args )
+
+if options[:debug]
+  puts options.inspect
+  puts args.inspect
+  exit( 0 )
+end
+
+# set up defaults
+options[:adapter]  ||= 'postgresql'
+options[:database] ||= 'times'
+options[:host] ||= 'localhost'
+options[:username] ||= 'panic'
+options[:password] ||= ''
+options[:table] ||= 'entries'
+
 # connect to the database
-ActiveRecord::Base.establish_connection({
-  :adapter  => 'postgresql',
-  :database => ARGV[1] || 'times',
-  :host => ARGV[2] || 'localhost',
-  :username => 'panic',
-  :password => ''
-})
+ActiveRecord::Base.establish_connection( options )
 
 puts "using database #{ActiveRecord::Base.connection.raw_connection.db}"
 
+# model definitions
 class Entry < ActiveRecord::Base
   include ActiveRecord::Dirty
   belongs_to :invoice
@@ -40,10 +73,6 @@ class Invoice < ActiveRecord::Base
   has_many :entries
 end
 
-table_name = ARGV[0] || 'entries'
-
-app = Qt::Application.new( ARGV )
-
 def entries
   EntryTableView.new( Entry ).create_model do |t|
     t.plain       :date, :sample => '28-Dec-08'
@@ -62,7 +91,7 @@ def entries
 end
 
 def invoices
-  EntryTableView.new( Invoice ).create_model do |t|
+  EntryTableView.new( Invoice, nil ).create_model do |t|
     t.plain :date
     t.plain :client
     t.plain :invoice_number
@@ -77,7 +106,7 @@ def invoices
 end
 
 def projects
-  EntryTableView.new( Project ).create_model do |t|
+  EntryTableView.new( Project, nil ).create_model do |t|
     t.plain :project
     t.plain :description
     t.plain :client
@@ -89,7 +118,7 @@ def projects
 end
 
 # must be one of the preceding function calls, or the eval will fail
-table = eval( "#{table_name}()" )
+table = eval( "#{options[:table]}()" )
 
 table.minimum_width = 600
 table.show
