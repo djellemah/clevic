@@ -12,9 +12,10 @@ class Browser < Qt::Widget
     self.connect( @layout.actionDump, SIGNAL('activated()'), self, SLOT('dump()') )
   end
   
+  # activated by Ctrl-D for debugging
   def dump
     widget = @layout.tables_tab.current_widget
-    puts "widget.model: #{widget.model.inspect}"
+    puts "widget.model: #{widget.model.inspect}" if widget.class == EntryTableView
   end
   
   def translate( st )
@@ -23,19 +24,18 @@ class Browser < Qt::Widget
   
   def open( file = '' )
     #~ puts "opening"
-    #~ tables_tab.clear
+    # remove the tab that designer puts in
+    @layout.tables_tab.clear
     
     #~ puts "accounts"
     accounts_tab = Tables.accounts( @layout.tables_tab )
     accounts_tab.object_name = 'accounts'
     @layout.tables_tab.add_tab( accounts_tab, translate( 'Accounts' ) )
-    puts "accounts_tab.model: #{accounts_tab.model.inspect}"
     
     #~ puts "entries"
     entries_tab = Tables.entries( @layout.tables_tab )
     entries_tab.object_name = 'entries'
     @layout.tables_tab.add_tab( entries_tab, translate( 'Entries' ) )
-    puts "entries_tab.model: #{entries_tab.model.inspect}"
     
     #~ tables_tab.corner_widget = Qt::PushButton.new
   end
