@@ -36,16 +36,9 @@ class Browser < Qt::Widget
     
     # Add all existing model objects as tabs, one each
     find_models.each do |model|
-      puts "ui for #{model.name}"
-      tab =
-      if defined?( Tables ) && Tables.respond_to?( model.table_name.to_sym )
-        puts "Tables.#{model.table_name}"
-        Tables.send( model.table_name, @layout.tables_tab )
-      elsif model.respond_to?( :ui )
-        puts "call #{model.name}.ui"
-        model.ui( @layout.tables_tab )
+      if model.respond_to?( :ui )
+        tab = model.ui( @layout.tables_tab )
       else
-        puts "oops"
         raise "Can't build ui for #{model.name}"
       end
       @layout.tables_tab.add_tab( tab, translate( model.name.humanize ) )
@@ -53,6 +46,7 @@ class Browser < Qt::Widget
   end
 end
 
+# fetch command line options
 require 'optparse'
 
 $options = {}
@@ -84,16 +78,22 @@ if $options[:debug]
 end
 
 # set up defaults
+# $options[:database] to be defined with the models
 $options[:adapter]  ||= 'postgresql'
 $options[:host] ||= 'localhost'
 $options[:username] ||= 'panic'
 $options[:password] ||= ''
 
 # connect to the database
+if !$options.has_key?( :database )
+  raise "Please define $options[:database]"
+end
+
 ActiveRecord::Base.establish_connection( $options )
 
 puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $options[:debug]
 
+# show UI
 main_window = Qt::MainWindow.new
 browser = Browser.new( main_window )
 browser.open( 'dummy' )

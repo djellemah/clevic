@@ -3,6 +3,7 @@ require 'rubygems'
 require 'active_record'
 require 'active_record/dirty.rb'
 
+$options ||= {}
 $options[:database] ||= 'accounts'
 
 class Entry < ActiveRecord::Base
