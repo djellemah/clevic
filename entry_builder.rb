@@ -69,6 +69,7 @@ class EntryBuilder
     # reference to this very same model is mysteriously
     # set to nil
     @model = EntryTableModel.new( self )
+    @model.object_name = @entry_table_view.model_class.name
     @model.dots = @fields.map {|x| x.column }
     @model.labels = @fields.map {|x| x.label }
     @model.attributes = @fields.map {|x| x.attribute }

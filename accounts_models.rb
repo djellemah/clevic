@@ -3,33 +3,14 @@ require 'rubygems'
 require 'active_record'
 require 'active_record/dirty.rb'
 
+$options[:database] ||= 'accounts'
+
 class Entry < ActiveRecord::Base
   include ActiveRecord::Dirty
   belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
-end
 
-class Account < ActiveRecord::Base
-  include ActiveRecord::Dirty
-  has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
-  has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
-end
-
-class Tables
-  def self.accounts( parent )
-    EntryTableView.new( Account, parent ).create_model do |t|
-      t.plain :name
-      t.plain :vat
-      t.plain :account_type
-      t.plain :pastel_number
-      t.plain :fringe
-      t.plain :active
-      
-      t.collection = Account.find( :all, :order => 'id' )
-    end
-  end
-
-  def self.entries( parent )
+  def self.ui( parent )
     EntryTableView.new( Entry, parent ).create_model do |t|
       t.plain       :date, :sample => '28-Dec-08'
       t.distinct    :description, :sample => '12345678901234567890123456'
@@ -41,6 +22,25 @@ class Tables
       t.plain       :vat, :sample => 'VAT', :label => 'VAT'
       
       t.collection = Entry.find( :all, :order => 'date, id' )
+    end
+  end
+end
+
+class Account < ActiveRecord::Base
+  include ActiveRecord::Dirty
+  has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
+  has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
+  
+  def self.ui( parent )
+    EntryTableView.new( Account, parent ).create_model do |t|
+      t.plain :name
+      t.plain :vat
+      t.plain :account_type
+      t.plain :pastel_number
+      t.plain :fringe
+      t.plain :active
+      
+      t.collection = Account.find( :all, :order => 'id' )
     end
   end
 end
