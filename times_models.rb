@@ -42,7 +42,7 @@ class Project < ActiveRecord::Base
       t.plain :rate
       t.plain :active
       
-      t.collection = Project.find( :all, :order => 'id' )
+      t.collection = Project.find( :all, :order => 'project' )
     end
   end
 end
@@ -55,7 +55,7 @@ class Activity < ActiveRecord::Base
     EntryTableView.new( Activity, parent ).create_model do |t|
       t.plain :activity
       
-      t.collection = Activity.find( :all, :order => 'id' )
+      t.collection = Activity.find( :all, :order => 'activity' )
     end
   end
 end

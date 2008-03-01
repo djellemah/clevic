@@ -1,3 +1,5 @@
+Ctrl-Tab
+sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 implement save on window close?, or whatever
 keyboard search by selected column, or everything if no column selected
 
@@ -13,7 +15,6 @@ filtering by various things
 highlighting by various things
 cut and paste (in model and csv format)
 paste of "common" records with different dates
-sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 
 deal with large datasets. Keep only indices and load entities as necessary.
 with some kind of cache.
@@ -61,3 +62,4 @@ completion for select distinct
 project field tab not working
 nil values for combos
 fix edit status moving from one checkbox to the next
+Tabs for various tables

@@ -41,7 +41,7 @@ class Account < ActiveRecord::Base
       t.plain :fringe
       t.plain :active
       
-      t.collection = Account.find( :all, :order => 'id' )
+      t.collection = Account.find( :all, :order => 'account_type,name' )
     end
   end
 end
