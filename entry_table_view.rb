@@ -10,6 +10,9 @@ class EntryTableView < Qt::TableView
     super( parent )
     @model_class = model_class
     horizontal_header.movable = true
+    # TODO might be useful, but need to change the shortcut ideas
+    # of next and previous rows
+    vertical_header.movable = true
     sorting_enabled = true
     # turn off "Object#type deprecated" messages
     $VERBOSE = nil

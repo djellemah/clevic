@@ -88,7 +88,7 @@ class EntryTableModel < Qt::AbstractTableModel
   def add_new_item
     # 1 new row
     begin_insert_rows( Qt::ModelIndex.invalid, row_count, row_count )
-    collection << collection[0].class.new
+    collection << model_class.new
     end_insert_rows
   end
   
@@ -187,6 +187,7 @@ class EntryTableModel < Qt::AbstractTableModel
         end
           
       when Qt::SizeHintRole
+        # anything other than nil here makes the headers disappear.
         nil
           
       #~ else
