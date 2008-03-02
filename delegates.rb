@@ -1,4 +1,3 @@
-# To emit focus out signals, because ComboBox stupidly doesn't.
 class EntryDelegate < Qt::ItemDelegate
   
   def initialize( parent, field_name, editor_class )
@@ -28,8 +27,8 @@ class EntryDelegate < Qt::ItemDelegate
   end
 end
 
+# To emit focus out signals, because ComboBox stupidly doesn't.
 class ComboDelegate < Qt::ItemDelegate
-  
   def initialize( parent )
     super( parent )
     
@@ -69,6 +68,7 @@ class ComboDelegate < Qt::ItemDelegate
   # descendants should override this to fill the combo box
   # list with values
   def populate( editor, model_index )
+    raise "subclass responsibility"
   end
   
   # This catches the event that begins the edit process.
@@ -162,6 +162,7 @@ class DistinctDelegate < ComboDelegate
     @ar_model = model_class
     @attribute = attribute
     @options = options
+    @options[:conditions] ||= 'true'
     super( parent )
   end
   
@@ -172,6 +173,7 @@ class DistinctDelegate < ComboDelegate
     rs = @ar_model.connection.execute <<-EOF
       select distinct #{@attribute.to_s}, lower(#{@attribute.to_s})
       from #{@ar_model.table_name}
+      where #{@options[:conditions]}
       order by lower(#{@attribute.to_s})
     EOF
     rs.rows.each do |row|
@@ -182,6 +184,7 @@ end
 
 # restrict the set of values in a field
 class RestrictedDelegate < ComboDelegate
+  # options must contain a :set => [ ... ]
   def initialize( parent, attribute, model_class, options )
     raise "RestrictedDelegate must have a :set in options" unless options.has_key?( :set )
     @ar_model = model_class

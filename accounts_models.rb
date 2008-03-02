@@ -14,7 +14,7 @@ class Entry < ActiveRecord::Base
   def self.ui( parent )
     EntryTableView.new( Entry, parent ).create_model do |t|
       t.plain       :date
-      t.distinct    :description
+      t.distinct    :description, :conditions => "now() - date <= '1 year'"
       t.relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
       t.relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
       t.plain       :amount

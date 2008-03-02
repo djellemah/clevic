@@ -31,13 +31,14 @@ end
 =begin
   This is similar to the Rails migrations usage.
 
-    EntryTableView.new( Entry, parent ).create_model do |t|
-      t.plain       :date, :format => '%d-%h-%y'
-      t.plain       :start, :format => '%H:%M'
-      t.plain       :amount, :format => '%.2f'
-      t.distinct    :description
-      t.relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
-      t.relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+    EntryTableView.new( Entry, parent ).create_model do |builder|
+      builder.plain       :date, :format => '%d-%h-%y'
+      builder.plain       :start, :format => '%H:%M'
+      builder.plain       :amount, :format => '%.2f'
+      builder.restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
+      builder.distinct    :description, :conditions => 'now() - date <= interval( 1 year )'
+      builder.relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+      builder.relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
     end
 =end
 class EntryBuilder
@@ -49,16 +50,19 @@ class EntryBuilder
     @active_record_options = [ :conditions, :class_name, :order ]
   end
 
+  # an ordinary field, edited in place with a text box
   def plain( attribute, options = {} )
     @fields << EntryField.new( attribute.to_sym, options )
   end
   
+  # edited with a combo box containing all previous entries in this field
   def distinct( attribute, options = {} )
     field = EntryField.new( attribute.to_sym, options )
     field.delegate = DistinctDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
     @fields << field
   end
-  
+
+  # edited with a combo box, but restricted to a specified set
   def restricted( attribute, options = {} )
     raise "restricted must have a set" unless options.has_key?( :set )
     puts "restricted: #{options[:set].inspect}"
@@ -67,13 +71,16 @@ class EntryBuilder
     @fields << field
   end
 
+  # for foreign keys. Edited with a combo box using values from the specified
+  # path on the foreign key model object
   def relational( attribute, path, options = {} )
     field = EntryField.new( attribute.to_sym, options )
     field.path = path
     field.delegate = RelationalDelegate.new( @entry_table_view, field.attribute_path, options )
     @fields << field
   end
-  
+
+  # The collection of model objects to display in a table
   def collection=( ary )
     @collection = ary
   end
