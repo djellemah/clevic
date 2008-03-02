@@ -11,13 +11,12 @@ hiding of fields
 
 project/invoice/activity editing. Means a MDI approach. See http://doc.trolltech.com/4.3/qworkspace.html
 turn on/off smart filters for relational delegates
-filtering by various things
+filtering by various things. http://doc.trolltech.com/4.3/qsortfilterproxymodel.html
 highlighting by various things
 cut and paste (in model and csv format)
 paste of "common" records with different dates
 
-deal with large datasets. Keep only indices and load entities as necessary.
-with some kind of cache.
+drop cached model objects from CacheTable when they're not in use
 
 refresh from db
 

@@ -77,21 +77,18 @@ class EntryTableView < Qt::TableView
   
   def fix_row_padding( rows = 0..model.collection.size )
     # decrease padding
+    # not necessary after setting vertical_header.default_section_size in setModel
     section_size = vertical_header.minimum_section_size
     rows.each do |row|
       vertical_header.resize_section( row, section_size )
     end
   end
   
-  def rowsInserted( parent, first, last )
-    super
-    fix_row_padding( first .. last )
-  end
-
-  # override this to allow row padding to be fixed
+  # make sure row size is correct
+  # show error messages for data
   def setModel( model )
+    vertical_header.default_section_size = vertical_header.minimum_section_size
     super
-    fix_row_padding( 0 .. model.collection.size - 1 )
     
     model.connect( SIGNAL( 'data_error(QModelIndex, QVariant, QString)' ) ) do |index,variant,msg|
       error_message = Qt::ErrorMessage.new( self )
@@ -104,12 +101,12 @@ class EntryTableView < Qt::TableView
   # setModel otherwise
   def model=( model )
     setModel( model )
-    resize
+    resize_columns
   end
   
   # resize all fields based on heuristics rather
   # than iterating through the entire data model
-  def resize
+  def resize_columns
     @builder.fields.each_with_index do |field, index|
       auto_size_column( index, field.sample ) unless field.sample.nil?
     end
@@ -133,7 +130,7 @@ class EntryTableView < Qt::TableView
   
   def keyPressEvent( event )
     # for some reason, trying to call another method inside
-    # the being .. rescue block throws a superclass method not
+    # the begin .. rescue block throws a superclass method not
     # found error. Weird.
     begin
       case

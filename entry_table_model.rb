@@ -61,6 +61,10 @@ class EntryTableModel < Qt::AbstractTableModel
     end
   end
   
+  def model_class
+    collection[0].class
+  end
+  
   # cache metadata (ActiveRecord#column_for_attribute) because it't not going
   # to change over the lifetime of the table
   # if the column is an attribute, create a ModelColumn
@@ -137,6 +141,15 @@ class EntryTableModel < Qt::AbstractTableModel
     end
     retval
   end
+  
+  def fetchMore( parent )
+    # not useful here
+  end
+  
+  def canFetchMore( parent )
+    # not useful here
+    return false
+  end
 
   # cache these because the qt binding does them slowly
   def qt_display_role
@@ -172,9 +185,15 @@ class EntryTableModel < Qt::AbstractTableModel
           when Qt::Vertical
             Qt::AlignRight | Qt::AlignVCenter
         end
-        
+          
+      when Qt::SizeHintRole
+        nil
+          
+      #~ else
+        #~ puts "headerData role for orientation #{orientation} is #{role}"
+        #~ nil
     end
-      
+    
     return value.to_variant
   end
 
@@ -232,6 +251,9 @@ class EntryTableModel < Qt::AbstractTableModel
               when :boolean; Qt::AlignCenter
             end
           end
+
+        when Qt::SizeHintRole
+          nil
       end
       
       value.to_variant

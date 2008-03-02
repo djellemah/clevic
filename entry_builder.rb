@@ -30,7 +30,9 @@ end
 
 =begin
   This is similar to the Rails migrations usage.
-
+  
+  :sample is used to size the columns
+  
     EntryTableView.new( Entry, parent ).create_model do |builder|
       builder.plain       :date, :format => '%d-%h-%y'
       builder.plain       :start, :format => '%H:%M'

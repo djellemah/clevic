@@ -103,6 +103,7 @@ module Qt
     
     # the value to be displayed in the gui for this index
     def gui_value
+      return nil if entity.nil?
       entity.evaluate_path( attribute_path )
     end
     
@@ -143,6 +144,7 @@ module Qt
     end
     
     def attribute_path
+      return nil if model.nil?
       model.attribute_paths[column]
     end
 
@@ -154,6 +156,7 @@ module Qt
     
     # the underlying entity
     def entity
+      return nil if model.nil?
       @entity ||= model.collection[row]
     end
     
