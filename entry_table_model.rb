@@ -189,7 +189,6 @@ class EntryTableModel < Qt::AbstractTableModel
         when role == qt_display_role || role == qt_edit_role
           # boolean values generally don't have text next to them in this context
           return nil.to_variant if index.metadata.type == :boolean
-          
           field_name = index.dotted_path
           #~ puts "field: #{field.inspect}"
           #~ puts "index.metadata: #{index.metadata.inspect}"

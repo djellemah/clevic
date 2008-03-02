@@ -30,8 +30,7 @@ class Browser < Qt::Widget
   end
   
   def open( file = '' )
-    #~ puts "opening"
-    # remove the tab that designer puts in
+    # remove the tab that Qt Designer puts in
     @layout.tables_tab.clear
     
     # Add all existing model objects as tabs, one each
