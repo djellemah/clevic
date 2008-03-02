@@ -2,7 +2,7 @@ require 'entry_table_model.rb'
 require 'delegates.rb'
 
 class EntryField
-  attr_accessor :attribute, :path, :sample, :format, :label, :delegate, :class_name
+  attr_accessor :attribute, :path, :sample, :format, :label, :delegate, :class_name, :alignment
   
   def initialize( attribute, options )
     @attribute = attribute
@@ -30,6 +30,15 @@ end
 
 =begin
   This is similar to the Rails migrations usage.
+
+    EntryTableView.new( Entry, parent ).create_model do |t|
+      t.plain       :date, :format => '%d-%h-%y'
+      t.plain       :start, :format => '%H:%M'
+      t.plain       :amount, :format => '%.2f'
+      t.distinct    :description
+      t.relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+      t.relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+    end
 =end
 class EntryBuilder
   attr_reader :fields
@@ -47,6 +56,14 @@ class EntryBuilder
   def distinct( attribute, options = {} )
     field = EntryField.new( attribute.to_sym, options )
     field.delegate = DistinctDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
+    @fields << field
+  end
+  
+  def restricted( attribute, options = {} )
+    raise "restricted must have a set" unless options.has_key?( :set )
+    puts "restricted: #{options[:set].inspect}"
+    field = EntryField.new( attribute.to_sym, options )
+    field.delegate = RestrictedDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
     @fields << field
   end
 

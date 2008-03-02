@@ -184,18 +184,36 @@ class EntryTableModel < Qt::AbstractTableModel
       return Qt::Variant.invalid if index.entity.nil?
       
       value = nil
+      field = @builder.fields[index.column]
       case
         when role == qt_display_role || role == qt_edit_role
           # boolean values generally don't have text next to them in this context
           return nil.to_variant if index.metadata.type == :boolean
           
           field_name = index.dotted_path
+          #~ puts "field: #{field.inspect}"
+          #~ puts "index.metadata: #{index.metadata.inspect}"
           value = index.gui_value
           # TODO formatting doesn't really belong here
+          #~ puts "index.metadata: #{index.metadata.inspect}" if field_name == 'fringe'
           if value != nil
-            value = value.strftime '%H:%M' if field_name == 'start' || field_name == 'end'
-            value = value.strftime( '%d-%h-%y' ) if field_name == 'date'
-            value = "%.2f" % value if field_name == 'amount'
+            if field.format
+              value = 
+              case index.metadata.type
+                when :time; value.strftime( field.format )
+                when :date; value.strftime( field.format )
+                else; field.format % value
+              end
+            else
+              value = 
+              case index.metadata.type
+                when :time; value.strftime( '%H:%M' )
+                when :date; value.strftime( '%d-%h-%y' )
+                when :decimal; "%.2f" % value
+                when :float; "%.2f" % value
+                else; value
+              end
+            end
           end
           
         when role == qt_checkstate_role
@@ -205,13 +223,15 @@ class EntryTableModel < Qt::AbstractTableModel
           
         when role == qt_text_alignment_role
           value = 
-          case index.metadata.type
-            when :decimal
-              Qt::AlignRight
-            when :integer
-              Qt::AlignRight
-            when :boolean
-              Qt::AlignCenter
+          if field.alignment
+            field.alignment
+          else
+            case index.metadata.type
+              when :decimal; Qt::AlignRight
+              when :integer; Qt::AlignRight
+              when :float; Qt::AlignRight
+              when :boolean; Qt::AlignCenter
+            end
           end
       end
       

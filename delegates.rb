@@ -110,7 +110,21 @@ class ComboDelegate < Qt::ItemDelegate
     super
   end
 
+  # save the value in the field, depending on what exit happened
   def close_editor( editor, hint )
+    dump_editor_state( editor )
+    
+		case hint
+      when Qt::AbstractItemDelegate::SubmitModelCache
+      if editor.completer.current_row == -1
+        @current_index.attribute_value = editor.current_text
+      else
+        @current_index.attribute_value = editor.completer.current_completion
+      end
+      
+      when Qt::AbstractItemDelegate::RevertModelCache
+        @current_index.attribute_value = @old_value
+    end
   end
 
   def updateEditorGeometry( editor, style_option_view_item, model_index )
@@ -127,6 +141,17 @@ class ComboDelegate < Qt::ItemDelegate
     editor.set_geometry( rect )
   end
 
+  # send data to the editor
+  def setEditorData( editor, model_index )
+    editor.current_index = editor.find_data( model_index.attribute_value.to_variant )
+    editor.line_edit.select_all
+  end
+  
+  # save the object in the model entity relationship
+  def setModelData( editor, abstract_item_model, model_index )
+    item_data = editor.item_data( editor.current_index )
+    model_index.attribute_value = item_data.value
+  end
 end
 
 # provide a list of all values in this field
@@ -153,36 +178,24 @@ class DistinctDelegate < ComboDelegate
       editor.add_item( row[0], row[0].to_variant )
     end
   end
-  
-  # send data to the editor
-  def setEditorData( editor, model_index )
-    editor.current_index = editor.find_data( model_index.attribute_value.to_variant )
-    editor.line_edit.select_all
+end
+
+# restrict the set of values in a field
+class RestrictedDelegate < ComboDelegate
+  def initialize( parent, attribute, model_class, options )
+    raise "RestrictedDelegate must have a :set in options" unless options.has_key?( :set )
+    @ar_model = model_class
+    @attribute = attribute
+    @options = options
+    @set = options[:set]
+    super( parent )
   end
   
-  # save the object in the model entity relationship
-  def setModelData( editor, abstract_item_model, model_index )
-    item_data = editor.item_data( editor.current_index )
-    model_index.attribute_value = item_data.value
-  end
-  
-  # save the value in the field, depending on what exit happened
-  def close_editor( editor, hint )
-    dump_editor_state( editor )
-    
-		case hint
-      when Qt::AbstractItemDelegate::SubmitModelCache
-      if editor.completer.current_row == -1
-        @current_index.attribute_value = editor.current_text
-      else
-        @current_index.attribute_value = editor.completer.current_completion
-      end
-      
-      when Qt::AbstractItemDelegate::RevertModelCache
-        @current_index.attribute_value = @old_value
+  def populate( editor, model_index )
+    @set.each do |item|
+      editor.add_item( item, item.to_variant )
     end
   end
-
 end
 
 # To edit a relation from an id and display a list of relevant entries
