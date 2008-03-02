@@ -14,14 +14,14 @@ class Entry < ActiveRecord::Base
 
   def self.ui( parent )
     EntryTableView.new( self, parent ).create_model do |t|
-      t.plain       :date
-      t.distinct    :description, :conditions => "now() - date <= '1 year'"
-      t.relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
-      t.relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+      t.plain       :date, :sample => '88-WWW-99'
+      t.distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
+      t.relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      t.relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
       t.plain       :amount, :sample => 999999.99
       t.plain       :cheque_number
-      t.plain       :active
-      t.plain       :vat, :label => 'VAT'
+      t.plain       :active, :sample => 'WW'
+      t.plain       :vat, :label => 'VAT', :sample => 'WW'
       
       #~ t.collection = self.find( :all, :order => 'date, id' )
       t.collection = CacheTable.new( self, :order => 'date, id' )
@@ -48,6 +48,8 @@ class Account < ActiveRecord::Base
     end
   end
 end
+
+$options[:models] = [ Entry, Account ]
 
 #~ class Values < ActiveRecord::Base
   #~ include ActiveRecord::Dirty

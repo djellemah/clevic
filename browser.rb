@@ -24,9 +24,13 @@ class Browser < Qt::Widget
   end
 
   def find_models
-    models = []
-    ObjectSpace.each_object( Class ) {|x| models << x if x.superclass == ActiveRecord::Base }
-    models
+    if $options[:models].nil?
+      models = []
+      ObjectSpace.each_object( Class ) {|x| models << x if x.superclass == ActiveRecord::Base }
+      models
+    else
+      $options[:models]
+    end
   end
   
   def open( file = '' )
