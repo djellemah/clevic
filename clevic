@@ -1,3 +1,5 @@
+#! /usr/bin/ruby
+
 require 'ui/browser_ui.rb'
 require 'entry_table_view.rb'
 require 'active_record'
