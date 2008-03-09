@@ -136,6 +136,13 @@ class EntryTableView < Qt::TableView
     # the begin .. rescue block throws a superclass method not
     # found error. Weird.
     begin
+      # call to model class for shortcuts
+      if model.model_class.respond_to?( :key_press_event )
+        model_result = model.model_class.key_press_event( event, current_index, self )
+        return model_result if model_result != nil
+      end
+      
+      # now do all the usual shortcuts
       case
       # on the last row, and down is pressed
       # add a new row
@@ -280,6 +287,11 @@ class EntryTableView < Qt::TableView
   
   # prevent tab pressed from editing next field
   def closeEditor( editor, end_edit_hint )
+    # pass event to model_class
+    if model.model_class.respond_to?( :close_editor )
+      model.model_class.close_editor( current_index, self, end_edit_hint )
+    end
+    
     case end_edit_hint
       when Qt::AbstractItemDelegate.EditNextItem
         super( editor, Qt::AbstractItemDelegate.NoHint )

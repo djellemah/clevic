@@ -27,6 +27,39 @@ class Entry < ActiveRecord::Base
       t.collection = CacheTable.new( self, :order => 'date, id' )
     end
   end
+  
+  #~ def self.key_press_event( event, current_index, view )
+  #~ end
+  
+  def self.close_editor( current_index, view, end_edit_hint )
+    # copy the values for the credit and debit fields
+    # from the previous similar entry
+    current_field = current_index.attribute
+    if current_field == :description
+      # most recent entry, ordered in reverse
+      similar = self.find(
+        :first,
+        :conditions => ["#{current_field} = ?", current_index.attribute_value],
+        :order => 'date desc'
+      )
+      if similar != nil
+        model = current_index.model
+        
+        # fetch the current ActiveRecord object and set the values
+        current_item = model.collection[current_index.row]
+        current_item.debit = similar.debit
+        current_item.credit = similar.credit
+        
+        # update view from top_left to bottom_right
+        top_left_index = model.create_index( current_index.row, current_index.column + 1 )
+        bottom_right_index = model.create_index( current_index.row, current_index.column + 2 )
+        view.dataChanged( top_left_index, bottom_right_index )
+        
+        # move edit cursor to amount field
+        view.set_current_index( model.create_index( current_index.row, current_index.column + 2 ) )
+      end
+    end
+  end
 end
 
 class Account < ActiveRecord::Base

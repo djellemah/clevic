@@ -74,9 +74,16 @@
     <addaction name="actionFilter" />
     <addaction name="actionSearch" />
    </widget>
+   <widget class="QMenu" name="menuModel" >
+    <property name="title" >
+     <string>&amp;Model</string>
+    </property>
+    <addaction name="action_reload" />
+   </widget>
    <addaction name="menuFile" />
    <addaction name="menuEdit" />
    <addaction name="menuSearch" />
+   <addaction name="menuModel" />
   </widget>
   <action name="actionOpen" >
    <property name="text" >
@@ -124,6 +131,17 @@
    </property>
    <property name="shortcut" >
     <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="action_reload" >
+   <property name="text" >
+    <string>&amp;Reload</string>
+   </property>
+   <property name="iconText" >
+    <string>Reload current model</string>
+   </property>
+   <property name="toolTip" >
+    <string>Reload code for current model. For development.</string>
    </property>
   </action>
  </widget>
