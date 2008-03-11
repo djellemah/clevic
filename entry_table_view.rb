@@ -4,7 +4,7 @@ require 'fastercsv'
 
 # The view class, implementing neat shortcuts and other pleasantness
 class EntryTableView < Qt::TableView
-  attr_reader :model_class
+  attr_reader :model_class, :builder
   
   def initialize( model_class, parent, *args )
     super( parent )
@@ -289,22 +289,24 @@ class EntryTableView < Qt::TableView
   def closeEditor( editor, end_edit_hint )
     # pass event to model_class
     if model.model_class.respond_to?( :close_editor )
-      model.model_class.close_editor( current_index, self, end_edit_hint )
+      result = model.model_class.close_editor( current_index, self, end_edit_hint )
     end
     
-    case end_edit_hint
-      when Qt::AbstractItemDelegate.EditNextItem
-        super( editor, Qt::AbstractItemDelegate.NoHint )
-        # Qt seems to take care of tab wraparound
-        set_current_index( model.create_index( current_index.row, current_index.column + 1 ) )
-        
-      when Qt::AbstractItemDelegate.EditPreviousItem
-        super( editor, Qt::AbstractItemDelegate.NoHint )
-        # Qt seems to take care of tab wraparound
-        set_current_index( model.create_index( current_index.row, current_index.column - 1 ) )
-        
-      else
-        super
+    if !result
+      case end_edit_hint
+        when Qt::AbstractItemDelegate.EditNextItem
+          super( editor, Qt::AbstractItemDelegate.NoHint )
+          # Qt seems to take care of tab wraparound
+          set_current_index( model.create_index( current_index.row, current_index.column + 1 ) )
+          
+        when Qt::AbstractItemDelegate.EditPreviousItem
+          super( editor, Qt::AbstractItemDelegate.NoHint )
+          # Qt seems to take care of tab wraparound
+          set_current_index( model.create_index( current_index.row, current_index.column - 1 ) )
+          
+        else
+          super
+        end
     end
   end
   

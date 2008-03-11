@@ -51,6 +51,17 @@ class EntryBuilder
     @fields = []
     @active_record_options = [ :conditions, :class_name, :order ]
   end
+  
+  # return the index of the named field
+  def index( field_name_sym )
+    retval = nil
+    fields.each_with_index{|x,i|
+      puts "x.attribute: #{x.attribute.inspect}"
+      puts "i: #{i.inspect}"
+      retval = i if x.attribute == field_name_sym.to_sym
+    }
+    retval
+  end
 
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {} )
