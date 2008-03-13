@@ -176,7 +176,7 @@ class DistinctDelegate < ComboDelegate
       where #{@options[:conditions]}
       order by lower(#{@attribute.to_s})
     EOF
-    rs.rows.each do |row|
+    rs.each do |row|
       editor.add_item( row[0], row[0].to_variant )
     end
   end

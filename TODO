@@ -1,4 +1,5 @@
 Ctrl-Tab
+make sure moving of display doesn't affect copying shortcuts
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 implement save on window close?, or whatever
 keyboard search by selected column, or everything if no column selected
