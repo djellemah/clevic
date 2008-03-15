@@ -23,7 +23,6 @@ class Entry < ActiveRecord::Base
       t.plain       :active, :sample => 'WW'
       t.plain       :vat, :label => 'VAT', :sample => 'WW'
       
-      #~ t.collection = self.find( :all, :order => 'date, id' )
       t.collection = CacheTable.new( self, :order => 'date, id' )
     end
   end
@@ -32,6 +31,7 @@ class Entry < ActiveRecord::Base
   #~ end
   
   def self.close_editor( current_index, view, end_edit_hint )
+    puts "close_editor: #{end_edit_hint}"
     # copy the values for the credit and debit fields
     # from the previous similar entry
     current_field = current_index.attribute
@@ -76,7 +76,6 @@ class Account < ActiveRecord::Base
       t.plain       :fringe, :format => "%.1f"
       t.plain       :active
       
-      #~ t.collection = CacheTable.new( self, :order => 'account_type,name' )
       t.collection = self.find( :all, :order => 'account_type,name' )
     end
   end

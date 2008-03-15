@@ -8,14 +8,6 @@ require 'active_record/dirty.rb'
 class Browser < Qt::Widget
   slots 'dump()', 'reload_model()'
 
-  def initialize( main_window )
-    super( main_window )
-    @layout = Ui::Browser.new
-    @layout.setup_ui( main_window )
-    self.connect( @layout.actionDump, SIGNAL('activated()'), self, SLOT('dump()') )
-    self.connect( @layout.action_reload, SIGNAL('activated()'), self, SLOT('reload_model()') )
-  end
-  
   # activated by Ctrl-D for debugging
   def dump
     widget = @layout.tables_tab.current_widget
@@ -26,6 +18,15 @@ class Browser < Qt::Widget
     widget = @layout.tables_tab.current_widget
     puts "reloading #{widget.model.model_class.inspect}"
     load "#{$options[:definition]}_models.rb"
+    widget.reload_data
+  end
+
+  def initialize( main_window )
+    super( main_window )
+    @layout = Ui::Browser.new
+    @layout.setup_ui( main_window )
+    self.connect( @layout.actionDump, SIGNAL('triggered(bool)'), self, SLOT('dump()') )
+    self.connect( @layout.action_reload, SIGNAL('triggered(bool)'), self, SLOT('reload_model()') )
   end
   
   def translate( st )

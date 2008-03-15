@@ -12,10 +12,18 @@ class CacheTable < Array
   def []( index )
     if super(index).nil?
       obj = @model_class.find( :first, @options.merge( :offset => index ) )
+      #~ puts "obj: #{obj.inspect}"
       self[index] = obj
     else
       super(index)
     end
   end
-
+  
+  # make a new instance that has the attributes of this one, but an empty
+  # data set
+  def renew
+    clear
+    self.class.new( @model_class, @options )
+  end
+    
 end

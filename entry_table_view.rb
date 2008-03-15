@@ -138,8 +138,15 @@ class EntryTableView < Qt::TableView
     begin
       # call to model class for shortcuts
       if model.model_class.respond_to?( :key_press_event )
-        model_result = model.model_class.key_press_event( event, current_index, self )
-        return model_result if model_result != nil
+        begin
+          model_result = model.model_class.key_press_event( event, current_index, self )
+          return model_result if model_result != nil
+        rescue Exception => e
+          puts e.backtrace
+          error_message = Qt::ErrorMessage.new( self )
+          error_message.show_message( "Error in shortcut handler for #{model.model_class.name}: #{e.message}" )
+          error_message.show
+        end
       end
       
       # now do all the usual shortcuts
@@ -289,7 +296,14 @@ class EntryTableView < Qt::TableView
   def closeEditor( editor, end_edit_hint )
     # pass event to model_class
     if model.model_class.respond_to?( :close_editor )
-      result = model.model_class.close_editor( current_index, self, end_edit_hint )
+      begin
+        result = model.model_class.close_editor( current_index, self, end_edit_hint )
+      rescue Exception => e
+        puts e.backtrace
+        error_message = Qt::ErrorMessage.new( self )
+        error_message.show_message( "Error in edit handler for #{model.model_class.name}: #{e.message}" )
+        error_message.show
+      end
     end
     
     if !result
@@ -308,6 +322,14 @@ class EntryTableView < Qt::TableView
           super
         end
     end
+  end
+
+  def reload_data
+    # clear out cache
+    model.collection = model.collection.renew
+    top_left_index = model.create_index( 0, 0 )
+    bottom_right_index = model.create_index( model.row_count, model.column_count )
+    emit model.dataChanged( top_left_index, bottom_right_index )
   end
   
 end

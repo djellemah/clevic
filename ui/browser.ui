@@ -137,6 +137,9 @@
    <property name="text" >
     <string>&amp;Reload</string>
    </property>
+   <property name="shortcut" >
+    <string>Ctrl+R</string>
+   </property>
    <property name="iconText" >
     <string>Reload current model</string>
    </property>
