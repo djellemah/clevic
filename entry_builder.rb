@@ -55,11 +55,7 @@ class EntryBuilder
   # return the index of the named field
   def index( field_name_sym )
     retval = nil
-    fields.each_with_index{|x,i|
-      puts "x.attribute: #{x.attribute.inspect}"
-      puts "i: #{i.inspect}"
-      retval = i if x.attribute == field_name_sym.to_sym
-    }
+    fields.each_with_index{|x,i| retval = i if x.attribute == field_name_sym.to_sym }
     retval
   end
 
