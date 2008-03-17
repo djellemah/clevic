@@ -22,6 +22,11 @@ class EntryTableView < Qt::TableView
     @builder = EntryBuilder.new( self )
     yield( @builder )
     @builder.build
+    model.connect( SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) ) do |top_left, bottom_right|
+      if @model_class.respond_to?( :data_changed )
+        @model_class.data_changed( top_left, bottom_right, self )
+      end
+    end
     self
   end
   
@@ -167,8 +172,13 @@ class EntryTableView < Qt::TableView
           key = current_index.attribute
           previous_item = model.collection[current_index.row - 1]
           current_item = model.collection[current_index.row]
-          current_item.send( "#{key}=", previous_item.send( key ) )
-          dataChanged( current_index, current_index )
+          
+          previous_value = previous_item.send( key )
+          current_value = current_item.send( key )
+          if current_value != previous_value
+            current_item.send( "#{key}=", previous_value )
+            emit model.dataChanged( current_index, current_index )
+          end
         end
         
       # copy the value from the previous row, one cell right
@@ -178,7 +188,7 @@ class EntryTableView < Qt::TableView
           previous_item = model.collection[current_index.row - 1]
           current_item = model.collection[current_index.row]
           current_item.send( "#{key}=", previous_item.send( model.attributes[ current_index.column + 1 ] ) )
-          dataChanged( current_index, current_index )
+          emit model.dataChanged( current_index, current_index )
         end
         
       # copy the value from the previous row, one cell left
@@ -188,7 +198,7 @@ class EntryTableView < Qt::TableView
           previous_item = model.collection[current_index.row - 1]
           current_item = model.collection[current_index.row]
           current_item.send( "#{key}=", previous_item.send( model.attributes[ current_index.column - 1 ] ) )
-          dataChanged( current_index, current_index )
+          emit model.dataChanged( current_index, current_index )
         end
         
       # insert today's date in the current field
@@ -196,7 +206,7 @@ class EntryTableView < Qt::TableView
         key = current_index.attribute
         current_item = model.collection[current_index.row]
         current_item.send( "#{key}=", Time.now )
-        dataChanged( current_index, current_index )
+        emit model.dataChanged( current_index, current_index )
         
       # dump current record to stdout
       when event.ctrl? && event.d?
@@ -310,11 +320,13 @@ class EntryTableView < Qt::TableView
       case end_edit_hint
         when Qt::AbstractItemDelegate.EditNextItem
           super( editor, Qt::AbstractItemDelegate.NoHint )
+          # move to next cell
           # Qt seems to take care of tab wraparound
           set_current_index( model.create_index( current_index.row, current_index.column + 1 ) )
           
         when Qt::AbstractItemDelegate.EditPreviousItem
           super( editor, Qt::AbstractItemDelegate.NoHint )
+          # move to previous cell
           # Qt seems to take care of tab wraparound
           set_current_index( model.create_index( current_index.row, current_index.column - 1 ) )
           

@@ -43,7 +43,9 @@ class EntryTableModel < Qt::AbstractTableModel
   attr_accessor :collection, :dots, :attributes, :attribute_paths, :labels
 
   # the index where the error occurred, the incoming value, and the error message
-  signals 'data_error(QModelIndex, QVariant, QString)'
+  signals 'data_error(QModelIndex, QVariant, QString)',
+    # top_left, bottom_right
+    'dataChanged ( const QModelIndex &, const QModelIndex & )'
 
   def initialize( builder )
     super()

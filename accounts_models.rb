@@ -30,10 +30,25 @@ class Entry < ActiveRecord::Base
   #~ def self.key_press_event( event, current_index, view )
   #~ end
   
+  def hint_to_string( hint )
+  end
+  
+  def self.data_changed( top_left, bottom_right, view )
+    if top_left == bottom_right
+      update_credit_debit( top_left, view )
+    else
+      puts "can't data_changed for a range"
+    end
+  end
+  
   def self.close_editor( current_index, view, end_edit_hint )
-    puts "close_editor: #{end_edit_hint}"
-    # copy the values for the credit and debit fields
-    # from the previous similar entry
+    update_credit_debit( current_index, view )
+  end
+  
+  # copy the values for the credit and debit fields
+  # from the previous similar entry
+  def self.update_credit_debit( current_index, view )
+    return if !current_index.valid?
     current_field = current_index.attribute
     if current_field == :description
       # most recent entry, ordered in reverse
@@ -56,7 +71,8 @@ class Entry < ActiveRecord::Base
         view.dataChanged( top_left_index, bottom_right_index )
         
         # move edit cursor to amount field
-        view.set_current_index( model.create_index( current_index.row, current_index.column + 2 ) )
+        view.selection_model.clear
+        view.set_current_index( model.create_index( current_index.row, view.builder.index( :amount ) ) )
       end
     end
   end
