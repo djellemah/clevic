@@ -16,8 +16,7 @@ class Browser < Qt::Widget
   
   def reload_model
     widget = @layout.tables_tab.current_widget
-    puts "reloading #{widget.model.model_class.inspect}"
-    load "#{$options[:definition]}_models.rb"
+    #load "#{$options[:definition]}_models.rb"
     widget.reload_data
   end
 

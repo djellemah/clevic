@@ -236,7 +236,7 @@ class EntryTableModel < Qt::AbstractTableModel
         when role == qt_display_role || role == qt_edit_role
           # boolean values generally don't have text next to them in this context
           return nil.to_variant if index.metadata.type == :boolean
-          value = index.gui_value
+          value = index.gui_value rescue nil
           # TODO formatting doesn't really belong here
           if value != nil
             field = @builder.fields[index.column]

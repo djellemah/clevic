@@ -37,16 +37,12 @@ module ActiveRecord
   class Base
     # recursively calls each entry in path_ary
     def evaluate_path( path_ary )
-      begin
-        path_ary.inject( self ) do |value, att|
-          if value.nil?
-            nil
-          else
-            value.send( att )
-          end
+      path_ary.inject( self ) do |value, att|
+        if value.nil?
+          nil
+        else
+          value.send( att )
         end
-      rescue Exception => e
-        debugger
       end
     end
   end
