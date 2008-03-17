@@ -74,7 +74,6 @@ class EntryBuilder
   # edited with a combo box, but restricted to a specified set
   def restricted( attribute, options = {} )
     raise "restricted must have a set" unless options.has_key?( :set )
-    puts "restricted: #{options[:set].inspect}"
     field = EntryField.new( attribute.to_sym, options )
     field.delegate = RestrictedDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
     @fields << field

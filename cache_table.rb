@@ -11,9 +11,15 @@ class CacheTable < Array
   
   def []( index )
     if super(index).nil?
-      obj = @model_class.find( :first, @options.merge( :offset => index ) )
-      #~ puts "obj: #{obj.inspect}"
-      self[index] = obj
+      # calculate negative indices for the SQL offset
+      offset = index < 0 ? index + @row_count : index
+      self[index] = @model_class.find( :first, @options.merge( :offset => offset ) )
+      #~ if index >= ( size - 3 ) || index < 0
+        #~ obj = self[index]
+        #~ puts "offset: #{offset.inspect}"
+        #~ puts "index: #{index.inspect}"
+        #~ puts "obj: #{obj.inspect}"
+      #~ end
     else
       super(index)
     end
@@ -26,4 +32,11 @@ class CacheTable < Array
     self.class.new( @model_class, @options )
   end
     
+end
+
+class Array
+  # return true if something is cached, false otherwise
+  def cached_at?( index )
+    !at(index).nil?
+  end
 end

@@ -168,6 +168,29 @@ class EntryTableModel < Qt::AbstractTableModel
     @qt_text_alignment_role ||= Qt::TextAlignmentRole
   end
   
+  def qt_size_hint_role
+    @qt_size_hint_role ||= Qt::SizeHintRole
+  end
+  
+  def const_as_string( constant )
+    case constant
+      when qt_text_alignment_role; 'Qt::TextAlignmentRole'
+      when qt_checkstate_role; 'Qt::CheckStateRole'
+      when qt_edit_role; 'Qt:EditRole'
+      when qt_display_role; 'Qt::DisplayRole'
+      when Qt::DecorationRole; 'Qt::DecorationRole'
+      when Qt::ToolTipRole; 'Qt::ToolTipRole'
+      when Qt::StatusTipRole; 'Qt::StatusTipRole'
+      when Qt::DecorationRole; 'Qt::DecorationRole'
+      when Qt::BackgroundRole; 'Qt::BackgroundRole'
+      when Qt::FontRole; 'Qt::FontRole'
+      when Qt::ForegroundRole; 'Qt::ForegroundRole'
+      when Qt::TextColorRole; 'Qt::TextColorRole'
+      
+      else "#{constant} unknown"
+    end
+  end
+  
   # values for horizontal and vertical headers
   def headerData( section, orientation, role )
     value = 
@@ -177,7 +200,12 @@ class EntryTableModel < Qt::AbstractTableModel
           when Qt::Horizontal
             @labels[section]
           when Qt::Vertical
-            collection[section].id
+            # don't force a fetch from the db
+            if collection.cached_at?( section )
+              collection[section].id
+            else
+              section
+            end
         end
         
       when qt_text_alignment_role
@@ -190,9 +218,9 @@ class EntryTableModel < Qt::AbstractTableModel
         # anything other than nil here makes the headers disappear.
         nil
           
-      #~ else
-        #~ puts "headerData role for orientation #{orientation} is #{role}"
-        #~ nil
+      else
+        puts "headerData section: #{section}, role: #{const_as_string(role)}" if $options[:debug]
+        nil
     end
     
     return value.to_variant
@@ -203,19 +231,15 @@ class EntryTableModel < Qt::AbstractTableModel
     begin
       return Qt::Variant.invalid if index.entity.nil?
       
-      value = nil
-      field = @builder.fields[index.column]
+      value =
       case
         when role == qt_display_role || role == qt_edit_role
           # boolean values generally don't have text next to them in this context
           return nil.to_variant if index.metadata.type == :boolean
-          field_name = index.dotted_path
-          #~ puts "field: #{field.inspect}"
-          #~ puts "index.metadata: #{index.metadata.inspect}"
           value = index.gui_value
           # TODO formatting doesn't really belong here
-          #~ puts "index.metadata: #{index.metadata.inspect}" if field_name == 'fringe'
           if value != nil
+            field = @builder.fields[index.column]
             if field.format
               value = 
               case index.metadata.type
@@ -237,23 +261,24 @@ class EntryTableModel < Qt::AbstractTableModel
           
         when role == qt_checkstate_role
           if index.metadata.type == :boolean
-            value = ( index.gui_value ? Qt::Checked : Qt::Unchecked )
+            index.gui_value ? Qt::Checked : Qt::Unchecked
           end
           
         when role == qt_text_alignment_role
-          value = 
-          if field.alignment
-            field.alignment
-          else
+          field = @builder.fields[index.column]
+          field.alignment ||
             case index.metadata.type
               when :decimal; Qt::AlignRight
               when :integer; Qt::AlignRight
               when :float; Qt::AlignRight
               when :boolean; Qt::AlignCenter
             end
-          end
-
-        when Qt::SizeHintRole
+          
+        when qt_size_hint_role
+          nil
+            
+        else
+          puts "data section: #{section}, role: #{const_as_string(role)}" if $options[:debug]
           nil
       end
       

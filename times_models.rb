@@ -16,7 +16,7 @@ class Entry < ActiveRecord::Base
   def self.ui( parent )
     EntryTableView.new( self, parent ).create_model do |t|
       t.plain       :date, :sample => '28-Dec-08'
-      t.relational  :project, 'project', :sample => 'Project', :conditions => 'active = true', :order => 'lower(project)'
+      t.relational  :project, 'project', :sample => 'Miscellaneous', :conditions => 'active = true', :order => 'lower(project)'
       t.relational  :invoice, 'invoice_number', :sample => 'WWW000', :conditions => "status = 'not sent'", :order => 'invoice_number'
       t.plain       :start, :sample => '00:00'
       t.plain       :end, :sample => '00:00'
