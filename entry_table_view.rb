@@ -321,6 +321,16 @@ class EntryTableView < Qt::TableView
     set_current_index( model_index )
     @index_override = true
   end
+  
+  # call set_current_index with model_index unless override is true.
+  def set_current_unless_override( model_index )
+    if ( !@index_override )
+      # move to next cell
+      # Qt seems to take care of tab wraparound
+      set_current_index( model_index )
+    end
+    @index_override = false
+  end
     
   # override to prevent tab pressed from editing next field
   # also takes into account that override_next_index may have been called
@@ -328,21 +338,11 @@ class EntryTableView < Qt::TableView
     case end_edit_hint
       when Qt::AbstractItemDelegate.EditNextItem
         super( editor, Qt::AbstractItemDelegate.NoHint )
-        # move to next cell
-        # Qt seems to take care of tab wraparound
-        if ( !@index_override )
-          set_current_index( model.create_index( current_index.row, current_index.column + 1 ) )
-        end
-        @index_override = false
+        set_current_unless_override( model.create_index( current_index.row, current_index.column + 1 ) )
         
       when Qt::AbstractItemDelegate.EditPreviousItem
         super( editor, Qt::AbstractItemDelegate.NoHint )
-        # move to previous cell
-        # Qt seems to take care of tab wraparound
-        if ( !@index_override )
-          set_current_index( model.create_index( current_index.row, current_index.column - 1 ) )
-        end
-        @index_override = false
+        set_current_unless_override( model.create_index( current_index.row, current_index.column - 1 ) )
         
       else
         super
