@@ -1,7 +1,7 @@
-# require AR
 require 'rubygems'
 require 'active_record'
 require 'active_record/dirty.rb'
+
 require 'cache_table.rb'
 
 $options ||= {}
@@ -25,9 +25,6 @@ class Entry < ActiveRecord::Base
       
       t.collection = CacheTable.new( self, :order => 'date, id' )
     end
-  end
-  
-  def hint_to_string( hint )
   end
   
   def self.data_changed( top_left, bottom_right, view )

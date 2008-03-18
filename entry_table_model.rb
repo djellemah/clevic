@@ -222,7 +222,7 @@ class EntryTableModel < Qt::AbstractTableModel
         nil
           
       else
-        puts "headerData section: #{section}, role: #{const_as_string(role)}" if $options[:debug]
+        #~ puts "headerData section: #{section}, role: #{const_as_string(role)}" if $options[:debug]
         nil
     end
     

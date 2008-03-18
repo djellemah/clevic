@@ -70,6 +70,12 @@ module Qt
     end
   end
   
+  class ItemDelegate
+    # overridden in EntryDelegate subclasses
+    def full_edit
+    end
+  end
+  
   class ItemSelection
     include Enumerable
     

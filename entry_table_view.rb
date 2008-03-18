@@ -242,7 +242,7 @@ class EntryTableView < Qt::TableView
       when event.f4?
         edit( current_index, Qt::AbstractItemView::AllEditTriggers, event )
         delegate = item_delegate( current_index )
-        delegate.open
+        delegate.full_edit
         
       # copy currently selected data in csv format
       when event.ctrl? && event.c?

@@ -57,8 +57,12 @@ class ComboDelegate < Qt::ItemDelegate
   end
   
   # open the combo box, just like if f4 was pressed
-  def open
+  def full_edit
     @editor.show_popup
+  end
+  
+  def restricted?
+    false
   end
   
   # descendants should override this to fill the combo box
@@ -87,7 +91,6 @@ class ComboDelegate < Qt::ItemDelegate
     
     # allow prefix matching from the keyboard
     @editor.editable = true
-    #~ @editor.completer.model_sorting = Qt::Completer::CaseInsensitivelySortedModel
     
     @editor
   end
@@ -112,24 +115,27 @@ class ComboDelegate < Qt::ItemDelegate
     editor.line_edit.select_all
   end
   
+  def translate_from_editor_text( editor, text )
+    text
+  end
+  
   # save the object in the model entity relationship
   def setModelData( editor, abstract_item_model, model_index )
     dump_editor_state( editor )
     
+    value = 
     if editor.completer.current_row == -1
-      # item doesn't exist in the list, so allow it be be added
-      model_index.attribute_value = editor.current_text
+      # item doesn't exist in the list, add it if not restricted
+      editor.current_text unless restricted?
     elsif editor.completer.completion_count == editor.count
-      if editor.current_text.empty?
-        # item is empty, so set nil
-        model_index.attribute_value = nil
-      else
-        model_index.attribute_value = editor.current_text
-      end
+      # selection from drop down. if it's empty, we want a nil
+      editor.current_text
     else
       # there is a matching completion, so use it
-      model_index.attribute_value = editor.completer.current_completion
+      editor.completer.current_completion
     end
+    
+    model_index.attribute_value = translate_from_editor_text( editor, value )
     
     emit abstract_item_model.dataChanged( model_index, model_index )
   end
@@ -173,6 +179,10 @@ class RestrictedDelegate < ComboDelegate
     @options = options
     @set = options[:set]
     super( parent )
+  end
+  
+  def restricted?
+    true
   end
   
   def populate( editor, model_index )
@@ -224,8 +234,13 @@ class RelationalDelegate < ComboDelegate
     editor.line_edit.select_all
   end
   
+  # don't allow new values
+  def restricted?
+    true
+  end
+  
   # return an AR entity object
-  def entity_from_text( editor, text )
+  def translate_from_editor_text( editor, text )
     item_index = editor.find_text( text )
     
     # fetch record id from editor item_data
@@ -238,30 +253,4 @@ class RelationalDelegate < ComboDelegate
     end
   end
   
-  # save the object in the model entity relationship
-  # called after close_editor
-  def setModelData( editor, abstract_item_model, model_index )
-    dump_editor_state( editor )
-    
-    if editor.completer.current_row == -1
-      # item doesn't exist in the list, so set to nil, because
-      # for this delegate, the value must be something that exists
-      # in the foreign key table, or null
-      model_index.attribute_value = nil
-    elsif editor.completer.completion_count == editor.count
-      if editor.current_text.empty?
-        # item is empty, so set nil
-        model_index.attribute_value = nil
-      else
-        # a value was chose from the drop-down list
-        model_index.attribute_value = entity_from_text( editor, editor.current_text )
-      end
-    else
-      # item exists, so use it
-      model_index.attribute_value = entity_from_text( editor, editor.completer.current_completion )
-    end
-    
-    emit model_index.model.dataChanged( model_index, model_index )
-  end
-
 end
