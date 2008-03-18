@@ -8,7 +8,13 @@ class EntryTableView < Qt::TableView
   
   def initialize( model_class, parent, *args )
     super( parent )
+    
+    # the AR entity class
     @model_class = model_class
+    
+    # see closeEditor
+    @index_override = false
+    
     horizontal_header.movable = true
     # TODO might be useful, but need to change the shortcut ideas
     # of next and previous rows
@@ -131,7 +137,7 @@ class EntryTableView < Qt::TableView
     end
     
     # make the gui refresh
-    bottom_right_index = model.create_index( top_left_index.row + csv_arr.size, top_left_index.column + csv_arr[0].size )
+    bottom_right_index = model.create_index( top_left_index.row + csv_arr.size - 1, top_left_index.column + csv_arr[0].size - 1 )
     emit model.dataChanged( top_left_index, bottom_right_index )
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
@@ -166,6 +172,10 @@ class EntryTableView < Qt::TableView
       when event.tab? && last_cell?
         model.add_new_item
         
+      # delete the current row
+      when event.ctrl? && event.delete?
+        model.remove_rows( [ current_index.row ] ) 
+      
       # copy the value from the row one above  
       when event.ctrl? && event.apostrophe?
         if current_index.row > 0
@@ -250,7 +260,8 @@ class EntryTableView < Qt::TableView
         return true
         
       when event.ctrl? && event.v?
-        text = Qt::Application::clipboard.text
+        # remove trailing "\n" if there is one
+        text = Qt::Application::clipboard.text.chomp
         arr = FasterCSV.parse( text )
         
         return true if selection_model.selection.size != 1
@@ -302,37 +313,39 @@ class EntryTableView < Qt::TableView
     super
   end
   
-  # prevent tab pressed from editing next field
-  def closeEditor( editor, end_edit_hint )
-    # pass event to model_class
-    if model.model_class.respond_to?( :close_editor )
-      begin
-        result = model.model_class.close_editor( current_index, self, end_edit_hint )
-      rescue Exception => e
-        puts e.backtrace
-        error_message = Qt::ErrorMessage.new( self )
-        error_message.show_message( "Error in edit handler for #{model.model_class.name}: #{e.message}" )
-        error_message.show
-      end
-    end
+  # this is to allow entity model UI handlers to tell the view
+  # where to move the current editing index to. If it's left blank
+  # default is based on the editing hint.
+  # see closeEditor
+  def override_next_index( model_index )
+    set_current_index( model_index )
+    @index_override = true
+  end
     
-    if !result
-      case end_edit_hint
-        when Qt::AbstractItemDelegate.EditNextItem
-          super( editor, Qt::AbstractItemDelegate.NoHint )
-          # move to next cell
-          # Qt seems to take care of tab wraparound
+  # override to prevent tab pressed from editing next field
+  # also takes into account that override_next_index may have been called
+  def closeEditor( editor, end_edit_hint )
+    case end_edit_hint
+      when Qt::AbstractItemDelegate.EditNextItem
+        super( editor, Qt::AbstractItemDelegate.NoHint )
+        # move to next cell
+        # Qt seems to take care of tab wraparound
+        if ( !@index_override )
           set_current_index( model.create_index( current_index.row, current_index.column + 1 ) )
-          
-        when Qt::AbstractItemDelegate.EditPreviousItem
-          super( editor, Qt::AbstractItemDelegate.NoHint )
-          # move to previous cell
-          # Qt seems to take care of tab wraparound
-          set_current_index( model.create_index( current_index.row, current_index.column - 1 ) )
-          
-        else
-          super
         end
+        @index_override = false
+        
+      when Qt::AbstractItemDelegate.EditPreviousItem
+        super( editor, Qt::AbstractItemDelegate.NoHint )
+        # move to previous cell
+        # Qt seems to take care of tab wraparound
+        if ( !@index_override )
+          set_current_index( model.create_index( current_index.row, current_index.column - 1 ) )
+        end
+        @index_override = false
+        
+      else
+        super
     end
   end
 

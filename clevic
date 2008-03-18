@@ -84,9 +84,8 @@ end
 app = Qt::Application.new( args )
 
 if $options[:debug]
-  puts $options.inspect
+  puts $options
   puts args.inspect
-  exit( 0 )
 end
 
 # set up defaults

@@ -16,6 +16,7 @@ class EntryDelegate < Qt::ItemDelegate
   
   def setModelData( editor, abstract_item_model, model_index )
     model_index.gui_value = editor.value
+    emit abstract_item_model.dataChanged( model_index, model_index )
   end
   
   def updateEditorGeometry( editor, style_option_view_item, model_index )
@@ -30,13 +31,7 @@ end
 # To emit focus out signals, because ComboBox stupidly doesn't.
 class ComboDelegate < Qt::ItemDelegate
   def initialize( parent )
-    super( parent )
-    
-    # make sure the values are correctly saved on exit
-    self.connect( SIGNAL( 'closeEditor ( QWidget*, QAbstractItemDelegate::EndEditHint )' ) ) do |editor, hint|
-      #~ puts "close editor #{editor.inspect} with #{hint}: #{hint_string(hint)}"
-      close_editor( editor, hint )
-    end
+    super
   end
   
   def hint_string( hint )
@@ -48,14 +43,15 @@ class ComboDelegate < Qt::ItemDelegate
   end
     
   def dump_editor_state( editor )
-    if false
+    if $options[:debug]
+      puts "#{self.class.name}"
 			puts "editor.completer.completion_count: #{editor.completer.completion_count}"
 			puts "editor.completer.current_completion: #{editor.completer.current_completion}"
 			puts "editor.find_text( editor.completer.current_completion ): #{editor.find_text( editor.completer.current_completion )}"
 			puts "editor.current_text: #{editor.current_text}"
 			puts "editor.count: #{editor.count}"
 			puts "editor.completer.current_row: #{editor.completer.current_row}"
-			#~ puts ": #{}"
+			puts "editor.item_data( editor.current_index ): #{editor.item_data( editor.current_index ).inspect}"
       puts
 		end
   end
@@ -79,10 +75,6 @@ class ComboDelegate < Qt::ItemDelegate
   
   # Create a ComboBox and fill it with the possible values
   def createEditor( parent_widget, style_option_view_item, model_index )
-    # save these for later
-    @current_index = model_index
-    @old_value = model_index.attribute_value
-    
     @editor = Qt::ComboBox.new( parent )
     
     # subclasses fill in the rest of the entries
@@ -100,33 +92,6 @@ class ComboDelegate < Qt::ItemDelegate
     @editor
   end
   
-  # make sure tab and backtab save data
-  def eventFilter( editor, event )
-    if event.class == Qt::KeyEvent
-      if event.tab? || event.backtab?
-        emit closeEditor( editor, Qt::AbstractItemDelegate::SubmitModelCache )
-      end
-    end
-    super
-  end
-
-  # save the value in the field, depending on what exit happened
-  def close_editor( editor, hint )
-    dump_editor_state( editor )
-    
-		case hint
-      when Qt::AbstractItemDelegate::SubmitModelCache
-      if editor.completer.current_row == -1
-        @current_index.attribute_value = editor.current_text
-      else
-        @current_index.attribute_value = editor.completer.current_completion
-      end
-      
-      when Qt::AbstractItemDelegate::RevertModelCache
-        @current_index.attribute_value = @old_value
-    end
-  end
-
   def updateEditorGeometry( editor, style_option_view_item, model_index )
     # figure out where to put the editor widget, taking into
     # account the sizes of the headers
@@ -149,8 +114,24 @@ class ComboDelegate < Qt::ItemDelegate
   
   # save the object in the model entity relationship
   def setModelData( editor, abstract_item_model, model_index )
-    item_data = editor.item_data( editor.current_index )
-    model_index.attribute_value = item_data.value
+    dump_editor_state( editor )
+    
+    if editor.completer.current_row == -1
+      # item doesn't exist in the list, so allow it be be added
+      model_index.attribute_value = editor.current_text
+    elsif editor.completer.completion_count == editor.count
+      if editor.current_text.empty?
+        # item is empty, so set nil
+        model_index.attribute_value = nil
+      else
+        model_index.attribute_value = editor.current_text
+      end
+    else
+      # there is a matching completion, so use it
+      model_index.attribute_value = editor.completer.current_completion
+    end
+    
+    emit abstract_item_model.dataChanged( model_index, model_index )
   end
 end
 
@@ -212,9 +193,7 @@ class RelationalDelegate < ComboDelegate
     @model_class = ( options[:class_name] || attribute_path[0].to_s.classify ).constantize
     @attribute_path = attribute_path[1..-1].join('.')
     @options = options.clone
-    @options.delete :class_name
-    @options.delete :sample
-    @options.delete :format
+    [ :class_name, :sample, :format ].each {|x| @options.delete x }
     super( parent )
   end
   
@@ -245,38 +224,44 @@ class RelationalDelegate < ComboDelegate
     editor.line_edit.select_all
   end
   
-  # save the object in the model entity relationship
-  def setModelData( editor, abstract_item_model, model_index )
+  # return an AR entity object
+  def entity_from_text( editor, text )
+    item_index = editor.find_text( text )
+    
     # fetch record id from editor item_data
-    item_data = editor.item_data( editor.current_index )
+    item_data = editor.item_data( item_index )
     if item_data.valid?
       # get the entity it refers to, if there is one
-      obj = @model_class.find_by_id( item_data.to_int )
-      unless obj.nil?
-        # save the belongs_to entity in the row model entity
-        model_index.attribute_value = obj
-      end
-    else
-      model_index.attribute_value = nil
+      # use find_by_id so that if it's not found, nil will
+      # be returned
+      @model_class.find_by_id( item_data.to_int )
     end
   end
   
-  # this doesn't save the entity to the db, it just
-  # manipulates values in the entity
-  def close_editor( editor, hint )
-		dump_editor_state( editor )
-		case hint
-      when Qt::AbstractItemDelegate::SubmitModelCache
-        if editor.completer.current_row == -1
-          @current_index.attribute_value = nil
-        else
-          editor.set_current_index( editor.find_text( editor.completer.current_completion ) )
-          setModelData( editor, parent.model, parent.current_index )
-        end
-        
-      when Qt::AbstractItemDelegate::RevertModelCache
-        @current_index.attribute_value = @old_value
+  # save the object in the model entity relationship
+  # called after close_editor
+  def setModelData( editor, abstract_item_model, model_index )
+    dump_editor_state( editor )
+    
+    if editor.completer.current_row == -1
+      # item doesn't exist in the list, so set to nil, because
+      # for this delegate, the value must be something that exists
+      # in the foreign key table, or null
+      model_index.attribute_value = nil
+    elsif editor.completer.completion_count == editor.count
+      if editor.current_text.empty?
+        # item is empty, so set nil
+        model_index.attribute_value = nil
+      else
+        # a value was chose from the drop-down list
+        model_index.attribute_value = entity_from_text( editor, editor.current_text )
+      end
+    else
+      # item exists, so use it
+      model_index.attribute_value = entity_from_text( editor, editor.completer.current_completion )
     end
-	end
+    
+    emit model_index.model.dataChanged( model_index, model_index )
+  end
 
 end

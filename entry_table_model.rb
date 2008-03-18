@@ -109,6 +109,7 @@ class EntryTableModel < Qt::AbstractTableModel
   
   def save( index )
     item = collection[index.row]
+    return false if item.nil?
     if item.changed?
       if item.valid?
         item.save

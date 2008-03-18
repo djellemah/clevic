@@ -27,9 +27,6 @@ class Entry < ActiveRecord::Base
     end
   end
   
-  #~ def self.key_press_event( event, current_index, view )
-  #~ end
-  
   def hint_to_string( hint )
   end
   
@@ -37,12 +34,10 @@ class Entry < ActiveRecord::Base
     if top_left == bottom_right
       update_credit_debit( top_left, view )
     else
-      puts "can't data_changed for a range"
+      puts "top_left: #{top_left.inspect}"
+      puts "bottom_right: #{bottom_right.inspect}"
+      puts "can't do data_changed for a range"
     end
-  end
-  
-  def self.close_editor( current_index, view, end_edit_hint )
-    update_credit_debit( current_index, view )
   end
   
   # copy the values for the credit and debit fields
@@ -66,13 +61,13 @@ class Entry < ActiveRecord::Base
         current_item.credit = similar.credit
         
         # update view from top_left to bottom_right
-        top_left_index = model.create_index( current_index.row, current_index.column + 1 )
-        bottom_right_index = model.create_index( current_index.row, current_index.column + 2 )
+        top_left_index = model.create_index( current_index.row, 0 )
+        bottom_right_index = model.create_index( current_index.row, view.builder.fields.size )
         view.dataChanged( top_left_index, bottom_right_index )
         
         # move edit cursor to amount field
         view.selection_model.clear
-        view.set_current_index( model.create_index( current_index.row, view.builder.index( :amount ) ) )
+        view.override_next_index( model.create_index( current_index.row, view.builder.index( :amount ) ) )
       end
     end
   end

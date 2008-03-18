@@ -52,24 +52,24 @@ class Entry < ActiveRecord::Base
           view.dataChanged( top_left_index, bottom_right_index )
           
           # move to end time field
-          end_index = model.create_index( current_index.row, view.builder.index( :end ) )
-          view.set_current_index( end_index )
+          view.view.override_next_index( model.create_index( current_index.row, view.builder.index( :end ) ) )
         end
         # don't let anybody else handle the keypress
         return true
       
       when event.ctrl? && event.i?
-        invoice_from_project( current_index, view, nil )
+        invoice_from_project( current_index, view )
         # don't let anybody else handle the keypress
         return true
     end
   end
   
-  def self.close_editor( current_index, view, end_edit_hint )
-    invoice_from_project( current_index, view, end_edit_hint )
+  def self.data_changed( top_left, bottom_right, view )
+    if ( top_left == bottom_right )
+      invoice_from_project( top_left, view )
   end
   
-  def self.invoice_from_project( current_index, view, end_edit_hint )
+  def self.invoice_from_project( current_index, view )
     # auto-complete invoice number field from project
     current_field = current_index.attribute
     if current_field == :project && current_index.entity.project != nil
@@ -89,8 +89,8 @@ class Entry < ActiveRecord::Base
         changed_index = model.create_index( current_index.row, view.builder.index( :invoice ) )
         view.dataChanged( changed_index, changed_index )
         
-        # move edit cursor to start
-        view.set_current_index( model.create_index( current_index.row, view.builder.index( :start ) ) )
+        # move edit cursor to start time field
+        view.override_next_index( model.create_index( current_index.row, view.builder.index( :start ) ) )
       end
     end
   end
