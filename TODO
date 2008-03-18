@@ -1,4 +1,4 @@
-Ctrl-Tab
+Ctrl-Tab to move between tabs
 make sure moving of display doesn't affect copying shortcuts
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 implement save on window close?, or whatever
@@ -7,10 +7,8 @@ keyboard search by selected column, or everything if no column selected
 add year if not specified, with 6 months on either side range
 value formatting not in model
 copy a field from a mouse-selection (ctrl-b maybe)
-smart copy, to insert a most-likely value
 hiding of fields
 
-project/invoice/activity editing. Means a MDI approach. See http://doc.trolltech.com/4.3/qworkspace.html
 turn on/off smart filters for relational delegates
 filtering by various things. http://doc.trolltech.com/4.3/qsortfilterproxymodel.html
 highlighting by various things
@@ -20,8 +18,6 @@ paste of "common" records with different dates
 drop cached model objects from CacheTable when they're not in use
 
 refresh from db
-
-f4 to drop down immediately
 
 allow scroll viewport to centre when at end of dataset
 wrap description, and allow Access-style zooming

@@ -16,9 +16,9 @@ class EntryTableView < Qt::TableView
     @index_override = false
     
     horizontal_header.movable = true
-    # TODO might be useful, but need to change the shortcut ideas
-    # of next and previous rows
-    vertical_header.movable = true
+    # TODO might be useful to allow movable vertical rows,
+    # but need to change the shortcut ideas of next and previous rows
+    vertical_header.movable = false
     sorting_enabled = true
     # turn off "Object#type deprecated" messages
     $VERBOSE = nil
@@ -223,9 +223,11 @@ class EntryTableView < Qt::TableView
         puts model.collection[current_index.row].inspect
         
       # add new record and go to it
-      when event.ctrl? && event.n?
+      when event.ctrl? && ( event.n? || event.return? )
         model.add_new_item
         new_row_index = model.index( model.collection.size - 1, 0 )
+        currentChanged( new_row_index, current_index )
+        selection_model.clear
         self.current_index = new_row_index
       
       # handle deletion of entire rows
@@ -301,6 +303,7 @@ class EntryTableView < Qt::TableView
   
   # save record whenever its row is exited
   def currentChanged( current_index, previous_index )
+    @index_override = false
     if current_index.row != previous_index.row
       saved = model.save( previous_index )
       if !saved

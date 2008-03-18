@@ -84,7 +84,7 @@ class Account < ActiveRecord::Base
       t.plain       :fringe, :format => "%.1f"
       t.plain       :active
       
-      t.collection = self.find( :all, :order => 'account_type,name' )
+      t.collection = self.find( :all, :order => 'name,account_type' )
     end
   end
 end
