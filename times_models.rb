@@ -1,7 +1,7 @@
 require 'rubygems'
 require 'active_record'
 require 'active_record/dirty.rb'
-require 'cache_table.rb'
+require 'clevic/cache_table.rb'
 
 $options ||= {}
 $options[:database] ||= 'times'
@@ -65,8 +65,7 @@ class Entry < ActiveRecord::Base
   end
   
   def self.data_changed( top_left, bottom_right, view )
-    if ( top_left == bottom_right )
-      invoice_from_project( top_left, view )
+    invoice_from_project( top_left, view ) if ( top_left == bottom_right )
   end
   
   def self.invoice_from_project( current_index, view )
@@ -147,4 +146,4 @@ class Invoice < ActiveRecord::Base
   end
 end
 
-$options[:models] = [ Entry, Invoice, Project, Activity ]
+#~ $options[:models] = [ Entry, Invoice, Project, Activity ]

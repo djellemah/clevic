@@ -1,5 +1,5 @@
-require 'entry_table_model.rb'
-require 'delegates.rb'
+require 'clevic/entry_table_model.rb'
+require 'clevic/delegates.rb'
 
 class EntryField
   attr_accessor :attribute, :path, :sample, :format, :label, :delegate, :class_name, :alignment

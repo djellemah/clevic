@@ -1,7 +1,7 @@
 #! /usr/bin/ruby
 
 require 'ui/browser_ui.rb'
-require 'entry_table_view.rb'
+require 'clevic/entry_table_view.rb'
 require 'active_record'
 require 'active_record/dirty.rb'
 

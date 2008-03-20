@@ -1,5 +1,5 @@
 require 'Qt4'
-require 'entry_builder.rb'
+require 'clevic/entry_builder.rb'
 require 'fastercsv'
 
 # The view class, implementing neat shortcuts and other pleasantness
