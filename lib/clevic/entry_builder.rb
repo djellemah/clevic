@@ -58,6 +58,10 @@ class EntryBuilder
     fields.each_with_index{|x,i| retval = i if x.attribute == field_name_sym.to_sym }
     retval
   end
+  
+  def model_class
+    @entry_table_view.model_class
+  end
 
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {} )

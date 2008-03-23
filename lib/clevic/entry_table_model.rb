@@ -64,7 +64,7 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   def model_class
-    collection[0].class
+    @builder.model_class
   end
   
   # cache metadata (ActiveRecord#column_for_attribute) because it't not going

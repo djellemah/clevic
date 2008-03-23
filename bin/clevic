@@ -6,7 +6,7 @@ require 'active_record'
 require 'active_record/dirty.rb'
 
 class Browser < Qt::Widget
-  slots 'dump()', 'reload_model()'
+  slots 'dump()', 'reload_model()', 'filter_by_current(bool)'
 
   # activated by Ctrl-D for debugging
   def dump
@@ -19,6 +19,29 @@ class Browser < Qt::Widget
     #load "#{$options[:definition]}_models.rb"
     widget.reload_data
   end
+  
+  def filter_by_current( bool_filter )
+    widget = @layout.tables_tab.current_widget
+    if bool_filter
+      indexes = widget.selection_model.selected_indexes
+      puts "indexes: #{indexes.inspect}"
+      if indexes.empty?
+        action_filter.checked = false
+      end
+      puts "indexes[0].attribute: #{indexes[0].attribute.inspect}"
+      puts "indexes[0].attribute_value: #{indexes[0].attribute_value.inspect}"
+      
+      
+      entity = indexes[0].entity
+      column = entity.column_for_attribute( indexes[0].attribute )
+      column ||= entity.column_for_attribute( indexes[0].attribute.to_s + "_id" )
+      
+      # TODO doesn't work for related tables
+      widget.reload_data( :conditions => { column.name => entity.send( column.name ) } )
+    else
+      widget.reload_data( :conditions => {} )
+    end
+  end
 
   def initialize( main_window )
     super( main_window )
@@ -26,6 +49,7 @@ class Browser < Qt::Widget
     @layout.setup_ui( main_window )
     self.connect( @layout.actionDump, SIGNAL('triggered(bool)'), self, SLOT('dump()') )
     self.connect( @layout.action_reload, SIGNAL('triggered(bool)'), self, SLOT('reload_model()') )
+    self.connect( @layout.action_filter, SIGNAL('triggered(bool)'), self, SLOT('filter_by_current(bool)') )
   end
   
   def translate( st )

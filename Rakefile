@@ -1,5 +1,8 @@
 require 'rubygems'
+require 'rake/clean'
 require 'hoe'
+
+CLEAN.include( 'ui/*.rb' )
 
 file 'ui/browser_ui.rb' => ['ui/browser.ui'] do |t|
   #~ puts "t.source: #{t.source.inspect}"
@@ -28,4 +31,4 @@ Hoe.new('clevic', '1.0.1') do |s|
 	#~ s.extra_rdoc_files  = ['README']
 end
 
-#~ task :default => 'ui/browser_ui.rb'
+task :ui => 'ui/browser_ui.rb'

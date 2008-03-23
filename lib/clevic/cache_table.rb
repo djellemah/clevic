@@ -26,12 +26,12 @@ class CacheTable < Array
   end
   
   # make a new instance that has the attributes of this one, but an empty
-  # data set
-  def renew
+  # data set. pass in ActiveRecord options to filter
+  def renew( options = {} )
     clear
-    self.class.new( @model_class, @options )
+    self.class.new( @model_class, @options.merge( options ) )
   end
-    
+  
 end
 
 class Array

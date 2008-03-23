@@ -352,12 +352,11 @@ class EntryTableView < Qt::TableView
     end
   end
 
-  def reload_data
-    # clear out cache
-    model.collection = model.collection.renew
-    top_left_index = model.create_index( 0, 0 )
-    bottom_right_index = model.create_index( model.row_count, model.column_count )
-    emit model.dataChanged( top_left_index, bottom_right_index )
+  def reload_data( options = {} )
+    # renew cache
+    model.collection = model.collection.renew( options )
+    # tell the UI we had a major data change
+    model.reset
   end
   
 end

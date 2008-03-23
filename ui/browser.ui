@@ -69,9 +69,9 @@
    </widget>
    <widget class="QMenu" name="menuSearch" >
     <property name="title" >
-     <string>Search</string>
+     <string>&amp;Search</string>
     </property>
-    <addaction name="actionFilter" />
+    <addaction name="action_filter" />
     <addaction name="actionSearch" />
    </widget>
    <widget class="QMenu" name="menuModel" >
@@ -115,14 +115,20 @@
     <string>Paste</string>
    </property>
   </action>
-  <action name="actionFilter" >
+  <action name="action_filter" >
+   <property name="checkable" >
+    <bool>true</bool>
+   </property>
    <property name="text" >
-    <string>Filter</string>
+    <string>&amp;Filter</string>
+   </property>
+   <property name="toolTip" >
+    <string>Filter by value in current field</string>
    </property>
   </action>
   <action name="actionSearch" >
    <property name="text" >
-    <string>Search</string>
+    <string>&amp;Search</string>
    </property>
   </action>
   <action name="actionDump" >
@@ -137,14 +143,14 @@
    <property name="text" >
     <string>&amp;Reload</string>
    </property>
-   <property name="shortcut" >
-    <string>Ctrl+R</string>
-   </property>
    <property name="iconText" >
     <string>Reload current model</string>
    </property>
    <property name="toolTip" >
     <string>Reload code for current model. For development.</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+R</string>
    </property>
   </action>
  </widget>
