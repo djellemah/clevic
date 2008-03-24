@@ -2,85 +2,9 @@
 
 require 'ui/browser_ui.rb'
 require 'clevic/entry_table_view.rb'
+require 'clevic/browser.rb'
 require 'active_record'
 require 'active_record/dirty.rb'
-
-class Browser < Qt::Widget
-  slots 'dump()', 'reload_model()', 'filter_by_current(bool)'
-
-  # activated by Ctrl-D for debugging
-  def dump
-    widget = @layout.tables_tab.current_widget
-    puts "widget.model: #{widget.model.inspect}" if widget.class == EntryTableView
-  end
-  
-  def reload_model
-    widget = @layout.tables_tab.current_widget
-    #load "#{$options[:definition]}_models.rb"
-    widget.reload_data
-  end
-  
-  def filter_by_current( bool_filter )
-    widget = @layout.tables_tab.current_widget
-    if bool_filter
-      indexes = widget.selection_model.selected_indexes
-      puts "indexes: #{indexes.inspect}"
-      if indexes.empty?
-        action_filter.checked = false
-      end
-      puts "indexes[0].attribute: #{indexes[0].attribute.inspect}"
-      puts "indexes[0].attribute_value: #{indexes[0].attribute_value.inspect}"
-      
-      
-      entity = indexes[0].entity
-      column = entity.column_for_attribute( indexes[0].attribute )
-      column ||= entity.column_for_attribute( indexes[0].attribute.to_s + "_id" )
-      
-      # TODO doesn't work for related tables
-      widget.reload_data( :conditions => { column.name => entity.send( column.name ) } )
-    else
-      widget.reload_data( :conditions => {} )
-    end
-  end
-
-  def initialize( main_window )
-    super( main_window )
-    @layout = Ui::Browser.new
-    @layout.setup_ui( main_window )
-    self.connect( @layout.actionDump, SIGNAL('triggered(bool)'), self, SLOT('dump()') )
-    self.connect( @layout.action_reload, SIGNAL('triggered(bool)'), self, SLOT('reload_model()') )
-    self.connect( @layout.action_filter, SIGNAL('triggered(bool)'), self, SLOT('filter_by_current(bool)') )
-  end
-  
-  def translate( st )
-    Qt::Application.translate("Browser", st, nil, Qt::Application::UnicodeUTF8)
-  end
-
-  def find_models
-    if $options[:models].nil?
-      models = []
-      ObjectSpace.each_object( Class ) {|x| models << x if x.superclass == ActiveRecord::Base }
-      models
-    else
-      $options[:models]
-    end
-  end
-  
-  def open( file = '' )
-    # remove the tab that Qt Designer puts in
-    @layout.tables_tab.clear
-    
-    # Add all existing model objects as tabs, one each
-    find_models.each do |model|
-      if model.respond_to?( :ui )
-        tab = model.ui( @layout.tables_tab )
-      else
-        raise "Can't build ui for #{model.name}"
-      end
-      @layout.tables_tab.add_tab( tab, translate( model.name.humanize ) )
-    end
-  end
-end
 
 # fetch command line options
 require 'optparse'
@@ -131,6 +55,6 @@ puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $opt
 # show UI
 main_window = Qt::MainWindow.new
 browser = Browser.new( main_window )
-browser.open( 'dummy' )
+browser.open Entry
 main_window.show
 app.exec

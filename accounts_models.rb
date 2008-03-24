@@ -37,6 +37,7 @@ class Entry < ActiveRecord::Base
     end
   end
   
+  # check that the current field is :descriptions, then
   # copy the values for the credit and debit fields
   # from the previous similar entry
   def self.update_credit_debit( current_index, view )

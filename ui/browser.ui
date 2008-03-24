@@ -8,8 +8,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>650</width>
+    <height>225</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -25,8 +25,8 @@
       <property name="windowModality" >
        <enum>Qt::NonModal</enum>
       </property>
-      <property name="contextMenuPolicy" >
-       <enum>Qt::ActionsContextMenu</enum>
+      <property name="focusPolicy" >
+       <enum>Qt::NoFocus</enum>
       </property>
       <property name="tabShape" >
        <enum>QTabWidget::Rounded</enum>
@@ -46,7 +46,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>650</width>
      <height>28</height>
     </rect>
    </property>
@@ -54,9 +54,10 @@
     <property name="title" >
      <string>File</string>
     </property>
-    <addaction name="actionOpen" />
+    <addaction name="action_open" />
     <addaction name="actionClose" />
     <addaction name="actionRecent" />
+    <addaction name="action_new_window" />
    </widget>
    <widget class="QMenu" name="menuEdit" >
     <property name="title" >
@@ -65,29 +66,33 @@
     <addaction name="actionCut" />
     <addaction name="actionCopy" />
     <addaction name="actionPaste" />
-    <addaction name="actionDump" />
    </widget>
    <widget class="QMenu" name="menuSearch" >
     <property name="title" >
      <string>&amp;Search</string>
     </property>
     <addaction name="action_filter" />
-    <addaction name="actionSearch" />
+    <addaction name="action_find" />
+    <addaction name="action_Highlight" />
    </widget>
    <widget class="QMenu" name="menuModel" >
     <property name="title" >
-     <string>&amp;Model</string>
+     <string>&amp;Table</string>
     </property>
+    <addaction name="action_next" />
+    <addaction name="action_previous" />
+    <addaction name="separator" />
     <addaction name="action_reload" />
+    <addaction name="action_dump" />
    </widget>
    <addaction name="menuFile" />
    <addaction name="menuEdit" />
    <addaction name="menuSearch" />
    <addaction name="menuModel" />
   </widget>
-  <action name="actionOpen" >
+  <action name="action_open" >
    <property name="text" >
-    <string>Open</string>
+    <string>&amp;Open</string>
    </property>
   </action>
   <action name="actionClose" >
@@ -120,18 +125,27 @@
     <bool>true</bool>
    </property>
    <property name="text" >
-    <string>&amp;Filter</string>
+    <string>F&amp;ilter</string>
    </property>
    <property name="toolTip" >
     <string>Filter by value in current field</string>
    </property>
-  </action>
-  <action name="actionSearch" >
-   <property name="text" >
-    <string>&amp;Search</string>
+   <property name="shortcut" >
+    <string>Ctrl+F</string>
    </property>
   </action>
-  <action name="actionDump" >
+  <action name="action_find" >
+   <property name="text" >
+    <string>&amp;Find</string>
+   </property>
+   <property name="statusTip" >
+    <string>Find a row with some value</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="action_dump" >
    <property name="text" >
     <string>Dump</string>
    </property>
@@ -151,6 +165,44 @@
    </property>
    <property name="shortcut" >
     <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="action_next" >
+   <property name="text" >
+    <string>&amp;Next</string>
+   </property>
+   <property name="iconText" >
+    <string>Next</string>
+   </property>
+   <property name="toolTip" >
+    <string>Next  Model</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Tab</string>
+   </property>
+  </action>
+  <action name="action_previous" >
+   <property name="text" >
+    <string>&amp;Previous</string>
+   </property>
+   <property name="toolTip" >
+    <string>Previous Model</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Shift+Backtab</string>
+   </property>
+  </action>
+  <action name="action_Highlight" >
+   <property name="text" >
+    <string>&amp;Highlight</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+H</string>
+   </property>
+  </action>
+  <action name="action_new_window" >
+   <property name="text" >
+    <string>&amp;New Window</string>
    </property>
   </action>
  </widget>

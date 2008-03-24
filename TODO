@@ -1,6 +1,8 @@
-Ctrl-Tab to move between tabs
-make sure moving of display doesn't affect copying shortcuts
+Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
+- layoutChanged
+
+make sure moving of display doesn't affect copying shortcuts
 implement save on window close?, or whatever
 keyboard search by selected column, or everything if no column selected
 
@@ -10,6 +12,8 @@ copy a field from a mouse-selection (ctrl-b maybe)
 hiding of fields
 
 turn on/off smart filters for relational delegates
+context menu for delegates, ie sort order, last used, etc
+save context menu settings, filter settings, etc
 filtering by various things. http://doc.trolltech.com/4.3/qsortfilterproxymodel.html
 highlighting by various things
 cut and paste (in model and csv format)
@@ -24,7 +28,6 @@ wrap description, and allow Access-style zooming
 warnings on overlap times
 warnings on large intervals
 moving of columns
-Ctrl-PgDn to last row in this column. Also extend selection
 
 maybe
 -----
@@ -35,6 +38,9 @@ pasting of csv, into rectangular regions
 
 db
 --
+
+times
+
 alter table invoices rename column type to billing;
 alter table entries add primary key (id);
 alter table entries alter column id set not null
