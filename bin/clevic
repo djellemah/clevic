@@ -55,6 +55,6 @@ puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $opt
 # show UI
 main_window = Qt::MainWindow.new
 browser = Browser.new( main_window )
-browser.open Entry
+browser.open
 main_window.show
 app.exec

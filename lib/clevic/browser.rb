@@ -89,7 +89,6 @@ class Browser < Qt::Widget
   end
 
   def find_models( models = $options[:models] )
-    puts models.inspect
     if models.nil? || models.empty?
       models = []
       ObjectSpace.each_object( Class ) {|x| models << x if x.superclass == ActiveRecord::Base }
