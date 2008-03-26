@@ -4,10 +4,11 @@ http://www.semiosix.com/clevic
 
 == DESCRIPTION:
 
-Framework and Qt Model/View GUI for data capture and editing of tables in a pre-existing
-relational DBMS. Uses ActiveRecord for data access.
+Database framework and Qt Model/View GUI for data capture and
+editing of tables in a pre-existing relational DBMS. So Postgresql, Mysql
+and so on are supported.
 
-There is a mild focus on reducing keystrokes for repetive data capture, so
+There is a mild focus on reducing keystrokes for repetitive data capture, so
 it provides
 nice keyboard shortcuts for all sorts of things. Model (table) objects
 are extensible to allow for model (table) specific cleverness, like
@@ -23,6 +24,8 @@ auto-filling-in of fields.
 * sortable by row headers
 * color highlighting of fields and records on definable criteria
 * extensions to various Qt classes to make db programming easier
+* leverages SQL whenever possible to handle large datasets, sorting, filtering
+	etc. So it's probably not suitable for talking to a remote db across a slow link.
 
 === Shortcuts:
 
@@ -48,6 +51,7 @@ Start with Browser and EntryBuilder.
 
 * ruby-qt4
 * bsearch
+* active_record
 * active_record/dirty
 
 == INSTALL:
