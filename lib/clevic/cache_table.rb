@@ -32,6 +32,10 @@ class CacheTable < Array
     self.class.new( @model_class, @options.merge( options ) )
   end
   
+  def index_for_id( id )
+    raise "This is hard. Not implemented"
+  end
+  
 end
 
 class Array

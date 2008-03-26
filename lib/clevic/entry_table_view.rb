@@ -15,11 +15,13 @@ class EntryTableView < Qt::TableView
     # see closeEditor
     @index_override = false
     
-    horizontal_header.movable = true
+    # set some Qt things
+    self.horizontal_header.movable = true
     # TODO might be useful to allow movable vertical rows,
     # but need to change the shortcut ideas of next and previous rows
-    vertical_header.movable = false
-    sorting_enabled = true
+    self.vertical_header.movable = false
+    self.sorting_enabled = true
+    
     # turn off "Object#type deprecated" messages
     $VERBOSE = nil
   end

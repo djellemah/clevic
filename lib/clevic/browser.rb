@@ -1,3 +1,5 @@
+require 'clevic/search_dialog.rb'
+
 =begin
   The main application class.
 =end
@@ -15,7 +17,7 @@ class Browser < Qt::Widget
     @layout.action_filter.connect   SIGNAL( 'triggered(bool)' ),      &method( :filter_by_current )
     @layout.action_next.connect     SIGNAL( 'triggered()' ),          &method( :next_tab )
     @layout.action_previous.connect SIGNAL( 'triggered()' ),          &method( :previous_tab )
-    
+    @layout.action_find.connect     SIGNAL( 'triggered()' ),          &method( :find )
     @layout.tables_tab.connect      SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
     
     # as an example
@@ -24,38 +26,84 @@ class Browser < Qt::Widget
   
   # activated by Ctrl-D for debugging
   def dump
-    widget = @layout.tables_tab.current_widget
-    puts "widget.model: #{widget.model.inspect}" if widget.class == EntryTableView
+    puts "current_tab_widget.model: #{current_tab_widget.model.inspect}" if current_tab_widget.class == EntryTableView
+  end
+  
+  def current_tab_widget
+    @layout.tables_tab.current_widget
+  end
+  
+  def find
+    sd = SearchDialog.new
+    result = sd.exec
+    case result
+      when Qt::Dialog::Accepted
+        search_for = sd.layout.search_text.text
+        @layout.tables_tab.current_widget.keyboard_search( search_for )
+      when Qt::Dialog::Rejected
+        puts "Don't search"
+      else
+        puts "unknown dialog code #{result}"
+    end
   end
   
   def reload_model
-    widget = @layout.tables_tab.current_widget
-    #load "#{$options[:definition]}_models.rb"
-    widget.reload_data
+    current_tab_widget.reload_data
   end
   
   # toggle the filter, based on current selection if it's off
   def filter_by_current( bool_filter )
-    widget = @layout.tables_tab.current_widget
+    save_entity = current_tab_widget.current_index.entity
+    save_index = current_tab_widget.current_index
+    save_region = current_tab_widget.visual_region_for_selection( current_tab_widget.selection_model.selection )
+    puts "save_region: #{save_region.inspect}"
     if bool_filter
-      indexes = widget.selection_model.selected_indexes
-      puts "indexes: #{indexes.inspect}"
+      # filter by current selection
+      # TODO handle a multiple-selection
+      indexes = current_tab_widget.selection_model.selected_indexes
       if indexes.empty?
-        action_filter.checked = false
+        @layout.action_filter.checked = false
+        return
+      elsif indexes.size > 1
+        puts "Can't do multiple selection filters yet"
+        return
       end
-      puts "indexes[0].attribute: #{indexes[0].attribute.inspect}"
-      puts "indexes[0].attribute_value: #{indexes[0].attribute_value.inspect}"
       
-      
-      entity = indexes[0].entity
-      column = entity.column_for_attribute( indexes[0].attribute )
-      column ||= entity.column_for_attribute( indexes[0].attribute.to_s + "_id" )
-      
-      # TODO doesn't work for related tables
-      widget.reload_data( :conditions => { column.name => entity.send( column.name ) } )
+      current_tab_widget.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
     else
-      widget.reload_data( :conditions => {} )
+      # unfilter
+      current_tab_widget.reload_data( :conditions => {} )
     end
+    
+    puts "current_tab_widget.horizontal_offset: #{current_tab_widget.horizontal_offset.inspect}"
+    puts "current_tab_widget.vertical_offset: #{current_tab_widget.vertical_offset.inspect}"
+    point = Qt::Point.new( current_tab_widget.horizontal_offset, current_tab_widget.vertical_offset )
+    puts "current_tab_widget.index_at: #{current_tab_widget.index_at(point)}"
+    
+    rect = current_tab_widget.children_rect
+    
+    puts "rect: #{rect.inspect}"
+    top_left_index = current_tab_widget.index_at(rect.top_left)
+    puts "top_left_index: #{top_left_index.inspect}, #{top_left_index.entity.inspect}"
+    bottom_right_index = current_tab_widget.index_at(rect.bottom_right)
+    puts "bottom_right_index: #{bottom_right_index.inspect}, #{bottom_right_index.entity.inspect}"
+    
+    # search top_left to bottom_right_index for the previous id value
+    #~ current_tab_widget.model.connect SLOT
+    
+    #~ row = nil
+    #~ current_tab_widget.model.collection.each_with_index do |obj,i|
+      #~ puts "obj: #{obj.inspect}"
+      #~ row = i if obj.id == save_id
+    #~ end
+    #~ puts "row: #{row.inspect}"
+    
+    #~ if row != nil
+      #~ index = current_tab_widget.create_index( row, save_index.column )
+      #~ puts "index: #{index.inspect}"
+      #~ current_tab_widget.current_index = index
+    #~ end
+    
   end
   
   # slot to handle Ctrl-Tab and move to next tab, or wrap around
@@ -81,6 +129,7 @@ class Browser < Qt::Widget
   # slot to handle the currentChanged signal from tables_tab, and
   # set focus on the grid
   def current_changed( current_tab_index )
+    puts "current_tab_index: #{current_tab_index.inspect}"
     @layout.tables_tab.current_widget.setFocus
   end
   
