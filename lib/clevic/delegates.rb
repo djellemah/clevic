@@ -28,10 +28,10 @@ class EntryDelegate < Qt::ItemDelegate
   end
 end
 
-=begin
-Base class for other delegates using Combo boxes.
+=begin rdoc
+Base class for other delegates using Combo boxes. Emit focus out signals, because ComboBox stupidly doesn't.
 
-- emit focus out signals, because ComboBox stupidly doesn't.
+Generally these will be created using an EntryBuilder.
 =end
 class ComboDelegate < Qt::ItemDelegate
   def initialize( parent )

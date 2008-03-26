@@ -2,9 +2,7 @@
 This table model allows an ActiveRecord or ActiveResource to be used as a
 basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
 
-Initially written by Richard Dale and Silvio Fonseca. Extensively modified
-by John Anderson.
-
+Initial idea by Richard Dale and Silvio Fonseca.
 =end
 
 require 'Qt4'
@@ -12,18 +10,18 @@ require 'date'
 require 'clevic/extensions'
 require 'clevic/model_column'
 
-=begin
-  labels are the headings in the table view
-  
-  dots are the dotted attribute paths that specify how to get values from
+=begin rdoc
+* labels are the headings in the table view
+
+* dots are the dotted attribute paths that specify how to get values from
   the underlying ActiveRecord model
-  
-  attribute_paths is a collection of attribute symbols. It comes from
+
+* attribute_paths is a collection of attribute symbols. It comes from
   dots, and is split on /\./
-  
-  attributes are the first-level of the dots
-  
-  collection is the set of ActiveRecord model objects (also called entities)
+
+* attributes are the first-level of the dots
+
+* collection is the set of ActiveRecord model objects (also called entities)
 =end
 class EntryTableModel < Qt::AbstractTableModel
   
@@ -266,7 +264,7 @@ class EntryTableModel < Qt::AbstractTableModel
     return value.to_variant
   end
 
-  # send data to UI
+  # Send data to UI. Default formatting is done here.
   def data( index, role = qt_display_role )
     begin
       return Qt::Variant.invalid if index.entity.nil?

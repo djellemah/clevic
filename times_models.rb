@@ -1,7 +1,4 @@
-require 'rubygems'
-require 'active_record'
-require 'active_record/dirty.rb'
-require 'clevic/cache_table.rb'
+require 'clevic'
 
 $options ||= {}
 $options[:database] ||= 'times'
@@ -30,7 +27,7 @@ class Entry < ActiveRecord::Base
       t.plain       :charge, :sample => 'Charge'
       t.distinct    :person, :sample => 'Leilani'
       
-      t.collection = CacheTable.new( self, :order => 'date, start, id' )
+      t.records = { :order => 'date, start, id' }
     end
   end
 
@@ -111,7 +108,7 @@ class Project < ActiveRecord::Base
       t.plain :rate
       t.plain :active
       
-      t.collection = CacheTable.new( self, :order => 'project' )
+      t.records = { :order => 'project' }
     end
   end
 end
@@ -125,7 +122,7 @@ class Activity < ActiveRecord::Base
       t.plain :activity
       t.plain :active
       
-      t.collection = CacheTable.new( self, :order => 'activity' )
+      t.records = { :order => 'activity' }
     end
   end
 end
@@ -145,7 +142,7 @@ class Invoice < ActiveRecord::Base
       t.plain :quote_amount
       t.plain :description
       
-      t.collection = CacheTable.new( self, :order => 'invoice_number' )
+      t.records = { :order => 'invoice_number' }
     end
   end
 end

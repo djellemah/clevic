@@ -1,7 +1,20 @@
 require 'clevic/search_dialog.rb'
+require 'ui/browser_ui.rb'
 
-=begin
-  The main application class.
+=begin rdoc
+The main application class. Each model for display should have a self.ui method
+which returns a EntryTableView instance, usually in conjunction with
+an EntryBuilder.
+
+  EntryTableView.new( Entry, parent ).create_model.new( Entry, parent ).create_model
+    .
+    .
+    .
+  end
+  
+Model instances may also implement <tt>self.key_press_event( event, current_index, view )</tt>
+and <tt>self.data_changed( top_left_index, bottom_right_index, view )</tt> methods so that
+they can respond to editing events and do Neat Stuff.
 =end
 class Browser < Qt::Widget
   slots *%w{dump() reload_model() filter_by_current(bool) next_tab() previous_tab() current_changed(int)}
@@ -29,10 +42,12 @@ class Browser < Qt::Widget
     puts "table_view.model: #{table_view.model.inspect}" if table_view.class == EntryTableView
   end
   
+  # return the EntryTableView object in the currently displayed tab
   def table_view
     @layout.tables_tab.current_widget
   end
   
+  # display a search dialog, and find the entered text
   def find
     sd = SearchDialog.new
     result = sd.exec
@@ -47,11 +62,12 @@ class Browser < Qt::Widget
     end
   end
   
+  # force a complete reload of the current tab's data
   def reload_model
     table_view.reload_data
   end
   
-  # toggle the filter, based on current selection if it's off
+  # toggle the filter, based on current selection.
   def filter_by_current( bool_filter )
     save_entity = table_view.current_index.entity
     save_index = table_view.current_index
@@ -104,14 +120,16 @@ class Browser < Qt::Widget
   # slot to handle the currentChanged signal from tables_tab, and
   # set focus on the grid
   def current_changed( current_tab_index )
-    puts "current_tab_index: #{current_tab_index.inspect}"
     @layout.tables_tab.current_widget.setFocus
   end
   
+  # shortcut for the Qt translate call
   def translate( st )
     Qt::Application.translate("Browser", st, nil, Qt::Application::UnicodeUTF8)
   end
 
+  # return the list of models in $options[:models] or find them
+  # as descendants of ActiveRecord::Base
   def find_models( models = $options[:models] )
     if models.nil? || models.empty?
       models = []
@@ -122,8 +140,10 @@ class Browser < Qt::Widget
     end
   end
   
-  # models can be an array of Model objects, in order of display
-  # if nil, find_models is called
+  # Create the tabs, each with a collection for a particular model class.
+  #
+  # models parameter can be an array of Model objects, in order of display.
+  # if models is nil, find_models is called
   def open( *models )
     models = $options[:models] if models.empty?
     # remove the tab that Qt Designer puts in

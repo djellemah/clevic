@@ -1,29 +1,58 @@
 = clevic
 
-* http://www.semiosix.com/clevic
+http://www.semiosix.com/clevic
 
 == DESCRIPTION:
 
-Framework and GUI for data capture and editing
+Framework and Qt Model/View GUI for data capture and editing of tables in a pre-existing
+relational DBMS. Uses ActiveRecord for data access.
+
+There is a mild focus on reducing keystrokes for repetive data capture, so
+it provides
+nice keyboard shortcuts for all sorts of things. Model (table) objects
+are extensible to allow for model (table) specific cleverness, like
+auto-filling-in of fields.
 
 == FEATURES/PROBLEMS:
 
-See TODO list
+* uses ActiveRecord for data access. Does *not* use the Qt SQL models.
+* sensible caching to handle large data sets without unnecessary memory usage
+* in-place Combo boxes for related table and foreign keys
+* distinct combo boxes to list previous values for a field
+* cut and paste in CSV format
+* sortable by row headers
+* color highlighting of fields and records on definable criteria
+* extensions to various Qt classes to make db programming easier
+
+=== Shortcuts:
+
+* Ctrl-' for ditto (copy value from previous record)
+* Ctrl-; for insert current date
+* Ctrl-] for copy previous record, one field right
+* Ctrl-[ for copy previous record, one field left
+* Ctrl-f to find a record
+* Ctrl-l to filter by current selection
+* cursor keys for movement
+
+=== Model definition:
+
+Right now, models must be defined in Ruby. The framework provides
+an easy Rails-migrations-like syntax for that.
+Start with Browser and EntryBuilder.
 
 == SYNOPSIS:
 
-  clevic model_definition
+	clevic model_definition_file
 
 == REQUIREMENTS:
 
-ruby-qt4
-bsearch
-active_record/dirty
-
+* ruby-qt4
+* bsearch
+* active_record/dirty
 
 == INSTALL:
 
-sudo gem install
+	sudo gem install
 
 == LICENSE:
 

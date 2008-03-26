@@ -1,8 +1,4 @@
-require 'rubygems'
-require 'active_record'
-require 'active_record/dirty.rb'
-
-require 'clevic/cache_table.rb'
+require 'clevic'
 
 $options ||= {}
 $options[:database] ||= 'accounts'
@@ -27,7 +23,7 @@ class Entry < ActiveRecord::Base
       t.plain       :active, :sample => 'WW'
       t.plain       :vat, :label => 'VAT', :sample => 'WW'
       
-      t.collection = CacheTable.new( self, :order => 'date, id' )
+      t.records = {:order => 'date, id' }
     end
   end
   
@@ -89,7 +85,7 @@ class Account < ActiveRecord::Base
       t.plain       :fringe, :format => "%.1f"
       t.plain       :active
       
-      t.collection = self.find( :all, :order => 'name,account_type' )
+      t.records = { :order => 'name,account_type' }
     end
   end
 end
@@ -114,7 +110,7 @@ $options[:models] = [ Entry, Account ]
       #~ t.plain       :financial_year
       #~ t.plain       :month
       
-      #~ t.collection = CacheTable.new( self, :order => 'date' )
+      #~ t.records = {:order => 'date' }
     #~ end
   #~ end
 #~ end

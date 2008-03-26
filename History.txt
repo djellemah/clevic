@@ -1,0 +1,371 @@
+2008-03-26 14:22  panic
+
+	* Manifest.txt, README.txt, TODO, accounts_models.rb,
+	  lib/clevic/delegates.rb, times_models.rb: documentation. Move db
+	  options to model defn files
+
+2008-03-26 13:31  panic
+
+	* accounts_models.rb, lib/clevic/browser.rb,
+	  lib/clevic/cache_table.rb, lib/clevic/entry_table_model.rb,
+	  times_models.rb: single-selection filtering working
+
+2008-03-26 09:43  panic
+
+	* TODO, lib/clevic/browser.rb, lib/clevic/cache_table.rb,
+	  lib/clevic/entry_table_model.rb, lib/clevic/entry_table_view.rb:
+	  search mostly working. Filtering half done
+
+2008-03-26 09:41  panic
+
+	* lib/clevic/search_dialog.rb: search dialog
+
+2008-03-26 09:40  panic
+
+	* bin/clevic, lib/clevic/db_options.rb: move db options to a
+	  separate file to make irb easier
+
+2008-03-26 09:39  panic
+
+	* accounts_models.rb: fix require
+	* Rakefile, ui/browser.ui, ui/search_dialog.ui: add search dialog
+
+2008-03-26 09:38  panic
+
+	* lib/clevic/model_column.rb: keep association metadata
+
+2008-03-26 09:09  panic
+
+	* lib/clevic/extensions.rb: improve some inspects. Add a dump for
+	  ModelIndex
+
+2008-03-24 17:08  panic
+
+	* bin/clevic, lib/clevic/browser.rb: take out test for single model
+
+2008-03-24 17:07  panic
+
+	* TODO, accounts_models.rb, bin/clevic, lib/clevic/browser.rb,
+	  ui/browser.ui: fix focus buglets. Ctrl-Tab to move tabs
+
+2008-03-23 04:18  panic
+
+	* Manifest.txt, Rakefile, bin/clevic, lib/clevic/cache_table.rb,
+	  lib/clevic/entry_builder.rb, lib/clevic/entry_table_model.rb,
+	  lib/clevic/entry_table_view.rb, ui/browser.ui: filter by current
+	  selection. Remove dependence on collection[0] for model_class
+	  retrieval
+
+2008-03-20 08:24  panic
+
+	* bin/clevic, lib/clevic/entry_builder.rb,
+	  lib/clevic/entry_table_model.rb, lib/clevic/entry_table_view.rb,
+	  times_models.rb: make requires use library directories
+
+2008-03-20 08:19  panic
+
+	* ., active_record, bin, bin/clevic, cache_table.rb, clevic,
+	  delegates.rb, entry_builder.rb, entry_table_model.rb,
+	  entry_table_view.rb, extensions.rb, lib, lib/active_record,
+	  lib/clevic, lib/clevic/cache_table.rb, lib/clevic/delegates.rb,
+	  lib/clevic/entry_builder.rb, lib/clevic/entry_table_model.rb,
+	  lib/clevic/entry_table_view.rb, lib/clevic/extensions.rb:
+	  conform to Hoe directories
+
+2008-03-20 08:17  panic
+
+	* History.txt, Manifest.txt, README.txt, Rakefile,
+	  sql/accounts.sql, sql/times.sql: first with Hoe
+
+2008-03-18 15:45  panic
+
+	* TODO, accounts_models.rb, entry_table_view.rb: allow Ctrl-Return
+	  to create new row
+
+2008-03-18 11:25  panic
+
+	* accounts_models.rb, delegates.rb, entry_table_model.rb,
+	  entry_table_view.rb, extensions.rb: make
+	  CombeDelegate#setModelData common. use full_edit instead of open.
+
+2008-03-18 08:53  panic
+
+	* entry_table_view.rb: create set_current_unless_override
+
+2008-03-18 08:46  panic
+
+	* accounts_models.rb, clevic, delegates.rb, entry_table_model.rb,
+	  entry_table_view.rb, times_models.rb: fix delegate editing and
+	  cursor movement
+
+2008-03-17 15:34  panic
+
+	* accounts_models.rb, entry_table_model.rb, entry_table_view.rb:
+	  send data_changed to entity models
+
+2008-03-17 12:28  panic
+
+	* clevic, entry_table_model.rb, extensions.rb: attempts to fix
+	  reloading:
+
+2008-03-17 12:03  panic
+
+	* cache_table.rb, entry_builder.rb, entry_table_model.rb,
+	  times_models.rb: improvements in caching and fetching from DB
+	  only when necessary
+
+2008-03-16 09:25  panic
+
+	* entry_builder.rb: remove debugging puts
+
+2008-03-15 08:54  panic
+
+	* accounts_models.rb, cache_table.rb, clevic, entry_table_view.rb,
+	  extensions.rb, times_models.rb, ui/browser.ui: use triggered
+	  instead of activated. Exception handling for calls to UI model
+	  definitions. Try to activate debugger.
+
+2008-03-13 12:26  panic
+
+	* TODO, delegates.rb: update for ruby-pg
+
+2008-03-11 19:50  panic
+
+	* entry_builder.rb, entry_table_view.rb, times_models.rb: add some
+	  times-capture specific code
+
+2008-03-09 19:22  panic
+
+	* accounts_models.rb, clevic, entry_table_view.rb, ui/browser.ui:
+	  add clever debit & credit completion
+
+2008-03-09 13:19  panic
+
+	* clevic: make it executable
+
+2008-03-09 13:15  panic
+
+	* browser.rb, clevic: rename main file
+
+2008-03-09 13:12  panic
+
+	* ., times: rename project
+
+2008-03-02 21:35  panic
+
+	* times/entry_table_model.rb, times/entry_table_view.rb: start
+	  abstracting model_class from collection[0]
+
+2008-03-02 21:20  panic
+
+	* times/accounts_models.rb, times/browser.rb: add some samples for
+	  accounts. Allow model order to be specified.
+
+2008-03-02 21:09  panic
+
+	* times/TODO, times/accounts_models.rb, times/cache_table.rb,
+	  times/entry_builder.rb, times/entry_table_model.rb,
+	  times/entry_table_view.rb, times/extensions.rb: Add lazy model
+	  instance fetching. Do a faster fix for row sizes
+
+2008-03-02 15:08  panic
+
+	* times/accounts_models.rb, times/browser.rb,
+	  times/entry_table_model.rb: add the values table to accounts.
+	  Various other comments.
+
+2008-03-02 12:55  panic
+
+	* times/accounts_models.rb, times/delegates.rb,
+	  times/entry_builder.rb: comments for builder methods. Allow
+	  conditions for DistinctDelegate
+
+2008-03-02 12:37  panic
+
+	* times/accounts_models.rb, times/delegates.rb,
+	  times/entry_builder.rb, times/entry_table_model.rb: allow format
+	  and alignment to be specified in the ui table definition.
+	  Improve formatting code. Add a Restricted field type.
+
+2008-03-01 16:15  panic
+
+	* times/TODO, times/accounts_models.rb, times/times_models.rb: fix
+	  some orderings
+
+2008-03-01 16:02  panic
+
+	* times/accounts_models.rb, times/browser.rb,
+	  times/times_models.rb: check for :database in options. remove
+	  references to old Tables idea.
+
+2008-03-01 15:57  panic
+
+	* times/accounts, times/accounts_models.rb, times/browser.rb,
+	  times/entry_builder.rb, times/times, times/times_models.rb:
+	  browser now uses command line parameter to get ui table
+	  definitions and db connections
+
+2008-02-28 18:47  panic
+
+	* times/browser.rb, times/entry_table_model.rb,
+	  times/ui/browser.ui: remove puts output. Make sure initial
+	  designer tab is empty, and is cleared when table tabs are added
+
+2008-02-28 18:40  panic
+
+	* times/Rakefile, times/dir.rb, times/ui: do Rakefile for invoking
+	  rbuic4
+
+2008-02-28 18:12  panic
+
+	* times/accounts_models.rb, times/browser.rb,
+	  times/entry_builder.rb, times/entry_table_model.rb,
+	  times/entry_table_view.rb, times/reports, times/reports/invoice,
+	  times/sql, times/sql/invoice.view.sql,
+	  times/sql/nice_entries.view.sql, times/times, times/times.ui,
+	  times/ui, times/ui/browser.ui: get elementary tabbed tables
+	  working
+
+2008-02-14 11:54  panic
+
+	* times/times: specify table name on command line
+
+2008-01-15 07:19  panic
+
+	* times/accounts, times/times: allow host to be specified
+
+2007-11-29 12:57  panic
+
+	* times/accounts, times/accounts.odb, times/accounts_models.rb:
+	  allow editing of accounts table. Copy accounts.odb here
+
+2007-09-13 06:04  panic
+
+	* times/accounts, times/accounts_models.rb, times/times: allow use
+	  of db to be specified on command line
+
+2007-09-05 15:53  panic
+
+	* times/times: make coding a bit neater
+
+2007-09-05 15:45  panic
+
+	* times/delegates.rb, times/entry_builder.rb,
+	  times/entry_table_model.rb, times/entry_table_view.rb,
+	  times/extensions.rb: paste of rows working
+
+2007-09-04 11:52  panic
+
+	* times/accounts_models.rb, times/entry_table_model.rb: change to
+	  test db. Allow entry of a single digit in a date field and it
+	  will fill in the month from the previous row
+
+2007-09-04 11:39  panic
+
+	* times/accounts_models.rb, times/entry_table_view.rb,
+	  times/times: don't show two tables. renames. Use live db for
+	  accounts
+
+2007-09-04 06:34  panic
+
+	* times/accounts, times/entry_builder.rb,
+	  times/entry_table_model.rb, times/entry_table_view.rb,
+	  times/extensions.rb, times/times: neaten up requires, and have a
+	  look at 2 windows where one goes blank
+
+2007-09-03 22:07  panic
+
+	* times/entry_table_model.rb: other small tweaks
+
+2007-09-03 22:00  panic
+
+	* times/accounts, times/entry_table_model.rb, times/times: fix
+	  number alignment
+
+2007-09-03 21:24  panic
+
+	* times/accounts, times/accounts_models.rb, times/delegates.rb,
+	  times/entry_builder.rb, times/entry_table_model.rb,
+	  times/entry_table_view.rb, times/times: add entry builder and
+	  make accounts and times work with it
+
+2007-09-03 15:28  panic
+
+	* times/accounts, times/entry_table_view.rb: do column sizing
+
+2007-09-03 11:52  panic
+
+	* times/accounts, times/delegates.rb, times/entry_table_view.rb:
+	  show popup on f4
+
+2007-09-03 11:21  panic
+
+	* times/accounts, times/accounts_models.rb, times/delegates.rb,
+	  times/entry_table_model.rb, times/entry_table_view.rb,
+	  times/extensions.rb: fix completion handling
+
+2007-09-03 06:15  panic
+
+	* times/TODO, times/accounts, times/entry_table_model.rb,
+	  times/entry_table_view.rb, times/extensions.rb, times/models.rb,
+	  times/times, times/times.rb: move times-specific code to its own
+	  file
+
+2007-09-02 18:05  panic
+
+	* times/TODO, times/entry_table_model.rb, times/extensions.rb:
+	  weirdness with can't convert frozen object with Date. Fix sql
+	  updates
+
+2007-09-02 16:52  panic
+
+	* times/TODO, times/delegates.rb, times/entry_table_model.rb,
+	  times/entry_table_view.rb: better error handling
+
+2007-08-31 15:11  panic
+
+	* times/TODO, times/delegates.rb, times/extensions.rb,
+	  times/models.rb, times/times.rb: allow nil values in combo box
+	  fields
+
+2007-08-30 21:58  panic
+
+	* times/TODO, times/delegates.rb, times/entry_table_view.rb,
+	  times/times.rb: do completion for select distinct
+
+2007-08-30 21:03  panic
+
+	* times/log: remove file
+
+2007-08-30 21:01  panic
+
+	* times/delegates.rb, times/entry_table_model.rb: remove cruft
+
+2007-08-30 20:55  panic
+
+	* times/active_table_model.rb, times/entry_table_model.rb,
+	  times/times.rb, times/times_qt.rb: rename to EntryTableModel.
+	  Remove old files
+
+2007-08-30 20:50  panic
+
+	* times/active_table_model.rb, times/delegates.rb,
+	  times/entry_table_view.rb, times/extensions.rb, times/times.rb:
+	  lots of neatening up code and putting the access methods into
+	  ModelIndex
+
+2007-08-30 19:33  panic
+
+	* times/TODO, times/active_table_model.rb, times/delegates.rb,
+	  times/entry_table_view.rb, times/extensions.rb, times/times.rb:
+	  Create EntryDelegate, although it's not really used. Make sure
+	  boolean fields get checkboxes.
+
+2007-08-29 11:25  panic
+
+	* times, times/TODO, times/active_record,
+	  times/active_record/dirty.rb, times/active_table_model.rb,
+	  times/delegates.rb, times/dir.rb, times/entry_table_view.rb,
+	  times/extensions.rb, times/log, times/models.rb, times/times.rb,
+	  times/times.ui, times/times_qt.rb: initial import
+

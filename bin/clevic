@@ -1,10 +1,6 @@
 #! /usr/bin/ruby
 
-require 'ui/browser_ui.rb'
-require 'clevic/entry_table_view.rb'
 require 'clevic/browser.rb'
-require 'active_record'
-require 'active_record/dirty.rb'
 
 # fetch command line options
 require 'optparse'
@@ -36,11 +32,11 @@ if $options[:debug]
   puts args.inspect
 end
 
-# connect to the database
 if !$options.has_key?( :database )
   raise "Please define $options[:database]"
 end
 
+# connect to db
 require 'clevic/db_options.rb'
 
 puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $options[:debug]
