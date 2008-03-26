@@ -123,7 +123,19 @@ module Qt
     end
     
     def inspect
-      "Qt::ModelIndex {(#{row},#{column}) #{gui_value}}"
+      "#<Qt::ModelIndex xy=(#{row},#{column}) gui_value=#{gui_value}>"
+    end
+    
+    def dump
+      <<-EOF
+      field_name: #{field_name}
+      field_value: #{field_value}
+      dotted_path: #{dotted_path.inspect}
+      attribute_path: #{attribute_path.inspect}
+      attribute: #{attribute.inspect}
+      attribute_value: #{attribute_value.inspect}
+      metadata: #{metadata.inspect}
+      EOF
     end
     
     # return the attribute of the underlying entity corresponding
@@ -151,6 +163,7 @@ module Qt
       model.dots[column]
     end
     
+    # return an array of path elements from dotted_path
     def attribute_path
       return nil if model.nil?
       model.attribute_paths[column]
@@ -160,6 +173,17 @@ module Qt
     def metadata
       # use the optimised version
       model.metadata( column )
+    end
+    
+    # return the table's field name. For associations, this would
+    # be suffixed with _id
+    def field_name
+      metadata.name
+    end
+    
+    # return the value of the field, it the _id value
+    def field_value
+      entity.send( field_name )
     end
     
     # the underlying entity
@@ -226,9 +250,31 @@ module Qt
     
   end
   
+  class Rect
+    def inspect
+      "#<Qt::Rect x=#{self.x} y=#{self.y} w=#{self.width} h=#{self.height}>"
+    end
+  end
+  
+  class Region
+    def inspect
+      "#<Qt::Region bounding_rect=#{self.bounding_rect.inspect}>"
+    end
+  end
+  
   class Variant
     def self.invalid
       @@invalid ||= Variant.new
     end
+    
+    # because the qtruby inspect doesn't provide the value
+    def inspect
+      "#<Qt::Variant value=#{self.value} typeName=#{self.typeName}>"
+    end
+    
+    def to_s
+      self.value.to_s
+    end
   end
+  
 end
