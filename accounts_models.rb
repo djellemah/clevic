@@ -2,7 +2,7 @@ require 'rubygems'
 require 'active_record'
 require 'active_record/dirty.rb'
 
-require 'cache_table.rb'
+require 'clevic/cache_table.rb'
 
 $options ||= {}
 $options[:database] ||= 'accounts'
