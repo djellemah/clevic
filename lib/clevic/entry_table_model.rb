@@ -9,7 +9,8 @@ by John Anderson.
 
 require 'Qt4'
 require 'date'
-require 'clevic/extensions.rb'
+require 'clevic/extensions'
+require 'clevic/model_column'
 
 =begin
   labels are the headings in the table view
@@ -22,8 +23,7 @@ require 'clevic/extensions.rb'
   
   attributes are the first-level of the dots
   
-  collection is the set of model objects
-  
+  collection is the set of ActiveRecord model objects (also called entities)
 =end
 class EntryTableModel < Qt::AbstractTableModel
   
@@ -41,6 +41,7 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   def hasIndex( row, col, parent )
+    puts 'hasIndex'
     puts "row: #{row.inspect}"
     puts "col: #{col.inspect}"
     puts "parent: #{parent.inspect}"
@@ -48,11 +49,13 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   def hasChildren( *args )
+    puts 'hasChildren'
     puts "args: #{args.inspect}"
     super
   end
   
   def sort( col, order )
+    puts 'sort'
     puts "col: #{col.inspect}"
     #~ Qt::AscendingOrder
     #~ Qt::DescendingOrder
@@ -61,6 +64,7 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   def match( start_index, role, search_value, hits, match_flags )
+    puts "#{__FILE__}:#{__LINE__}"
     puts start_index.dump
     puts "search_value: #{search_value.inspect}"
     puts "role: #{role.inspect}"

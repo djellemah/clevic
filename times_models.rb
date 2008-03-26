@@ -146,4 +146,4 @@ class Invoice < ActiveRecord::Base
   end
 end
 
-#~ $options[:models] = [ Entry, Invoice, Project, Activity ]
+$options[:models] = [ Entry, Invoice, Project, Activity ]

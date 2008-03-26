@@ -1,5 +1,34 @@
-# Fetch rows from the db on demand, rather than all up front
-# TODO drop rows when they haven't been accessed for a while
+require 'bsearch'
+
+=begin rdoc
+Store the SQL order_by attributes with ascending and descending values
+=end
+class OrderAttribute
+  attr_reader :direction, :attribute
+  
+  def initialize( sql_order_fragment )
+    if sql_order_fragment =~ /(.*?) *asc/
+      @direction = :ascending
+      @attribute = $1
+    elsif sql_order_fragment =~ /(.*?) *desc/
+      @direction = :descending
+      @attribute = $1
+    else
+      @direction = :ascending
+      @attribute = sql_order_fragment
+    end
+  end
+  
+  def to_s
+    attribute
+  end
+end
+
+=begin rdoc
+Fetch rows from the db on demand, rather than all up front
+---
+TODO drop rows when they haven't been accessed for a while
+=end
 class CacheTable < Array
   
   def initialize( model_class, find_options = {} )
@@ -32,8 +61,32 @@ class CacheTable < Array
     self.class.new( @model_class, @options.merge( options ) )
   end
   
-  def index_for_id( id )
-    raise "This is hard. Not implemented"
+  # Return the set of OrderAttribute objects for this collection
+  def order_attributes
+    # This is sorted in @options[:order], so use that for the search
+    @order_attributes ||= @options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(x)}
+  end
+  
+  # find the index for the given entity, using a binary search algorithm (bsearch).
+  # The order_by ActiveRecord style options are used to do the binary search.
+  # 0 is returned if the entity is nil
+  def index_for_entity( entity )
+    return 0 if entity.nil?
+    
+    found_index = bsearch_first do |x|
+      # sort by all attributes
+      order_attributes.inject(0) do |result,attribute|
+        if result == 0
+          if attribute.direction == :ascending
+            x.send( attribute.attribute ) <=> entity.send( attribute.attribute )
+          else
+            entity.send( attribute.attribute ) <=> x.send( attribute.attribute )
+          end
+        else
+          result
+        end
+      end
+    end
   end
   
 end

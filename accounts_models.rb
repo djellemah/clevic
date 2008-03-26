@@ -99,6 +99,7 @@ $options[:models] = [ Entry, Account ]
   #~ has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   #~ def self.ui( parent )
     #~ EntryTableView.new( self, parent ).create_model do |t|
+      #~ t.readonly
       #~ t.plain       :date
       #~ t.plain       :description
       #~ t.plain       :debit

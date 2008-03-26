@@ -26,10 +26,10 @@ class Browser < Qt::Widget
   
   # activated by Ctrl-D for debugging
   def dump
-    puts "current_tab_widget.model: #{current_tab_widget.model.inspect}" if current_tab_widget.class == EntryTableView
+    puts "table_view.model: #{table_view.model.inspect}" if table_view.class == EntryTableView
   end
   
-  def current_tab_widget
+  def table_view
     @layout.tables_tab.current_widget
   end
   
@@ -48,19 +48,18 @@ class Browser < Qt::Widget
   end
   
   def reload_model
-    current_tab_widget.reload_data
+    table_view.reload_data
   end
   
   # toggle the filter, based on current selection if it's off
   def filter_by_current( bool_filter )
-    save_entity = current_tab_widget.current_index.entity
-    save_index = current_tab_widget.current_index
-    save_region = current_tab_widget.visual_region_for_selection( current_tab_widget.selection_model.selection )
-    puts "save_region: #{save_region.inspect}"
+    save_entity = table_view.current_index.entity
+    save_index = table_view.current_index
+    
     if bool_filter
       # filter by current selection
       # TODO handle a multiple-selection
-      indexes = current_tab_widget.selection_model.selected_indexes
+      indexes = table_view.selection_model.selected_indexes
       if indexes.empty?
         @layout.action_filter.checked = false
         return
@@ -69,41 +68,17 @@ class Browser < Qt::Widget
         return
       end
       
-      current_tab_widget.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
+      table_view.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
     else
       # unfilter
-      current_tab_widget.reload_data( :conditions => {} )
+      table_view.reload_data( :conditions => {} )
     end
     
-    puts "current_tab_widget.horizontal_offset: #{current_tab_widget.horizontal_offset.inspect}"
-    puts "current_tab_widget.vertical_offset: #{current_tab_widget.vertical_offset.inspect}"
-    point = Qt::Point.new( current_tab_widget.horizontal_offset, current_tab_widget.vertical_offset )
-    puts "current_tab_widget.index_at: #{current_tab_widget.index_at(point)}"
+    # find the row for the saved entity
+    found_row = table_view.model.collection.index_for_entity( save_entity )
     
-    rect = current_tab_widget.children_rect
-    
-    puts "rect: #{rect.inspect}"
-    top_left_index = current_tab_widget.index_at(rect.top_left)
-    puts "top_left_index: #{top_left_index.inspect}, #{top_left_index.entity.inspect}"
-    bottom_right_index = current_tab_widget.index_at(rect.bottom_right)
-    puts "bottom_right_index: #{bottom_right_index.inspect}, #{bottom_right_index.entity.inspect}"
-    
-    # search top_left to bottom_right_index for the previous id value
-    #~ current_tab_widget.model.connect SLOT
-    
-    #~ row = nil
-    #~ current_tab_widget.model.collection.each_with_index do |obj,i|
-      #~ puts "obj: #{obj.inspect}"
-      #~ row = i if obj.id == save_id
-    #~ end
-    #~ puts "row: #{row.inspect}"
-    
-    #~ if row != nil
-      #~ index = current_tab_widget.create_index( row, save_index.column )
-      #~ puts "index: #{index.inspect}"
-      #~ current_tab_widget.current_index = index
-    #~ end
-    
+    # create a new index and move to it
+    table_view.current_index = table_view.model.create_index( found_row, save_index.column )
   end
   
   # slot to handle Ctrl-Tab and move to next tab, or wrap around
@@ -150,6 +125,7 @@ class Browser < Qt::Widget
   # models can be an array of Model objects, in order of display
   # if nil, find_models is called
   def open( *models )
+    models = $options[:models] if models.empty?
     # remove the tab that Qt Designer puts in
     @layout.tables_tab.clear
     # make sure focus goes to first table
@@ -160,7 +136,7 @@ class Browser < Qt::Widget
       if model.respond_to?( :ui )
         tab = model.ui( @layout.tables_tab )
       else
-        raise "Can't build ui for #{model.name}"
+        raise "Can't build ui for #{model.name}. Provide a self.ui method."
       end
       @layout.tables_tab.add_tab( tab, translate( model.name.humanize ) )
     end
