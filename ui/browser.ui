@@ -131,7 +131,7 @@
     <string>Filter by value in current field</string>
    </property>
    <property name="shortcut" >
-    <string>Ctrl+F</string>
+    <string>Ctrl+L</string>
    </property>
   </action>
   <action name="action_find" >
