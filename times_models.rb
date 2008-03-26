@@ -5,6 +5,10 @@ require 'clevic/cache_table.rb'
 
 $options ||= {}
 $options[:database] ||= 'times'
+$options[:adapter]  ||= 'postgresql'
+$options[:host] ||= 'localhost'
+$options[:username] ||= 'panic'
+$options[:password] ||= ''
 
 # model definitions
 class Entry < ActiveRecord::Base

@@ -12,11 +12,14 @@ See TODO list
 
 == SYNOPSIS:
 
-  clevic model_defitions
+  clevic model_definition
 
 == REQUIREMENTS:
 
 ruby-qt4
+bsearch
+active_record/dirty
+
 
 == INSTALL:
 

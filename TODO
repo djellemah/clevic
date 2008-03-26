@@ -2,11 +2,14 @@ Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 - layoutChanged
 
-make sure moving of display doesn't affect copying shortcuts
-implement save on window close?, or whatever
-keyboard search by selected column, or everything if no column selected
+by default, add id (from model-specified id field) in ascending order to cache_table sorting
 
-add year if not specified, with 6 months on either side range
+moving of columns. Make sure moving of display doesn't affect copying shortcuts
+implement save on window close, or whatever
+/-style keyboard search by selected column, or everything if no column selected
+/-style filtering?
+
+for dates, add year if not specified, with 6 months on either side range
 value formatting not in model
 copy a field from a mouse-selection (ctrl-b maybe)
 hiding of fields
@@ -32,9 +35,10 @@ QAbstractItemView::ScrollHint
     \value PositionAtCenter  Scroll to position the item at the center of the viewport.
 
 wrap description, and allow Access-style zooming
-warnings on overlap times
-warnings on large intervals
-moving of columns
+f4 for date fields and time fields
+
+warnings on overlap times (in status bar)
+warnings on large intervals (in status bar)
 
 maybe
 -----

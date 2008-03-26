@@ -28,12 +28,17 @@ class EntryDelegate < Qt::ItemDelegate
   end
 end
 
-# To emit focus out signals, because ComboBox stupidly doesn't.
+=begin
+Base class for other delegates using Combo boxes.
+
+- emit focus out signals, because ComboBox stupidly doesn't.
+=end
 class ComboDelegate < Qt::ItemDelegate
   def initialize( parent )
     super
   end
   
+  # Convert Qt:: constants from the integer value to a string value.
   def hint_string( hint )
     hs = String.new
     Qt::AbstractItemDelegate.constants.each do |x|
@@ -61,23 +66,25 @@ class ComboDelegate < Qt::ItemDelegate
     @editor.show_popup
   end
   
+  # returns true if the editor allows values outside of a predefined
+  # range, false otherwise.
   def restricted?
     false
   end
   
-  # descendants should override this to fill the combo box
-  # list with values
+  # Subclasses should override this to fill the combo box
+  # list with values.
   def populate( editor, model_index )
     raise "subclass responsibility"
   end
   
   # This catches the event that begins the edit process.
-  # Not used at the moment
+  # Not used at the moment.
   def editorEvent ( event, model, style_option_view_item, model_index ) 
     super
   end
   
-  # Create a ComboBox and fill it with the possible values
+  # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
   def createEditor( parent_widget, style_option_view_item, model_index )
     @editor = Qt::ComboBox.new( parent )
     
@@ -95,6 +102,7 @@ class ComboDelegate < Qt::ItemDelegate
     @editor
   end
   
+  # Override the Qt::ItemDelegate method.
   def updateEditorGeometry( editor, style_option_view_item, model_index )
     # figure out where to put the editor widget, taking into
     # account the sizes of the headers
@@ -109,17 +117,20 @@ class ComboDelegate < Qt::ItemDelegate
     editor.set_geometry( rect )
   end
 
-  # send data to the editor
+  # Override the Qt method to send data to the editor from the model.
   def setEditorData( editor, model_index )
     editor.current_index = editor.find_data( model_index.attribute_value.to_variant )
     editor.line_edit.select_all
   end
   
+  # This translates the text from the editor into something that is
+  # stored in an underlying model. Intended to be overridden by subclasses.
   def translate_from_editor_text( editor, text )
     text
   end
-  
-  # save the object in the model entity relationship
+
+  # Send the data from the editor to the model. The data will
+  # be translated by translate_from_editor_text,
   def setModelData( editor, abstract_item_model, model_index )
     dump_editor_state( editor )
     
@@ -141,8 +152,8 @@ class ComboDelegate < Qt::ItemDelegate
   end
 end
 
-# provide a list of all values in this field
-# and allow new values to be entered
+# Provide a list of all values in this field,
+# and allow new values to be entered.
 class DistinctDelegate < ComboDelegate
   
   def initialize( parent, attribute, model_class, options )
@@ -169,9 +180,9 @@ class DistinctDelegate < ComboDelegate
   end
 end
 
-# restrict the set of values in a field
+# A Combo box which only allows a restricted set of value to be entered.
 class RestrictedDelegate < ComboDelegate
-  # options must contain a :set => [ ... ]
+  # options must contain a :set => [ ... ] to specify the set of values.
   def initialize( parent, attribute, model_class, options )
     raise "RestrictedDelegate must have a :set in options" unless options.has_key?( :set )
     @ar_model = model_class
@@ -192,11 +203,13 @@ class RestrictedDelegate < ComboDelegate
   end
 end
 
-# To edit a relation from an id and display a list of relevant entries
+# Edit a relation from an id and display a list of relevant entries.
+#
 # attribute_path is the full dotted path to get from the entity in the
 # model to the values displayed in the combo box.
-# the ids of the ActiveRecord models are stored in the item data
-# and the item text is fetched from them using attribute_path
+# 
+# The ids of the ActiveRecord models are stored in the item data
+# and the item text is fetched from them using attribute_path.
 class RelationalDelegate < ComboDelegate
 
   def initialize( parent, attribute_path, options )
