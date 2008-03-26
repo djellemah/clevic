@@ -36,19 +36,12 @@ if $options[:debug]
   puts args.inspect
 end
 
-# set up defaults
-# $options[:database] to be defined with the models
-$options[:adapter]  ||= 'postgresql'
-$options[:host] ||= 'localhost'
-$options[:username] ||= 'panic'
-$options[:password] ||= ''
-
 # connect to the database
 if !$options.has_key?( :database )
   raise "Please define $options[:database]"
 end
 
-ActiveRecord::Base.establish_connection( $options )
+require 'clevic/db_options.rb'
 
 puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $options[:debug]
 
