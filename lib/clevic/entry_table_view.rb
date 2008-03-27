@@ -354,11 +354,4 @@ class EntryTableView < Qt::TableView
     end
   end
 
-  def reload_data( options = {} )
-    # renew cache
-    model.collection = model.collection.renew( options )
-    # tell the UI we had a major data change
-    model.reset
-  end
-  
 end

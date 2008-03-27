@@ -34,16 +34,6 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::NoButton|QDialogButtonBox::Ok</set>
    </property>
   </widget>
-  <widget class="QLineEdit" name="search_text" >
-   <property name="geometry" >
-    <rect>
-     <x>160</x>
-     <y>30</y>
-     <width>110</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QCheckBox" name="selected_rows" >
    <property name="geometry" >
     <rect>
@@ -70,7 +60,7 @@
     <string>Selected Columns</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label" >
+  <widget class="QLabel" name="search_label" >
    <property name="geometry" >
     <rect>
      <x>90</x>
@@ -89,7 +79,42 @@
     <cstring>search_text</cstring>
    </property>
   </widget>
+  <widget class="QComboBox" name="search_text" >
+   <property name="geometry" >
+    <rect>
+     <x>160</x>
+     <y>30</y>
+     <width>171</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="focusPolicy" >
+    <enum>Qt::StrongFocus</enum>
+   </property>
+   <property name="editable" >
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="from_start" >
+   <property name="geometry" >
+    <rect>
+     <x>160</x>
+     <y>130</y>
+     <width>78</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>From Start</string>
+   </property>
+  </widget>
  </widget>
+ <tabstops>
+  <tabstop>search_text</tabstop>
+  <tabstop>selected_columns</tabstop>
+  <tabstop>selected_rows</tabstop>
+  <tabstop>button_box</tabstop>
+ </tabstops>
  <resources>
   <include location="icons.qrc" />
  </resources>

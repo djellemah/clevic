@@ -53,7 +53,7 @@ class Entry < ActiveRecord::Base
           view.dataChanged( top_left_index, bottom_right_index )
           
           # move to end time field
-          view.view.override_next_index( model.create_index( current_index.row, view.builder.index( :end ) ) )
+          view.override_next_index( model.create_index( current_index.row, view.builder.index( :end ) ) )
         end
         # don't let anybody else handle the keypress
         return true

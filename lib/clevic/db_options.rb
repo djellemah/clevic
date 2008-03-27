@@ -1,7 +1,8 @@
 # set up defaults
 # $options[:database] to be defined with the models
+require 'active_record'
 
-$options ||= []
+$options ||= {}
 $options[:adapter]  ||= 'postgresql'
 $options[:host] ||= 'localhost'
 $options[:username] ||= 'panic'

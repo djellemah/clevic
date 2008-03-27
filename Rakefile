@@ -12,7 +12,7 @@ file 'ui/search_dialog_ui.rb' => ['ui/search_dialog.ui'] do |t|
   sh "rbuic4 #{t.prerequisites} -o #{t.name}"
 end
 
-Hoe.new('clevic', '1.0.1') do |s|
+Hoe.new('clevic', '1.1.1') do |s|
 	s.author     = "John Anderson"
 	s.email      = "john at semiosix dot com"
 	s.need_zip = true

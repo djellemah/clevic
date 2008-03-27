@@ -31,6 +31,11 @@ class OrderAttribute
   def to_sql
     "#{attribute} #{direction.to_s}"
   end
+  
+  def + ( obj )
+    self.direction += obj.direction
+  end
+  
 end
 
 =begin rdoc
@@ -57,8 +62,14 @@ class CacheTable < Array
     
     # size the array and fill it with nils. They'll be filled
     # in by the [] operator
-    @row_count = model_class.count( :conditions => @options[:conditions] )
+    @row_count = sql_count
     super(@row_count)
+  end
+  
+  # The count of the records according to the db, which may be different to
+  # the records in the cache
+  def sql_count
+    @model_class.count( :conditions => @options[:conditions] )
   end
   
   # add an id to options[:order] if it's not in there

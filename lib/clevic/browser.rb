@@ -64,7 +64,7 @@ class Browser < Qt::Widget
   
   # force a complete reload of the current tab's data
   def reload_model
-    table_view.reload_data
+    table_view.model.reload_data
   end
   
   # toggle the filter, based on current selection.
@@ -84,10 +84,10 @@ class Browser < Qt::Widget
         return
       end
       
-      table_view.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
+      table_view.model.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
     else
       # unfilter
-      table_view.reload_data( :conditions => {} )
+      table_view.model.reload_data( :conditions => {} )
     end
     
     # find the row for the saved entity

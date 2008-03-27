@@ -180,13 +180,27 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   def fetchMore( parent )
-    # not really useful here
-    puts "fetchMore parent: #{parent.inspect}"
+    #~ puts "fetchMore"
+    #~ reload_data if canFetchMore( parent )
   end
   
   def canFetchMore( parent )
-    # not useful here
-    return false
+    false
+    #~ puts "canFetchMore"
+    #~ puts "self.collection.size: #{self.collection.size.inspect}"
+    #~ puts "self.collection.sql_count: #{self.collection.sql_count.inspect}"
+    # Here, test for self.collection.size - new_records != self.collection.sql_count
+    # maintaining new_records will be the tricky part
+    #~ result = self.collection.size != self.collection.sql_count
+    #~ puts "result: #{result.inspect}"
+    #~ result
+  end
+
+  def reload_data( options = {} )
+    # renew cache
+    self.collection = self.collection.renew( options )
+    # tell the UI we had a major data change
+    reset
   end
 
   # cache these because the qt binding does them slowly
