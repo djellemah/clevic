@@ -2,19 +2,17 @@ Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 - layoutChanged
 
-by default, add id (from model-specified id field) in ascending order to cache_table sorting
-
 moving of columns. Make sure moving of display doesn't affect copying shortcuts
 implement save on window close, or whatever
 /-style keyboard search by selected column, or everything if no column selected
 /-style filtering?
 
-for dates, add year if not specified, with 6 months on either side range
+for dates, add year if not specified, with 6 months on either side range. Configurable?
 value formatting not in model
 copy a field from a mouse-selection (ctrl-b maybe)
 hiding of fields
 
-turn on/off smart filters for relational delegates
+turn on/off smart filters for relational delegates. Like selecting only distincts in the last year.
 context menu for delegates, ie sort order, last used, etc
 save context menu settings, filter settings, etc
 filtering by various things. http://doc.trolltech.com/4.3/qsortfilterproxymodel.html

@@ -25,7 +25,7 @@ auto-filling-in of fields.
 * color highlighting of fields and records on definable criteria
 * extensions to various Qt classes to make db programming easier
 * leverages SQL whenever possible to handle large datasets, sorting, filtering
-	etc. So it's probably not suitable for talking to a remote db across a slow link.
+  etc. So it's probably not suitable for talking to a remote db across a slow link.
 
 === Shortcuts:
 

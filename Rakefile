@@ -17,7 +17,6 @@ file 'ui/search_dialog_ui.rb' => ['ui/search_dialog.ui'] do |t|
 end
 
 Hoe.new('clevic', '1.0.1') do |s|
-#~ spec = Gem::Specification.new do |s|
 	s.author     = "John Anderson"
 	s.email      = "john at semiosix dot com"
 	s.need_zip = true
