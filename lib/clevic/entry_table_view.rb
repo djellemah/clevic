@@ -131,7 +131,9 @@ class EntryTableView < Qt::TableView
       auto_size_column( index, field.sample ) unless field.sample.nil?
     end
   end
-  
+
+  # paste a CSV array to the index
+  # TODO make additional rows if we need them, or at least check for enough space
   def paste_to_index( top_left_index, csv_arr )
     csv_arr.each_with_index do |row,row_index|
       row.each_with_index do |field, field_index|
@@ -358,6 +360,9 @@ class EntryTableView < Qt::TableView
     end
   end
 
+  # If self.filter is false, use the data in the indexes to filter the data set;
+  # otherwise turn filtering off.
+  # Sets self.filter to true if filtering worked, false otherwise.
   def filter_by_indexes( indexes )
     save_entity = current_index.entity
     save_index = current_index
