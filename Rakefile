@@ -43,5 +43,4 @@ task :irb do |t|
   ARGV.shift()
   ENV['RUBYLIB'] += ":#{File.expand_path('.')}/lib"
   exec "irb -rclevic -rclevic/db_options.rb #{ARGV.join(' ')}"
-  #~ exec "irb -rclevic/db_options.rb #{ARGV.join(' ')}"
 end
