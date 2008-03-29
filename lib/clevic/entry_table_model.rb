@@ -9,6 +9,7 @@ require 'Qt4'
 require 'date'
 require 'clevic/extensions'
 require 'clevic/model_column'
+require 'clevic/qt_flags.rb'
 
 =begin rdoc
 * labels are the headings in the table view
@@ -24,6 +25,7 @@ require 'clevic/model_column'
 * collection is the set of ActiveRecord model objects (also called entities)
 =end
 class EntryTableModel < Qt::AbstractTableModel
+  include QtFlags
   
   attr_accessor :collection, :dots, :attributes, :attribute_paths, :labels
 
@@ -32,7 +34,7 @@ class EntryTableModel < Qt::AbstractTableModel
     # index where error occurred, value, message
     'data_error(QModelIndex,QVariant,QString)',
     # top_left, bottom_right
-    'dataChanged(constQModelIndex&,constQModelIndex&)'
+    'dataChanged(const QModelIndex&,const QModelIndex&)'
   )
   
   def initialize( builder )
@@ -41,19 +43,20 @@ class EntryTableModel < Qt::AbstractTableModel
     @builder = builder
   end
   
-  def hasIndex( row, col, parent )
-    puts 'hasIndex'
-    puts "row: #{row.inspect}"
-    puts "col: #{col.inspect}"
-    puts "parent: #{parent.inspect}"
-    super
-  end
-  
   def hasChildren( *args )
     puts 'hasChildren'
     puts "args: #{args.inspect}"
     super
   end
+  
+  #~ def index( row, column, parent )
+    #~ puts "index row: #{row}, column: #{column}, parent: #{parent}"
+    #~ if row < collection.size
+      #~ self.createIndex( row, column )
+    #~ else
+      #~ ModelIndex.invalid
+    #~ end
+  #~ end
   
   def sort( col, order )
     puts 'sort'
@@ -131,6 +134,7 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   # rows is a collection of integers specifying row indices to remove
+  # TODO call begin_remove and end_remove around the whole block
   def remove_rows( rows )
     # delete from the end to avoid holes affecting the indexing
     rows.sort.reverse.each do |index|
@@ -143,6 +147,7 @@ class EntryTableModel < Qt::AbstractTableModel
     end
   end
   
+  # save the AR model at the given index, if it's dirty
   def save( index )
     item = collection[index.row]
     return false if item.nil?
@@ -153,6 +158,7 @@ class EntryTableModel < Qt::AbstractTableModel
         false
       end
     else
+      # AR model not changed
       true
     end
   end
@@ -175,9 +181,9 @@ class EntryTableModel < Qt::AbstractTableModel
   
   def flags( model_index )
     # TODO don't return IsEditable if the model is read-only
-    retval = Qt::ItemIsEditable | super( model_index )
+    retval = qt_item_is_editable | super( model_index )
     if model_index.metadata.type == :boolean
-      retval = Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable
+      retval = item_boolean_flags
     end
     retval
   end
@@ -206,46 +212,6 @@ class EntryTableModel < Qt::AbstractTableModel
     reset
   end
 
-  # cache these because the qt binding does them slowly
-  def qt_display_role
-    @qt_display_role ||= Qt::DisplayRole
-  end
-  
-  def qt_edit_role
-    @qt_edit_role ||= Qt::EditRole
-  end
-  
-  def qt_checkstate_role
-    @qt_checkstate_role ||= Qt::CheckStateRole
-  end
-  
-  def qt_text_alignment_role
-    @qt_text_alignment_role ||= Qt::TextAlignmentRole
-  end
-  
-  def qt_size_hint_role
-    @qt_size_hint_role ||= Qt::SizeHintRole
-  end
-  
-  def const_as_string( constant )
-    case constant
-      when qt_text_alignment_role; 'Qt::TextAlignmentRole'
-      when qt_checkstate_role; 'Qt::CheckStateRole'
-      when qt_edit_role; 'Qt:EditRole'
-      when qt_display_role; 'Qt::DisplayRole'
-      when Qt::DecorationRole; 'Qt::DecorationRole'
-      when Qt::ToolTipRole; 'Qt::ToolTipRole'
-      when Qt::StatusTipRole; 'Qt::StatusTipRole'
-      when Qt::DecorationRole; 'Qt::DecorationRole'
-      when Qt::BackgroundRole; 'Qt::BackgroundRole'
-      when Qt::FontRole; 'Qt::FontRole'
-      when Qt::ForegroundRole; 'Qt::ForegroundRole'
-      when Qt::TextColorRole; 'Qt::TextColorRole'
-      
-      else "#{constant} unknown"
-    end
-  end
-  
   # values for horizontal and vertical headers
   def headerData( section, orientation, role )
     value = 
@@ -280,56 +246,48 @@ class EntryTableModel < Qt::AbstractTableModel
     
     return value.to_variant
   end
-
-  # Send data to UI. Default formatting is done here.
+  
+  # Provide data to UI. Default formatting is done here.
   def data( index, role = qt_display_role )
+    #~ puts "data for index: #{index.inspect} and role: #{const_as_string role}"
     begin
-      return Qt::Variant.invalid if index.entity.nil?
-      
-      value =
+      retval =
       case
         when role == qt_display_role || role == qt_edit_role
           # boolean values generally don't have text next to them in this context
+          # check explicitly to avoid fetching the entity from
+          # the model's collection when we don't need to
           return nil.to_variant if index.metadata.type == :boolean
+          
           value = index.gui_value rescue nil
           # TODO formatting doesn't really belong here
           if value != nil
             field = @builder.fields[index.column]
-            if field.format
-              value = 
-              case index.metadata.type
-                when :time; value.strftime( field.format )
-                when :date; value.strftime( field.format )
-                else; field.format % value
-              end
-            else
-              value = 
-              case index.metadata.type
-                when :time; value.strftime( '%H:%M' )
-                when :date; value.strftime( '%d-%h-%y' )
-                when :decimal; "%.2f" % value
-                when :float; "%.2f" % value
-                else; value
-              end
+            case index.metadata.type
+              when :time; value.strftime( field.format || '%H:%M' )
+              when :date; value.strftime( field.format || '%d-%h-%y' )
+              when :decimal; ( field.format || "%.2f" ) % value
+              when :float; ( field.format || "%.2f" ) % value
+              else; value
             end
           end
           
         when role == qt_checkstate_role
           if index.metadata.type == :boolean
-            index.gui_value ? Qt::Checked : Qt::Unchecked
+            index.gui_value ? qt_checked : qt_unchecked
           end
           
         when role == qt_text_alignment_role
           field = @builder.fields[index.column]
           field.alignment ||
             case index.metadata.type
-              when :decimal; Qt::AlignRight
-              when :integer; Qt::AlignRight
-              when :float; Qt::AlignRight
-              when :boolean; Qt::AlignCenter
+              when :decimal; qt_alignright
+              when :integer; qt_alignright
+              when :float; qt_alignright
+              when :boolean; qt_aligncenter
             end
           
-        when qt_size_hint_role
+        when role == qt_size_hint_role
           nil
             
         else
@@ -337,7 +295,8 @@ class EntryTableModel < Qt::AbstractTableModel
           nil
       end
       
-      value.to_variant
+      # return a variant
+      retval.to_variant
     rescue Exception => e
       puts e.backtrace.join( "\n" )
       puts "#{index.inspect} #{value.inspect} #{index.entity.inspect} #{e.message}"
@@ -346,10 +305,10 @@ class EntryTableModel < Qt::AbstractTableModel
   end
 
   # data sent from UI
-  def setData( index, variant, role = Qt::EditRole )
+  def setData( index, variant, role = qt_edit_role )
     if index.valid?
       case role
-      when Qt::EditRole
+      when qt_edit_role
         # Don't allow the primary key to be changed
         return false if index.attribute == :id
         
@@ -360,14 +319,16 @@ class EntryTableModel < Qt::AbstractTableModel
         type = index.metadata.type
         value = variant.value
         
-        # modify some data
+        # translate the value from the ui to something that
+        # the AR model will understand
         begin
+          index.gui_value =
           case
             when value.class.name == 'Qt::Date'
-              value = Date.new( value.year, value.month, value.day )
+              Date.new( value.year, value.month, value.day )
               
             when value.class.name == 'Qt::Time'
-              value = Time.new( value.hour, value.min, value.sec )
+              Time.new( value.hour, value.min, value.sec )
               
             # allow flexibility in entering dates. For example
             # 16jun, 16-jun, 16 jun, 16 jun 2007 would be accepted here
@@ -375,45 +336,51 @@ class EntryTableModel < Qt::AbstractTableModel
             # for when you're entering 16dec and you're in the next
             # year
             when type == :date && value =~ %r{^(\d{1,2})[ /-]?(\w{3})$}
-              value = Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
+              Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
             
             # if a digit only is entered, fetch month and year from
             # previous row
             when type == :date && value =~ %r{^(\d{1,2})$}
               previous_entity = collection[index.row - 1]
               # year,month,day
-              value = Date.new( previous_entity.date.year, previous_entity.date.month, $1.to_i )
+              Date.new( previous_entity.date.year, previous_entity.date.month, $1.to_i )
             
             # this one is mostly to fix date strings that have come
             # out of the db and been formatted
             when type == :date && value =~ %r{^(\d{2})[ /-](\w{3})[ /-](\d{2})$}
-              value = Date.parse( "#$1 #$2 20#$3" )
+              Date.parse( "#$1 #$2 20#$3" )
             
             # allow lots of flexibility in entering times
             # 01:17, 0117, 117, 1 17, are all accepted
             when type == :time && value =~ %r{^(\d{1,2}).?(\d{2})$}
-              value = Time.parse( "#$1:#$2" )
+              Time.parse( "#$1:#$2" )
+              
+            else
+              value
           end
           
-          index.gui_value = value
           emit dataChanged( index, index )
+          # value conversion was successful
           true
         rescue Exception => e
           puts e.backtrace.join( "\n" )
           puts e.message
           emit data_error( index, variant, e.message )
+          # value conversion was not successful
           false
         end
         
-      when Qt::CheckStateRole
+      when qt_checkstate_role
         if index.metadata.type == :boolean
           index.entity.toggle!( index.attribute )
+          true
+        else
+          false
         end
-        true
       
       # user-defined role
       # TODO this only works with single-dotted paths
-      when Qt::PasteRole
+      when qt_paste_role
         if index.metadata.type == :association
           field = @builder.fields[index.column]
           association_class = field.class_name.constantize

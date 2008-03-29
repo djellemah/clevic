@@ -1,6 +1,6 @@
 require 'Qt4'
-require 'clevic/entry_builder.rb'
 require 'fastercsv'
+require 'clevic/entry_builder.rb'
 
 # The view class, implementing neat shortcuts and other pleasantness
 class EntryTableView < Qt::TableView
@@ -130,6 +130,12 @@ class EntryTableView < Qt::TableView
     @builder.fields.each_with_index do |field, index|
       auto_size_column( index, field.sample ) unless field.sample.nil?
     end
+  end
+  
+  def moveCursor( cursor_action, modifiers )
+    # TODO use this as a preload indicator
+    
+    super
   end
 
   # paste a CSV array to the index
@@ -386,9 +392,11 @@ class EntryTableView < Qt::TableView
     end
     
     # find the row for the saved entity
+    Qt::Application.setOverrideCursor( Qt::Cursor.new( Qt::BusyCursor ) )
     found_row = model.collection.index_for_entity( save_entity )
+    Qt::Application.restoreOverrideCursor
     
     # create a new index and move to it
-    current_index = model.create_index( found_row, save_index.column )
+    self.current_index = model.create_index( found_row, save_index.column )
   end
 end

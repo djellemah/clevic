@@ -111,10 +111,30 @@ class EntryBuilder
   # is created, or it can be an array
   def records=( arg )
     if arg.class == Hash
-      @records = CacheTable.new( model_class, arg )
+      # need to defer this until all fields are collected
+      @options = arg
     else
       @records = arg
     end
+  end
+
+  # add AR :include options, but it takes up too much memory,
+  # and actually takes longer
+  def add_include_options
+    @fields.each do |field|
+      if field.delegate.class == RelationalDelegate
+        @options[:include] ||= []
+        @options[:include] << field.attribute
+      end
+    end
+  end
+
+  def records
+    if @records.nil?
+      #~ add_include_options
+      @records = CacheTable.new( model_class, @options )
+    end
+    @records
   end
 
   # This is intended to be called from the view class which instantiated
@@ -132,7 +152,7 @@ class EntryBuilder
     @model.attribute_paths = @fields.map { |x| x.attribute_path }
     
     # the data
-    @model.collection = @records || CacheTable.new( model_class )
+    @model.collection = records
     
     # now set delegates
     @fields.each_with_index do |field, index|

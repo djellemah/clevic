@@ -3,17 +3,20 @@ require 'active_record'
 require 'active_record/dirty.rb'
 require 'bsearch'
 
+require 'profiler'
+
 =begin rdoc
 Store the SQL order_by attributes with ascending and descending values
 =end
 class OrderAttribute
   attr_reader :direction, :attribute
   
-  def initialize( sql_order_fragment )
-    if sql_order_fragment =~ /(.*?) *asc/
+  def initialize( model_class, sql_order_fragment )
+    @model_class = model_class
+    if sql_order_fragment =~ /.*\.(.*?) *asc/
       @direction = :asc
       @attribute = $1
-    elsif sql_order_fragment =~ /(.*?) *desc/
+    elsif sql_order_fragment =~ /.*\.(.*?) *desc/
       @direction = :desc
       @attribute = $1
     else
@@ -29,11 +32,7 @@ class OrderAttribute
   
   # return 'field ASC' or 'field DESC', depending
   def to_sql
-    "#{attribute} #{direction.to_s}"
-  end
-  
-  def + ( obj )
-    self.direction += obj.direction
+    "#{@model_class.table_name}.#{attribute} #{direction.to_s}"
   end
   
 end
@@ -53,8 +52,11 @@ TODO how to handle a quickly-changing underlying table? invalidate cache
 for each call?
 =end
 class CacheTable < Array
+  # the number of records loaded in one call to the db
+  attr_accessor :preload_count
   
   def initialize( model_class, find_options = {} )
+    @preload_count = 10
     # must be before sanitise_options
     @model_class = model_class
     # must be before anything that uses options
@@ -76,13 +78,13 @@ class CacheTable < Array
   # also create @order_attributes
   def sanitise_options( options )
     options[:order] ||= ''
-    @order_attributes = options[:order].split( /, */ ).map{|x| OrderAttribute.new(x)}
+    @order_attributes = options[:order].split( /, */ ).map{|x| OrderAttribute.new(@model_class, x)}
     
     # add the primary key if nothing is specified
     # because we need an ordering of some kind otherwise
     # index_for_entity will not work
     if !@order_attributes.any? {|x| x.attribute == @model_class.primary_key }
-      @order_attributes << OrderAttribute.new( @model_class.primary_key )
+      @order_attributes << OrderAttribute.new( @model_class, @model_class.primary_key )
     end
     
     # recreate the options[:order] entry
@@ -91,20 +93,31 @@ class CacheTable < Array
     # give back the sanitised options
     options
   end
+
+  # Execute the block with the specified preload_count,
+  # and restore the existing one when done.
+  # Return the value of the block
+  def preload_limit( limit, &block )
+    old_limit = preload_count
+    self.preload_count = limit
+    retval = yield
+    self.preload_count = old_limit
+    retval
+  end
   
   # fetch the entity for the given index from the db, and store it
   # in the array
   def fetch_entity( index )
     # calculate negative indices for the SQL offset
     offset = index < 0 ? index + @row_count : index
-    # fetch the entity and store it
-    self[index] = @model_class.find( :first, @options.merge( :offset => offset ) )
-    #~ if index >= ( size - 3 ) || index < 0
-      #~ obj = self[index]
-      #~ puts "offset: #{offset.inspect}"
-      #~ puts "index: #{index.inspect}"
-      #~ puts "obj: #{obj.inspect}"
-    #~ end
+    
+    # fetch self.preload_count records
+    #~ puts "loading #{preload_count} from #{index}"
+    records = @model_class.find( :all, @options.merge( :offset => offset, :limit => preload_count ) )
+    records.each_with_index {|x,i| self[i+index] = x if !cached_at?( i+index )}
+    
+    # return the first one
+    records[0]
   end
   
   # return the entity at the given index. Fetch it from the
@@ -124,13 +137,13 @@ class CacheTable < Array
   def order_attributes
     # This is sorted in @options[:order], so use that for the search
     if @order_attributes.nil?
-      @order_attributes = @options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(x)}
+      @order_attributes = @options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@model_class, x)}
       
       # add the primary key if nothing is specified
       # because we need an ordering of some kind otherwise
       # index_for_entity will not work
       if !@order_attributes.any? {|x| x.attribute == @model_class.primary_key }
-        @order_attributes << OrderAttribute.new( @model_class.primary_key )
+        @order_attributes << OrderAttribute.new( @model_class, @model_class.primary_key )
       end
     end
     @order_attributes
@@ -142,22 +155,36 @@ class CacheTable < Array
   # nil is returned if the array is empty
   def index_for_entity( entity )
     return nil if size == 0
-    return 0 if entity.nil?
+    return nil if entity.nil?
     
-    # do the binary search base on what we know about the search order
-    found_index = bsearch_first do |x|
-      # sort by all attributes
-      order_attributes.inject(0) do |result,attribute|
-        if result == 0
-          # try to return either 1 or -1.
-          if attribute.direction == :asc
-            x.send( attribute.attribute ) <=> entity.send( attribute.attribute )
+    # only load one record at a time
+    preload_limit( 1 ) do
+      #~ puts "entity: #{entity.inspect}"
+      # do the binary search based on what we know about the search order
+      bsearch do |candidate|
+        #~ puts "candidate: #{candidate.inspect}"
+        # find using all sort attributes
+        order_attributes.inject(0) do |result,attribute|
+          if result == 0
+            method = attribute.attribute.to_sym
+            # compare taking ordering direction into account
+            retval =
+            if attribute.direction == :asc
+              #~ candidate.send( method ) <=> entity.send( method )
+              candidate[method] <=> entity[method]
+            else
+              #~ entity.send( method ) <=> candidate.send( method )
+              entity[method] <=> candidate[method]
+            end
+            # exit now because we have a difference
+            next( retval ) if retval != 0
+            
+            # otherwise try with the next order attribute
+            retval
           else
-            entity.send( attribute.attribute ) <=> x.send( attribute.attribute )
+            # they're equal, so try next order attribute
+            result
           end
-        else
-          # they're equal, so keep trying or end
-          result
         end
       end
     end

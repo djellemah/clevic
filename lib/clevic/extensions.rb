@@ -117,11 +117,16 @@ module Qt
     # entity wants it to be
     # TODO this will break for more than 2 objects in a path
     def gui_value=( obj )
-      model.collection[row].send( "#{model.dots[column]}=", obj )
+      entity.send( "#{model.dots[column]}=", obj )
     end
     
     def inspect
-      "#<Qt::ModelIndex xy=(#{row},#{column}) gui_value=#{gui_value}>"
+      #<Qt::ModelIndex:0xb6004e8c>
+      # fetch address from superclass inspect
+      super =~ /ModelIndex:(.*)>/
+      # format nicely
+      #~ "#<Qt::ModelIndex:#{$1} xy=(#{row},#{column}) gui_value=#{gui_value}>"
+      "#<Qt::ModelIndex:#{$1} xy=(#{row},#{column})>"
     end
     
     def dump
@@ -186,9 +191,13 @@ module Qt
     
     # the underlying entity
     def entity
+      #~ puts "self.internalPointer: #{self.internalPointer.inspect}"
       return nil if model.nil?
+      #~ puts "fetching entity from collection for xy=(#{row},#{column})" if @entity.nil?
       @entity ||= model.collection[row]
     end
+    
+    attr_writer :entity
     
     # sort by row, then column
     def <=>( other )
