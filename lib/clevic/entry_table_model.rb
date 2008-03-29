@@ -28,10 +28,13 @@ class EntryTableModel < Qt::AbstractTableModel
   attr_accessor :collection, :dots, :attributes, :attribute_paths, :labels
 
   # the index where the error occurred, the incoming value, and the error message
-  signals 'data_error(QModelIndex, QVariant, QString)',
+  signals(
+    # index where error occurred, value, message
+    'data_error(QModelIndex,QVariant,QString)',
     # top_left, bottom_right
-    'dataChanged ( const QModelIndex &, const QModelIndex & )'
-
+    'dataChanged(constQModelIndex&,constQModelIndex&)'
+  )
+  
   def initialize( builder )
     super()
     @metadatas = []
@@ -342,7 +345,7 @@ class EntryTableModel < Qt::AbstractTableModel
     end
   end
 
-  # data set from UI
+  # data sent from UI
   def setData( index, variant, role = Qt::EditRole )
     if index.valid?
       case role

@@ -31,8 +31,6 @@ class BigDecimal
   end
 end
 
-RAILS_DEFAULT_LOGGER = '/tmp/clevic'
-
 module ActiveRecord
   class Base
     # recursively calls each entry in path_ary
@@ -192,6 +190,7 @@ module Qt
       @entity ||= model.collection[row]
     end
     
+    # sort by row, then column
     def <=>( other )
       row_comp = self.row <=> other.row
       if row_comp == 0
@@ -263,6 +262,7 @@ module Qt
   end
   
   class Variant
+    # return an empty variant
     def self.invalid
       @@invalid ||= Variant.new
     end
@@ -272,6 +272,7 @@ module Qt
       "#<Qt::Variant value=#{self.value} typeName=#{self.typeName}>"
     end
     
+    # return the string of the value of this variant
     def to_s
       self.value.to_s
     end
