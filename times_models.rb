@@ -1,4 +1,4 @@
-require 'clevic'
+require 'clevic.rb'
 
 $options ||= {}
 $options[:database] ||= 'times'

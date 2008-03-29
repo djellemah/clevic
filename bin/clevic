@@ -5,6 +5,10 @@ require 'clevic/browser.rb'
 # fetch command line options
 require 'optparse'
 
+def  require_if( file_path )
+  require file_path if File.exist?( file_path ) || File.exist?( file_path + '.rb' )
+end
+  
 $options = {}
 oparser = OptionParser.new
 oparser.on( '-h', '--host HOST', 'RDBMS host', String ) { |o| $options[:host] = o }
@@ -22,7 +26,10 @@ args = oparser.parse( ARGV )
 
 if args.size > 0
   $options[:definition] = args.shift
-  require "#{$options[:definition]}_models.rb"
+  require_if "#{$options[:definition]}_models"
+  require_if $options[:definition]
+else
+  raise "no model definition file specified"
 end
 
 app = Qt::Application.new( args )
