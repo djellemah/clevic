@@ -2,6 +2,7 @@ Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 - layoutChanged
 
+collect a set of data requests to the model, and do them in one SQL query
 moving of columns. Make sure moving of display doesn't affect copying shortcuts
 implement save on window close, or whatever
 /-style keyboard search by selected column, or everything if no column selected

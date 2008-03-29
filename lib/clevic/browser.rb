@@ -31,10 +31,10 @@ class Browser < Qt::Widget
     @layout.action_next.connect     SIGNAL( 'triggered()' ),          &method( :next_tab )
     @layout.action_previous.connect SIGNAL( 'triggered()' ),          &method( :previous_tab )
     @layout.action_find.connect     SIGNAL( 'triggered()' ),          &method( :find )
-    @layout.tables_tab.connect      SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
+    tables_tab.connect      SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
     
     # as an example
-    #~ @layout.tables_tab.connect SIGNAL( 'currentChanged(int)' ) { |index| puts "other current_changed: #{index}" }
+    #~ tables_tab.connect SIGNAL( 'currentChanged(int)' ) { |index| puts "other current_changed: #{index}" }
   end
   
   # activated by Ctrl-D for debugging
@@ -44,7 +44,11 @@ class Browser < Qt::Widget
   
   # return the EntryTableView object in the currently displayed tab
   def table_view
-    @layout.tables_tab.current_widget
+    tables_tab.current_widget
+  end
+  
+  def tables_tab
+    @layout.tables_tab
   end
   
   # display a search dialog, and find the entered text
@@ -54,7 +58,7 @@ class Browser < Qt::Widget
     case result
       when Qt::Dialog::Accepted
         search_for = sd.layout.search_text.text
-        @layout.tables_tab.current_widget.keyboard_search( search_for )
+        table_view.keyboard_search( search_for )
       when Qt::Dialog::Rejected
         puts "Don't search"
       else
@@ -69,58 +73,42 @@ class Browser < Qt::Widget
   
   # toggle the filter, based on current selection.
   def filter_by_current( bool_filter )
-    save_entity = table_view.current_index.entity
-    save_index = table_view.current_index
+    # TODO if there's no selection, use the current index instead
+    table_view.filter_by_indexes( table_view.selection_model.selected_indexes )
     
-    if bool_filter
-      # filter by current selection
-      # TODO handle a multiple-selection
-      indexes = table_view.selection_model.selected_indexes
-      if indexes.empty?
-        @layout.action_filter.checked = false
-        return
-      elsif indexes.size > 1
-        puts "Can't do multiple selection filters yet"
-        return
-      end
-      
-      table_view.model.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
-    else
-      # unfilter
-      table_view.model.reload_data( :conditions => {} )
-    end
+    # set the checkbox in the menu item
+    @layout.action_filter.checked = table_view.filtered
     
-    # find the row for the saved entity
-    found_row = table_view.model.collection.index_for_entity( save_entity )
-    
-    # create a new index and move to it
-    table_view.current_index = table_view.model.create_index( found_row, save_index.column )
+    # update the tab, so there's a visual indication of filtering
+    tab_title = table_view.filtered ? translate( '| ' + table_view.model_class.name.humanize ) : translate( table_view.model_class.name.humanize )
+    tables_tab.setTabText( tables_tab.current_index, tab_title )
   end
   
   # slot to handle Ctrl-Tab and move to next tab, or wrap around
   def next_tab
-    @layout.tables_tab.current_index = 
-    if @layout.tables_tab.current_index >= @layout.tables_tab.count - 1
+    tables_tab.current_index = 
+    if tables_tab.current_index >= tables_tab.count - 1
       0
     else
-      @layout.tables_tab.current_index + 1
+      tables_tab.current_index + 1
     end
   end
 
   # slot to handle Ctrl-Backtab and move to previous tab, or wrap around
   def previous_tab
-    @layout.tables_tab.current_index = 
-    if @layout.tables_tab.current_index <= 0
-      @layout.tables_tab.count - 1
+    tables_tab.current_index = 
+    if tables_tab.current_index <= 0
+      tables_tab.count - 1
     else
-      @layout.tables_tab.current_index - 1
+      tables_tab.current_index - 1
     end
   end
   
   # slot to handle the currentChanged signal from tables_tab, and
   # set focus on the grid
   def current_changed( current_tab_index )
-    @layout.tables_tab.current_widget.setFocus
+    tables_tab.current_widget.setFocus
+    @layout.action_filter.checked = table_view.filtered
   end
   
   # shortcut for the Qt translate call
@@ -147,18 +135,18 @@ class Browser < Qt::Widget
   def open( *models )
     models = $options[:models] if models.empty?
     # remove the tab that Qt Designer puts in
-    @layout.tables_tab.clear
+    tables_tab.clear
     # make sure focus goes to first table
-    @layout.tables_tab.tab_bar.focus_policy = Qt::NoFocus
+    tables_tab.tab_bar.focus_policy = Qt::NoFocus
     
     # Add all existing model objects as tabs, one each
     find_models( models ).each do |model|
       if model.respond_to?( :ui )
-        tab = model.ui( @layout.tables_tab )
+        tab = model.ui( tables_tab )
       else
         raise "Can't build ui for #{model.name}. Provide a self.ui method."
       end
-      @layout.tables_tab.add_tab( tab, translate( model.name.humanize ) )
+      tables_tab.add_tab( tab, translate( model.name.humanize ) )
     end
   end
 end

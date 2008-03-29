@@ -10,12 +10,9 @@ class EntryField
     options.each do |key,value|
       self.send( "#{key}=", value ) if respond_to?( key )
     end
-  end
-
-  def label
     @label ||= attribute.to_s.humanize
   end
-  
+
   def column
     [attribute.to_s, path].compact.join('.')
   end

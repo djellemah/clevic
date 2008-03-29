@@ -5,6 +5,9 @@ require 'fastercsv'
 # The view class, implementing neat shortcuts and other pleasantness
 class EntryTableView < Qt::TableView
   attr_reader :model_class, :builder
+  # whether the model is currently filtered
+  # TODO better in QAbstractSortFilter?
+  attr_accessor :filtered
   
   def initialize( model_class, parent, *args )
     super( parent )
@@ -21,6 +24,7 @@ class EntryTableView < Qt::TableView
     # but need to change the shortcut ideas of next and previous rows
     self.vertical_header.movable = false
     self.sorting_enabled = true
+    @filtered = false
     
     # turn off "Object#type deprecated" messages
     $VERBOSE = nil
@@ -354,4 +358,32 @@ class EntryTableView < Qt::TableView
     end
   end
 
+  def filter_by_indexes( indexes )
+    save_entity = current_index.entity
+    save_index = current_index
+    
+    if !self.filtered
+      # filter by current selection
+      # TODO handle a multiple-selection
+      if indexes.empty?
+        self.filtered = false
+      elsif indexes.size > 1
+        puts "Can't do multiple selection filters yet"
+        self.filtered = false
+      end
+      
+      model.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
+      self.filtered = true
+    else
+      # unfilter
+      model.reload_data( :conditions => {} )
+      self.filtered = false
+    end
+    
+    # find the row for the saved entity
+    found_row = model.collection.index_for_entity( save_entity )
+    
+    # create a new index and move to it
+    current_index = model.create_index( found_row, save_index.column )
+  end
 end
