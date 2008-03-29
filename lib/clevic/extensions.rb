@@ -1,6 +1,7 @@
 # need this here otherwise the definition of BigDecimal#to_variant
 # causes and error
 require 'bigdecimal'
+require 'clevic/qt_flags.rb'
 
 # Because Qt::Variant.new( obj ) is a PITA to type
 class Object
@@ -51,9 +52,22 @@ module Qt
 
   PasteRole = UserRole + 1
   
+  class Base
+    # use the cursor constant for the application override cursor
+    # while the block is executing.
+    # Return the value of the block
+    def override_cursor( cursor_constant, &block )
+      Qt::Application.setOverrideCursor( Qt::Cursor.new( cursor_constant ) )
+      retval = yield
+      Qt::Application.restoreOverrideCursor
+      retval
+    end
+  end
+
   class CheckBox
+    include QtFlags
     def value
-      checkState == Qt::Checked
+      checkState == qt_checked
     end
     
     def value=( obj )

@@ -10,6 +10,7 @@ require 'date'
 require 'clevic/extensions'
 require 'clevic/model_column'
 require 'clevic/qt_flags.rb'
+require 'pp'
 
 =begin rdoc
 * labels are the headings in the table view
@@ -68,13 +69,6 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
   def match( start_index, role, search_value, hits, match_flags )
-    puts "#{__FILE__}:#{__LINE__}"
-    puts start_index.dump
-    puts "search_value: #{search_value.inspect}"
-    puts "role: #{role.inspect}"
-    results = model_class.find( :all, :conditions => "#{start_index.attribute} ilike '%#{search_value}%'" )
-    puts "results: #{results.inspect}"
-    
     #~ Qt::MatchExactly	0	Performs QVariant-based matching.
     #~ Qt::MatchFixedString	8	Performs string-based matching. String-based comparisons are case-insensitive unless the MatchCaseSensitive flag is also specified.
     #~ Qt::MatchContains	1	The search term is contained in the item.
@@ -404,4 +398,43 @@ class EntryTableModel < Qt::AbstractTableModel
       false
     end
   end
+  
+  # return a set of indexes that match the search criteria
+  def search( start_index, search_criteria )
+    # get the search value parameter, in SQL format
+    search_value =
+    if search_criteria.whole_words?
+      "% #{search_criteria.search_text} %"
+    else
+      "%#{search_criteria.search_text}%"
+    end
+
+    # build up the conditions
+    bits = collection.sql_ordering( start_index.entity )
+    conditions = "#{start_index.field_name} ilike ?"
+    conditions += ( " and " + bits[:sql] ) unless search_criteria.from_start?
+    params = [ search_value ]
+    params += bits[:params] unless search_criteria.from_start?
+    
+    puts "#{([ conditions ] + params).inspect}"
+    
+    puts "start_index: #{start_index.inspect}"
+    # find the first match
+    result = model_class.find(
+      :all,
+      :conditions => [ conditions ] + params,
+      :order => collection.options[:order]
+    )
+    pp result
+    entity = result[0]
+    puts "entity: #{entity.inspect}"
+    # return matched indexes
+    if entity != nil
+      found_row = collection.index_for_entity( entity )
+      [ create_index( found_row, start_index.column ) ]
+    else
+      []
+    end
+  end
+  
 end

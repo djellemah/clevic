@@ -8,7 +8,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>307</width>
     <height>300</height>
    </rect>
   </property>
@@ -23,7 +23,7 @@
     <rect>
      <x>30</x>
      <y>240</y>
-     <width>341</width>
+     <width>261</width>
      <height>32</height>
     </rect>
    </property>
@@ -35,11 +35,14 @@
    </property>
   </widget>
   <widget class="QCheckBox" name="selected_rows" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
    <property name="geometry" >
     <rect>
-     <x>160</x>
-     <y>100</y>
-     <width>131</width>
+     <x>90</x>
+     <y>190</y>
+     <width>191</width>
      <height>21</height>
     </rect>
    </property>
@@ -48,11 +51,14 @@
    </property>
   </widget>
   <widget class="QCheckBox" name="selected_columns" >
+   <property name="enabled" >
+    <bool>false</bool>
+   </property>
    <property name="geometry" >
     <rect>
-     <x>160</x>
-     <y>70</y>
-     <width>131</width>
+     <x>90</x>
+     <y>160</y>
+     <width>191</width>
      <height>21</height>
     </rect>
    </property>
@@ -63,8 +69,8 @@
   <widget class="QLabel" name="search_label" >
    <property name="geometry" >
     <rect>
-     <x>90</x>
-     <y>30</y>
+     <x>20</x>
+     <y>10</y>
      <width>51</width>
      <height>21</height>
     </rect>
@@ -76,16 +82,16 @@
     <enum>Qt::PlainText</enum>
    </property>
    <property name="buddy" >
-    <cstring>search_text</cstring>
+    <cstring>search_combo</cstring>
    </property>
   </widget>
-  <widget class="QComboBox" name="search_text" >
+  <widget class="QComboBox" name="search_combo" >
    <property name="geometry" >
     <rect>
-     <x>160</x>
-     <y>30</y>
-     <width>171</width>
-     <height>22</height>
+     <x>90</x>
+     <y>10</y>
+     <width>201</width>
+     <height>25</height>
     </rect>
    </property>
    <property name="focusPolicy" >
@@ -98,19 +104,45 @@
   <widget class="QCheckBox" name="from_start" >
    <property name="geometry" >
     <rect>
-     <x>160</x>
-     <y>130</y>
-     <width>78</width>
+     <x>90</x>
+     <y>50</y>
+     <width>191</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text" >
-    <string>From Start</string>
+    <string>From &amp;Start</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="regex" >
+   <property name="geometry" >
+    <rect>
+     <x>90</x>
+     <y>80</y>
+     <width>191</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>&amp;Regular Expression</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="whole_words" >
+   <property name="geometry" >
+    <rect>
+     <x>90</x>
+     <y>110</y>
+     <width>191</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>&amp;Whole Words</string>
    </property>
   </widget>
  </widget>
  <tabstops>
-  <tabstop>search_text</tabstop>
+  <tabstop>search_combo</tabstop>
   <tabstop>selected_columns</tabstop>
   <tabstop>selected_rows</tabstop>
   <tabstop>button_box</tabstop>

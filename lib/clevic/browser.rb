@@ -53,16 +53,19 @@ class Browser < Qt::Widget
   
   # display a search dialog, and find the entered text
   def find
-    sd = SearchDialog.new
-    result = sd.exec
-    case result
-      when Qt::Dialog::Accepted
-        search_for = sd.layout.search_text.text
-        table_view.keyboard_search( search_for )
-      when Qt::Dialog::Rejected
-        puts "Don't search"
-      else
-        puts "unknown dialog code #{result}"
+    @search_dialog ||= SearchDialog.new
+    result = @search_dialog.exec
+    
+    override_cursor( Qt::BusyCursor ) do
+      case result
+        when Qt::Dialog::Accepted
+          search_for = @search_dialog.search_text
+          table_view.search( @search_dialog )
+        when Qt::Dialog::Rejected
+          puts "Don't search"
+        else
+          puts "unknown dialog code #{result}"
+      end
     end
   end
   

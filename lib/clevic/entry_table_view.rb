@@ -392,11 +392,20 @@ class EntryTableView < Qt::TableView
     end
     
     # find the row for the saved entity
-    Qt::Application.setOverrideCursor( Qt::Cursor.new( Qt::BusyCursor ) )
-    found_row = model.collection.index_for_entity( save_entity )
-    Qt::Application.restoreOverrideCursor
+    found_row = override_cursor( Qt::BusyCursor ) do
+      model.collection.index_for_entity( save_entity )
+    end
     
     # create a new index and move to it
     self.current_index = model.create_index( found_row, save_index.column )
   end
+  
+  def search( search_criteria )
+    start_index = model.create_index( current_index.row + 1, current_index.column ) 
+    indexes = model.search( start_index, search_criteria )
+    if indexes.size > 0
+      self.current_index = indexes[0]
+    end
+  end
+  
 end

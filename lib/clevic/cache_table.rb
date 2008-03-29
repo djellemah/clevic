@@ -54,6 +54,7 @@ for each call?
 class CacheTable < Array
   # the number of records loaded in one call to the db
   attr_accessor :preload_count
+  attr_reader :options
   
   def initialize( model_class, find_options = {} )
     @preload_count = 10
@@ -72,6 +73,14 @@ class CacheTable < Array
   # the records in the cache
   def sql_count
     @model_class.count( :conditions => @options[:conditions] )
+  end
+  
+  def sql_ordering( entity )
+    sql = @order_attributes.map{|x| "#{x.attribute} >= ?" }.join( ' and ' )
+    puts "sql: #{sql.inspect}"
+    params = @order_attributes.map{|x| entity.send( x.attribute ) }
+    puts "params: #{params.inspect}"
+    { :sql => sql, :params => params }
   end
   
   # add an id to options[:order] if it's not in there
