@@ -31,3 +31,17 @@ Hoe.new('clevic', '1.1.1') do |s|
 end
 
 task :ui => [ 'ui/browser_ui.rb', 'ui/search_dialog_ui.rb' ]
+
+desc "Runs Clevic"
+task :run do |t|
+  ARGV.shift()
+  exec "ruby -w -Ilib bin/clevic #{ARGV.join(' ')}"
+end
+
+desc 'Runs irb in this project\'s context'
+task :irb do |t|
+  ARGV.shift()
+  ENV['RUBYLIB'] += ":#{File.expand_path('.')}/lib"
+  exec "irb -rclevic -rclevic/db_options.rb #{ARGV.join(' ')}"
+  #~ exec "irb -rclevic/db_options.rb #{ARGV.join(' ')}"
+end
