@@ -401,8 +401,7 @@ class EntryTableView < Qt::TableView
   end
   
   def search( search_criteria )
-    start_index = model.create_index( current_index.row + 1, current_index.column ) 
-    indexes = model.search( start_index, search_criteria )
+    indexes = model.search( current_index, search_criteria )
     if indexes.size > 0
       self.current_index = indexes[0]
     end

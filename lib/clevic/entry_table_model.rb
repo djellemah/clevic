@@ -410,7 +410,7 @@ class EntryTableModel < Qt::AbstractTableModel
     end
 
     # build up the conditions
-    bits = collection.sql_ordering( start_index.entity )
+    bits = collection.build_sql_find( start_index.entity, search_criteria.direction )
     conditions = "#{start_index.field_name} ilike ?"
     conditions += ( " and " + bits[:sql] ) unless search_criteria.from_start?
     params = [ search_value ]
@@ -419,12 +419,15 @@ class EntryTableModel < Qt::AbstractTableModel
     puts "#{([ conditions ] + params).inspect}"
     
     puts "start_index: #{start_index.inspect}"
+    order = search_criteria.direction == :forwards ? collection.order : collection.reverse_order
+    puts "order: #{order.inspect}"
     # find the first match
     result = model_class.find(
       :all,
       :conditions => [ conditions ] + params,
-      :order => collection.options[:order]
+      :order => order
     )
+    pp result
     pp result
     entity = result[0]
     puts "entity: #{entity.inspect}"

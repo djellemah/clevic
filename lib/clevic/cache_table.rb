@@ -35,6 +35,19 @@ class OrderAttribute
     "#{@model_class.table_name}.#{attribute} #{direction.to_s}"
   end
   
+  def reverse( direction )
+    case direction
+      when :asc; :desc
+      when :desc; :asc
+      else; raise "unknown direction #{direction}"
+    end
+  end
+  
+  # return the opposite ASC or DESC from to_sql
+  def to_reverse_sql
+    "#{@model_class.table_name}.#{attribute} #{reverse(direction).to_s}"
+  end
+  
 end
 
 =begin rdoc
@@ -75,12 +88,35 @@ class CacheTable < Array
     @model_class.count( :conditions => @options[:conditions] )
   end
   
-  def sql_ordering( entity )
-    sql = @order_attributes.map{|x| "#{x.attribute} >= ?" }.join( ' and ' )
+  def order
+    @options[:order]
+  end
+  
+  def reverse_order
+    @order_attributes.map{|x| x.to_reverse_sql}.join(',')
+  end
+  
+  def build_sql_find( entity, direction )
+    operator =
+    case direction
+      when :forwards; '>'
+      when :backwards; '<'
+      else; raise "unknown direction #{direction.inspect}"
+    end
+    
+    # build the sql comparison statements
+    sql = []
+    max_index = @order_attributes.size - 1
+    @order_attributes.each_with_index do |x,i|
+      equality = i < max_index ? '=' : ''
+      sql << "#{x.attribute} #{operator}#{equality} ?"
+    end
+    
+    # build parameter values
     puts "sql: #{sql.inspect}"
     params = @order_attributes.map{|x| entity.send( x.attribute ) }
     puts "params: #{params.inspect}"
-    { :sql => sql, :params => params }
+    { :sql => sql.join( ' and ' ), :params => params }
   end
   
   # add an id to options[:order] if it's not in there

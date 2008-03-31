@@ -9,7 +9,7 @@
     <x>0</x>
     <y>0</y>
     <width>307</width>
-    <height>300</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -40,8 +40,8 @@
    </property>
    <property name="geometry" >
     <rect>
-     <x>90</x>
-     <y>190</y>
+     <x>30</x>
+     <y>280</y>
      <width>191</width>
      <height>21</height>
     </rect>
@@ -56,8 +56,8 @@
    </property>
    <property name="geometry" >
     <rect>
-     <x>90</x>
-     <y>160</y>
+     <x>30</x>
+     <y>310</y>
      <width>191</width>
      <height>21</height>
     </rect>
@@ -138,6 +138,35 @@
    </property>
    <property name="text" >
     <string>&amp;Whole Words</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="forwards" >
+   <property name="geometry" >
+    <rect>
+     <x>90</x>
+     <y>140</y>
+     <width>171</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>&amp;Forwards</string>
+   </property>
+   <property name="checked" >
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="backwards" >
+   <property name="geometry" >
+    <rect>
+     <x>90</x>
+     <y>170</y>
+     <width>176</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text" >
+    <string>&amp;Backwards</string>
    </property>
   </widget>
  </widget>

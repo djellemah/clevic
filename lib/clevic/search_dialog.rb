@@ -28,6 +28,21 @@ class SearchDialog
     layout.search_combo
   end
   
+  def forwards?
+    @layout.forwards.checked?
+  end
+  
+  def backwards?
+    @layout.backwards.checked?
+  end
+  
+  # return either :backwards or :forwards
+  def direction
+    return :forwards if forwards?
+    return :backwards if backwards?
+    raise "direction not known"
+  end
+  
   def exec
     search_combo.set_focus
     retval = @dialog.exec
