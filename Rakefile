@@ -42,5 +42,19 @@ desc 'Runs irb in this project\'s context'
 task :irb do |t|
   ARGV.shift()
   ENV['RUBYLIB'] += ":#{File.expand_path('.')}/lib"
-  exec "irb -rclevic -rclevic/db_options.rb #{ARGV.join(' ')}"
+  exec "irb -Ilib -rclevic"
+end
+
+desc 'irb with times_models'
+task :times do |t|
+  ARGV.shift()
+  ENV['RUBYLIB'] += ":#{File.expand_path('.')}/lib"
+  exec "irb -Ilib -rclevic -r times_models.rb -rclevic/db_options.rb"
+end
+
+desc 'irb with accounts_models'
+task :accounts do |t|
+  ARGV.shift()
+  ENV['RUBYLIB'] += ":#{File.expand_path('.')}/lib"
+  exec "irb -Ilib -rclevic -raccounts_models.rb -rclevic/db_options.rb"
 end
