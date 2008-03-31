@@ -9,6 +9,9 @@ class EntryTableView < Qt::TableView
   # TODO better in QAbstractSortFilter?
   attr_accessor :filtered
   
+  # this is emitted when this object was to display something in the status bar
+  signals 'status_text(QString)'
+  
   def initialize( model_class, parent, *args )
     super( parent )
     
@@ -34,7 +37,7 @@ class EntryTableView < Qt::TableView
     @builder = EntryBuilder.new( self )
     yield( @builder )
     @builder.build
-    model.connect( SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) ) do |top_left, bottom_right|
+    model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
       if @model_class.respond_to?( :data_changed )
         @model_class.data_changed( top_left, bottom_right, self )
       end
@@ -403,7 +406,11 @@ class EntryTableView < Qt::TableView
   def search( search_criteria )
     indexes = model.search( current_index, search_criteria )
     if indexes.size > 0
+      emit status_text( "Found #{search_criteria.search_text} at row #{indexes[0].row}" )
+      selection_model.clear
       self.current_index = indexes[0]
+    else
+      emit status_text( "No match found for #{search_criteria.search_text}" )
     end
   end
   

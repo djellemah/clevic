@@ -27,7 +27,11 @@ class OrderAttribute
   
   # return ORDER BY field name
   def to_s
-    attribute
+    @string ||= attribute
+  end
+  
+  def to_sym
+    @sym ||= attribute.to_sym
   end
   
   # return 'field ASC' or 'field DESC', depending
@@ -70,7 +74,7 @@ class CacheTable < Array
   attr_reader :options
   
   def initialize( model_class, find_options = {} )
-    @preload_count = 10
+    @preload_count = 20
     # must be before sanitise_options
     @model_class = model_class
     # must be before anything that uses options
@@ -96,6 +100,32 @@ class CacheTable < Array
     @order_attributes.map{|x| x.to_reverse_sql}.join(',')
   end
   
+  # recursively create a case statement to do the comparison
+  # because and ... and ... and filters on *each* one rather than
+  # consecutively.
+  # operator is either '<' or '>'
+  def build_recursive_comparison( operator, index = 0 )
+    # end recursion
+    return 'false' if index == @order_attributes.size
+    
+    # fetch the current attribute
+    attribute = @order_attributes[index]
+    
+    # build case statement, including recusion
+    st = <<-EOF
+case
+  when #{attribute} #{operator} :#{attribute} then true
+  when #{attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
+  else false
+end
+EOF
+  end
+  
+  # return a Hash containing
+  # :sql => the sql statement to be used as part of a where clause
+  # :params => the parameters corresponding to :sql
+  # entity is an AR model object
+  # direction is either :forwards or :backwards
   def build_sql_find( entity, direction )
     operator =
     case direction
@@ -104,19 +134,13 @@ class CacheTable < Array
       else; raise "unknown direction #{direction.inspect}"
     end
     
-    # build the sql comparison statements
-    sql = []
-    max_index = @order_attributes.size - 1
-    @order_attributes.each_with_index do |x,i|
-      equality = i < max_index ? '=' : ''
-      sql << "#{x.attribute} #{operator}#{equality} ?"
-    end
+    # build the sql comparison where clause fragment
+    sql = build_recursive_comparison( operator )
     
     # build parameter values
-    puts "sql: #{sql.inspect}"
-    params = @order_attributes.map{|x| entity.send( x.attribute ) }
-    puts "params: #{params.inspect}"
-    { :sql => sql.join( ' and ' ), :params => params }
+    params = {}
+    @order_attributes.each {|x| params[x.to_sym] = entity.send( x.attribute )}
+    { :sql => sql, :params => params }
   end
   
   # add an id to options[:order] if it's not in there
@@ -150,14 +174,14 @@ class CacheTable < Array
     retval
   end
   
-  # fetch the entity for the given index from the db, and store it
-  # in the array
+  # Fetch the entity for the given index from the db, and store it
+  # in the array. Also, preload preload_count records to avoid subsequent
+  # hits on the db
   def fetch_entity( index )
     # calculate negative indices for the SQL offset
     offset = index < 0 ? index + @row_count : index
     
     # fetch self.preload_count records
-    #~ puts "loading #{preload_count} from #{index}"
     records = @model_class.find( :all, @options.merge( :offset => offset, :limit => preload_count ) )
     records.each_with_index {|x,i| self[i+index] = x if !cached_at?( i+index )}
     

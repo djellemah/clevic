@@ -25,13 +25,14 @@ class Browser < Qt::Widget
     @layout.setup_ui( main_window )
     
     # connect slots
-    @layout.action_dump.connect     SIGNAL( 'triggered()' ),          &method( :dump )
-    @layout.action_reload.connect   SIGNAL( 'triggered()' ),          &method( :reload_model )
-    @layout.action_filter.connect   SIGNAL( 'triggered(bool)' ),      &method( :filter_by_current )
-    @layout.action_next.connect     SIGNAL( 'triggered()' ),          &method( :next_tab )
-    @layout.action_previous.connect SIGNAL( 'triggered()' ),          &method( :previous_tab )
-    @layout.action_find.connect     SIGNAL( 'triggered()' ),          &method( :find )
-    tables_tab.connect      SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
+    @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
+    @layout.action_reload.connect     SIGNAL( 'triggered()' ),          &method( :reload_model )
+    @layout.action_filter.connect     SIGNAL( 'triggered(bool)' ),      &method( :filter_by_current )
+    @layout.action_next.connect       SIGNAL( 'triggered()' ),          &method( :next_tab )
+    @layout.action_previous.connect   SIGNAL( 'triggered()' ),          &method( :previous_tab )
+    @layout.action_find.connect       SIGNAL( 'triggered()' ),          &method( :find )
+    @layout.action_find_next.connect  SIGNAL( 'triggered()' ),          &method( :find_next )
+    tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
     
     # as an example
     #~ tables_tab.connect SIGNAL( 'currentChanged(int)' ) { |index| puts "other current_changed: #{index}" }
@@ -66,6 +67,17 @@ class Browser < Qt::Widget
         else
           puts "unknown dialog code #{result}"
       end
+    end
+  end
+  
+  def find_next
+    if @search_dialog.nil?
+      @layout.statusbar.show_message( 'No previous find' )
+    else
+      save_from_start = @search_dialog.from_start?
+      @search_dialog.from_start = false
+      table_view.search( @search_dialog )
+      @search_dialog.from_start = save_from_start
     end
   end
   
@@ -146,6 +158,7 @@ class Browser < Qt::Widget
     find_models( models ).each do |model|
       if model.respond_to?( :ui )
         tab = model.ui( tables_tab )
+        tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 20000 ) }
       else
         raise "Can't build ui for #{model.name}. Provide a self.ui method."
       end

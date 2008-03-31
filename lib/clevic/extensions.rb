@@ -72,7 +72,7 @@ module Qt
     
     def value=( obj )
       # This seems backwards to me, but it works
-      setCheckState( ( obj ? Qt::Unchecked : Qt::Checked ) )
+      setCheckState( ( obj == false ? Qt::Unchecked : Qt::Checked ) )
     end
   end
   

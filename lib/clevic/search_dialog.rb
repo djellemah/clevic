@@ -16,6 +16,10 @@ class SearchDialog
     layout.from_start.value
   end
   
+  def from_start=( value )
+    layout.from_start.value = value
+  end
+  
   def regex?
     layout.regex.value
   end
