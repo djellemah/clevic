@@ -100,6 +100,10 @@ class CacheTable < Array
     @order_attributes.map{|x| x.to_reverse_sql}.join(',')
   end
   
+  def quote_column( field_name )
+    @model_class.connection.quote_column_name( field_name )
+  end
+  
   # recursively create a case statement to do the comparison
   # because and ... and ... and filters on *each* one rather than
   # consecutively.
@@ -114,8 +118,8 @@ class CacheTable < Array
     # build case statement, including recusion
     st = <<-EOF
 case
-  when #{attribute} #{operator} :#{attribute} then true
-  when #{attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
+  when #{quote_column attribute} #{operator} :#{attribute} then true
+  when #{quote_column attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
   else false
 end
 EOF

@@ -2,6 +2,8 @@ Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 - layoutChanged
 
+search with acts_as_searchable and hyperestraier
+
 moving of columns. Make sure moving of display doesn't affect copying shortcuts
 implement save on window close, or whatever
 /-style keyboard search by selected column, or everything if no column selected
@@ -34,6 +36,15 @@ QAbstractItemView::ScrollHint
 wrap description, and allow Access-style zooming
 f4 for date fields and time fields
 
+maybe
+-----
+allow moving of rows
+discontiguous copying of entities/csv
+multi-row copying
+pasting of csv, into rectangular regions
+collect a set of data requests to the model, and do them in one SQL query. See EntryTableView#moveCursor
+Use SQL cursors for find & find_next?
+
 Accounts
 --------
 paste of "common" records with different dates
@@ -43,14 +54,6 @@ Times
 
 warnings on overlap times (in status bar)
 warnings on large intervals (in status bar)
-
-maybe
------
-allow moving of rows
-discontiguous copying of entities/csv
-multi-row copying
-pasting of csv, into rectangular regions
-collect a set of data requests to the model, and do them in one SQL query. See EntryTableView#moveCursor
 
 db
 --

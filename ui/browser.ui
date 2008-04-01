@@ -1,9 +1,6 @@
 <ui version="4.0" >
  <class>Browser</class>
  <widget class="QMainWindow" name="Browser" >
-  <property name="windowModality" >
-   <enum>Qt::ApplicationModal</enum>
-  </property>
   <property name="geometry" >
    <rect>
     <x>0</x>
