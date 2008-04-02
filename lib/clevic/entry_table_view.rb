@@ -318,17 +318,22 @@ class EntryTableView < Qt::TableView
     end
   end
   
+  # save the entity in the row of the given index
+  def save_row( index )
+    saved = model.save( index )
+    if !saved
+      error_message = Qt::ErrorMessage.new( self )
+      msg = model.collection[previous_index.row].errors.join("\n")
+      error_message.show_message( msg )
+      error_message.show
+    end
+  end
+  
   # save record whenever its row is exited
   def currentChanged( current_index, previous_index )
     @index_override = false
     if current_index.row != previous_index.row
-      saved = model.save( previous_index )
-      if !saved
-        error_message = Qt::ErrorMessage.new( self )
-        msg = model.collection[previous_index.row].errors.join("\n")
-        error_message.show_message( msg )
-        error_message.show
-      end
+      save_row( previous_index )
     end
     super
   end

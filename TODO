@@ -4,9 +4,10 @@ sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder
 - layoutChanged
 
 search with acts_as_searchable and hyperestraier
+acts_as_trashable to undo deletes
+implement undo of field changes
 
 moving of columns. Make sure moving of display doesn't affect copying shortcuts
-implement save on window close, or whatever
 /-style keyboard search by selected column, or everything if no column selected
 /-style filtering?
 

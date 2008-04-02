@@ -165,4 +165,9 @@ class Browser < Qt::Widget
       tables_tab.add_tab( tab, translate( model.name.humanize ) )
     end
   end
+  
+  # make sure all outstanding records are saved
+  def save_all
+    tables_tab.each {|x| x.save_row( x.current_index ) }
+  end
 end

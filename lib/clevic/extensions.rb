@@ -284,6 +284,17 @@ module Qt
     end
   end
   
+  class TabWidget
+    include Enumerable
+    def each_tab( &block )
+      save_index = self.current_index
+      (0...self.count).each do |i|
+        yield( self.widget(i) )
+      end
+    end
+    alias_method :each, :each_tab
+  end
+  
   class Variant
     # return an empty variant
     def self.invalid
