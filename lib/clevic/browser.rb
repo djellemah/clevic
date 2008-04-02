@@ -74,10 +74,12 @@ class Browser < Qt::Widget
     if @search_dialog.nil?
       @layout.statusbar.show_message( 'No previous find' )
     else
-      save_from_start = @search_dialog.from_start?
-      @search_dialog.from_start = false
-      table_view.search( @search_dialog )
-      @search_dialog.from_start = save_from_start
+      override_cursor( Qt::BusyCursor ) do
+        save_from_start = @search_dialog.from_start?
+        @search_dialog.from_start = false
+        table_view.search( @search_dialog )
+        @search_dialog.from_start = save_from_start
+      end
     end
   end
   
