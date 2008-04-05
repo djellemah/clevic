@@ -35,7 +35,7 @@ task :ui => [ 'ui/browser_ui.rb', 'ui/search_dialog_ui.rb' ]
 desc "Runs Clevic"
 task :run do |t|
   ARGV.shift()
-  exec "ruby -w -Ilib bin/clevic #{ARGV.join(' ')}"
+  exec "ruby -w -Ilib bin/clevic -D #{ARGV.join(' ')}"
 end
 
 desc 'Runs irb in this project\'s context'
@@ -48,7 +48,10 @@ end
 desc 'irb with times_models'
 task :times do |t|
   ARGV.shift()
+  
+  ENV['RUBYLIB'] ||= ''
   ENV['RUBYLIB'] += ":#{File.expand_path('.')}/lib"
+  
   exec "irb -Ilib -rclevic -r times_models.rb -rclevic/db_options.rb"
 end
 

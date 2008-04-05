@@ -285,7 +285,7 @@ class EntryTableModel < Qt::AbstractTableModel
           nil
             
         else
-          puts "data section: #{section}, role: #{const_as_string(role)}" if $options[:debug]
+          puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
           nil
       end
       

@@ -7,6 +7,9 @@ search with acts_as_searchable and hyperestraier
 acts_as_trashable to undo deletes
 implement undo of field changes
 
+cache belongs_to associations, during loading, ie don't affect ability to pick up
+changes more or less instantly.
+
 moving of columns. Make sure moving of display doesn't affect copying shortcuts
 /-style keyboard search by selected column, or everything if no column selected
 /-style filtering?
