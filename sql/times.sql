@@ -15,24 +15,6 @@ COMMENT ON SCHEMA public IS 'Standard public schema';
 
 SET search_path = public, pg_catalog;
 
---
--- Name: plperl_call_handler(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION plperl_call_handler() RETURNS language_handler
-    AS '$libdir/plperl', 'plperl_call_handler'
-    LANGUAGE c;
-
-
-ALTER FUNCTION public.plperl_call_handler() OWNER TO postgres;
-
---
--- Name: plperl; Type: PROCEDURAL LANGUAGE; Schema: public; Owner: 
---
-
-CREATE TRUSTED PROCEDURAL LANGUAGE plperl HANDLER plperl_call_handler;
-
-
 SET default_tablespace = '';
 
 SET default_with_oids = true;
