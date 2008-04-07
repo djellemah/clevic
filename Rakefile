@@ -1,24 +1,24 @@
 require 'rubygems'
 require 'rake/clean'
 require 'hoe'
+require 'lib/clevic/version.rb'
 
-CLEAN.include( 'ui/*.rb' )
+CLEAN.include( 'lib/clevic/ui/*.rb' )
 
-file 'ui/browser_ui.rb' => ['ui/browser.ui'] do |t|
-  sh "rbuic4 #{t.prerequisites} -o #{t.name}"
-end
-
-file 'ui/search_dialog_ui.rb' => ['ui/search_dialog.ui'] do |t|
-  sh "rbuic4 #{t.prerequisites} -o #{t.name}"
-end
-
-Hoe.new('clevic', '0.4.2') do |s|
+Hoe.new( 'clevic', Clevic::VERSION ) do |s|
 	s.author     = "John Anderson"
 	s.email      = "john at semiosix dot com"
-	s.need_zip = true
 end
 
-task :ui => [ 'ui/browser_ui.rb', 'ui/search_dialog_ui.rb' ]
+file 'lib/clevic/ui/browser_ui.rb' => ['lib/clevic/ui/browser.ui'] do |t|
+  sh "rbuic4 #{t.prerequisites} -o #{t.name}"
+end
+
+file 'lib/clevic/ui/search_dialog_ui.rb' => ['lib/clevic/ui/search_dialog.ui'] do |t|
+  sh "rbuic4 #{t.prerequisites} -o #{t.name}"
+end
+
+task :ui => [ 'lib/clevic/ui/browser_ui.rb', 'lib/clevic/ui/search_dialog_ui.rb' ]
 
 desc "Runs Clevic"
 task :run do |t|
