@@ -1,5 +1,5 @@
 require 'Qt4'
-require 'ui/search_dialog_ui.rb'
+require 'clevic/ui/search_dialog_ui.rb'
 require 'clevic/qt_flags.rb'
 
 class SearchDialog

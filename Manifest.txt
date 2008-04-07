@@ -18,7 +18,7 @@ lib/clevic/search_dialog.rb
 sql/accounts.sql
 sql/times.sql
 times_models.rb
-ui/browser.ui
-ui/search_dialog.ui
-ui/browser_ui.rb
-ui/search_dialog_ui.rb
+lib/clevic/ui/browser.ui
+lib/clevic/ui/search_dialog.ui
+lib/clevic/ui/browser_ui.rb
+lib/clevic/ui/search_dialog_ui.rb

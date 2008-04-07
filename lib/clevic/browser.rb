@@ -1,5 +1,5 @@
 require 'clevic/search_dialog.rb'
-require 'ui/browser_ui.rb'
+require 'clevic/ui/browser_ui.rb'
 
 =begin rdoc
 The main application class. Each model for display should have a self.ui method
