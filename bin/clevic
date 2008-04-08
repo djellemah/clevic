@@ -5,6 +5,7 @@ require 'clevic/browser.rb'
 # fetch command line options
 require 'optparse'
 
+# find and require variations on file_path
 def require_if( file_path )
   require file_path if File.exist?( file_path ) || File.exist?( file_path + '.rb' )
 end

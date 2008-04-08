@@ -1,5 +1,11 @@
+restricted to sample from set
+restricted not editing properly
+
+ORDER BY allow functions, ie lower(project)
+no sample, fetch max length from table
 handle db errors
 easier way to run models, search LOAD_PATH
+
 generate models
 Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )

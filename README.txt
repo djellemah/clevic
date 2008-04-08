@@ -5,8 +5,8 @@ http://www.semiosix.com/clevic
 == DESCRIPTION:
 
 Database framework and Qt Model/View GUI for data capture and
-editing of tables in a pre-existing relational DBMS. So Postgresql, Mysql
-and so on are supported.
+editing of tables in a pre-existing relational DBMS. Thanks to ActiveRecord,
+Postgresql, Mysql and so on are supported.
 
 There is a mild focus on reducing keystrokes for repetitive data capture, so
 it provides
@@ -14,16 +14,18 @@ nice keyboard shortcuts for all sorts of things. Model (table) objects
 are extensible to allow for model (table) specific cleverness, like
 auto-filling-in of fields.
 
-== FEATURES/PROBLEMS:
+== FEATURES:
 
+* Filter by current field.
+* search by field contents.
 * uses ActiveRecord for data access. Does *not* use the Qt SQL models.
-* sensible caching to handle large data sets without unnecessary memory usage
+* sensible caching to handle large data sets without unnecessary memory and cpu usage
 * in-place Combo boxes for related table and foreign keys
 * distinct combo boxes to list previous values for a field
 * cut and paste in CSV format
-* sortable by row headers
-* color highlighting of fields and records on definable criteria
-* extensions to various Qt classes to make db programming easier
+* sortable by row headers (not yet)
+* color highlighting of fields and records on definable criteria (not yet).
+* extensions to various Qt classes to make db programming easier.
 * leverages SQL whenever possible to handle large datasets, sorting, filtering
   etc. So it's probably not suitable for talking to a remote db across a slow link.
 
@@ -43,6 +45,10 @@ Right now, models must be defined in Ruby. The framework provides
 an easy Rails-migrations-like syntax for that.
 Start with Browser and EntryBuilder.
 
+== PROBLEMS:
+
+See TODO file.
+
 == SYNOPSIS:
 
 	clevic model_definition_file
@@ -52,7 +58,9 @@ Start with Browser and EntryBuilder.
 * ruby-qt4
 * bsearch
 * active_record
-* active_record/dirty
+* active_record/dirty (included)
+* db driver (ie postgres-pr)
+* rdbms (ie postgres)
 
 == INSTALL:
 
