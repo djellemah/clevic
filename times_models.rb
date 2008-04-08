@@ -104,7 +104,7 @@ class Project < ActiveRecord::Base
     EntryTableView.new( Project, parent ).create_model do |t|
       t.plain :project
       t.plain :description
-      t.plain :client
+      t.distinct :client
       t.plain :rate
       t.plain :active
       
@@ -134,10 +134,10 @@ class Invoice < ActiveRecord::Base
   def self.ui( parent )
     EntryTableView.new( Invoice, parent ).create_model do |t|
       t.plain :date
-      t.plain :client
+      t.distinct :client
       t.plain :invoice_number
       t.distinct :status
-      t.plain :billing
+      t.restricted :billing, :set => %w{Hours Quote Internal}
       t.plain :quote_date
       t.plain :quote_amount
       t.plain :description

@@ -79,7 +79,7 @@ class Account < ActiveRecord::Base
   def self.ui( parent )
     EntryTableView.new( self, parent ).create_model do |t|
       t.plain       :name
-      t.restricted  :vat, :label => 'VAT', :set => %w{ yes no all }, :sample => 'www'
+      t.restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
       t.plain       :account_type
       t.plain       :pastel_number, :alignment => Qt::AlignRight, :label => 'Pastel'
       t.plain       :fringe, :format => "%.1f"
