@@ -1,9 +1,28 @@
+empty database
+--------------
+have empty record if no records
+combos should not show if they have no data
+
+F2 for standard edit, F4 for calendar edit
+make sure record is saved when changing tabs
+tooltips for tabs and column headers
+Help in general for new data capture people
+Help to right of tabs
+messages for wrong dates etc
+numeric months
+
+ctrl-enter for new record
+Doing data capture, sort by id, but unfilter reverts to date/id rather than entry order
+search to populate search field from current entry
+warnings for back-dated entries. Highlighting 
+make sure bsearch easier to install
 restricted to sample from set
 restricted not editing properly
 
 ORDER BY allow functions, ie lower(project)
 no sample, fetch max length from table
 handle db errors
+test with sqlite
 easier way to run models, search LOAD_PATH
 
 generate models
@@ -49,6 +68,14 @@ QAbstractItemView::ScrollHint
 wrap description, and allow Access-style zooming
 f4 for date fields and time fields
 
+preferences
+-----------
+store previous searches, by model & app
+
+windows
+-------
+Ctrl-; date formatting goes 07--08 instead of 07-Apr-08. But typing the full month will be OK.
+
 maybe
 -----
 allow moving of rows
@@ -61,6 +88,7 @@ Use SQL cursors for find & find_next?
 Accounts
 --------
 paste of "common" records with different dates
+restricted type for Account Type record
 
 Times
 -----
