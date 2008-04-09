@@ -53,13 +53,28 @@ module QtFlags
     @qt_aligncenter ||= Qt::AlignCenter
   end
   
+  def qt_decoration_role
+    @qt_decoration_role ||= Qt::DecorationRole
+  end
+  
+  def qt_background_role
+    @qt_background_role ||= Qt::BackgroundRole
+  end
+  
+  def qt_font_role
+    @qt_font_role ||= Qt::FontRole
+  end
+  
+  def qt_foreground_role
+    @qt_foreground_role ||= Qt::ForegroundRole
+  end
+  
   def const_as_string( constant )
     case constant
       when qt_text_alignment_role; 'Qt::TextAlignmentRole'
       when qt_checkstate_role; 'Qt::CheckStateRole'
       when qt_edit_role; 'Qt:EditRole'
       when qt_display_role; 'Qt::DisplayRole'
-      when Qt::DecorationRole; 'Qt::DecorationRole'
       when Qt::ToolTipRole; 'Qt::ToolTipRole'
       when Qt::StatusTipRole; 'Qt::StatusTipRole'
       when Qt::DecorationRole; 'Qt::DecorationRole'

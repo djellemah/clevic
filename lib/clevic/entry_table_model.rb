@@ -103,11 +103,12 @@ class EntryTableModel < Qt::AbstractTableModel
   # cache metadata (ActiveRecord#column_for_attribute) because it't not going
   # to change over the lifetime of the table
   # if the column is an attribute, create a ModelColumn
+  # TODO use ActiveRecord::Base.reflections instead
   def metadata( column )
     if @metadatas[column].nil?
-      meta = collection[0].column_for_attribute( attributes[column] )
+      meta = model_class.columns_hash[attributes[column].to_s]
       if meta.nil?
-        meta = collection[0].column_for_attribute( "#{attributes[column]}_id".to_sym )
+        meta = model_class.columns_hash[ "#{attributes[column]}_id" ]
         if meta.nil?
           return nil
         else
@@ -254,16 +255,9 @@ class EntryTableModel < Qt::AbstractTableModel
           return nil.to_variant if index.metadata.type == :boolean
           
           value = index.gui_value rescue nil
-          # TODO formatting doesn't really belong here
           if value != nil
             field = @builder.fields[index.column]
-            case index.metadata.type
-              when :time; value.strftime( field.format || '%H:%M' )
-              when :date; value.strftime( field.format || '%d-%h-%y' )
-              when :decimal; ( field.format || "%.2f" ) % value
-              when :float; ( field.format || "%.2f" ) % value
-              else; value
-            end
+            field.do_format( value )
           end
           
         when role == qt_checkstate_role
@@ -284,6 +278,11 @@ class EntryTableModel < Qt::AbstractTableModel
         when role == qt_size_hint_role
           nil
             
+        when role == qt_background_role;
+        when role == qt_font_role;
+        when role == qt_foreground_role;
+        when role == qt_decoration_role;
+
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
           nil

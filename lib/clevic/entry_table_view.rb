@@ -44,20 +44,22 @@ class EntryTableView < Qt::TableView
     end
     self
   end
-  
+
+  # alternative access for auto_size_column
   def auto_size_attribute( attribute, sample )
     col = model.attributes.index( attribute )
     self.set_column_width( col, column_size( col, sample ).width )
   end
   
+  # set the size of the column from the sample
   def auto_size_column( col, sample )
     self.set_column_width( col, column_size( col, sample ).width )
   end
 
+  # set the size of the column from the string value of the data
   # mostly copied from qheaderview.cpp:2301
   def column_size( col, data )
     opt = Qt::StyleOptionHeader.new
-    #~ initStyleOption( opt )
     
     # fetch font size
     fnt = font
@@ -90,21 +92,14 @@ class EntryTableView < Qt::TableView
     set_item_delegate_for_column( col, delegate )
   end
   
+  # is current_index on the last row?
   def last_row?
     current_index.row == model.row_count - 1
   end
   
+  # is current_index on the bottom_right cell?
   def last_cell?
     current_index.row == model.row_count - 1 && current_index.column == model.column_count - 1
-  end
-  
-  def fix_row_padding( rows = 0..model.collection.size )
-    # decrease padding
-    # not necessary after setting vertical_header.default_section_size in setModel
-    section_size = vertical_header.minimum_section_size
-    rows.each do |row|
-      vertical_header.resize_section( row, section_size )
-    end
   end
   
   # make sure row size is correct
@@ -131,7 +126,7 @@ class EntryTableView < Qt::TableView
   # than iterating through the entire data model
   def resize_columns
     @builder.fields.each_with_index do |field, index|
-      auto_size_column( index, field.sample ) unless field.sample.nil?
+      auto_size_column( index, field.sample )
     end
   end
   
@@ -408,6 +403,13 @@ class EntryTableView < Qt::TableView
     self.current_index = model.create_index( found_row, save_index.column )
   end
   
+  # search_criteria must respond to:
+  # * search_text
+  # * whole_words?
+  # * direction ( :forward, :backward )
+  # * from_start?
+  #
+  # TODO formalise this
   def search( search_criteria )
     indexes = model.search( current_index, search_criteria )
     if indexes.size > 0

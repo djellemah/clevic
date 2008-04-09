@@ -1,30 +1,7 @@
 require 'clevic/entry_table_model.rb'
 require 'clevic/delegates.rb'
 require 'clevic/cache_table.rb'
-
-class EntryField
-  attr_accessor :attribute, :path, :sample, :format, :label, :delegate, :class_name, :alignment
-  
-  def initialize( attribute, options )
-    @attribute = attribute
-    options.each do |key,value|
-      self.send( "#{key}=", value ) if respond_to?( key )
-    end
-    @label ||= attribute.to_s.humanize
-  end
-
-  def column
-    [attribute.to_s, path].compact.join('.')
-  end
-  
-  # return an array of the various attribute parts
-  def attribute_path
-    pieces = [ attribute.to_s ]
-    pieces.concat( path.split( /\./ ) ) unless path.nil?
-    pieces.map{|x| x.to_sym}
-  end
-  
-end
+require 'clevic/field.rb'
 
 =begin rdoc
 This is used to define a set of fields in a UI, any related tables,
@@ -32,16 +9,19 @@ restrictions on data entry, formatting and that kind of thing.
 
 It's similar to the Rails migrations syntax.
 
-* :sample is used to size the columns
-* :format is something that can be understood by sprintf (for time and date
+Optional specifiers are:
+* :sample is used to size the columns. Will default to some hopefully sensible value from the db.
+* :format is something that can be understood by strftime (for time and date
   fields) or understood by % (for everything else)
 * :alignment is one of Qt::TextAlignmentRole, ie Qt::AlignRight, Qt::AlignLeft, Qt::AlignCenter
 * :set is the set of strings that are accepted by a RestrictedDelegate
-* everything else is passed to ActiveRecord::Base#find
+
+In the case of relational fields, all other options are passed to ActiveRecord::Base#find
 
 For example, a the UI for a model called Entry would be defined like this:
 
   EntryTableView.new( Entry, parent ).create_model do |builder|
+    # :format is optional
     builder.plain       :date, :format => '%d-%h-%y'
     builder.plain       :start, :format => '%H:%M'
     builder.plain       :amount, :format => '%.2f'
@@ -58,6 +38,7 @@ For example, a the UI for a model called Entry would be defined like this:
   end
 =end
 class EntryBuilder
+  # The collection of Clevic::Field objects
   attr_reader :fields
   
   def initialize( entry_table_view )
@@ -73,18 +54,19 @@ class EntryBuilder
     retval
   end
   
+  # the AR class for this table
   def model_class
     @entry_table_view.model_class
   end
 
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {} )
-    @fields << EntryField.new( attribute.to_sym, options )
+    @fields << Clevic::Field.new( attribute.to_sym, model_class, options )
   end
   
   # edited with a combo box containing all previous entries in this field
   def distinct( attribute, options = {} )
-    field = EntryField.new( attribute.to_sym, options )
+    field = Clevic::Field.new( attribute.to_sym, model_class, options )
     field.delegate = DistinctDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
     @fields << field
   end
@@ -92,7 +74,7 @@ class EntryBuilder
   # edited with a combo box, but restricted to a specified set
   def restricted( attribute, options = {} )
     raise "restricted must have a set" unless options.has_key?( :set )
-    field = EntryField.new( attribute.to_sym, options )
+    field = Clevic::Field.new( attribute.to_sym, model_class, options )
     field.delegate = RestrictedDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
     @fields << field
   end
@@ -100,7 +82,7 @@ class EntryBuilder
   # for foreign keys. Edited with a combo box using values from the specified
   # path on the foreign key model object
   def relational( attribute, path, options = {} )
-    field = EntryField.new( attribute.to_sym, options )
+    field = Clevic::Field.new( attribute.to_sym, model_class, options )
     field.path = path
     field.delegate = RelationalDelegate.new( @entry_table_view, field.attribute_path, options )
     @fields << field
@@ -118,8 +100,8 @@ class EntryBuilder
     end
   end
 
-  # add AR :include options, but it takes up too much memory,
-  # and actually takes longer
+  # add AR :include options for foreign keys, but it takes up too much memory,
+  # and actually takes longer to load a data set
   def add_include_options
     @fields.each do |field|
       if field.delegate.class == RelationalDelegate
@@ -129,6 +111,7 @@ class EntryBuilder
     end
   end
 
+  # return a collection of records. Usually this will be a CacheTable
   def records
     if @records.nil?
       #~ add_include_options

@@ -205,7 +205,6 @@ module Qt
     
     # the underlying entity
     def entity
-      #~ puts "self.internalPointer: #{self.internalPointer.inspect}"
       return nil if model.nil?
       #~ puts "fetching entity from collection for xy=(#{row},#{column})" if @entity.nil?
       @entity ||= model.collection[row]

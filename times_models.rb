@@ -17,15 +17,15 @@ class Entry < ActiveRecord::Base
   def self.ui( parent )
     EntryTableView.new( self, parent ).create_model do |t|
       t.plain       :date, :sample => '28-Dec-08'
-      t.relational  :project, 'project', :sample => 'Miscellaneous', :conditions => 'active = true', :order => 'lower(project)'
-      t.relational  :invoice, 'invoice_number', :sample => 'WWW000', :conditions => "status = 'not sent'", :order => 'invoice_number'
-      t.plain       :start, :sample => '00:00'
-      t.plain       :end, :sample => '00:00'
+      t.relational  :project, 'project', :conditions => 'active = true', :order => 'lower(project)'
+      t.relational  :invoice, 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
+      t.plain       :start
+      t.plain       :end
       t.plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
       t.relational  :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = true'
-      t.distinct    :module, :sample => 'Doing Stuff'
-      t.plain       :charge, :sample => 'Charge'
-      t.distinct    :person, :sample => 'Leilani'
+      t.distinct    :module
+      t.plain       :charge
+      t.distinct    :person
       
       t.records = { :order => 'date, start, id' }
     end
