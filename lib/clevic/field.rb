@@ -1,9 +1,13 @@
+require 'clevic/qt_flags.rb'
+
 module Clevic
 
 =begin rdoc
 This defines a field in the UI, and how it hooks up to a field in the DB.
 =end
 class Field
+  include QtFlags
+  
   attr_accessor :attribute, :path, :label, :delegate, :class_name, :alignment, :format
   attr_writer :sample
   
@@ -16,13 +20,22 @@ class Field
     end
     @label ||= attribute.to_s.humanize
     
+    # default formats
     if @format.nil?
       case meta.type
-      when :time; @format = '%H:%M'
-      when :date; @format = '%d-%h-%y'
-      when :datetime; @format = '%d-%h-%y %H:%M:%S'
-      when :decimal; @format = "%.2f"
-      when :float; @format = "%.2f"
+        when :time; @format = '%H:%M'
+        when :date; @format = '%d-%h-%y'
+        when :datetime; @format = '%d-%h-%y %H:%M:%S'
+        when :decimal, :float; @format = "%.2f"
+      end
+    end
+    
+    # default alignments
+    if @alignment.nil?
+      @alignment =
+      case meta.type
+        when :decimal, :integer, :float; qt_alignright
+        when :boolean; qt_aligncenter
       end
     end
   end
@@ -73,17 +86,15 @@ class Field
     if @sample.nil?
       self.sample =
       case meta.type
-        when :string; string_sample
         # max width of 40 chars
-        when :text; string_sample( 'n'*40 )
+        when :string, :text
+          string_sample( 'n'*40 )
         
-        when :date; date_time_sample
-        when :time; date_time_sample
-        when :datetime; date_time_sample
+        when :date, :time, :datetime
+          date_time_sample
         
-        when :numeric; numeric_sample
-        when :decimal; numeric_sample
-        when :integer; numeric_sample
+        when :numeric, :decimal, :integer
+          numeric_sample
         
         # TODO return a width, or something like that
         when :boolean; 'W'

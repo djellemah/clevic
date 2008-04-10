@@ -30,7 +30,6 @@ class EntryTableModel < Qt::AbstractTableModel
   
   attr_accessor :collection, :dots, :attributes, :attribute_paths, :labels
 
-  # the index where the error occurred, the incoming value, and the error message
   signals(
     # index where error occurred, value, message
     'data_error(QModelIndex,QVariant,QString)',
@@ -49,15 +48,6 @@ class EntryTableModel < Qt::AbstractTableModel
     puts "args: #{args.inspect}"
     super
   end
-  
-  #~ def index( row, column, parent )
-    #~ puts "index row: #{row}, column: #{column}, parent: #{parent}"
-    #~ if row < collection.size
-      #~ self.createIndex( row, column )
-    #~ else
-      #~ ModelIndex.invalid
-    #~ end
-  #~ end
   
   def sort( col, order )
     puts 'sort'
@@ -78,11 +68,6 @@ class EntryTableModel < Qt::AbstractTableModel
     #~ Qt::MatchRegExp	4	Performs string-based matching using a regular expression as the search term.
     #~ Qt::MatchWildcard	5	Performs string-based matching using a string with wildcards as the search term.
     #~ Qt::MatchWrap	32	Perform a search that wraps around, so that when the search reaches the last item in the model, it begins again at the first item and continues until all items have been examined.
-    super
-  end
-  
-  def submit
-    puts "submit"
     super
   end
   
@@ -242,46 +227,43 @@ class EntryTableModel < Qt::AbstractTableModel
     return value.to_variant
   end
   
-  # Provide data to UI. Default formatting is done here.
+  # Provide data to UI.
   def data( index, role = qt_display_role )
     #~ puts "data for index: #{index.inspect} and role: #{const_as_string role}"
     begin
       retval =
-      case
-        when role == qt_display_role || role == qt_edit_role
+      case role
+        when qt_display_role, qt_edit_role
           # boolean values generally don't have text next to them in this context
           # check explicitly to avoid fetching the entity from
           # the model's collection when we don't need to
-          return nil.to_variant if index.metadata.type == :boolean
-          
-          value = index.gui_value rescue nil
-          if value != nil
-            field = @builder.fields[index.column]
-            field.do_format( value )
+          unless index.metadata.type == :boolean
+            begin
+              value = index.gui_value
+              unless value.nil?
+                field = @builder.fields[index.column]
+                field.do_format( value )
+              end
+            rescue Exception => e
+              puts e.backtrace
+            end
           end
           
-        when role == qt_checkstate_role
+        when qt_checkstate_role
           if index.metadata.type == :boolean
             index.gui_value ? qt_checked : qt_unchecked
           end
           
-        when role == qt_text_alignment_role
+        when qt_text_alignment_role
           field = @builder.fields[index.column]
-          field.alignment ||
-            case index.metadata.type
-              when :decimal; qt_alignright
-              when :integer; qt_alignright
-              when :float; qt_alignright
-              when :boolean; qt_aligncenter
-            end
-          
-        when role == qt_size_hint_role
-          nil
-            
-        when role == qt_background_role;
-        when role == qt_font_role;
-        when role == qt_foreground_role;
-        when role == qt_decoration_role;
+          field.alignment
+
+        # these are just here to make debug output quieter
+        when qt_size_hint_role;
+        when qt_background_role;
+        when qt_font_role;
+        when qt_foreground_role;
+        when qt_decoration_role;
 
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
