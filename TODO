@@ -4,6 +4,7 @@ have empty record if no records
 combos should not show if they have no data
 
 F2 for standard edit, F4 for calendar edit
+Only move for data_changed if field was exited with tab, not enter.
 make sure record is saved when changing tabs
 tooltips for tabs and column headers
 Help in general for new data capture people
