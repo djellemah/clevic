@@ -57,7 +57,7 @@ class Browser < Qt::Widget
   # display a search dialog, and find the entered text
   def find
     @search_dialog ||= SearchDialog.new
-    result = @search_dialog.exec
+    result = @search_dialog.exec( table_view.current_index.gui_value )
     
     override_cursor( Qt::BusyCursor ) do
       case result

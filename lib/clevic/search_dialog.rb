@@ -47,7 +47,8 @@ class SearchDialog
     raise "direction not known"
   end
   
-  def exec
+  def exec( text = '' )
+    search_combo.edit_text = text
     search_combo.set_focus
     retval = @dialog.exec
     

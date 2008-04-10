@@ -11,10 +11,8 @@ Help to right of tabs
 messages for wrong dates etc
 numeric months
 
-ctrl-enter for new record
 Doing data capture, sort by id, but unfilter reverts to date/id rather than entry order
-search to populate search field from current entry
-warnings for back-dated entries. Highlighting 
+optional warnings for back-dated entries. Highlighting 
 make sure bsearch easier to install
 restricted to sample from set
 restricted not editing properly
