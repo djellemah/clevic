@@ -1,7 +1,7 @@
 require 'clevic.rb'
 
 $options ||= {}
-$options[:database] ||= 'accounts'
+$options[:database] ||= $options[:debug] ? 'accounts_test' : 'accounts'
 $options[:adapter]  ||= 'postgresql'
 $options[:host] ||= 'localhost'
 $options[:username] ||= 'panic'

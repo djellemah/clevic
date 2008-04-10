@@ -11,9 +11,10 @@ lib/clevic/browser.rb
 lib/clevic/cache_table.rb
 lib/clevic/db_options.rb
 lib/clevic/delegates.rb
-lib/clevic/entry_builder.rb
-lib/clevic/entry_table_model.rb
-lib/clevic/entry_table_view.rb
+lib/clevic/field.rb
+lib/clevic/model_builder.rb
+lib/clevic/table_model.rb
+lib/clevic/table_view.rb
 lib/clevic/extensions.rb
 lib/clevic/model_column.rb
 lib/clevic/qt_flags.rb

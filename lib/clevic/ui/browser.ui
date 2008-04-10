@@ -9,9 +9,6 @@
     <height>794</height>
    </rect>
   </property>
-  <property name="windowTitle" >
-   <string comment="Database editor" >Database</string>
-  </property>
   <property name="windowIcon" >
    <iconset/>
   </property>
@@ -123,7 +120,7 @@
     <bool>true</bool>
    </property>
    <property name="text" >
-    <string>F&amp;ilter</string>
+    <string>F&amp;ilter by current</string>
    </property>
    <property name="toolTip" >
     <string>Filter by value in current field</string>
