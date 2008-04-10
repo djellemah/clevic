@@ -1,4 +1,4 @@
-require 'clevic/entry_table_view.rb'
-require 'clevic/entry_builder.rb'
+require 'clevic/table_view.rb'
+require 'clevic/model_builder.rb'
 
 

@@ -15,7 +15,7 @@ class Entry < ActiveRecord::Base
   belongs_to :project
   
   def self.ui( parent )
-    EntryTableView.new( self, parent ).create_model do |t|
+    Clevic::TableView.new( self, parent ).create_model do |t|
       t.plain       :date, :sample => '28-Dec-08'
       t.relational  :project, 'project', :conditions => 'active = true', :order => 'lower(project)'
       t.relational  :invoice, 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
@@ -101,7 +101,7 @@ class Project < ActiveRecord::Base
   has_many :entries
 
   def self.ui( parent )
-    EntryTableView.new( Project, parent ).create_model do |t|
+    Clevic::TableView.new( Project, parent ).create_model do |t|
       t.plain :project
       t.plain :description
       t.distinct :client
@@ -118,7 +118,7 @@ class Activity < ActiveRecord::Base
   has_many :entries
 
   def self.ui( parent )
-    EntryTableView.new( Activity, parent ).create_model do |t|
+    Clevic::TableView.new( Activity, parent ).create_model do |t|
       t.plain :activity
       t.plain :active
       
@@ -132,7 +132,7 @@ class Invoice < ActiveRecord::Base
   has_many :entries
 
   def self.ui( parent )
-    EntryTableView.new( Invoice, parent ).create_model do |t|
+    Clevic::TableView.new( Invoice, parent ).create_model do |t|
       t.plain :date
       t.distinct :client
       t.plain :invoice_number

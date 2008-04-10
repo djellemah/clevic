@@ -13,7 +13,7 @@ class Entry < ActiveRecord::Base
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
 
   def self.ui( parent )
-    EntryTableView.new( self, parent ).create_model do |t|
+    Clevic::TableView.new( self, parent ).create_model do |t|
       t.plain       :date, :sample => '88-WWW-99'
       t.distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
       t.relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
@@ -77,7 +77,7 @@ class Account < ActiveRecord::Base
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   
   def self.ui( parent )
-    EntryTableView.new( self, parent ).create_model do |t|
+    Clevic::TableView.new( self, parent ).create_model do |t|
       t.plain       :name
       t.restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
       t.plain       :account_type
@@ -98,7 +98,7 @@ $options[:models] = [ Entry, Account ]
   #~ has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   #~ has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   #~ def self.ui( parent )
-    #~ EntryTableView.new( self, parent ).create_model do |t|
+    #~ Clevic::TableView.new( self, parent ).create_model do |t|
       #~ t.readonly
       #~ t.plain       :date
       #~ t.plain       :description
