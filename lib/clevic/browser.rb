@@ -1,12 +1,14 @@
 require 'clevic/search_dialog.rb'
 require 'clevic/ui/browser_ui.rb'
 
+module Clevic
+
 =begin rdoc
 The main application class. Each model for display should have a self.ui method
-which returns a EntryTableView instance, usually in conjunction with
-an EntryBuilder.
+which returns a Clevic::TableView instance, usually in conjunction with
+a ModelBuilder.
 
-  EntryTableView.new( Entry, parent ).create_model.new( Entry, parent ).create_model
+  Clevic::TableView.new( Entry, parent ).create_model.new( Entry, parent ).create_model
     .
     .
     .
@@ -40,10 +42,10 @@ class Browser < Qt::Widget
   
   # activated by Ctrl-D for debugging
   def dump
-    puts "table_view.model: #{table_view.model.inspect}" if table_view.class == EntryTableView
+    puts "table_view.model: #{table_view.model.inspect}" if table_view.class == Clevic::TableView
   end
   
-  # return the EntryTableView object in the currently displayed tab
+  # return the Clevic::TableView object in the currently displayed tab
   def table_view
     tables_tab.current_widget
   end
@@ -172,4 +174,6 @@ class Browser < Qt::Widget
   def save_all
     tables_tab.each {|x| x.save_row( x.current_index ) }
   end
+end
+
 end

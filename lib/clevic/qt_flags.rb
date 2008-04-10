@@ -69,6 +69,10 @@ module QtFlags
     @qt_foreground_role ||= Qt::ForegroundRole
   end
   
+  def qt_tooltip_role
+    @qt_tooltip_role ||= Qt::ToolTipRole
+  end
+  
   def const_as_string( constant )
     case constant
       when qt_text_alignment_role; 'Qt::TextAlignmentRole'

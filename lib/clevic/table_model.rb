@@ -1,10 +1,3 @@
-=begin
-This table model allows an ActiveRecord or ActiveResource to be used as a
-basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
-
-Initial idea by Richard Dale and Silvio Fonseca.
-=end
-
 require 'Qt4'
 require 'date'
 require 'clevic/extensions'
@@ -12,7 +5,14 @@ require 'clevic/model_column'
 require 'clevic/qt_flags.rb'
 require 'pp'
 
+module Clevic
+
 =begin rdoc
+This table model allows an ActiveRecord or ActiveResource to be used as a
+basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
+
+Initial idea by Richard Dale and Silvio Fonseca.
+
 * labels are the headings in the table view
 
 * dots are the dotted attribute paths that specify how to get values from
@@ -25,7 +25,7 @@ require 'pp'
 
 * collection is the set of ActiveRecord model objects (also called entities)
 =end
-class EntryTableModel < Qt::AbstractTableModel
+class TableModel < Qt::AbstractTableModel
   include QtFlags
   
   attr_accessor :collection, :dots, :attributes, :attribute_paths, :labels
@@ -264,6 +264,7 @@ class EntryTableModel < Qt::AbstractTableModel
         when qt_font_role;
         when qt_foreground_role;
         when qt_decoration_role;
+        when qt_tooltip_role;
 
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
@@ -415,3 +416,5 @@ class EntryTableModel < Qt::AbstractTableModel
   end
   
 end
+
+end #module

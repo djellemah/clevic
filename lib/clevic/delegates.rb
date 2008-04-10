@@ -31,7 +31,7 @@ end
 =begin rdoc
 Base class for other delegates using Combo boxes. Emit focus out signals, because ComboBox stupidly doesn't.
 
-Generally these will be created using an EntryBuilder.
+Generally these will be created using a ModelBuilder.
 =end
 class ComboDelegate < Qt::ItemDelegate
   def initialize( parent )

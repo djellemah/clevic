@@ -1,9 +1,11 @@
 require 'Qt4'
 require 'fastercsv'
-require 'clevic/entry_builder.rb'
+require 'clevic/model_builder.rb'
+
+module Clevic
 
 # The view class, implementing neat shortcuts and other pleasantness
-class EntryTableView < Qt::TableView
+class TableView < Qt::TableView
   attr_reader :model_class, :builder
   # whether the model is currently filtered
   # TODO better in QAbstractSortFilter?
@@ -34,7 +36,7 @@ class EntryTableView < Qt::TableView
   end
   
   def create_model( &block )
-    @builder = EntryBuilder.new( self )
+    @builder = Clevic::ModelBuilder.new( self )
     yield( @builder )
     @builder.build
     model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
@@ -421,4 +423,6 @@ class EntryTableView < Qt::TableView
     end
   end
   
+end
+
 end

@@ -1,7 +1,9 @@
-require 'clevic/entry_table_model.rb'
+require 'clevic/table_model.rb'
 require 'clevic/delegates.rb'
 require 'clevic/cache_table.rb'
 require 'clevic/field.rb'
+
+module Clevic
 
 =begin rdoc
 This is used to define a set of fields in a UI, any related tables,
@@ -20,7 +22,7 @@ In the case of relational fields, all other options are passed to ActiveRecord::
 
 For example, a the UI for a model called Entry would be defined like this:
 
-  EntryTableView.new( Entry, parent ).create_model do |builder|
+  Clevic::TableView.new( Entry, parent ).create_model do |builder|
     # :format is optional
     builder.plain       :date, :format => '%d-%h-%y'
     builder.plain       :start, :format => '%H:%M'
@@ -37,12 +39,12 @@ For example, a the UI for a model called Entry would be defined like this:
     builder.records = [ a,b,c,d,e ]
   end
 =end
-class EntryBuilder
+class ModelBuilder
   # The collection of Clevic::Field objects
   attr_reader :fields
   
-  def initialize( entry_table_view )
-    @entry_table_view = entry_table_view
+  def initialize( table_view )
+    @table_view = table_view
     @fields = []
     @active_record_options = [ :conditions, :class_name, :order ]
   end
@@ -56,7 +58,7 @@ class EntryBuilder
   
   # the AR class for this table
   def model_class
-    @entry_table_view.model_class
+    @table_view.model_class
   end
 
   # an ordinary field, edited in place with a text box
@@ -67,7 +69,7 @@ class EntryBuilder
   # edited with a combo box containing all previous entries in this field
   def distinct( attribute, options = {} )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = DistinctDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
+    field.delegate = DistinctDelegate.new( @table_view, attribute, @table_view.model_class, collect_finder_options( options ) )
     @fields << field
   end
 
@@ -75,7 +77,7 @@ class EntryBuilder
   def restricted( attribute, options = {} )
     raise "restricted must have a set" unless options.has_key?( :set )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = RestrictedDelegate.new( @entry_table_view, attribute, @entry_table_view.model_class, collect_finder_options( options ) )
+    field.delegate = RestrictedDelegate.new( @table_view, attribute, @table_view.model_class, collect_finder_options( options ) )
     @fields << field
   end
 
@@ -84,7 +86,7 @@ class EntryBuilder
   def relational( attribute, path, options = {} )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
     field.path = path
-    field.delegate = RelationalDelegate.new( @entry_table_view, field.attribute_path, options )
+    field.delegate = RelationalDelegate.new( @table_view, field.attribute_path, options )
     @fields << field
   end
 
@@ -127,8 +129,8 @@ class EntryBuilder
     # using @model here because otherwise the view's
     # reference to this very same model is mysteriously
     # set to nil
-    @model = EntryTableModel.new( self )
-    @model.object_name = @entry_table_view.model_class.name
+    @model = Clevic::TableModel.new( self )
+    @model.object_name = @table_view.model_class.name
     @model.dots = @fields.map {|x| x.column }
     @model.labels = @fields.map {|x| x.label }
     @model.attributes = @fields.map {|x| x.attribute }
@@ -139,12 +141,12 @@ class EntryBuilder
     
     # now set delegates
     @fields.each_with_index do |field, index|
-      @entry_table_view.set_item_delegate_for_column( index, field.delegate )
+      @table_view.set_item_delegate_for_column( index, field.delegate )
     end
     
     # give the built model back to the view class
     # see above comment about @model
-    @entry_table_view.model = @model
+    @table_view.model = @model
   end
   
 protected
@@ -159,5 +161,7 @@ protected
       end
     end
   end
+
+end
 
 end
