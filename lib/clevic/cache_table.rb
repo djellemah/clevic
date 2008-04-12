@@ -263,6 +263,14 @@ EOF
     end
   end
   
+  def delete_at( index )
+    retval = super
+    if self.size == 0
+      self << @model_class.new
+    end
+    retval
+  end
+  
 end
 
 class Array

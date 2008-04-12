@@ -36,8 +36,9 @@ end
 app = Qt::Application.new( args )
 
 if $options[:debug]
-  puts $options
-  puts args.inspect
+  require 'pp'
+  #~ puts "$options: #{$options.inspect}"
+  #~ puts args.inspect
 end
 
 if !$options.has_key?( :database )
@@ -53,6 +54,7 @@ puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $opt
 main_window = Qt::MainWindow.new
 browser = Clevic::Browser.new( main_window )
 browser.open
+# this must come after Clevic::Browser.new
 main_window.window_title = $options[:database]
 main_window.show
 # make sure any partially edited records are saved when the window is closed

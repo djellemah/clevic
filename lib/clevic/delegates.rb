@@ -63,7 +63,9 @@ class ComboDelegate < Qt::ItemDelegate
   
   # open the combo box, just like if f4 was pressed
   def full_edit
-    @editor.show_popup
+    if is_combo?( @editor )
+      @editor.show_popup
+    end
   end
   
   # returns true if the editor allows values outside of a predefined
@@ -72,10 +74,24 @@ class ComboDelegate < Qt::ItemDelegate
     false
   end
   
+  # TODO fetch this from the model definition
+  def allow_null?
+    true
+  end
+  
   # Subclasses should override this to fill the combo box
   # list with values.
   def populate( editor, model_index )
     raise "subclass responsibility"
+  end
+  
+  # return true if this delegate needs a combo, false otherwise
+  def needs_combo?
+    raise "subclass responsibility"
+  end
+
+  def is_combo?( editor )
+    editor.class == Qt::ComboBox
   end
   
   # This catches the event that begins the edit process.
@@ -86,41 +102,51 @@ class ComboDelegate < Qt::ItemDelegate
   
   # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
   def createEditor( parent_widget, style_option_view_item, model_index )
-    @editor = Qt::ComboBox.new( parent )
-    
-    # subclasses fill in the rest of the entries
-    populate( @editor, model_index )
-    
-    # create a nil entry
-    if ( @editor.find_data( nil.to_variant ) == -1 )
-      @editor.add_item( '', nil.to_variant )
+    if needs_combo?
+      @editor = Qt::ComboBox.new( parent_widget )
+      
+      # subclasses fill in the rest of the entries
+      populate( @editor, model_index )
+      
+      # create a nil entry
+      if allow_null?
+        if ( @editor.find_data( nil.to_variant ) == -1 )
+          @editor.add_item( '', nil.to_variant )
+        end
+      end
+      
+      # allow prefix matching from the keyboard
+      @editor.editable = true
+    else
+      @editor =
+      if restricted?
+        emit parent.status_text "Add entries in #{@model_class.name.humanize}"
+        nil
+      else
+        Qt::LineEdit.new( model_index.gui_value, parent_widget )
+      end
     end
-    
-    # allow prefix matching from the keyboard
-    @editor.editable = true
-    
     @editor
   end
   
   # Override the Qt::ItemDelegate method.
   def updateEditorGeometry( editor, style_option_view_item, model_index )
-    # figure out where to put the editor widget, taking into
-    # account the sizes of the headers
     rect = style_option_view_item.rect
-    horizontal_header_rect = parent.horizontal_header.rect
-    vertical_header_rect = parent.vertical_header.rect
-    rect.translate( vertical_header_rect.width + 1, horizontal_header_rect.height + 1 )
     
     # ask the editor for how much space it wants, and set the editor
     # to that size when it displays in the table
-    rect.set_width( editor.size_hint.width )
+    rect.set_width( editor.size_hint.width ) if is_combo?( editor )
     editor.set_geometry( rect )
   end
 
   # Override the Qt method to send data to the editor from the model.
   def setEditorData( editor, model_index )
-    editor.current_index = editor.find_data( model_index.attribute_value.to_variant )
-    editor.line_edit.select_all
+    if is_combo?( editor )
+      editor.current_index = editor.find_data( model_index.attribute_value.to_variant )
+      editor.line_edit.select_all
+    else
+      editor.text = model_index.gui_value
+    end
   end
   
   # This translates the text from the editor into something that is
@@ -132,22 +158,25 @@ class ComboDelegate < Qt::ItemDelegate
   # Send the data from the editor to the model. The data will
   # be translated by translate_from_editor_text,
   def setModelData( editor, abstract_item_model, model_index )
-    dump_editor_state( editor )
-    
-    value = 
-    if editor.completer.current_row == -1
-      # item doesn't exist in the list, add it if not restricted
-      editor.current_text unless restricted?
-    elsif editor.completer.completion_count == editor.count
-      # selection from drop down. if it's empty, we want a nil
-      editor.current_text
+    if is_combo?( editor )
+      dump_editor_state( editor )
+      
+      value = 
+      if editor.completer.current_row == -1
+        # item doesn't exist in the list, add it if not restricted
+        editor.current_text unless restricted?
+      elsif editor.completer.completion_count == editor.count
+        # selection from drop down. if it's empty, we want a nil
+        editor.current_text
+      else
+        # there is a matching completion, so use it
+        editor.completer.current_completion
+      end
+      
+      model_index.attribute_value = translate_from_editor_text( editor, value )
     else
-      # there is a matching completion, so use it
-      editor.completer.current_completion
+      model_index.gui_value = editor.text
     end
-    
-    model_index.attribute_value = translate_from_editor_text( editor, value )
-    
     emit abstract_item_model.dataChanged( model_index, model_index )
   end
 end
@@ -160,8 +189,14 @@ class DistinctDelegate < ComboDelegate
     @ar_model = model_class
     @attribute = attribute
     @options = options
+    # hackery for amateur query building in populate
     @options[:conditions] ||= 'true'
     super( parent )
+  end
+  
+  def needs_combo?
+    # works except when there is a '' in the column
+    @ar_model.count( @attribute, @options ) > 0
   end
   
   def populate( editor, model_index )
@@ -192,6 +227,10 @@ class RestrictedDelegate < ComboDelegate
     super( parent )
   end
   
+  def needs_combo?
+    true
+  end
+  
   def restricted?
     true
   end
@@ -220,6 +259,10 @@ class RelationalDelegate < ComboDelegate
     super( parent )
   end
   
+  def needs_combo?
+    @model_class.count( :conditions => @options[:conditions] ) > 0
+  end
+  
   def populate( editor, model_index )
     # add set of all possible related entities
     @model_class.find( :all, @options ).each do |x|
@@ -243,8 +286,10 @@ class RelationalDelegate < ComboDelegate
   
   # send data to the editor
   def setEditorData( editor, model_index )
-    editor.current_index = editor.find_data( model_index.attribute_value.id.to_variant )
-    editor.line_edit.select_all
+    if is_combo?( editor )
+      editor.current_index = editor.find_data( model_index.attribute_value.id.to_variant )
+      editor.line_edit.select_all
+    end
   end
   
   # don't allow new values

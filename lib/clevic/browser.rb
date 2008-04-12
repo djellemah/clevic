@@ -34,6 +34,7 @@ class Browser < Qt::Widget
     @layout.action_previous.connect   SIGNAL( 'triggered()' ),          &method( :previous_tab )
     @layout.action_find.connect       SIGNAL( 'triggered()' ),          &method( :find )
     @layout.action_find_next.connect  SIGNAL( 'triggered()' ),          &method( :find_next )
+    @layout.action_new_row.connect    SIGNAL( 'triggered()' ),          &method( :new_row )
     tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
     
     # as an example
@@ -121,6 +122,10 @@ class Browser < Qt::Widget
     else
       tables_tab.current_index - 1
     end
+  end
+  
+  def new_row
+    table_view.model.add_new_item
   end
   
   # slot to handle the currentChanged signal from tables_tab, and

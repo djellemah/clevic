@@ -1,7 +1,7 @@
 require 'clevic.rb'
 
 $options ||= {}
-$options[:database] ||= $options[:debug] ? 'timestest' : 'times'
+$options[:database] ||= $options[:debug] ? 'times_test' : 'times'
 $options[:adapter]  ||= 'postgresql'
 $options[:host] ||= 'localhost'
 $options[:username] ||= 'panic'
@@ -136,7 +136,7 @@ class Invoice < ActiveRecord::Base
       t.plain :date
       t.distinct :client
       t.plain :invoice_number
-      t.distinct :status
+      t.restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff' ]
       t.restricted :billing, :set => %w{Hours Quote Internal}
       t.plain :quote_date
       t.plain :quote_amount

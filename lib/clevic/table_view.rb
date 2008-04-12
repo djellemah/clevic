@@ -134,7 +134,6 @@ class TableView < Qt::TableView
   
   def moveCursor( cursor_action, modifiers )
     # TODO use this as a preload indicator
-    
     super
   end
 
@@ -317,12 +316,14 @@ class TableView < Qt::TableView
   
   # save the entity in the row of the given index
   def save_row( index )
-    saved = model.save( index )
-    if !saved
-      error_message = Qt::ErrorMessage.new( self )
-      msg = model.collection[previous_index.row].errors.join("\n")
-      error_message.show_message( msg )
-      error_message.show
+    if index.valid?
+      saved = model.save( index )
+      if !saved
+        error_message = Qt::ErrorMessage.new( self )
+        msg = model.collection[index.row].errors.join("\n")
+        error_message.show_message( msg )
+        error_message.show
+      end
     end
   end
   
@@ -422,7 +423,11 @@ class TableView < Qt::TableView
       emit status_text( "No match found for #{search_criteria.search_text}" )
     end
   end
-  
+
+  def itemDelegateForColumn( column )
+    puts "itemDelegateForColumn #{column}"
+    super
+  end
 end
 
 end

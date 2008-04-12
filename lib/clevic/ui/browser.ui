@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>727</width>
-    <height>794</height>
+    <height>740</height>
    </rect>
   </property>
   <property name="windowIcon" >
@@ -41,7 +41,7 @@
      <x>0</x>
      <y>0</y>
      <width>727</width>
-     <height>28</height>
+     <height>32</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile" >
@@ -74,6 +74,7 @@
     <property name="title" >
      <string>&amp;Table</string>
     </property>
+    <addaction name="action_new_row" />
     <addaction name="action_next" />
     <addaction name="action_previous" />
     <addaction name="separator" />
@@ -206,6 +207,11 @@
    </property>
    <property name="shortcut" >
     <string>Ctrl+G</string>
+   </property>
+  </action>
+  <action name="action_new_row" >
+   <property name="text" >
+    <string>New &amp;Row</string>
    </property>
   </action>
  </widget>

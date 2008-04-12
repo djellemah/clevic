@@ -1,7 +1,6 @@
 empty database
 --------------
-have empty record if no records
-combos should not show if they have no data
+resize fields for first record, while it's being entered.
 
 F2 for standard edit, F4 for calendar edit
 Only move for data_changed if field was exited with tab, not enter.

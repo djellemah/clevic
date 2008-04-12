@@ -138,6 +138,8 @@ class ModelBuilder
     
     # the data
     @model.collection = records
+    # fill in an empty record
+    @model.collection << model_class.new if @model.collection.size == 0
     
     # now set delegates
     @fields.each_with_index do |field, index|
