@@ -24,20 +24,20 @@ UI_FILES.each do |ui_file|
     sh "rbuic4 #{t.prerequisites} -o #{t.name}" 
   end
   
-  namespace :ui do
   # make tasks to start designer when the ui file is named
-    desc "Start Qt designer with #{ui_file}"
-    file Pathname.new(ui_file).basename.to_s.ext do |t|
+  desc "Start Qt designer with #{ui_file}"
+  namespace :ui do |n|
+    task Pathname.new(ui_file).basename.to_s.ext do |t|
       sh "designer #{ui_file}"
     end
   end
 end
 
 desc 'Generate all _ui.rb files'
-task :rbuic => UI_FILES.map{|x| ui_rb_file( x ) }
+task :ui => UI_FILES.map{|x| ui_rb_file( x ) }
 
 namespace :ui do
-  desc 'Start Qt designer with the argument, or all .ui files. '
+  desc 'Start Qt designer with the argument, or all .ui files.'
   task :design do |t|
     ARGV.shift()
     if ARGV.size == 0
@@ -52,12 +52,12 @@ namespace :ui do
 end
 
 desc "Runs Clevic in debug mode, with test databases"
-task :run => :rbuic do |t|
+task :run => :ui do |t|
   ARGV.shift()
   exec "ruby -w -Ilib bin/clevic -D #{ARGV.join(' ')}"
 end
 
-desc "Runs irb in this project's context"
+desc "irb in this project's context"
 task :irb do |t|
   ARGV.shift()
   ENV['RUBYLIB'] += ":#{File.expand_path('.')}/lib"
@@ -74,7 +74,7 @@ end
 MODELS_LIST.each do |model_file|
   # generate irb contexts
   desc "irb with #{model_file}"
-  namespace 'irb' do
+  namespace :irb do
     task short_model( model_file ) do |t|
       ARGV.shift()
       ENV['RUBYLIB'] ||= '.'
@@ -90,4 +90,4 @@ MODELS_LIST.each do |model_file|
   end
 end
 
-task :package => :rbuic
+task :package => :ui
