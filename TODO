@@ -1,7 +1,19 @@
+restricted to sample from set
+restricted not editing properly
+refresh from db
+wrap description, and allow Access-style zooming
+tooltip for empty RelationalDelegates
+
+windows
+-------
+Ctrl-; date formatting goes 07--08 instead of 07-Apr-08. But typing the full month will be OK.
+
 empty database
 --------------
 resize fields for first record, while it's being entered.
 
+editing
+-------
 F2 for standard edit, F4 for calendar edit
 Only move for data_changed if field was exited with tab, not enter.
 make sure record is saved when changing tabs
@@ -16,16 +28,13 @@ shortcut sets, depending on which OS you're used
 Doing data capture, sort by id, but unfilter reverts to date/id rather than entry order
 optional warnings for back-dated entries. Highlighting 
 make sure bsearch easier to install
-restricted to sample from set
-restricted not editing properly
 
 ORDER BY allow functions, ie lower(project)
-no sample, fetch max length from table
 handle db errors
 test with sqlite
 easier way to run models, search LOAD_PATH
 
-generate models
+generate models - DrySQL
 Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 - layoutChanged
@@ -55,7 +64,6 @@ cut and paste (in model and csv format)
 
 drop cached model objects from CacheTable when they're not in use
 
-refresh from db
 
 allow scroll viewport to centre when at end of dataset
 QAbstractItemView::ScrollHint
@@ -65,16 +73,11 @@ QAbstractItemView::ScrollHint
     \value PositionAtBottom  Scroll to position the item at the bottom of the viewport.
     \value PositionAtCenter  Scroll to position the item at the center of the viewport.
 
-wrap description, and allow Access-style zooming
-f4 for date fields and time fields
 
 preferences
 -----------
 store previous searches, by model & app
 
-windows
--------
-Ctrl-; date formatting goes 07--08 instead of 07-Apr-08. But typing the full month will be OK.
 
 maybe
 -----
@@ -114,14 +117,3 @@ alter table projects rename active to old_active;
 alter table projects add column active boolean;
 update projects set active = ( old_active = 1 );
 alter table projects drop column old_active;
-
-Done
-----
-17 16 instead of 17:16
-20 mar instead of 20-mar
-checkbox for booleans. Data and flags correctly? http://lists.trolltech.com/qt-interest/2007-06/thread00629-0.html
-completion for select distinct
-project field tab not working
-nil values for combos
-fix edit status moving from one checkbox to the next
-Tabs for various tables
