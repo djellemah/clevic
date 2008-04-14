@@ -51,10 +51,16 @@ namespace :ui do
   end
 end
 
-desc "Runs Clevic in debug mode, with test databases"
+desc "Runs Clevic in warning mode, with test databases and debug flag on"
 task :run => :ui do |t|
   ARGV.shift()
   exec "ruby -w -Ilib bin/clevic -D #{ARGV.join(' ')}"
+end
+
+desc "Runs Clevic in debug mode, with test databases"
+task :debug => :ui do |t|
+  ARGV.shift()
+  exec "ruby -w -rdebug -Ilib bin/clevic -D #{ARGV.join(' ')}"
 end
 
 desc "irb in this project's context"
@@ -85,8 +91,9 @@ MODELS_LIST.each do |model_file|
   
   # generate runs
   desc "run clevic with #{model_file}"
-  task short_model( model_file ) do |t|
-    exec "ruby -w -Ilib bin/clevic -D #{model_file}"
+  task short_model( model_file )  => :ui do |t|
+    ARGV.shift()
+    exec "ruby -w -Ilib bin/clevic -D #{model_file} #{ARGV.join(' ')}"
   end
 end
 

@@ -46,7 +46,6 @@ class ModelBuilder
   def initialize( table_view )
     @table_view = table_view
     @fields = []
-    @active_record_options = [ :conditions, :class_name, :order ]
   end
   
   # return the index of the named field
@@ -69,7 +68,7 @@ class ModelBuilder
   # edited with a combo box containing all previous entries in this field
   def distinct( attribute, options = {} )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = DistinctDelegate.new( @table_view, attribute, @table_view.model_class, collect_finder_options( options ) )
+    field.delegate = DistinctDelegate.new( @table_view, attribute, @table_view.model_class, options )
     @fields << field
   end
 
@@ -77,7 +76,7 @@ class ModelBuilder
   def restricted( attribute, options = {} )
     raise "restricted must have a set" unless options.has_key?( :set )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = RestrictedDelegate.new( @table_view, attribute, @table_view.model_class, collect_finder_options( options ) )
+    field.delegate = RestrictedDelegate.new( @table_view, attribute, @table_view.model_class, options )
     @fields << field
   end
 
@@ -142,6 +141,7 @@ class ModelBuilder
     @model.collection << model_class.new if @model.collection.size == 0
     
     # now set delegates
+    @table_view.item_delegate = Clevic::ItemDelegate.new( @table_view )
     @fields.each_with_index do |field, index|
       @table_view.set_item_delegate_for_column( index, field.delegate )
     end
@@ -150,20 +150,6 @@ class ModelBuilder
     # see above comment about @model
     @table_view.model = @model
   end
-  
-protected
-  # given a hash of options, return only those
-  # which are applicable to a ActiveRecord::Base.find
-  # method call.
-  def collect_finder_options( options )
-    new_options = {}
-    options.each do |key,value|
-      if @active_record_options.include?( key )
-        new_options[key] = value
-      end
-    end
-  end
-
 end
 
 end

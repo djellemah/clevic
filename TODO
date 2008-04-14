@@ -1,5 +1,5 @@
-restricted to sample from set
-restricted not editing properly
+nil vs "" in delegates
+use Qt::ExpandingLineEdit for ComboDelegate? Doesn't exist in Ruby bindings
 refresh from db
 wrap description, and allow Access-style zooming
 tooltip for empty RelationalDelegates
@@ -23,7 +23,7 @@ Help to right of tabs
 messages for wrong dates etc
 numeric months
 
-shortcut sets, depending on which OS you're used
+shortcut sets, depending on which OS you're used. use QKeyEvent::matches ( QKeySequence::StandardKey key )
 
 Doing data capture, sort by id, but unfilter reverts to date/id rather than entry order
 optional warnings for back-dated entries. Highlighting 

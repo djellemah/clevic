@@ -136,7 +136,7 @@ class Invoice < ActiveRecord::Base
       t.plain :date
       t.distinct :client
       t.plain :invoice_number
-      t.restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff' ]
+      t.restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff', 'internal']
       t.restricted :billing, :set => %w{Hours Quote Internal}
       t.plain :quote_date
       t.plain :quote_amount

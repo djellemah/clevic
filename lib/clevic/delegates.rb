@@ -1,41 +1,17 @@
-class EntryDelegate < Qt::ItemDelegate
-  
-  def initialize( parent, field_name, editor_class )
-    super( parent )
-    @field_name = field_name
-    @editor_class = editor_class
-  end
-  
-  def createEditor( parent_widget, style_option_view_item, model_index )
-    @editor_class.new( parent_widget )
-  end
-  
-  def setEditorData( editor, model_index )
-    editor.value = model_index.gui_value
-  end
-  
-  def setModelData( editor, abstract_item_model, model_index )
-    model_index.gui_value = editor.value
-    emit abstract_item_model.dataChanged( model_index, model_index )
-  end
-  
-  def updateEditorGeometry( editor, style_option_view_item, model_index )
-    # figure out where to put the editor widget, taking into
-    # account the sizes of the headers
-    rect = style_option_view_item.rect
-    rect.set_width( editor.size_hint.width )
-    editor.set_geometry( rect )
-  end
-end
+require 'clevic/item_delegate.rb'
+
+module Clevic
 
 =begin rdoc
-Base class for other delegates using Combo boxes. Emit focus out signals, because ComboBox stupidly doesn't.
+Base class for other delegates using Combo boxes. Emit focus out signals,
+because ComboBox stupidly doesn't.
 
 Generally these will be created using a ModelBuilder.
 =end
-class ComboDelegate < Qt::ItemDelegate
+class ComboDelegate < Clevic::ItemDelegate
   def initialize( parent )
     super
+    @@active_record_options ||= [ :conditions, :class_name, :order ]
   end
   
   # Convert Qt:: constants from the integer value to a string value.
@@ -94,12 +70,6 @@ class ComboDelegate < Qt::ItemDelegate
     editor.class == Qt::ComboBox
   end
   
-  # This catches the event that begins the edit process.
-  # Not used at the moment.
-  def editorEvent ( event, model, style_option_view_item, model_index ) 
-    super
-  end
-  
   # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
   def createEditor( parent_widget, style_option_view_item, model_index )
     if needs_combo?
@@ -107,6 +77,12 @@ class ComboDelegate < Qt::ItemDelegate
       
       # subclasses fill in the rest of the entries
       populate( @editor, model_index )
+      
+      # add the current entry, if it isn't there already
+      # TODO add it in the correct order
+      if ( @editor.find_data( model_index.gui_value.to_variant ) == -1 )
+        @editor.add_item( model_index.gui_value, model_index.gui_value.to_variant )
+      end
       
       # create a nil entry
       if allow_null?
@@ -117,10 +93,13 @@ class ComboDelegate < Qt::ItemDelegate
       
       # allow prefix matching from the keyboard
       @editor.editable = true
+      
+      # don't insert if restricted
+      @editor.insert_policy = Qt::ComboBox::NoInsert if restricted?
     else
       @editor =
       if restricted?
-        emit parent.status_text "Add entries in #{@model_class.name.humanize}"
+        emit parent.status_text( "Add entries in #{@model_class.name.humanize}" )
         nil
       else
         Qt::LineEdit.new( model_index.gui_value, parent_widget )
@@ -135,7 +114,7 @@ class ComboDelegate < Qt::ItemDelegate
     
     # ask the editor for how much space it wants, and set the editor
     # to that size when it displays in the table
-    rect.set_width( editor.size_hint.width ) if is_combo?( editor )
+    rect.set_width( [editor.size_hint.width,rect.width].max ) if is_combo?( editor )
     editor.set_geometry( rect )
   end
 
@@ -143,7 +122,7 @@ class ComboDelegate < Qt::ItemDelegate
   def setEditorData( editor, model_index )
     if is_combo?( editor )
       editor.current_index = editor.find_data( model_index.attribute_value.to_variant )
-      editor.line_edit.select_all
+      editor.line_edit.select_all if editor.editable
     else
       editor.text = model_index.gui_value
     end
@@ -152,7 +131,12 @@ class ComboDelegate < Qt::ItemDelegate
   # This translates the text from the editor into something that is
   # stored in an underlying model. Intended to be overridden by subclasses.
   def translate_from_editor_text( editor, text )
-    text
+    index = editor.find_text( text )
+    if index == -1
+      text unless restricted?
+    else
+      editor.item_data( index ).value
+    end
   end
 
   # Send the data from the editor to the model. The data will
@@ -160,7 +144,6 @@ class ComboDelegate < Qt::ItemDelegate
   def setModelData( editor, abstract_item_model, model_index )
     if is_combo?( editor )
       dump_editor_state( editor )
-      
       value = 
       if editor.completer.current_row == -1
         # item doesn't exist in the list, add it if not restricted
@@ -173,12 +156,31 @@ class ComboDelegate < Qt::ItemDelegate
         editor.completer.current_completion
       end
       
-      model_index.attribute_value = translate_from_editor_text( editor, value )
+      if value != nil
+        model_index.attribute_value = translate_from_editor_text( editor, value )
+      end
+      
     else
       model_index.gui_value = editor.text
     end
     emit abstract_item_model.dataChanged( model_index, model_index )
   end
+
+protected
+
+  # given a hash of options, return only those
+  # which are applicable to a ActiveRecord::Base.find
+  # method call
+  def collect_finder_options( options )
+    new_options = {}
+    options.each do |key,value|
+      if @@active_record_options.include?( key )
+        new_options[key] = value
+      end
+    end
+    new_options
+  end
+
 end
 
 # Provide a list of all values in this field,
@@ -196,7 +198,7 @@ class DistinctDelegate < ComboDelegate
   
   def needs_combo?
     # works except when there is a '' in the column
-    @ar_model.count( @attribute, @options ) > 0
+    @ar_model.count( @attribute, collect_finder_options( @options ) ) > 0
   end
   
   def populate( editor, model_index )
@@ -212,6 +214,10 @@ class DistinctDelegate < ComboDelegate
     rs.each do |row|
       editor.add_item( row[0], row[0].to_variant )
     end
+  end
+  
+  def translate_from_editor_text( editor, text )
+    text
   end
 end
 
@@ -265,7 +271,7 @@ class RelationalDelegate < ComboDelegate
   
   def populate( editor, model_index )
     # add set of all possible related entities
-    @model_class.find( :all, @options ).each do |x|
+    @model_class.find( :all, collect_finder_options( @options ) ).each do |x|
       editor.add_item( x[@attribute_path], x.id.to_variant )
     end
     
@@ -311,4 +317,6 @@ class RelationalDelegate < ComboDelegate
     end
   end
   
+end
+
 end
