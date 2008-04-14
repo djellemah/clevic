@@ -22,6 +22,7 @@ Help in general for new data capture people
 Help to right of tabs
 messages for wrong dates etc
 numeric months
+shortlist combos by prefix
 
 shortcut sets, depending on which OS you're used. use QKeyEvent::matches ( QKeySequence::StandardKey key )
 
