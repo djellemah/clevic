@@ -30,7 +30,11 @@ class ItemDelegate < Qt::ItemDelegate
   def createEditor( parent_widget, style_option_view_item, model_index )
     puts "model_index.metadata.type: #{model_index.metadata.type.inspect}"
     if model_index.metadata.type == :date
-      Qt::CalendarWidget.new( parent_widget )
+      # not going to work here because being triggered by
+      # an alphanumeric keystroke (as opposed to F4)
+      # will result in the calendar widget being opened.
+      #~ Qt::CalendarWidget.new( parent_widget )
+      super
     else
       super
     end
