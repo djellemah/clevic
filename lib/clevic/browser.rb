@@ -19,7 +19,7 @@ and <tt>self.data_changed( top_left_index, bottom_right_index, view )</tt> metho
 they can respond to editing events and do Neat Stuff.
 =end
 class Browser < Qt::Widget
-  slots *%w{dump() reload_model() filter_by_current(bool) next_tab() previous_tab() current_changed(int)}
+  slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab() current_changed(int)}
   
   def initialize( main_window )
     super( main_window )
@@ -28,7 +28,7 @@ class Browser < Qt::Widget
     
     # connect slots
     @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
-    @layout.action_reload.connect     SIGNAL( 'triggered()' ),          &method( :reload_model )
+    @layout.action_refresh.connect    SIGNAL( 'triggered()' ),          &method( :refresh_table )
     @layout.action_filter.connect     SIGNAL( 'triggered(bool)' ),      &method( :filter_by_current )
     @layout.action_next.connect       SIGNAL( 'triggered()' ),          &method( :next_tab )
     @layout.action_previous.connect   SIGNAL( 'triggered()' ),          &method( :previous_tab )
@@ -87,8 +87,10 @@ class Browser < Qt::Widget
   end
   
   # force a complete reload of the current tab's data
-  def reload_model
-    table_view.model.reload_data
+  def refresh_table
+    override_cursor( Qt::BusyCursor ) do
+      table_view.model.reload_data
+    end
   end
   
   # toggle the filter, based on current selection.
@@ -101,7 +103,7 @@ class Browser < Qt::Widget
     
     # update the tab, so there's a visual indication of filtering
     tab_title = table_view.filtered ? translate( '| ' + table_view.model_class.name.humanize ) : translate( table_view.model_class.name.humanize )
-    tables_tab.setTabText( tables_tab.current_index, tab_title )
+    tables_tab.set_tab_text( tables_tab.current_index, tab_title )
   end
   
   # slot to handle Ctrl-Tab and move to next tab, or wrap around

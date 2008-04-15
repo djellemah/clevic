@@ -78,7 +78,7 @@
     <addaction name="action_next" />
     <addaction name="action_previous" />
     <addaction name="separator" />
-    <addaction name="action_reload" />
+    <addaction name="action_refresh" />
     <addaction name="action_dump" />
    </widget>
    <addaction name="menuFile" />
@@ -149,15 +149,15 @@
     <string>Ctrl+D</string>
    </property>
   </action>
-  <action name="action_reload" >
+  <action name="action_refresh" >
    <property name="text" >
-    <string>&amp;Reload</string>
+    <string>&amp;Refresh</string>
    </property>
    <property name="iconText" >
-    <string>Reload current model</string>
+    <string>Refresh current table from database</string>
    </property>
    <property name="toolTip" >
-    <string>Reload code for current model. For development.</string>
+    <string>Refresh current table from database</string>
    </property>
    <property name="shortcut" >
     <string>Ctrl+R</string>

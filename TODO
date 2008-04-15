@@ -4,7 +4,6 @@ Check that qtruby4 runs on OSX and so does Clevic
 
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 use Qt::ExpandingLineEdit for ComboDelegate? Doesn't exist in Ruby bindings
-refresh from db
 wrap description, and allow Access-style zooming
 tooltip for empty RelationalDelegates
 
