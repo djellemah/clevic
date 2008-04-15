@@ -192,14 +192,10 @@ class TableView < Qt::TableView
       # copy the value from the row one above  
       when event.ctrl? && event.apostrophe?
         if current_index.row > 0
-          key = current_index.attribute
-          previous_item = model.collection[current_index.row - 1]
-          current_item = model.collection[current_index.row]
-          
-          previous_value = previous_item.send( key )
-          current_value = current_item.send( key )
-          if current_value != previous_value
-            current_item.send( "#{key}=", previous_value )
+          one_up_index = model.create_index( current_index.row - 1, current_index.column )
+          previous_value = one_up_index.attribute_value
+          if current_index.attribute_value != previous_value
+            current_index.attribute_value = previous_value
             emit model.dataChanged( current_index, current_index )
           end
         end
@@ -207,28 +203,22 @@ class TableView < Qt::TableView
       # copy the value from the previous row, one cell right
       when event.ctrl? && event.bracket_right?
         if current_index.row > 0 && current_index.column < model.column_count
-          key = current_index.attribute
-          previous_item = model.collection[current_index.row - 1]
-          current_item = model.collection[current_index.row]
-          current_item.send( "#{key}=", previous_item.send( model.attributes[ current_index.column + 1 ] ) )
+          one_up_right_index = model.create_index( current_index.row - 1, current_index.column + 1 )
+          current_index.attribute_value = one_up_right_index.attribute_value
           emit model.dataChanged( current_index, current_index )
         end
         
       # copy the value from the previous row, one cell left
       when event.ctrl? && event.bracket_left?
         if current_index.row > 0 && current_index.column > 0
-          key = current_index.attribute
-          previous_item = model.collection[current_index.row - 1]
-          current_item = model.collection[current_index.row]
-          current_item.send( "#{key}=", previous_item.send( model.attributes[ current_index.column - 1 ] ) )
+          one_up_left_index = model.create_index( current_index.row - 1, current_index.column - 1 )
+          current_index.attribute_value = one_up_left_index.attribute_value
           emit model.dataChanged( current_index, current_index )
         end
         
       # insert today's date in the current field
       when event.ctrl? && event.semicolon?
-        key = current_index.attribute
-        current_item = model.collection[current_index.row]
-        current_item.send( "#{key}=", Time.now )
+        current_index.attribute_value = Time.now
         emit model.dataChanged( current_index, current_index )
         
       # dump current record to stdout

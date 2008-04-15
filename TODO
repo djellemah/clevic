@@ -26,7 +26,12 @@ Help in general for new data capture people
 Help to right of tabs
 messages for wrong dates etc
 numeric months
+
+Combos
+------
 shortlist combos by prefix
+turn on/off smart filters for relational delegates. Like selecting only distincts in the last year.
+context menu for delegates, ie sort order, last used, etc
 
 shortcut sets, depending on which OS you're used. use QKeyEvent::matches ( QKeySequence::StandardKey key )
 
@@ -51,7 +56,7 @@ implement undo of field changes
 cache belongs_to associations, during loading, ie don't affect ability to pick up
 changes more or less instantly.
 
-moving of columns. Make sure moving of display doesn't affect copying shortcuts
+moving of columns
 /-style keyboard search by selected column, or everything if no column selected
 /-style filtering?
 
@@ -60,15 +65,12 @@ value formatting not in model
 copy a field from a mouse-selection (ctrl-b maybe)
 hiding of fields
 
-turn on/off smart filters for relational delegates. Like selecting only distincts in the last year.
-context menu for delegates, ie sort order, last used, etc
 save context menu settings, filter settings, etc
 filtering by various things. http://doc.trolltech.com/4.3/qsortfilterproxymodel.html
 highlighting by various things
 cut and paste (in model and csv format)
 
 drop cached model objects from CacheTable when they're not in use
-
 
 allow scroll viewport to centre when at end of dataset
 QAbstractItemView::ScrollHint
