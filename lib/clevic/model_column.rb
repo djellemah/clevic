@@ -16,6 +16,7 @@ class ModelColumn
   
   # return the underlying field name, ie "#{attribute}_id" if
   # it's an association
+  alias_method :old_name, :name
   def name
     @meta.name
   end

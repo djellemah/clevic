@@ -104,10 +104,8 @@ class ModelBuilder
   # used as an accessor for records
   def records( *args )
     if args.size == 0
-      puts "return records"
       get_records
     else
-      puts "set records to #{args.inspect}"
       set_records( args[0] )
     end
   end

@@ -134,6 +134,7 @@ module Qt
       entity.send( "#{model.dots[column]}=", obj )
     end
     
+    alias_method :old_inspect, :inspect
     def inspect
       #<Qt::ModelIndex:0xb6004e8c>
       # fetch address from superclass inspect
@@ -272,6 +273,7 @@ module Qt
   end
   
   class Rect
+    alias_method :old_inspect, :inspect
     def inspect
       "#<Qt::Rect x=#{self.x} y=#{self.y} w=#{self.width} h=#{self.height}>"
     end
@@ -301,6 +303,7 @@ module Qt
     end
     
     # because the qtruby inspect doesn't provide the value
+    alias_method :old_inspect, :inspect
     def inspect
       "#<Qt::Variant value=#{self.value} typeName=#{self.typeName}>"
     end
