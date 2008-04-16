@@ -15,19 +15,19 @@ class Entry < ActiveRecord::Base
   belongs_to :project
   
   def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do |t|
-      t.plain       :date, :sample => '28-Dec-08'
-      t.relational  :project, 'project', :conditions => 'active = true', :order => 'lower(project)'
-      t.relational  :invoice, 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
-      t.plain       :start
-      t.plain       :end
-      t.plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
-      t.relational  :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = true'
-      t.distinct    :module
-      t.plain       :charge
-      t.distinct    :person
+    Clevic::TableView.new( self, parent ).create_model do
+      plain       :date, :sample => '28-Dec-08'
+      relational  :project, 'project', :conditions => 'active = true', :order => 'lower(project)'
+      relational  :invoice, 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
+      plain       :start
+      plain       :end
+      plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
+      relational  :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = true'
+      distinct    :module
+      plain       :charge
+      distinct    :person
       
-      t.records = { :order => 'date, start, id' }
+      records     :order => 'date, start, id'
     end
   end
 
@@ -36,15 +36,14 @@ class Entry < ActiveRecord::Base
       # copy almost all of the previous line
       when event.ctrl? && event.quote_dbl?
         if current_index.row > 1
-          # fetch the two row models
+          # fetch previous item
           model = current_index.model
           previous_item = model.collection[current_index.row - 1]
-          current_item = model.collection[current_index.row]
           
           # copy the relevant fields
-          current_item.start = previous_item.end
+          current_index.entity.start = previous_item.end
           [:date, :project, :invoice, :activity, :module, :charge, :person].each do |attr|
-            current_item.send( "#{attr.to_s}=", previous_item.send( attr ) )
+            current_index.entity.send( "#{attr.to_s}=", previous_item.send( attr ) )
           end
           
           # tell view to update
@@ -101,14 +100,14 @@ class Project < ActiveRecord::Base
   has_many :entries
 
   def self.ui( parent )
-    Clevic::TableView.new( Project, parent ).create_model do |t|
-      t.plain :project
-      t.plain :description
-      t.distinct :client
-      t.plain :rate
-      t.plain :active
+    Clevic::TableView.new( Project, parent ).create_model do
+      plain     :project
+      plain     :description
+      distinct  :client
+      plain     :rate
+      plain     :active
       
-      t.records = { :order => 'project' }
+      records   :order => 'project'
     end
   end
 end
@@ -118,11 +117,11 @@ class Activity < ActiveRecord::Base
   has_many :entries
 
   def self.ui( parent )
-    Clevic::TableView.new( Activity, parent ).create_model do |t|
-      t.plain :activity
-      t.plain :active
+    Clevic::TableView.new( Activity, parent ).create_model do
+      plain :activity
+      plain :active
       
-      t.records = { :order => 'activity' }
+      records :order => 'activity'
     end
   end
 end
@@ -132,17 +131,17 @@ class Invoice < ActiveRecord::Base
   has_many :entries
 
   def self.ui( parent )
-    Clevic::TableView.new( Invoice, parent ).create_model do |t|
-      t.plain :date
-      t.distinct :client
-      t.plain :invoice_number
-      t.restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff', 'internal']
-      t.restricted :billing, :set => %w{Hours Quote Internal}
-      t.plain :quote_date
-      t.plain :quote_amount
-      t.plain :description
+    Clevic::TableView.new( Invoice, parent ).create_model do
+      plain :date
+      distinct :client
+      plain :invoice_number
+      restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff', 'internal']
+      restricted :billing, :set => %w{Hours Quote Internal}
+      plain :quote_date
+      plain :quote_amount
+      plain :description
       
-      t.records = { :order => 'invoice_number' }
+      records :order => 'invoice_number'
     end
   end
 end

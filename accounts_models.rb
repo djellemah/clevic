@@ -13,17 +13,17 @@ class Entry < ActiveRecord::Base
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
 
   def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do |t|
-      t.plain       :date, :sample => '88-WWW-99'
-      t.distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
-      t.relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
-      t.relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
-      t.plain       :amount, :sample => 999999.99
-      t.plain       :cheque_number
-      t.plain       :active, :sample => 'WW'
-      t.plain       :vat, :label => 'VAT', :sample => 'WW'
+    Clevic::TableView.new( self, parent ).create_model do
+      plain       :date, :sample => '88-WWW-99'
+      distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
+      relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      plain       :amount, :sample => 999999.99
+      plain       :cheque_number
+      plain       :active, :sample => 'WW'
+      plain       :vat, :label => 'VAT', :sample => 'WW'
       
-      t.records = {:order => 'date, id' }
+      records     :order => 'date, id'
     end
   end
   
@@ -31,8 +31,8 @@ class Entry < ActiveRecord::Base
     if top_left == bottom_right
       update_credit_debit( top_left, view )
     else
-      puts "top_left: #{top_left.inspect}"
-      puts "bottom_right: #{bottom_right.inspect}"
+      puts "top_left: #{top_lefinspect}"
+      puts "bottom_right: #{bottom_righinspect}"
       puts "can't do data_changed for a range"
     end
   end
@@ -51,14 +51,12 @@ class Entry < ActiveRecord::Base
         :order => 'date desc'
       )
       if similar != nil
-        model = current_index.model
-        
-        # fetch the current ActiveRecord object and set the values
-        current_item = model.collection[current_index.row]
-        current_item.debit = similar.debit
-        current_item.credit = similar.credit
+        # set the values
+        current_index.entity.debit = similar.debit
+        current_index.entity.credit = similar.credit
         
         # update view from top_left to bottom_right
+        model = current_index.model
         top_left_index = model.create_index( current_index.row, 0 )
         bottom_right_index = model.create_index( current_index.row, view.builder.fields.size )
         view.dataChanged( top_left_index, bottom_right_index )
@@ -77,15 +75,15 @@ class Account < ActiveRecord::Base
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   
   def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do |t|
-      t.plain       :name
-      t.restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
-      t.plain       :account_type
-      t.plain       :pastel_number, :alignment => Qt::AlignRight, :label => 'Pastel'
-      t.plain       :fringe, :format => "%.1f"
-      t.plain       :active
+    Clevic::TableView.new( self, parent ).create_model do
+      plain       :name
+      restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
+      plain       :account_type
+      plain       :pastel_number, :alignment => Qt::AlignRight, :label => 'Pastel'
+      plain       :fringe, :format => "%.1f"
+      plain       :active
       
-      t.records = { :order => 'name,account_type' }
+      records  :order => 'name,account_type'
     end
   end
 end
@@ -98,19 +96,19 @@ $options[:models] = [ Entry, Account ]
   #~ has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   #~ has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   #~ def self.ui( parent )
-    #~ Clevic::TableView.new( self, parent ).create_model do |t|
-      #~ t.readonly
-      #~ t.plain       :date
-      #~ t.plain       :description
-      #~ t.plain       :debit
-      #~ t.plain       :credit
-      #~ t.plain       :pre_vat_amount
-      #~ t.plain       :cheque_number
-      #~ t.plain       :vat, :label => 'VAT'
-      #~ t.plain       :financial_year
-      #~ t.plain       :month
+    #~ Clevic::TableView.new( self, parent ).create_model do
+      #~ readonly
+      #~ plain       :date
+      #~ plain       :description
+      #~ plain       :debit
+      #~ plain       :credit
+      #~ plain       :pre_vat_amount
+      #~ plain       :cheque_number
+      #~ plain       :vat, :label => 'VAT'
+      #~ plain       :financial_year
+      #~ plain       :month
       
-      #~ t.records = {:order => 'date' }
+      #~ records :order => 'date'
     #~ end
   #~ end
 #~ end

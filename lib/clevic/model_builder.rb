@@ -89,18 +89,6 @@ class ModelBuilder
     @fields << field
   end
 
-  # The collection of model objects to display in a table
-  # arg can either be a Hash, in which case a new CacheTable
-  # is created, or it can be an array
-  def records=( arg )
-    if arg.class == Hash
-      # need to defer this until all fields are collected
-      @options = arg
-    else
-      @records = arg
-    end
-  end
-
   # add AR :include options for foreign keys, but it takes up too much memory,
   # and actually takes longer to load a data set
   def add_include_options
@@ -112,13 +100,16 @@ class ModelBuilder
     end
   end
 
-  # return a collection of records. Usually this will be a CacheTable
-  def records
-    if @records.nil?
-      #~ add_include_options
-      @records = CacheTable.new( model_class, @options )
+  # mostly used in the create_model block, but may also be
+  # used as an accessor for records
+  def records( *args )
+    if args.size == 0
+      puts "return records"
+      get_records
+    else
+      puts "set records to #{args.inspect}"
+      set_records( args[0] )
     end
-    @records
   end
 
   # This is intended to be called from the view class which instantiated
@@ -149,6 +140,31 @@ class ModelBuilder
     # give the built model back to the view class
     # see above comment about @model
     @table_view.model = @model
+  end
+
+private
+
+  # The collection of model objects to display in a table
+  # arg can either be a Hash, in which case a new CacheTable
+  # is created, or it can be an array
+  # called by records( *args )
+  def set_records( arg )
+    if arg.class == Hash
+      # need to defer this until all fields are collected
+      @options = arg
+    else
+      @records = arg
+    end
+  end
+
+  # return a collection of records. Usually this will be a CacheTable.
+  # called by records( *args )
+  def get_records
+    if @records.nil?
+      #~ add_include_options
+      @records = CacheTable.new( model_class, @options )
+    end
+    @records
   end
 end
 

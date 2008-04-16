@@ -36,8 +36,9 @@ class TableView < Qt::TableView
   end
   
   def create_model( &block )
+    raise "provide a block" unless block
     @builder = Clevic::ModelBuilder.new( self )
-    yield( @builder )
+    @builder.instance_eval( &block )
     @builder.build
     model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
       if @model_class.respond_to?( :data_changed )
