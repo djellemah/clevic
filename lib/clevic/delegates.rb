@@ -70,6 +70,26 @@ class ComboDelegate < Clevic::ItemDelegate
     editor.class == Qt::ComboBox
   end
   
+  # return true if this field has no data (needs_combo? is false)
+  # and is at the same time restricted (ie needs data from somewhere else)
+  def empty_set?
+    !needs_combo? && restricted?
+  end
+  
+  # the message to display if the set is empty, and
+  # the delegate is restricted to a predefined set.
+  def empty_set_message
+    raise "subclass responsibility"
+  end
+  
+  # if this delegate has an empty set, return the message, otherwise
+  # return nil.
+  def if_empty_message
+    if empty_set?
+      empty_set_message
+    end
+  end
+  
   # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
   def createEditor( parent_widget, style_option_view_item, model_index )
     if needs_combo?
@@ -99,7 +119,7 @@ class ComboDelegate < Clevic::ItemDelegate
     else
       @editor =
       if restricted?
-        emit parent.status_text( "Add entries in #{@model_class.name.humanize}" )
+        emit parent.status_text( empty_set_message )
         nil
       else
         Qt::LineEdit.new( model_index.gui_value, parent_widget )
@@ -269,6 +289,10 @@ class RelationalDelegate < ComboDelegate
     @model_class.count( :conditions => @options[:conditions] ) > 0
   end
   
+  def empty_set_message
+    "There must be records in #{@model_class.name.humanize} for this field to be editable."
+  end
+
   def populate( editor, model_index )
     # add set of all possible related entities
     @model_class.find( :all, collect_finder_options( @options ) ).each do |x|

@@ -5,7 +5,10 @@ Check that qtruby4 runs on OSX and so does Clevic
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 use Qt::ExpandingLineEdit for ComboDelegate? Doesn't exist in Ruby bindings
 wrap description, and allow Access-style zooming
-tooltip for empty RelationalDelegates. Causes crossover issues between model and view.
+multi-cell delete should not edit a field
+Single cell delete should not edit a field
+filter-by-current throws if it's on a newly-added row
+multi-row ctrl-delete not working
 
 windows
 -------

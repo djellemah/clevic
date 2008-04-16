@@ -260,8 +260,7 @@ class TableModel < Qt::AbstractTableModel
           end
           
         when qt_text_alignment_role
-          field = @builder.fields[index.column]
-          field.alignment
+          @builder.fields[index.column].alignment
 
         # these are just here to make debug output quieter
         when qt_size_hint_role;
@@ -269,8 +268,13 @@ class TableModel < Qt::AbstractTableModel
         when qt_font_role;
         when qt_foreground_role;
         when qt_decoration_role;
-        when qt_tooltip_role;
-
+        
+        # provide a tooltip when an empty relational field is encountered
+        when qt_tooltip_role
+          if index.metadata.type == :association
+            @builder.fields[index.column].delegate.if_empty_message
+          end
+          
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
           nil
