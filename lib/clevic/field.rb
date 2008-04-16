@@ -8,7 +8,7 @@ This defines a field in the UI, and how it hooks up to a field in the DB.
 class Field
   include QtFlags
   
-  attr_accessor :attribute, :path, :label, :delegate, :class_name, :alignment, :format
+  attr_accessor :attribute, :path, :label, :delegate, :class_name, :alignment, :format, :tooltip
   attr_writer :sample
   
   def initialize( attribute, model_class, options )

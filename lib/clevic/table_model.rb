@@ -218,7 +218,12 @@ class TableModel < Qt::AbstractTableModel
       when Qt::SizeHintRole
         # anything other than nil here makes the headers disappear.
         nil
-          
+        
+      when qt_tooltip_role
+        if orientation == Qt::Horizontal
+          @builder.fields[section].tooltip
+        end
+        
       else
         #~ puts "headerData section: #{section}, role: #{const_as_string(role)}" if $options[:debug]
         nil

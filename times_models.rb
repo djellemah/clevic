@@ -23,9 +23,9 @@ class Entry < ActiveRecord::Base
       plain       :end
       plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
       relational  :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = true'
-      distinct    :module
-      plain       :charge
-      distinct    :person
+      distinct    :module, :tooltip => 'Module or sub-project'
+      plain       :charge, :tooltip => 'Is this time billable?'
+      distinct    :person, :tooltip => 'The person who did the work'
       
       records     :order => 'date, start, id'
     end

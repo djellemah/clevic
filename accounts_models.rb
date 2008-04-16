@@ -21,7 +21,7 @@ class Entry < ActiveRecord::Base
       plain       :amount, :sample => 999999.99
       plain       :cheque_number
       plain       :active, :sample => 'WW'
-      plain       :vat, :label => 'VAT', :sample => 'WW'
+      plain       :vat, :label => 'VAT', :sample => 'WW', :tooltip => 'Does this include VAT?'
       
       records     :order => 'date, id'
     end

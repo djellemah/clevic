@@ -9,8 +9,6 @@ module Clevic
 This is used to define a set of fields in a UI, any related tables,
 restrictions on data entry, formatting and that kind of thing.
 
-It's similar to the Rails migrations syntax.
-
 Optional specifiers are:
 * :sample is used to size the columns. Will default to some hopefully sensible value from the db.
 * :format is something that can be understood by strftime (for time and date
@@ -22,21 +20,22 @@ In the case of relational fields, all other options are passed to ActiveRecord::
 
 For example, a the UI for a model called Entry would be defined like this:
 
-  Clevic::TableView.new( Entry, parent ).create_model do |builder|
+  Clevic::TableView.new( Entry, parent ).create_model do
     # :format is optional
-    builder.plain       :date, :format => '%d-%h-%y'
-    builder.plain       :start, :format => '%H:%M'
-    builder.plain       :amount, :format => '%.2f'
-    builder.restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
-    builder.distinct    :description, :conditions => 'now() - date <= interval( 1 year )'
-    builder.relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
-    builder.relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+    plain       :date, :format => '%d-%h-%y'
+    plain       :start, :format => '%H:%M'
+    plain       :amount, :format => '%.2f'
+    # :set is mandatory
+    restricted  :vat, :label => 'VAT', :set => %w{ yes no all }, :tooltip => 'Is VAT included?'
+    distinct    :description, :conditions => 'now() - date <= interval( 1 year )'
+    relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+    relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
     
     # this is optional
-    builder.records = { :order => 'date,start' }
+    records :order => 'date,start'
     
     # could also be like this, where a..e are instances of Entry
-    builder.records = [ a,b,c,d,e ]
+    records [ a,b,c,d,e ]
   end
 =end
 class ModelBuilder

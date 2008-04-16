@@ -5,7 +5,7 @@ Check that qtruby4 runs on OSX and so does Clevic
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 use Qt::ExpandingLineEdit for ComboDelegate? Doesn't exist in Ruby bindings
 wrap description, and allow Access-style zooming
-tooltip for empty RelationalDelegates
+tooltip for empty RelationalDelegates. Causes crossover issues between model and view.
 
 windows
 -------
@@ -20,7 +20,7 @@ editing
 F2 for standard edit, F4 for calendar edit
 Only move for data_changed if field was exited with tab, not enter.
 make sure record is saved when changing tabs
-tooltips for tabs and column headers
+tooltips for tabs
 Help in general for new data capture people
 Help to right of tabs
 messages for wrong dates etc
