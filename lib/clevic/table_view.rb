@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'Qt4'
 require 'fastercsv'
 require 'clevic/model_builder.rb'
@@ -156,6 +157,41 @@ class TableView < Qt::TableView
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
   
+  def delete_cells
+    cells_deleted = false
+    # go ahead with delete if there's only 1 cell, or the user says OK
+    delete_ok =
+    if selection_model.selected_indexes.size > 1
+      # confirmation message, until there are undos
+      msg = Qt::MessageBox.new(
+        Qt::MessageBox::Question,
+        'Multiple Delete',
+        'Are you sure you want to delete multiple cells?',
+        Qt::MessageBox::Yes | Qt::MessageBox::No,
+        self
+      )
+      msg.exec == Qt::MessageBox::Yes
+    else
+      true
+    end
+    
+    # do delete
+    if delete_ok
+      selection_model.selected_indexes.each do |index|
+        index.attribute_value = nil
+        cells_deleted = true
+      end
+    end
+    
+    # deletes were done, some emit dataChanged
+    if cells_deleted
+      # emit data changed for all ranges
+      selection_model.selection.each do |selection_range|
+        emit dataChanged( selection_range.top_left, selection_range.bottom_right )
+      end
+    end
+  end
+  
   def keyPressEvent( event )
     # for some reason, trying to call another method inside
     # the begin .. rescue block throws a superclass method not
@@ -241,7 +277,11 @@ class TableView < Qt::TableView
         unless rows.empty?
           model.remove_rows( rows ) 
           #~ make sure no other handlers get this event
-          return
+          return true
+        else
+          delete_cells
+          # nobody else handles this
+          return true
         end
         
       # f4 should open editor immediately
