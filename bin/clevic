@@ -12,7 +12,7 @@ end
   
 $options = {}
 oparser = OptionParser.new
-oparser.on( '-h', '--host HOST', 'RDBMS host', String ) { |o| $options[:host] = o }
+oparser.on( '-H', '--host HOST', 'RDBMS host', String ) { |o| $options[:host] = o }
 oparser.on( '-u', '--user USERNAME', String ) { |o| $options[:user] = o }
 oparser.on( '-p', '--pass PASSWORD', String ) { |o| $options[:password] = o }
 oparser.on( '-t', '--table TABLE', 'Table to display', String ) { |o| $options[:table] = o }
