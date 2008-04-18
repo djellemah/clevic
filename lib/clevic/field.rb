@@ -72,8 +72,7 @@ class Field
   def do_format( value )
     if self.format != nil
       if is_date_time?
-        # workaround for frozen date in 1.8.6 and postgres and activerecord
-        value.dup.strftime( format )
+        value.strftime( format )
       else
         self.format % value
       end
