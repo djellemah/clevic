@@ -1,0 +1,10 @@
+port install ssl
+port install dbus
+port install qt4-mac +dbus +ssl
+fetch qt4-qtruby from rubyforge
+unpack
+fetch kalyptus and kalyptusCxxToSmoke.pm frm http://websvn.kde.org/trunk/KDE/kdebindings/kalyptus/
+copy over files
+cmake .
+comment out qsslconfiguration.h line in smoke/qt/x_15.cpp
+make

@@ -55,6 +55,7 @@ See TODO file.
 
 == REQUIREMENTS:
 
+* fastercsv
 * ruby-qt4
 * bsearch
 * active_record
