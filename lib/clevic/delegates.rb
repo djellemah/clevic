@@ -90,6 +90,14 @@ class ComboDelegate < Clevic::ItemDelegate
     end
   end
   
+  def populate_current( editor, model_index )
+    # add the current entry, if it isn't there already
+    # TODO add it in the correct order
+    if ( editor.find_data( model_index.gui_value.to_variant ) == -1 )
+      editor.add_item( model_index.gui_value, model_index.gui_value.to_variant )
+    end
+  end
+  
   # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
   def createEditor( parent_widget, style_option_view_item, model_index )
     if needs_combo?
@@ -98,11 +106,8 @@ class ComboDelegate < Clevic::ItemDelegate
       # subclasses fill in the rest of the entries
       populate( @editor, model_index )
       
-      # add the current entry, if it isn't there already
-      # TODO add it in the correct order
-      if ( @editor.find_data( model_index.gui_value.to_variant ) == -1 )
-        @editor.add_item( model_index.gui_value, model_index.gui_value.to_variant )
-      end
+      # add the current item, if it isn't there already
+      populate_current( @editor, model_index )
       
       # create a nil entry
       if allow_null?
@@ -221,14 +226,20 @@ class DistinctDelegate < ComboDelegate
     @ar_model.count( @attribute, collect_finder_options( @options ) ) > 0
   end
   
+  def populate_current( editor, model_index )
+    # already done in the SQL query in populate, so don't even check
+  end
+  
   def populate( editor, model_index )
     # we only use the first column, so use the second
     # column to sort by, since SQL requires the order by clause
     # to be in the select list where distinct is involved
-    rs = @ar_model.connection.execute <<-EOF
+    conn = @ar_model.connection
+    rs = conn.execute <<-EOF
       select distinct #{@attribute.to_s}, lower(#{@attribute.to_s})
       from #{@ar_model.table_name}
-      where #{@options[:conditions]}
+      where (#{@options[:conditions]})
+      or #{conn.quote_column_name( @attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
       order by lower(#{@attribute.to_s})
     EOF
     rs.each do |row|
@@ -292,18 +303,14 @@ class RelationalDelegate < ComboDelegate
   def empty_set_message
     "There must be records in #{@model_class.name.humanize} for this field to be editable."
   end
-
-  def populate( editor, model_index )
-    # add set of all possible related entities
-    @model_class.find( :all, collect_finder_options( @options ) ).each do |x|
-      editor.add_item( x[@attribute_path], x.id.to_variant )
-    end
-    
+  
+  # add the current item, unless it's already in the combo data
+  def populate_current( editor, model_index )
     # always add the current selection, if it isn't already there
     # and it makes sense. This is to make sure that if the list
     # is filtered, we always have the current value if the filter
     # excludes it
-    if !model_index.nil?
+    unless model_index.nil?
       item = model_index.attribute_value
       if item
         item_index = editor.find_data( item.id.to_variant )
@@ -311,6 +318,13 @@ class RelationalDelegate < ComboDelegate
           editor.add_item( item[@attribute_path], item.id.to_variant )
         end
       end
+    end
+  end
+
+  def populate( editor, model_index )
+    # add set of all possible related entities
+    @model_class.find( :all, collect_finder_options( @options ) ).each do |x|
+      editor.add_item( x[@attribute_path], x.id.to_variant )
     end
   end
   

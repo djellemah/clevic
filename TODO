@@ -8,7 +8,7 @@ resources for icons
 
 OSX
 ---
-Check that qtruby4 runs on OSX and so does Clevic
+Check that qtruby4 runs on OSX and so does Clevic. It does. Very slowly on Leilani's Mini.
 
 windows
 -------
@@ -90,6 +90,7 @@ store previous searches, by model & app
 
 maybe
 -----
+use rubigen for creating apps
 allow moving of rows
 discontiguous copying of entities/csv
 multi-row copying
