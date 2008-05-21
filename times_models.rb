@@ -73,13 +73,9 @@ class Entry < ActiveRecord::Base
     current_field = current_index.attribute
     if current_field == :project && current_index.entity.project != nil
       # most recent entry, ordered in reverse
-      invoice = Invoice.find(
-        :first,
-        :conditions => ["client = ? and status = 'not sent'", current_index.entity.project.client],
-        :order => 'invoice_number desc'
-      )
+      invoice = current_index.entity.project.latest_invoice
       
-      if invoice != nil
+      unless invoice.nil?
         # make a reference to the invoice
         current_index.entity.invoice = invoice
         
@@ -110,6 +106,15 @@ class Project < ActiveRecord::Base
       records   :order => 'project'
     end
   end
+  
+  def latest_invoice
+    Invoice.find(
+      :first,
+      :conditions => ["client = ? and status = 'not sent'", self.client],
+      :order => 'invoice_number desc'
+    )
+  end
+
 end
 
 class Activity < ActiveRecord::Base
