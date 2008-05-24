@@ -378,7 +378,7 @@ class TableView < Qt::TableView
   
   # call set_current_index with model_index unless override is true.
   def set_current_unless_override( model_index )
-    if ( !@index_override )
+    if !@index_override
       # move to next cell
       # Qt seems to take care of tab wraparound
       set_current_index( model_index )

@@ -1,9 +1,10 @@
 require 'Qt4'
 require 'date'
-require 'clevic/extensions'
+require 'clevic/extensions.rb'
 require 'clevic/model_column'
 require 'clevic/qt_flags.rb'
 require 'pp'
+require 'qtext/extensions.rb'
 
 module Clevic
 

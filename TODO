@@ -4,7 +4,7 @@ filter-by-current throws if it's on a newly-added row
 multi-row ctrl-delete not working
 Undo deletes and other commands. Possibly via ActiveRecord callbacks.
 
-resources for icons
+resources for icons. use rbrcc
 
 OSX
 ---
