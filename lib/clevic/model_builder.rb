@@ -82,6 +82,9 @@ class ModelBuilder
   # for foreign keys. Edited with a combo box using values from the specified
   # path on the foreign key model object
   def relational( attribute, path, options = {} )
+    unless options.has_key? :class_name
+      options[:class_name] = attribute.to_s.classify
+    end
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
     field.path = path
     field.delegate = RelationalDelegate.new( @table_view, field.attribute_path, options )

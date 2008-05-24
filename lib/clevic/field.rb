@@ -11,6 +11,7 @@ class Field
   attr_accessor :attribute, :path, :label, :delegate, :class_name, :alignment, :format, :tooltip
   attr_writer :sample
   
+  # attribute is the symbol for the attribute on the model_class
   def initialize( attribute, model_class, options )
     @attribute = attribute
     @model_class = model_class
@@ -18,6 +19,8 @@ class Field
     options.each do |key,value|
       self.send( "#{key}=", value ) if respond_to?( key )
     end
+    
+    # default the label
     @label ||= attribute.to_s.humanize
     
     # default formats

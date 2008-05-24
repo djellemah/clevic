@@ -1,6 +1,7 @@
 #! /usr/bin/ruby
 
 require 'clevic/browser.rb'
+require 'ruby-debug'
 
 # fetch command line options
 require 'optparse'
