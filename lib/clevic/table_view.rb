@@ -157,8 +157,7 @@ class TableView < Qt::TableView
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
   
-  def delete_cells
-    cells_deleted = false
+  def delete_multiple_cells?
     # go ahead with delete if there's only 1 cell, or the user says OK
     delete_ok =
     if selection_model.selected_indexes.size > 1
@@ -174,16 +173,20 @@ class TableView < Qt::TableView
     else
       true
     end
+  end
+    
+  def delete_cells
+    cells_deleted = false
     
     # do delete
-    if delete_ok
+    if delete_multiple_cells?
       selection_model.selected_indexes.each do |index|
         index.attribute_value = nil
         cells_deleted = true
       end
     end
     
-    # deletes were done, some emit dataChanged
+    # deletes were done, so emit dataChanged
     if cells_deleted
       # emit data changed for all ranges
       selection_model.selection.each do |selection_range|
@@ -224,7 +227,9 @@ class TableView < Qt::TableView
         
       # delete the current row
       when event.ctrl? && event.delete?
-        model.remove_rows( [ current_index.row ] ) 
+        if delete_multiple_cells?
+          model.remove_rows( selection_model.selected_indexes.map{|index| index.row} )
+        end
       
       # copy the value from the row one above  
       when event.ctrl? && event.apostrophe?
@@ -275,10 +280,12 @@ class TableView < Qt::TableView
         # translate from ModelIndex objects to row indices
         rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
         unless rows.empty?
+          # header rows are selected, so delete them
           model.remove_rows( rows ) 
-          #~ make sure no other handlers get this event
+          # make sure no other handlers get this event
           return true
         else
+          # otherwise various cells are selected, so delete the cells
           delete_cells
           # nobody else handles this
           return true
