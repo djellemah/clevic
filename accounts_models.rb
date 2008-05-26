@@ -19,6 +19,7 @@ class Entry < ActiveRecord::Base
       relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
       relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
       plain       :amount, :sample => 999999.99
+      distinct    :category
       plain       :cheque_number
       plain       :active, :sample => 'WW'
       plain       :vat, :label => 'VAT', :sample => 'WW', :tooltip => 'Does this include VAT?'
@@ -31,8 +32,8 @@ class Entry < ActiveRecord::Base
     if top_left == bottom_right
       update_credit_debit( top_left, view )
     else
-      puts "top_left: #{top_lefinspect}"
-      puts "bottom_right: #{bottom_righinspect}"
+      puts "top_left: #{top_left.inspect}"
+      puts "bottom_right: #{bottom_right.inspect}"
       puts "can't do data_changed for a range"
     end
   end
@@ -54,6 +55,7 @@ class Entry < ActiveRecord::Base
         # set the values
         current_index.entity.debit = similar.debit
         current_index.entity.credit = similar.credit
+        current_index.entity.category = similar.category
         
         # update view from top_left to bottom_right
         model = current_index.model

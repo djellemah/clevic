@@ -13,6 +13,16 @@ class Field
   
   # attribute is the symbol for the attribute on the model_class
   def initialize( attribute, model_class, options )
+    # sanity checking
+    unless model_class.has_attribute?( attribute )
+      msg = <<EOF
+#{attribute} not found in #{model_class.name}. Possibilities are:
+#{model_class.attribute_names.join("\n")}
+EOF
+      raise msg
+    end
+    
+    # set values
     @attribute = attribute
     @model_class = model_class
     

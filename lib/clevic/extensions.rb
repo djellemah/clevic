@@ -14,6 +14,20 @@ module ActiveRecord
         end
       end
     end
+    
+    def self.has_attribute?( attribute_sym )
+      if column_names.include?(  attribute_sym.to_s )
+        true
+      elsif reflections.has_key?(  attribute_sym )
+        true
+      else
+        false
+      end
+    end
+    
+    def self.attribute_names
+      ( column_names + reflections.keys.map {|sym| sym.to_s} ).sort
+    end
   end
 end
 

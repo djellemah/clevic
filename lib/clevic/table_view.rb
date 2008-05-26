@@ -410,7 +410,7 @@ class TableView < Qt::TableView
     save_entity = current_index.entity
     save_index = current_index
     
-    if !self.filtered
+    unless self.filtered
       # filter by current selection
       # TODO handle a multiple-selection
       if indexes.empty?
@@ -420,8 +420,14 @@ class TableView < Qt::TableView
         self.filtered = false
       end
       
-      model.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
-      self.filtered = true
+      if indexes[0].entity.new_record?
+        emit status_text( "Can't filter on a new row" )
+        self.filtered = false
+        return
+      else
+        model.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
+        self.filtered = true
+      end
     else
       # unfilter
       model.reload_data( :conditions => {} )
@@ -434,7 +440,9 @@ class TableView < Qt::TableView
     end
     
     # create a new index and move to it
-    self.current_index = model.create_index( found_row, save_index.column )
+    unless found_row.nil?
+      self.current_index = model.create_index( found_row, save_index.column )
+    end
   end
   
   # search_criteria must respond to:

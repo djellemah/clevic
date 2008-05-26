@@ -87,7 +87,7 @@ class TableModel < Qt::AbstractTableModel
     @builder.model_class
   end
   
-  # cache metadata (ActiveRecord#column_for_attribute) because it't not going
+  # cache metadata (ActiveRecord#column_for_attribute) because it's not going
   # to change over the lifetime of the table
   # if the column is an attribute, create a ModelColumn
   # TODO use ActiveRecord::Base.reflections instead

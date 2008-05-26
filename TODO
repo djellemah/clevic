@@ -1,8 +1,11 @@
+Sort by frequency for drop-down. Option?
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 wrap description, and allow Access-style zooming
 filter-by-current throws if it's on a newly-added row
 multi-row ctrl-delete not working
 Undo deletes and other commands. Possibly via ActiveRecord callbacks.
+
+Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
 
 resources for icons. use rbrcc
 
