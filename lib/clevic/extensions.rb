@@ -1,6 +1,6 @@
 # extensions specific to clevic
 
-require 'clevic/qt_flags.rb'
+require 'qtext/flags.rb'
 
 module ActiveRecord
   class Base

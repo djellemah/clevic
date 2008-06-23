@@ -9,9 +9,6 @@
     <height>740</height>
    </rect>
   </property>
-  <property name="windowIcon" >
-   <iconset/>
-  </property>
   <widget class="QWidget" name="mainWidget" >
    <layout class="QVBoxLayout" >
     <item>

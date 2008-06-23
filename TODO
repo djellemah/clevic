@@ -1,3 +1,7 @@
+Times Ctrl-Shift-" should not copy date if it already exists, and should not copy time if it's a different date.
+Times Ctrl-Shift-" after it's done, tab doesn't change fields
+Times look up invoice for project leaves the wrong fields highlighted, and focus in the wrong field.
+
 Sort by frequency for drop-down. Option?
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 wrap description, and allow Access-style zooming

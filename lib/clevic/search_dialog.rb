@@ -1,6 +1,6 @@
 require 'Qt4'
 require 'clevic/ui/search_dialog_ui.rb'
-require 'clevic/qt_flags.rb'
+require 'qtext/flags.rb'
 
 class SearchDialog
   include QtFlags

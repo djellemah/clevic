@@ -1,4 +1,4 @@
-require 'clevic/qt_flags.rb'
+require 'qtext/flags.rb'
 
 module Clevic
 
