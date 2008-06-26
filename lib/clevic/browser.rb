@@ -26,6 +26,11 @@ class Browser < Qt::Widget
     @layout = Ui::Browser.new
     @layout.setup_ui( main_window )
     
+    # add the tables tab
+    @tables_tab = Qt::TabWidget.new( @layout.main_widget )
+    @layout.main_widget.layout.add_widget @tables_tab
+    @tables_tab.tab_bar.focus_policy = Qt::NoFocus
+    
     # connect slots
     @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
     @layout.action_refresh.connect    SIGNAL( 'triggered()' ),          &method( :refresh_table )
@@ -35,7 +40,8 @@ class Browser < Qt::Widget
     @layout.action_find.connect       SIGNAL( 'triggered()' ),          &method( :find )
     @layout.action_find_next.connect  SIGNAL( 'triggered()' ),          &method( :find_next )
     @layout.action_new_row.connect    SIGNAL( 'triggered()' ),          &method( :new_row )
-    tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
+    
+    @tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
     
     # as an example
     #~ tables_tab.connect SIGNAL( 'currentChanged(int)' ) { |index| puts "other current_changed: #{index}" }
@@ -52,7 +58,7 @@ class Browser < Qt::Widget
   end
   
   def tables_tab
-    @layout.tables_tab
+    @tables_tab
   end
   
   # display a search dialog, and find the entered text
@@ -160,10 +166,6 @@ class Browser < Qt::Widget
   # if models is nil, find_models is called
   def open( *models )
     models = $options[:models] if models.empty?
-    # remove the tab that Qt Designer puts in
-    tables_tab.clear
-    # make sure focus goes to first table
-    tables_tab.tab_bar.focus_policy = Qt::NoFocus
     
     # Add all existing model objects as tabs, one each
     find_models( models ).each do |model|
