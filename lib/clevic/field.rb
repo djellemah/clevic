@@ -106,7 +106,7 @@ EOF
         when :date, :time, :datetime
           date_time_sample
         
-        when :numeric, :decimal, :integer
+        when :numeric, :decimal, :integer, :float
           numeric_sample
         
         # TODO return a width, or something like that
@@ -167,7 +167,8 @@ private
   
   def numeric_sample
     # TODO Use precision from metadata, not for integers
-    puts "meta.precision: #{meta.precision.inspect}"
+    # returns nil for floats. So it's probably not useful
+    #~ puts "meta.precision: #{meta.precision.inspect}"
     result_set = @model_class.find_by_sql <<-EOF
       select max( #{quoted_field} )
       from #{@model_class.table_name}

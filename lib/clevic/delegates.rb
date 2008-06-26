@@ -266,7 +266,6 @@ class DistinctDelegate < ComboDelegate
     end
     rs = conn.execute( query )
     rs.each do |row|
-      puts "adding: #{row[0]}"
       editor.add_item( row[0], row[0].to_variant )
     end
   end

@@ -18,7 +18,8 @@ oparser.on( '-u', '--user USERNAME', String ) { |o| $options[:user] = o }
 oparser.on( '-p', '--pass PASSWORD', String ) { |o| $options[:password] = o }
 oparser.on( '-t', '--table TABLE', 'Table to display', String ) { |o| $options[:table] = o }
 oparser.on( '-d', '--database DATABASE', 'Database name', String ) { |o| $options[:database] = o }
-oparser.on( '-D', '-v', '--debug' ) { |o| $options[:debug] = true }
+oparser.on( '-D', '--debug' ) { |o| $options[:debug] = true }
+oparser.on( '-v', '--verbose' ) { |o| $options[:verbose] = true }
 oparser.on( '-h', '-?', '--help' ) do |o|
   puts oparser.to_s
   exit( 0 )
