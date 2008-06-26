@@ -1,15 +1,15 @@
 = clevic
 
-http://www.semiosix.com/clevic
+http://www.rubyforge.org/clevic
 
 == DESCRIPTION:
 
 Database framework and Qt Model/View GUI for data capture and
 editing of tables in a pre-existing relational DBMS. Thanks to ActiveRecord,
-Postgresql, Mysql and so on are supported.
+Postgresql, Mysql and so on are supported. Has only been tested with Postgres.
 
-There is a mild focus on reducing keystrokes for repetitive data capture, so
-it provides
+There is a mild focus on reducing keystrokes for repetitive data capture,
+so it provides
 nice keyboard shortcuts for all sorts of things. Model (table) objects
 are extensible to allow for model (table) specific cleverness, like
 auto-filling-in of fields.
@@ -43,7 +43,9 @@ auto-filling-in of fields.
 
 Right now, models must be defined in Ruby. The framework provides
 an easy Rails-migrations-like syntax for that.
-Start with Browser and EntryBuilder.
+Start with account_models.rb and times_models.rb, with associated SQL
+schemas in the sql subdirectory. For implementation and more extensive
+comments, see Browser and EntryBuilder.
 
 == PROBLEMS:
 
