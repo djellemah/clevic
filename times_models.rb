@@ -1,5 +1,6 @@
 require 'clevic.rb'
 
+# db connection options
 $options ||= {}
 $options[:database] ||= $options[:debug] ? 'times_test' : 'times'
 $options[:adapter]  ||= 'postgresql'
@@ -14,6 +15,7 @@ class Entry < ActiveRecord::Base
   belongs_to :activity
   belongs_to :project
   
+  # define how fields are displayed
   def self.ui( parent )
     Clevic::TableView.new( self, parent ).create_model do
       plain       :date, :sample => '28-Dec-08'
@@ -31,6 +33,7 @@ class Entry < ActiveRecord::Base
     end
   end
 
+  # called when a key is pressed in this model's table view
   def self.key_press_event( event, current_index, view )
     case
       # copy almost all of the previous line
@@ -64,6 +67,7 @@ class Entry < ActiveRecord::Base
     end
   end
   
+  # called when data is changed in this model's table view
   def self.data_changed( top_left, bottom_right, view )
     invoice_from_project( top_left, view ) if ( top_left == bottom_right )
   end
@@ -107,6 +111,8 @@ class Project < ActiveRecord::Base
     end
   end
   
+  # Return the latest invoice for this project
+  # Not part of the UI.
   def latest_invoice
     Invoice.find(
       :first,
@@ -121,6 +127,7 @@ class Activity < ActiveRecord::Base
   include ActiveRecord::Dirty
   has_many :entries
 
+  # define how fields are displayed
   def self.ui( parent )
     Clevic::TableView.new( Activity, parent ).create_model do
       plain :activity
@@ -135,6 +142,7 @@ class Invoice < ActiveRecord::Base
   include ActiveRecord::Dirty
   has_many :entries
 
+  # define how fields are displayed
   def self.ui( parent )
     Clevic::TableView.new( Invoice, parent ).create_model do
       plain :date
@@ -151,4 +159,5 @@ class Invoice < ActiveRecord::Base
   end
 end
 
+# tab widget order
 $options[:models] = [ Entry, Invoice, Project, Activity ]

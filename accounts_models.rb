@@ -1,5 +1,6 @@
 require 'clevic.rb'
 
+# db connection options
 $options ||= {}
 $options[:database] ||= $options[:debug] ? 'accounts_test' : 'accounts'
 $options[:adapter]  ||= 'postgresql'
@@ -12,6 +13,7 @@ class Entry < ActiveRecord::Base
   belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
 
+  # define how fields will be displayed
   def self.ui( parent )
     Clevic::TableView.new( self, parent ).create_model do
       plain       :date, :sample => '88-WWW-99'
@@ -28,6 +30,7 @@ class Entry < ActiveRecord::Base
     end
   end
   
+  # called when data is changed in the UI
   def self.data_changed( top_left, bottom_right, view )
     if top_left == bottom_right
       update_credit_debit( top_left, view )
@@ -57,7 +60,7 @@ class Entry < ActiveRecord::Base
         current_index.entity.credit = similar.credit
         current_index.entity.category = similar.category
         
-        # update view from top_left to bottom_right
+        # emit signal to update view from top_left to bottom_right
         model = current_index.model
         top_left_index = model.create_index( current_index.row, 0 )
         bottom_right_index = model.create_index( current_index.row, view.builder.fields.size )
@@ -76,6 +79,7 @@ class Account < ActiveRecord::Base
   has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   
+  # define how fields are displayed
   def self.ui( parent )
     Clevic::TableView.new( self, parent ).create_model do
       plain       :name
@@ -90,8 +94,10 @@ class Account < ActiveRecord::Base
   end
 end
 
+# order of tab display
 $options[:models] = [ Entry, Account ]
 
+# This is a read-only view, which is currently not implemented
 #~ class Values < ActiveRecord::Base
   #~ include ActiveRecord::Dirty
   #~ set_table_name 'values'
