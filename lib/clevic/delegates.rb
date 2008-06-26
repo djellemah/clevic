@@ -210,6 +210,8 @@ end
 
 # Provide a list of all values in this field,
 # and allow new values to be entered.
+# :frequency can be set as an option. Boolean. If it's true
+# the options are sorted in order of most frequently used first.
 class DistinctDelegate < ComboDelegate
   
   def initialize( parent, attribute, model_class, options )
@@ -230,19 +232,41 @@ class DistinctDelegate < ComboDelegate
     # already done in the SQL query in populate, so don't even check
   end
   
-  def populate( editor, model_index )
-    # we only use the first column, so use the second
-    # column to sort by, since SQL requires the order by clause
-    # to be in the select list where distinct is involved
-    conn = @ar_model.connection
-    rs = conn.execute <<-EOF
+  def query_order_description( conn, model_index )
+    <<-EOF
       select distinct #{@attribute.to_s}, lower(#{@attribute.to_s})
       from #{@ar_model.table_name}
       where (#{@options[:conditions]})
       or #{conn.quote_column_name( @attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
       order by lower(#{@attribute.to_s})
     EOF
+  end
+  
+  def query_order_frequency( conn, model_index )
+    <<-EOF
+      select distinct #{@attribute.to_s}, count(#{@attribute.to_s})
+      from #{@ar_model.table_name}
+      where (#{@options[:conditions]})
+      or #{conn.quote_column_name( @attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
+      group by #{@attribute.to_s}
+      order by count(#{@attribute.to_s}) desc
+    EOF
+  end
+  
+  def populate( editor, model_index )
+    # we only use the first column, so use the second
+    # column to sort by, since SQL requires the order by clause
+    # to be in the select list where distinct is involved
+    conn = @ar_model.connection
+    query =
+    if @options[:frequency]
+      query_order_frequency( conn, model_index )
+    else
+      query_order_description( conn, model_index )
+    end
+    rs = conn.execute( query )
     rs.each do |row|
+      puts "adding: #{row[0]}"
       editor.add_item( row[0], row[0].to_variant )
     end
   end
