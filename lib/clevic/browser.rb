@@ -23,8 +23,15 @@ class Browser < Qt::Widget
   
   def initialize( main_window )
     super( main_window )
+    
+    # do menus and widgets
     @layout = Ui::Browser.new
     @layout.setup_ui( main_window )
+    
+    # set icon. MUST come after call to setup_ui
+    icon_path = Pathname.new( __FILE__ ).parent + "ui/icon.png"
+    raise "icon.png not found" unless icon_path.file?
+    main_window.window_icon = Qt::Icon.new( icon_path.realpath.to_s )
     
     # add the tables tab
     @tables_tab = Qt::TabWidget.new( @layout.main_widget )
@@ -41,7 +48,7 @@ class Browser < Qt::Widget
     @layout.action_find_next.connect  SIGNAL( 'triggered()' ),          &method( :find_next )
     @layout.action_new_row.connect    SIGNAL( 'triggered()' ),          &method( :new_row )
     
-    @tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
+    tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
     
     # as an example
     #~ tables_tab.connect SIGNAL( 'currentChanged(int)' ) { |index| puts "other current_changed: #{index}" }

@@ -8,8 +8,6 @@ Undo deletes and other commands. Possibly via ActiveRecord callbacks.
 
 Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
 
-resources for icons. use rbrcc
-
 OSX
 ---
 Check that qtruby4 runs on OSX and so does Clevic. It does. Very slowly on Leilani's Mini.

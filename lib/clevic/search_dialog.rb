@@ -48,7 +48,7 @@ class SearchDialog
   end
   
   def exec( text = '' )
-    search_combo.edit_text = text
+    search_combo.edit_text = text.to_s
     search_combo.set_focus
     retval = @dialog.exec
     

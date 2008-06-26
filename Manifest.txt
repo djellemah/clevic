@@ -23,7 +23,6 @@ lib/clevic/table_view.rb
 lib/clevic/ui/browser.ui
 lib/clevic/ui/browser_ui.rb
 lib/clevic/ui/icon.png
-lib/clevic/ui/icons.qrc
 lib/clevic/ui/search_dialog.ui
 lib/clevic/ui/search_dialog_ui.rb
 sql/accounts.sql
