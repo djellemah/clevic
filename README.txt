@@ -45,7 +45,7 @@ Right now, models must be defined in Ruby. The framework provides
 an easy Rails-migrations-like syntax for that.
 Start with account_models.rb and times_models.rb, with associated SQL
 schemas in the sql subdirectory. For implementation and more extensive
-comments, see Browser and EntryBuilder.
+comments, see Clevic::Browser and Clevic::ModelBuilder.
 
 == PROBLEMS:
 
@@ -57,10 +57,14 @@ See TODO file.
 
 == REQUIREMENTS:
 
+=== Gems
 * fastercsv
 * ruby-qt4
-* bsearch
 * active_record
+
+=== Other
+
+* bsearch (http://0xcc.net/ruby-bsearch)
 * active_record/dirty (included)
 * db driver (ie postgres-pr)
 * rdbms (ie postgres)

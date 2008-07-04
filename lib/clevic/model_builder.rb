@@ -1,3 +1,5 @@
+require 'activerecord'
+
 require 'clevic/table_model.rb'
 require 'clevic/delegates.rb'
 require 'clevic/cache_table.rb'

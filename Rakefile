@@ -4,9 +4,16 @@ require 'hoe'
 require 'lib/clevic/version.rb'
 require 'pathname'
 
-Hoe.new( 'clevic', Clevic::VERSION ) do |s|
+$hoe = Hoe.new( 'clevic', Clevic::VERSION ) do |s|
 	s.author     = "John Anderson"
 	s.email      = "john at semiosix dot com"
+	s.rubyforge_name = 'clevic'
+	s.extra_deps = [
+    ['qtext', '>=0.2.0'],
+    ['activerecord', '>=2.0.2']
+    # This isn't always installed from gems
+    #~ ['qtruby4', '>=1.4.9']
+  ]
 end
 
 # generate a _ui.rb filename from a .ui filename
@@ -98,3 +105,20 @@ MODELS_LIST.each do |model_file|
 end
 
 task :package => :ui
+
+# redefine this from the Hoe-1.7.0 sources to use
+# the jamis template.
+Rake::RDocTask.new(:docs) do |rd|
+  rd.main = "README.txt"
+  rd.options << '-d' if RUBY_PLATFORM !~ /win32/ and `which dot` =~ /\/dot/ and not ENV['NODOT']
+  rd.rdoc_dir = 'doc'
+  rd.template = 'template/jamis.rb'
+  files = $hoe.spec.files.grep($hoe.rdoc_pattern)
+  files -= ['Manifest.txt']
+  rd.rdoc_files.push(*files)
+
+  title = "#{$hoe.name}-#{$hoe.version} Documentation"
+  title = "#{$hoe.rubyforge_name}'s " + title if $hoe.rubyforge_name != $hoe.name
+
+  rd.options << "-t #{title}"
+end

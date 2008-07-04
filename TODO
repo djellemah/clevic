@@ -4,13 +4,13 @@ Times look up invoice for project leaves the wrong fields highlighted, and focus
 
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 wrap description, and allow Access-style zooming
-Undo deletes and other commands. Possibly via ActiveRecord callbacks.
+Undo deletes and other commands. Possibly via ActiveRecord callbacks?
 
 Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
 
 OSX
 ---
-Check that qtruby4 runs on OSX and so does Clevic. It does. Very slowly on Leilani's Mini.
+Check that qtruby4 runs on OSX and so does Clevic. It does. Very slowly on Mac Mini with Motorola.
 
 windows
 -------
@@ -89,16 +89,16 @@ preferences
 -----------
 store previous searches, by model & app
 
-
 maybe
 -----
-use rubigen for creating apps
+use rubigen for creating model definition files
 allow moving of rows
 discontiguous copying of entities/csv
 multi-row copying
 pasting of csv, into rectangular regions
 collect a set of data requests to the model, and do them in one SQL query. See EntryTableView#moveCursor
 Use SQL cursors for find & find_next?
+Use roo to parse spreadsheets?
 
 Accounts
 --------
@@ -110,22 +110,3 @@ Times
 
 warnings on overlap times (in status bar)
 warnings on large intervals (in status bar)
-
-db
---
-
-times
-
-alter table invoices rename column type to billing;
-alter table entries add primary key (id);
-alter table entries alter column id set not null
-select max(id) from entries;
-create sequence entries_id_seq start with 11694;
-alter table entries alter column id set default nextval('entries_id_seq');
-update entries set module = null where module = '';
-update entries set module = 'admin' where module = 'Admin';
-
-alter table projects rename active to old_active;
-alter table projects add column active boolean;
-update projects set active = ( old_active = 1 );
-alter table projects drop column old_active;

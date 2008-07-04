@@ -27,4 +27,5 @@ lib/clevic/ui/search_dialog.ui
 lib/clevic/ui/search_dialog_ui.rb
 sql/accounts.sql
 sql/times.sql
+template/jamis.rb
 times_models.rb

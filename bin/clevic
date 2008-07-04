@@ -3,7 +3,6 @@
 require 'clevic/browser.rb'
 require 'ruby-debug'
 
-# fetch command line options
 require 'optparse'
 
 # find and require variations on file_path
@@ -13,6 +12,15 @@ end
   
 $options = {}
 oparser = OptionParser.new
+oparser.banner = <<BANNER
+Usage: #{File.basename($0)} [options] model_definition_file
+
+model_definition_file, \#{model_definition_file}_models.rb will be searched for.
+
+Options are:
+BANNER
+oparser.separator ''
+
 oparser.on( '-H', '--host HOST', 'RDBMS host', String ) { |o| $options[:host] = o }
 oparser.on( '-u', '--user USERNAME', String ) { |o| $options[:user] = o }
 oparser.on( '-p', '--pass PASSWORD', String ) { |o| $options[:password] = o }
@@ -37,20 +45,12 @@ end
 
 app = Qt::Application.new( args )
 
-if $options[:debug]
-  require 'pp'
-  #~ puts "$options: #{$options.inspect}"
-  #~ puts args.inspect
-end
-
-if !$options.has_key?( :database )
+unless $options.has_key? :database
   raise "Please define $options[:database]"
 end
 
 # connect to db
 require 'clevic/db_options.rb'
-
-puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $options[:debug]
 
 # show UI
 main_window = Qt::MainWindow.new

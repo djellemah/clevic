@@ -1,14 +1,429 @@
+2008-06-26 14:56  panic
+
+	* README.txt:
+	  readme comments
+
+2008-06-26 14:54  panic
+
+	* accounts_models.rb, times_models.rb:
+	  comments for people looking at code
+
+2008-06-26 14:47  panic
+
+	* bin/clevic, lib/clevic/db_options.rb, lib/clevic/delegates.rb,
+	  lib/clevic/field.rb:
+	  do verbose flag. Move some debugging output around. Start of fix
+	  for float samples
+
+2008-06-26 14:38  panic
+
+	* Manifest.txt, TODO, lib/clevic/browser.rb,
+	  lib/clevic/search_dialog.rb, lib/clevic/ui/browser.ui,
+	  lib/clevic/ui/icon.png, lib/clevic/ui/icons.qrc:
+	  make use of icon for main window
+
+2008-06-26 13:42  panic
+
+	* lib/clevic/browser.rb, lib/clevic/ui/browser.ui:
+	  improve tables_tab
+
+2008-06-26 12:36  panic
+
+	* TODO, accounts_models.rb, lib/clevic/delegates.rb,
+	  lib/clevic/version.rb, times_models.rb:
+	  sort distinct delegate options by frequency if specified
+
+2008-06-23 19:56  panic
+
+	* Manifest.txt, TODO, lib/clevic/extensions.rb,
+	  lib/clevic/field.rb, lib/clevic/search_dialog.rb,
+	  lib/clevic/ui/browser.ui:
+	  fix gem install and note some todos
+
+2008-05-26 19:37  panic
+
+	* TODO, lib/clevic/table_view.rb:
+	  fix multi-selection ctrl-del
+
+2008-05-26 19:26  panic
+
+	* TODO, accounts_models.rb, lib/clevic/extensions.rb,
+	  lib/clevic/field.rb, lib/clevic/table_model.rb,
+	  lib/clevic/table_view.rb:
+	  fix a silly typo
+
+2008-05-24 19:22  panic
+
+	* bin/clevic, lib/clevic/field.rb, lib/clevic/model_builder.rb,
+	  lib/clevic/table_model.rb:
+	  fix pasting of relational attributes
+
+2008-05-24 18:54  panic
+
+	* TODO, lib/clevic/qt_extensions.rb, lib/clevic/qt_flags.rb,
+	  lib/clevic/table_model.rb, lib/clevic/table_view.rb:
+	  move dependencies to qtext gem
+
+2008-05-23 09:58  panic
+
+	* lib/clevic/extensions.rb, lib/clevic/qt_extensions.rb:
+	  split extensions into clevic-specific and qt-generic
+
+2008-05-21 12:51  panic
+
+	* bin/import-times, times_models.rb:
+	  Project to look up latest invoice. Import times from yml file.
+
+2008-05-21 08:36  panic
+
+	* TODO, lib/clevic/delegates.rb:
+	  make sure the current item appears in combo box
+
+2008-04-18 19:57  panic
+
+	* bin/clevic:
+	  -h already used for help, so use -H for host
+
+2008-04-18 19:56  panic
+
+	* lib/clevic/ui/browser.ui:
+	  make view dump Ctrl-Shift-D
+	* lib/clevic/db_options.rb:
+	  add workaround to Date class
+	* lib/clevic/field.rb:
+	  remove workaround
+
+2008-04-18 19:24  panic
+
+	* INSTALL, README.txt, lib/clevic/field.rb:
+	  the Date#freeze workaround
+
+2008-04-17 20:56  panic
+
+	* TODO:
+	  resolve conflict
+
+2008-04-17 20:45  panic
+
+	* TODO, lib/clevic/table_view.rb:
+	  delete multiple cells
+
+2008-04-16 21:46  panic
+
+	* TODO, lib/clevic/delegates.rb, lib/clevic/table_model.rb:
+	  tooltip for empty relational fieldsS
+
+2008-04-16 20:41  panic
+
+	* TODO, accounts_models.rb, lib/clevic/field.rb,
+	  lib/clevic/model_builder.rb, lib/clevic/table_model.rb,
+	  times_models.rb:
+	  Tooltips for column headers. Update builder syntax docs.
+
+2008-04-16 20:26  panic
+
+	* lib/clevic/extensions.rb, lib/clevic/model_builder.rb,
+	  lib/clevic/model_column.rb:
+	  clean up some warnings and old debug code
+
+2008-04-16 20:23  panic
+
+	* accounts_models.rb, lib/clevic/model_builder.rb,
+	  lib/clevic/table_view.rb, times_models.rb:
+	  Simplify ui definition syntax. Get rid of current_item.
+
+2008-04-15 20:25  panic
+
+	* TODO, lib/clevic/browser.rb, lib/clevic/ui/browser.ui:
+	  refresh table from db. Mostly just minor renaming.
+
+2008-04-15 20:06  panic
+
+	* TODO, lib/clevic/table_view.rb:
+	  use ModelIndex#attribute_value to simplify code, and allow for
+	  columns to be moved. Notes and rearrangements in TODO
+
+2008-04-15 10:58  panic
+
+	* TODO, env.sh, lib/clevic/item_delegate.rb:
+	  Fix issue with Calendar opening when it shouldn't. Notes and
+	  todos.
+
+2008-04-14 19:55  panic
+
+	* lib/clevic/item_delegate.rb:
+	  oops, forgot to add this
+
+2008-04-14 14:11  panic
+
+	* TODO:
+	  notes
+	* Rakefile, TODO, lib/clevic/delegates.rb,
+	  lib/clevic/model_builder.rb, times_models.rb:
+	  fix restricted combo editing and completion. Groundwork for
+	  calendar edits and things like that.
+
+2008-04-13 13:54  panic
+
+	* TODO:
+	  remove old todos. Rearrange current ones.
+
+2008-04-12 20:49  panic
+
+	* TODO, bin/clevic, lib/clevic/browser.rb,
+	  lib/clevic/cache_table.rb, lib/clevic/delegates.rb,
+	  lib/clevic/model_builder.rb, lib/clevic/table_view.rb,
+	  lib/clevic/ui/browser.ui, sql/add_activities_id.sql,
+	  times_models.rb:
+	  combo fields that have no values in the combo just use a text
+	  field, or not editable for restricted
+
+2008-04-12 20:47  panic
+
+	* Rakefile:
+	  fix namespace usages
+
+2008-04-10 20:43  panic
+
+	* Manifest.txt, Rakefile, TODO, accounts_models.rb, bin/clevic,
+	  lib/clevic/ui/browser.ui, times_models.rb:
+	  Futzing with rake tasks to make things easier. Use title in
+	  window so I know what db is used, and default to test dbs.
+
+2008-04-10 11:08  panic
+
+	* TODO:
+	  notes
+
+2008-04-10 11:04  panic
+
+	* TODO, lib/clevic/browser.rb, lib/clevic/search_dialog.rb:
+	  Set search text to current cell
+
+2008-04-10 10:56  panic
+
+	* accounts_models.rb, bin/clevic, lib/clevic.rb, times_models.rb:
+	  use Clevic module for view and model classes. More qt flags.
+
+2008-04-10 10:54  panic
+
+	* lib/clevic/browser.rb, lib/clevic/delegates.rb,
+	  lib/clevic/entry_builder.rb, lib/clevic/entry_table_model.rb,
+	  lib/clevic/entry_table_view.rb, lib/clevic/model_builder.rb,
+	  lib/clevic/qt_flags.rb, lib/clevic/table_model.rb,
+	  lib/clevic/table_view.rb, lib/clevic/version.rb:
+	  use Clevic module for view and model classes. More qt flags.
+
+2008-04-10 10:05  panic
+
+	* lib/clevic/entry_table_model.rb, lib/clevic/field.rb:
+	  Clean up case statements. Move alignment out of EntryTableModel
+	  and into Field.
+
+2008-04-09 23:44  panic
+
+	* lib/clevic/entry_builder.rb, lib/clevic/entry_table_model.rb,
+	  lib/clevic/entry_table_view.rb, lib/clevic/extensions.rb,
+	  lib/clevic/field.rb, lib/clevic/qt_flags.rb, times_models.rb:
+	  Do column auto-sizing based on the data. Move Clevic::Field into
+	  its own file.
+
+2008-04-08 20:21  panic
+
+	* TODO:
+	  issues from testing with Michelle on windows
+
+2008-04-08 05:33  panic
+
+	* README.txt, TODO, bin/clevic:
+	  notes and docs
+	* accounts_models.rb, times_models.rb:
+	  more restricted and distinct
+
+2008-04-07 14:28  panic
+
+	* lib/clevic.rb:
+	  remove versin from clevic.rb
+
+2008-04-07 14:19  panic
+
+	* Manifest.txt, README.txt, Rakefile, lib/clevic.rb,
+	  lib/clevic/version.rb:
+	  add more missing files to manifest. Create a version file so
+	  Rakefile doesn't keep changing. Change licence to GPL. Add
+	  THANKS section.
+
+2008-04-07 13:23  panic
+
+	* Manifest.txt, Rakefile, TODO, lib/clevic/browser.rb,
+	  lib/clevic/search_dialog.rb, lib/clevic/ui, ui:
+	  move ui files under the lib directory. Decrease version number
+	  because it
+	  's nowhere near release. Clean up Rakefile.
+
+2008-04-07 13:21  panic
+
+	* sql/accounts.sql, sql/times.sql:
+	  remove plperl references
+
+2008-04-05 11:34  panic
+
+	* Rakefile, TODO, lib/clevic/db_options.rb,
+	  lib/clevic/entry_table_model.rb:
+	  Better debugging. Deal with empty RUBYLIB.
+
+2008-04-02 21:42  panic
+
+	* lib/clevic/browser.rb:
+	  busy cursor on find_next
+
+2008-04-02 21:35  panic
+
+	* TODO, bin/clevic, lib/clevic/browser.rb,
+	  lib/clevic/entry_table_view.rb, lib/clevic/extensions.rb:
+	  make sure records are saved on app exit
+
+2008-04-02 12:01  panic
+
+	* TODO:
+	  notes
+
+2008-04-01 06:47  panic
+
+	* TODO, lib/clevic/cache_table.rb,
+	  lib/clevic/entry_table_model.rb, lib/clevic/entry_table_view.rb,
+	  ui/browser.ui:
+	  turn ui table headers off, quote fields
+
+2008-03-31 11:05  panic
+
+	* lib/clevic/browser.rb, lib/clevic/cache_table.rb,
+	  lib/clevic/entry_table_model.rb, lib/clevic/entry_table_view.rb,
+	  lib/clevic/extensions.rb, lib/clevic/search_dialog.rb,
+	  ui/browser.ui:
+	  fix search sql. Search backwards and forwards. Find Next menu
+	  item.
+
+2008-03-31 06:02  panic
+
+	* lib/clevic/cache_table.rb, lib/clevic/entry_table_model.rb,
+	  lib/clevic/entry_table_view.rb, lib/clevic/search_dialog.rb,
+	  ui/search_dialog.ui:
+	  start on backwards and forwards searching. But there
+	  's and issue with multiple field searching using and.
+
+2008-03-31 06:00  panic
+
+	* Rakefile:
+	  add times and accounts irb tasks
+
+2008-03-29 22:47  panic
+
+	* lib/clevic/browser.rb, lib/clevic/cache_table.rb,
+	  lib/clevic/entry_table_model.rb, lib/clevic/entry_table_view.rb,
+	  lib/clevic/extensions.rb, lib/clevic/search_dialog.rb,
+	  ui/search_dialog.ui:
+	  search dialog partly working
+
+2008-03-29 17:46  panic
+
+	* TODO:
+	  notes
+
+2008-03-29 17:37  panic
+
+	* lib/clevic/cache_table.rb, lib/clevic/entry_builder.rb,
+	  lib/clevic/entry_table_model.rb, lib/clevic/entry_table_view.rb,
+	  lib/clevic/extensions.rb, lib/clevic/qt_flags.rb:
+	  Qt constant cleanups. better EntryTableModel.data. Do preload of
+	  10 rows at a time. Make sure index_for_entity doesn't preload
+	  10. Wait cursor.
+
+2008-03-29 09:28  panic
+
+	* lib/clevic/entry_table_model.rb, lib/clevic/extensions.rb:
+	  comments and formatting
+
+2008-03-29 09:12  panic
+
+	* lib/clevic/entry_table_view.rb:
+	  comments
+
+2008-03-29 09:03  panic
+
+	* Rakefile:
+	  remove old lines
+
+2008-03-29 08:45  panic
+
+	* TODO, lib/clevic/browser.rb, lib/clevic/entry_builder.rb,
+	  lib/clevic/entry_table_view.rb:
+	  move filtering to EntryTableView. Do visual indication of
+	  filtering
+	* accounts.odb:
+	  move odb file
+
+2008-03-29 08:44  panic
+
+	* sql/accounts.odb:
+	  move odb file
+
+2008-03-29 08:43  panic
+
+	* accounts_models.rb, bin/clevic, times_models.rb:
+	  futzing with lib path
+
+2008-03-29 08:42  panic
+
+	* ui/browser.ui:
+	  better size
+	* Rakefile:
+	  add run and irb tasks
+
+2008-03-27 20:52  panic
+
+	* ., Rakefile, lib/clevic/browser.rb, lib/clevic/cache_table.rb,
+	  lib/clevic/db_options.rb, lib/clevic/entry_table_model.rb,
+	  lib/clevic/entry_table_view.rb, times_models.rb, ui/icon.png,
+	  ui/icons.qrc, ui/search_dialog.ui:
+	  add icon resource. attempt on canFetchMore.
+
+2008-03-27 12:10  panic
+
+	* Rakefile:
+	  take out old debug lines
+
+2008-03-27 09:26  panic
+
+	* README.txt, Rakefile, TODO, lib/clevic.rb:
+	  documentation. Add lib/clevic.rb
+
+2008-03-26 21:07  panic
+
+	* README.txt:
+	  more docs
+
+2008-03-26 21:00  panic
+
+	* History.txt, README.txt, Rakefile, accounts_models.rb,
+	  bin/clevic, lib/clevic/browser.rb, lib/clevic/cache_table.rb,
+	  lib/clevic/db_options.rb, lib/clevic/delegates.rb,
+	  lib/clevic/entry_builder.rb, lib/clevic/entry_table_model.rb,
+	  lib/clevic/model_column.rb, times_models.rb:
+	  documentation
+
 2008-03-26 14:22  panic
 
 	* Manifest.txt, README.txt, TODO, accounts_models.rb,
-	  lib/clevic/delegates.rb, times_models.rb: documentation. Move db
-	  options to model defn files
+	  lib/clevic/delegates.rb, times_models.rb:
+	  documentation. Move db options to model defn files
 
 2008-03-26 13:31  panic
 
 	* accounts_models.rb, lib/clevic/browser.rb,
 	  lib/clevic/cache_table.rb, lib/clevic/entry_table_model.rb,
-	  times_models.rb: single-selection filtering working
+	  times_models.rb:
+	  single-selection filtering working
 
 2008-03-26 09:43  panic
 
@@ -18,49 +433,56 @@
 
 2008-03-26 09:41  panic
 
-	* lib/clevic/search_dialog.rb: search dialog
+	* lib/clevic/search_dialog.rb:
+	  search dialog
 
 2008-03-26 09:40  panic
 
-	* bin/clevic, lib/clevic/db_options.rb: move db options to a
-	  separate file to make irb easier
+	* bin/clevic, lib/clevic/db_options.rb:
+	  move db options to a separate file to make irb easier
 
 2008-03-26 09:39  panic
 
-	* accounts_models.rb: fix require
-	* Rakefile, ui/browser.ui, ui/search_dialog.ui: add search dialog
+	* accounts_models.rb:
+	  fix require
+	* Rakefile, ui/browser.ui, ui/search_dialog.ui:
+	  add search dialog
 
 2008-03-26 09:38  panic
 
-	* lib/clevic/model_column.rb: keep association metadata
+	* lib/clevic/model_column.rb:
+	  keep association metadata
 
 2008-03-26 09:09  panic
 
-	* lib/clevic/extensions.rb: improve some inspects. Add a dump for
-	  ModelIndex
+	* lib/clevic/extensions.rb:
+	  improve some inspects. Add a dump for ModelIndex
 
 2008-03-24 17:08  panic
 
-	* bin/clevic, lib/clevic/browser.rb: take out test for single model
+	* bin/clevic, lib/clevic/browser.rb:
+	  take out test for single model
 
 2008-03-24 17:07  panic
 
 	* TODO, accounts_models.rb, bin/clevic, lib/clevic/browser.rb,
-	  ui/browser.ui: fix focus buglets. Ctrl-Tab to move tabs
+	  ui/browser.ui:
+	  fix focus buglets. Ctrl-Tab to move tabs
 
 2008-03-23 04:18  panic
 
 	* Manifest.txt, Rakefile, bin/clevic, lib/clevic/cache_table.rb,
 	  lib/clevic/entry_builder.rb, lib/clevic/entry_table_model.rb,
-	  lib/clevic/entry_table_view.rb, ui/browser.ui: filter by current
-	  selection. Remove dependence on collection[0] for model_class
-	  retrieval
+	  lib/clevic/entry_table_view.rb, ui/browser.ui:
+	  filter by current selection. Remove dependence on collection[0]
+	  for model_class retrieval
 
 2008-03-20 08:24  panic
 
 	* bin/clevic, lib/clevic/entry_builder.rb,
 	  lib/clevic/entry_table_model.rb, lib/clevic/entry_table_view.rb,
-	  times_models.rb: make requires use library directories
+	  times_models.rb:
+	  make requires use library directories
 
 2008-03-20 08:19  panic
 
@@ -75,28 +497,31 @@
 2008-03-20 08:17  panic
 
 	* History.txt, Manifest.txt, README.txt, Rakefile,
-	  sql/accounts.sql, sql/times.sql: first with Hoe
+	  sql/accounts.sql, sql/times.sql:
+	  first with Hoe
 
 2008-03-18 15:45  panic
 
-	* TODO, accounts_models.rb, entry_table_view.rb: allow Ctrl-Return
-	  to create new row
+	* TODO, accounts_models.rb, entry_table_view.rb:
+	  allow Ctrl-Return to create new row
 
 2008-03-18 11:25  panic
 
 	* accounts_models.rb, delegates.rb, entry_table_model.rb,
-	  entry_table_view.rb, extensions.rb: make
-	  CombeDelegate#setModelData common. use full_edit instead of open.
+	  entry_table_view.rb, extensions.rb:
+	  make CombeDelegate#setModelData common. use full_edit instead of
+	  open.
 
 2008-03-18 08:53  panic
 
-	* entry_table_view.rb: create set_current_unless_override
+	* entry_table_view.rb:
+	  create set_current_unless_override
 
 2008-03-18 08:46  panic
 
 	* accounts_models.rb, clevic, delegates.rb, entry_table_model.rb,
-	  entry_table_view.rb, times_models.rb: fix delegate editing and
-	  cursor movement
+	  entry_table_view.rb, times_models.rb:
+	  fix delegate editing and cursor movement
 
 2008-03-17 15:34  panic
 
@@ -105,34 +530,36 @@
 
 2008-03-17 12:28  panic
 
-	* clevic, entry_table_model.rb, extensions.rb: attempts to fix
-	  reloading:
+	* clevic, entry_table_model.rb, extensions.rb:
+	  attempts to fix reloading:
 
 2008-03-17 12:03  panic
 
 	* cache_table.rb, entry_builder.rb, entry_table_model.rb,
-	  times_models.rb: improvements in caching and fetching from DB
-	  only when necessary
+	  times_models.rb:
+	  improvements in caching and fetching from DB only when necessary
 
 2008-03-16 09:25  panic
 
-	* entry_builder.rb: remove debugging puts
+	* entry_builder.rb:
+	  remove debugging puts
 
 2008-03-15 08:54  panic
 
 	* accounts_models.rb, cache_table.rb, clevic, entry_table_view.rb,
-	  extensions.rb, times_models.rb, ui/browser.ui: use triggered
-	  instead of activated. Exception handling for calls to UI model
-	  definitions. Try to activate debugger.
+	  extensions.rb, times_models.rb, ui/browser.ui:
+	  use triggered instead of activated. Exception handling for calls
+	  to UI model definitions. Try to activate debugger.
 
 2008-03-13 12:26  panic
 
-	* TODO, delegates.rb: update for ruby-pg
+	* TODO, delegates.rb:
+	  update for ruby-pg
 
 2008-03-11 19:50  panic
 
-	* entry_builder.rb, entry_table_view.rb, times_models.rb: add some
-	  times-capture specific code
+	* entry_builder.rb, entry_table_view.rb, times_models.rb:
+	  add some times-capture specific code
 
 2008-03-09 19:22  panic
 
@@ -141,62 +568,67 @@
 
 2008-03-09 13:19  panic
 
-	* clevic: make it executable
+	* clevic:
+	  make it executable
 
 2008-03-09 13:15  panic
 
-	* browser.rb, clevic: rename main file
+	* browser.rb, clevic:
+	  rename main file
 
 2008-03-09 13:12  panic
 
-	* ., times: rename project
+	* ., times:
+	  rename project
 
 2008-03-02 21:35  panic
 
-	* times/entry_table_model.rb, times/entry_table_view.rb: start
-	  abstracting model_class from collection[0]
+	* times/entry_table_model.rb, times/entry_table_view.rb:
+	  start abstracting model_class from collection[0]
 
 2008-03-02 21:20  panic
 
-	* times/accounts_models.rb, times/browser.rb: add some samples for
-	  accounts. Allow model order to be specified.
+	* times/accounts_models.rb, times/browser.rb:
+	  add some samples for accounts. Allow model order to be specified.
 
 2008-03-02 21:09  panic
 
 	* times/TODO, times/accounts_models.rb, times/cache_table.rb,
 	  times/entry_builder.rb, times/entry_table_model.rb,
-	  times/entry_table_view.rb, times/extensions.rb: Add lazy model
-	  instance fetching. Do a faster fix for row sizes
+	  times/entry_table_view.rb, times/extensions.rb:
+	  Add lazy model instance fetching. Do a faster fix for row sizes
 
 2008-03-02 15:08  panic
 
 	* times/accounts_models.rb, times/browser.rb,
-	  times/entry_table_model.rb: add the values table to accounts.
-	  Various other comments.
+	  times/entry_table_model.rb:
+	  add the values table to accounts. Various other comments.
 
 2008-03-02 12:55  panic
 
 	* times/accounts_models.rb, times/delegates.rb,
-	  times/entry_builder.rb: comments for builder methods. Allow
-	  conditions for DistinctDelegate
+	  times/entry_builder.rb:
+	  comments for builder methods. Allow conditions for
+	  DistinctDelegate
 
 2008-03-02 12:37  panic
 
 	* times/accounts_models.rb, times/delegates.rb,
-	  times/entry_builder.rb, times/entry_table_model.rb: allow format
-	  and alignment to be specified in the ui table definition.
-	  Improve formatting code. Add a Restricted field type.
+	  times/entry_builder.rb, times/entry_table_model.rb:
+	  allow format and alignment to be specified in the ui table
+	  definition. Improve formatting code. Add a Restricted field type.
 
 2008-03-01 16:15  panic
 
-	* times/TODO, times/accounts_models.rb, times/times_models.rb: fix
-	  some orderings
+	* times/TODO, times/accounts_models.rb, times/times_models.rb:
+	  fix some orderings
 
 2008-03-01 16:02  panic
 
 	* times/accounts_models.rb, times/browser.rb,
-	  times/times_models.rb: check for :database in options. remove
-	  references to old Tables idea.
+	  times/times_models.rb:
+	  check for :database in options. remove references to old Tables
+	  idea.
 
 2008-03-01 15:57  panic
 
@@ -208,13 +640,14 @@
 2008-02-28 18:47  panic
 
 	* times/browser.rb, times/entry_table_model.rb,
-	  times/ui/browser.ui: remove puts output. Make sure initial
-	  designer tab is empty, and is cleared when table tabs are added
+	  times/ui/browser.ui:
+	  remove puts output. Make sure initial designer tab is empty, and
+	  is cleared when table tabs are added
 
 2008-02-28 18:40  panic
 
-	* times/Rakefile, times/dir.rb, times/ui: do Rakefile for invoking
-	  rbuic4
+	* times/Rakefile, times/dir.rb, times/ui:
+	  do Rakefile for invoking rbuic4
 
 2008-02-28 18:12  panic
 
@@ -223,16 +656,18 @@
 	  times/entry_table_view.rb, times/reports, times/reports/invoice,
 	  times/sql, times/sql/invoice.view.sql,
 	  times/sql/nice_entries.view.sql, times/times, times/times.ui,
-	  times/ui, times/ui/browser.ui: get elementary tabbed tables
-	  working
+	  times/ui, times/ui/browser.ui:
+	  get elementary tabbed tables working
 
 2008-02-14 11:54  panic
 
-	* times/times: specify table name on command line
+	* times/times:
+	  specify table name on command line
 
 2008-01-15 07:19  panic
 
-	* times/accounts, times/times: allow host to be specified
+	* times/accounts, times/times:
+	  allow host to be specified
 
 2007-11-29 12:57  panic
 
@@ -241,57 +676,62 @@
 
 2007-09-13 06:04  panic
 
-	* times/accounts, times/accounts_models.rb, times/times: allow use
-	  of db to be specified on command line
+	* times/accounts, times/accounts_models.rb, times/times:
+	  allow use of db to be specified on command line
 
 2007-09-05 15:53  panic
 
-	* times/times: make coding a bit neater
+	* times/times:
+	  make coding a bit neater
 
 2007-09-05 15:45  panic
 
 	* times/delegates.rb, times/entry_builder.rb,
 	  times/entry_table_model.rb, times/entry_table_view.rb,
-	  times/extensions.rb: paste of rows working
+	  times/extensions.rb:
+	  paste of rows working
 
 2007-09-04 11:52  panic
 
-	* times/accounts_models.rb, times/entry_table_model.rb: change to
-	  test db. Allow entry of a single digit in a date field and it
-	  will fill in the month from the previous row
+	* times/accounts_models.rb, times/entry_table_model.rb:
+	  change to test db. Allow entry of a single digit in a date field
+	  and it will fill in the month from the previous row
 
 2007-09-04 11:39  panic
 
 	* times/accounts_models.rb, times/entry_table_view.rb,
-	  times/times: don't show two tables. renames. Use live db for
-	  accounts
+	  times/times:
+	  don't show two tables. renames. Use live db for accounts
 
 2007-09-04 06:34  panic
 
 	* times/accounts, times/entry_builder.rb,
 	  times/entry_table_model.rb, times/entry_table_view.rb,
-	  times/extensions.rb, times/times: neaten up requires, and have a
-	  look at 2 windows where one goes blank
+	  times/extensions.rb, times/times:
+	  neaten up requires, and have a look at 2 windows where one goes
+	  blank
 
 2007-09-03 22:07  panic
 
-	* times/entry_table_model.rb: other small tweaks
+	* times/entry_table_model.rb:
+	  other small tweaks
 
 2007-09-03 22:00  panic
 
-	* times/accounts, times/entry_table_model.rb, times/times: fix
-	  number alignment
+	* times/accounts, times/entry_table_model.rb, times/times:
+	  fix number alignment
 
 2007-09-03 21:24  panic
 
 	* times/accounts, times/accounts_models.rb, times/delegates.rb,
 	  times/entry_builder.rb, times/entry_table_model.rb,
-	  times/entry_table_view.rb, times/times: add entry builder and
-	  make accounts and times work with it
+	  times/entry_table_view.rb, times/times:
+	  add entry builder and make accounts and times work with it
 
 2007-09-03 15:28  panic
 
-	* times/accounts, times/entry_table_view.rb: do column sizing
+	* times/accounts, times/entry_table_view.rb:
+	  do column sizing
 
 2007-09-03 11:52  panic
 
@@ -302,14 +742,15 @@
 
 	* times/accounts, times/accounts_models.rb, times/delegates.rb,
 	  times/entry_table_model.rb, times/entry_table_view.rb,
-	  times/extensions.rb: fix completion handling
+	  times/extensions.rb:
+	  fix completion handling
 
 2007-09-03 06:15  panic
 
 	* times/TODO, times/accounts, times/entry_table_model.rb,
 	  times/entry_table_view.rb, times/extensions.rb, times/models.rb,
-	  times/times, times/times.rb: move times-specific code to its own
-	  file
+	  times/times, times/times.rb:
+	  move times-specific code to its own file
 
 2007-09-02 18:05  panic
 
@@ -320,32 +761,36 @@
 2007-09-02 16:52  panic
 
 	* times/TODO, times/delegates.rb, times/entry_table_model.rb,
-	  times/entry_table_view.rb: better error handling
+	  times/entry_table_view.rb:
+	  better error handling
 
 2007-08-31 15:11  panic
 
 	* times/TODO, times/delegates.rb, times/extensions.rb,
-	  times/models.rb, times/times.rb: allow nil values in combo box
-	  fields
+	  times/models.rb, times/times.rb:
+	  allow nil values in combo box fields
 
 2007-08-30 21:58  panic
 
 	* times/TODO, times/delegates.rb, times/entry_table_view.rb,
-	  times/times.rb: do completion for select distinct
+	  times/times.rb:
+	  do completion for select distinct
 
 2007-08-30 21:03  panic
 
-	* times/log: remove file
+	* times/log:
+	  remove file
 
 2007-08-30 21:01  panic
 
-	* times/delegates.rb, times/entry_table_model.rb: remove cruft
+	* times/delegates.rb, times/entry_table_model.rb:
+	  remove cruft
 
 2007-08-30 20:55  panic
 
 	* times/active_table_model.rb, times/entry_table_model.rb,
-	  times/times.rb, times/times_qt.rb: rename to EntryTableModel.
-	  Remove old files
+	  times/times.rb, times/times_qt.rb:
+	  rename to EntryTableModel. Remove old files
 
 2007-08-30 20:50  panic
 
@@ -367,5 +812,6 @@
 	  times/active_record/dirty.rb, times/active_table_model.rb,
 	  times/delegates.rb, times/dir.rb, times/entry_table_view.rb,
 	  times/extensions.rb, times/log, times/models.rb, times/times.rb,
-	  times/times.ui, times/times_qt.rb: initial import
+	  times/times.ui, times/times_qt.rb:
+	  initial import
 
