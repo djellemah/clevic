@@ -1,6 +1,6 @@
 = clevic
 
-http://www.rubyforge.org/clevic
+http://www.rubyforge.org/clevic/clevic/index.html
 
 == DESCRIPTION:
 
@@ -13,6 +13,8 @@ so it provides
 nice keyboard shortcuts for all sorts of things. Model (table) objects
 are extensible to allow for model (table) specific cleverness, like
 auto-filling-in of fields.
+
+Start with Clevic::Browser
 
 == FEATURES:
 
@@ -60,7 +62,8 @@ See TODO file.
 === Gems
 * fastercsv
 * ruby-qt4
-* active_record
+* qtext (not available on rubyforge yet. Download from http://www.semiosix.com/qtext-0.2.0.gem)
+* ActiveRecord
 
 === Other
 
