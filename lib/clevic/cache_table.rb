@@ -62,7 +62,9 @@ known entity in the set requires a defined ordering, so if no ordering
 is specified, the primary key of the entity will be used.
 
 It hasn't been tested with compound primary keys.
+
 --
+
 TODO drop rows when they haven't been accessed for a while
 
 TODO how to handle a quickly-changing underlying table? invalidate cache

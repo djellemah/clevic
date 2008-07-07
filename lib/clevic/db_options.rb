@@ -1,18 +1,88 @@
 require 'active_record'
 
-# these will normally be defined fully in the model definition file
-# $options[:database] to be defined with the models
-$options ||= {}
-$options[:adapter]  ||= 'postgresql'
-$options[:host] ||= 'localhost'
-$options[:username] ||= ''
-$options[:password] ||= ''
+module Clevic
+=begin rdoc
+This class is intended to set up db options for a ActiveRecord
+connection to a particular database. Like this:
 
-ActiveRecord::Base.establish_connection( $options )
-ActiveRecord::Base.logger = Logger.new(STDOUT) if $options[:verbose]
-#~ ActiveRecord.colorize_logging = false
+  Clevic::DbOptions.connect( $options ) do
+    database :accounts
+    adapter :postgresql
+    username 'panic'
+  end
 
-puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $options[:debug]
+When the block ends, a check is done to see that the :database key
+exists. If not and exception is thrown. Finally the relevant calls to
+ActiveRecord are performed.
+
+Method calls are translated to insertions into a hash with the same
+key as the method being called. The hash is initialised
+with the options value passed in (in this case $options).
+Values have to_s called on them so they can be symbols or strings.
+=end
+class DbOptions
+  def initialize( options )
+    @options = options || {}
+    # make sure the relevant entries exist, so method_missing works
+    @options[:adapter] ||= ''
+    @options[:host] ||= ''
+    @options[:username] ||= ''
+    @options[:password] ||= ''
+    @options[:database] ||= ''
+  end
+  
+  def connect( *args, &block )
+    # using the Rails implementation, included in Qt
+    block.bind( self )[*args]
+    do_connection
+  end
+  
+  # do error checking and make the ActiveRecord connection calls.
+  def do_connection
+    unless @options[:database]
+      raise "Please define database using DbOptions"
+    end
+    
+    # connect to db
+    ActiveRecord::Base.establish_connection( @options )
+    ActiveRecord::Base.logger = Logger.new(STDOUT) if @options[:verbose]
+    #~ ActiveRecord.colorize_logging = @options[:verbose]
+    puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $options[:debug]
+  end
+  
+  # convenience method so we can do things like
+  #   Clevic::DbOptions.connect( $options ) do
+  #     database :accounts
+  #     adapter :postgresql
+  #     username 'panic'
+  #   end
+  # the block is evaluated in the context of the a new DbOptions
+  # object.
+  def self.connect( args, &block )
+    inst = self.new( args )
+    # using the Rails implementation, included in Qt
+    block.bind( inst )[*args]
+    inst.do_connection
+  end
+  
+  # translate method calls in the context of an instance
+  # of this object to setting values in the @options
+  # variable
+  def method_missing(meth, *args, &block)
+    if @options.has_key? meth.to_sym
+      @options[meth.to_sym] = args[0].to_s
+    else
+      super
+    end
+  end
+  
+  # convenience to find out if we're in debug mode
+  def debug?
+    @options[:debug] == true
+  end
+end
+
+end
 
 # workaround for the date freeze issue
 class Date

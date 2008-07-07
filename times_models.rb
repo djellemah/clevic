@@ -1,12 +1,11 @@
 require 'clevic.rb'
 
 # db connection options
-$options ||= {}
-$options[:database] ||= $options[:debug] ? 'times_test' : 'times'
-$options[:adapter]  ||= 'postgresql'
-$options[:host] ||= 'localhost'
-$options[:username] ||= 'panic'
-$options[:password] ||= ''
+Clevic::DbOptions.connect( $options ) do
+  database( debug? ? :times_test : :times )
+  adapter :postgresql
+  username 'panic'
+end
 
 # model definitions
 class Entry < ActiveRecord::Base

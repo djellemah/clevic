@@ -1,12 +1,11 @@
 require 'clevic.rb'
 
-# db connection options
-$options ||= {}
-$options[:database] ||= $options[:debug] ? 'accounts_test' : 'accounts'
-$options[:adapter]  ||= 'postgresql'
-$options[:host] ||= 'localhost'
-$options[:username] ||= 'panic'
-$options[:password] ||= ''
+# db connection
+Clevic::DbOptions.connect( $options ) do
+  database :accounts_test
+  adapter :postgresql
+  username 'panic'
+end
 
 # This is a read-only view, which is currently not implemented
 class Values < ActiveRecord::Base

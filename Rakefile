@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'rake/clean'
 require 'hoe'
-require 'lib/clevic/version.rb'
 require 'pathname'
 
 require 'config/requirements'
@@ -105,7 +104,7 @@ Rake::RDocTask.new(:docs) do |rd|
   rd.main = "README.txt"
   rd.options << '-d' if RUBY_PLATFORM !~ /win32/ and `which dot` =~ /\/dot/ and not ENV['NODOT']
   rd.rdoc_dir = 'doc'
-  rd.template = 'template/jamis.rb'
+  rd.template = 'config/jamis.rb'
   files = $hoe.spec.files.grep($hoe.rdoc_pattern)
   files -= ['Manifest.txt']
   rd.rdoc_files.push(*files)

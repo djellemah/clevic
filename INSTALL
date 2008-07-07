@@ -1,3 +1,5 @@
+Apple OSX install:
+
 port install ssl
 port install dbus
 port install qt4-mac +dbus +ssl

@@ -1,8 +1,6 @@
 #! /usr/bin/ruby
 
 require 'clevic/browser.rb'
-require 'ruby-debug'
-
 require 'optparse'
 
 # find and require variations on file_path
@@ -30,7 +28,7 @@ oparser.on( '-D', '--debug' ) { |o| $options[:debug] = true }
 oparser.on( '-v', '--verbose' ) { |o| $options[:verbose] = true }
 oparser.on( '-h', '-?', '--help' ) do |o|
   puts oparser.to_s
-  exit( 0 )
+  exit( 1 )
 end
 
 args = oparser.parse( ARGV )
@@ -44,13 +42,6 @@ else
 end
 
 app = Qt::Application.new( args )
-
-unless $options.has_key? :database
-  raise "Please define $options[:database]"
-end
-
-# connect to db
-require 'clevic/db_options.rb'
 
 # show UI
 main_window = Qt::MainWindow.new
