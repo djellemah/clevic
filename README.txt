@@ -1,6 +1,6 @@
 = clevic
 
-http://www.rubyforge.org/clevic/clevic/index.html
+http://clevic.rubyforge.org/
 
 == DESCRIPTION:
 

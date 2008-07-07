@@ -4,17 +4,10 @@ require 'hoe'
 require 'lib/clevic/version.rb'
 require 'pathname'
 
-$hoe = Hoe.new( 'clevic', Clevic::VERSION ) do |s|
-	s.author     = "John Anderson"
-	s.email      = "john at semiosix dot com"
-	s.rubyforge_name = 'clevic'
-	s.extra_deps = [
-    ['qtext', '>=0.2.0'],
-    ['activerecord', '>=2.0.2']
-    # This isn't always installed from gems
-    #~ ['qtruby4', '>=1.4.9']
-  ]
-end
+require 'config/requirements'
+require 'config/hoe' # setup Hoe + all gem configuration
+
+Dir['tasks/**/*.rake'].each { |rake| load rake }
 
 # generate a _ui.rb filename from a .ui filename
 def ui_rb_file( ui_file )

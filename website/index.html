@@ -1,3 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <link rel="stylesheet" href="stylesheets/screen.css" type="text/css" media="screen" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>
+      Clevic
+  </title>
+<style>
+
+</style>
+  <script type="text/javascript">
+    window.onload = function() {
+      settings = {
+          tl: { radius: 10 },
+          tr: { radius: 10 },
+          bl: { radius: 10 },
+          br: { radius: 10 },
+          antiAlias: true,
+          autoPad: true,
+          validTags: ["div"]
+      }
+    }
+  </script>
+</head>
+<body>
+<div id="main">
+	<h1>Clevic</h1>
+	<p><a href="rdoc">RDoc</a> | <a href="http://rubyforge.org/projects/clevic/">Rubyforge Project</a></p>
+
+
+	<p>Screenshot of a table with the foreign-key dropdown in place. Tabs contain
+the two tables, model definition file is below the screenshot. The Entry
+model has some code to do update the credit and debit fields when
+the new item description is found in the table.</p>
+
+
+	<p><img src="screenshot.png" title="Screenshot" alt="Screenshot" /></p>
+</div>
+
+<pre><code>
 require 'clevic.rb'
 
 # db connection options
@@ -96,3 +138,10 @@ end
 
 # order of tab display
 $options[:models] = [ Entry, Account ]
+
+</code></pre>
+
+<!-- insert site tracking codes here, like Google Urchin -->
+
+</body>
+</html>
