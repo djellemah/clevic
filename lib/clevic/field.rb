@@ -103,7 +103,7 @@ EOF
         when :string, :text
           string_sample( 'n'*40 )
         
-        when :date, :time, :datetime
+        when :date, :time, :datetime, :timestamp
           date_time_sample
         
         when :numeric, :decimal, :integer, :float
@@ -112,8 +112,11 @@ EOF
         # TODO return a width, or something like that
         when :boolean; 'W'
         
+        when ActiveRecord::Reflection::AssociationReflection
+          #TODO width for relations
+        
         else
-          puts "#{@model_class.name}.#{attribute} is a #{meta.type}"
+          puts "#{@model_class.name}.#{attribute} is a #{meta.type.inspect}"
       end
         
       if $options[:debug]  

@@ -91,6 +91,7 @@ store previous searches, by model & app
 
 maybe
 -----
+Look at DataMapper. Not suitable - need to declare properties.
 use rubigen for creating model definition files
 allow moving of rows
 discontiguous copying of entities/csv

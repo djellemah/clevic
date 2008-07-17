@@ -45,7 +45,7 @@ CREATE TABLE entries (
     "start" time without time zone,
     "end" time without time zone,
     description text,
-    person character varying(30) DEFAULT 'John'::character varying,
+    person character varying(30),
     order_number character varying(40),
     out_of_spec integer,
     module character varying(100),

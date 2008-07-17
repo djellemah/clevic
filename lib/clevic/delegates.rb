@@ -219,7 +219,7 @@ class DistinctDelegate < ComboDelegate
     @attribute = attribute
     @options = options
     # hackery for amateur query building in populate
-    @options[:conditions] ||= 'true'
+    @options[:conditions] ||= '1=1'
     super( parent )
   end
   
@@ -315,6 +315,8 @@ class RelationalDelegate < ComboDelegate
     @model_class = ( options[:class_name] || attribute_path[0].to_s.classify ).constantize
     @attribute_path = attribute_path[1..-1].join('.')
     @options = options.clone
+    @options[:conditions].gsub!( /true/, @model_class.connection.quoted_true )
+    @options[:conditions].gsub!( /false/, @model_class.connection.quoted_false )
     [ :class_name, :sample, :format ].each {|x| @options.delete x }
     super( parent )
   end

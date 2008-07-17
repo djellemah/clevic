@@ -21,6 +21,8 @@ with the options value passed in (in this case $options).
 Values have to_s called on them so they can be symbols or strings.
 =end
 class DbOptions
+  attr_reader :options
+  
   def initialize( options )
     @options = options || {}
     # make sure the relevant entries exist, so method_missing works
@@ -29,6 +31,11 @@ class DbOptions
     @options[:username] ||= ''
     @options[:password] ||= ''
     @options[:database] ||= ''
+    @options[:models] ||= []
+  end
+  
+  def models=( arr )
+    @options[:models] ||= arr
   end
   
   def connect( *args, &block )
@@ -47,7 +54,8 @@ class DbOptions
     ActiveRecord::Base.establish_connection( @options )
     ActiveRecord::Base.logger = Logger.new(STDOUT) if @options[:verbose]
     #~ ActiveRecord.colorize_logging = @options[:verbose]
-    puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if $options[:debug]
+    puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if options[:debug]
+    self
   end
   
   # convenience method so we can do things like

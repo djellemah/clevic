@@ -1,12 +1,9 @@
 require 'clevic.rb'
 
-$options ||= {}
-
 # db connection options
-dbo = Clevic::DbOptions.connect( $options ) do
-  database( debug? ? :times_test : :times )
-  adapter :postgresql
-  username 'panic'
+Clevic::DbOptions.connect( $options ) do
+  database :times
+  adapter :sqlite3
 end
 
 # model definitions
@@ -20,12 +17,12 @@ class Entry < ActiveRecord::Base
   def self.ui( parent )
     Clevic::TableView.new( self, parent ).create_model do
       plain       :date, :sample => '28-Dec-08'
-      relational  :project, 'project', :conditions => 'active = true', :order => 'lower(project)'
+      relational  :project, 'project', :conditions => "active = true", :order => 'lower(project)'
       relational  :invoice, 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
       plain       :start
       plain       :end
       plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
-      relational  :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = true'
+      relational  :activity, 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = #{connection.quoted_true}'
       distinct    :module, :tooltip => 'Module or sub-project'
       plain       :charge, :tooltip => 'Is this time billable?'
       distinct    :person, :tooltip => 'The person who did the work'
@@ -145,7 +142,7 @@ class Invoice < ActiveRecord::Base
 
   # define how fields are displayed
   def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do
+    Clevic::TableView.new( Invoice, parent ).create_model do
       plain :date
       distinct :client, :frequency => true
       plain :invoice_number
