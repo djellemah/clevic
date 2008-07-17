@@ -2,7 +2,11 @@ require 'clevic.rb'
 
 # db connection
 Clevic::DbOptions.connect( $options ) do
-  database( debug? ? :accounts_test : :accounts )
+  if $options[:database].nil? || $options[:database].empty?
+    database( debug? ? :accounts_test : :accounts )
+  else
+    database $options[:database]
+  end
   adapter :postgresql
   username 'panic'
 end
