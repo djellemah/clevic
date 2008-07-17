@@ -56,6 +56,12 @@ task :run => :ui do |t|
   exec "ruby -w -Ilib bin/clevic -D #{ARGV.join(' ')}"
 end
 
+desc "Runs Clevic in warning mode, with test databases and debug flag on"
+task :sqlite => :ui do |t|
+  ARGV.shift()
+  exec "ruby -Ilib bin/clevic #{ARGV.join(' ')} times_sqlite_model.rb"
+end
+
 desc "Runs Clevic in debug mode, with test databases"
 task :debug => :ui do |t|
   ARGV.shift()

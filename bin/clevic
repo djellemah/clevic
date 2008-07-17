@@ -31,6 +31,9 @@ oparser.on( '-h', '-?', '--help' ) do |o|
   exit( 1 )
 end
 
+require 'pp'
+pp $options
+
 args = oparser.parse( ARGV )
 
 if args.size > 0

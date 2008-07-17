@@ -51,10 +51,10 @@ class DbOptions
     end
     
     # connect to db
-    ActiveRecord::Base.establish_connection( @options )
-    ActiveRecord::Base.logger = Logger.new(STDOUT) if @options[:verbose]
+    ActiveRecord::Base.establish_connection( options )
+    ActiveRecord::Base.logger = Logger.new(STDOUT) if options[:verbose]
     #~ ActiveRecord.colorize_logging = @options[:verbose]
-    puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if options[:debug]
+    #~ puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if options[:debug]
     self
   end
   

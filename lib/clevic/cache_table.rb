@@ -3,8 +3,6 @@ require 'active_record'
 require 'active_record/dirty.rb'
 require 'bsearch'
 
-require 'profiler'
-
 =begin rdoc
 Store the SQL order_by attributes with ascending and descending values
 =end
@@ -73,7 +71,7 @@ for each call?
 class CacheTable < Array
   # the number of records loaded in one call to the db
   attr_accessor :preload_count
-  attr_reader :options
+  attr_reader :options, :model_class
   
   def initialize( model_class, find_options = {} )
     @preload_count = 20
@@ -106,13 +104,25 @@ class CacheTable < Array
     @model_class.connection.quote_column_name( field_name )
   end
   
+  # return a string containing the correct
+  # boolean value depending on the DB adapter
+  # because Postgres wants real true and false in complex statements, not 't' and 'f'
+  def sql_boolean( value )
+    case model_class.connection.adapter_name
+      when 'PostgreSQL'
+        value ? 'true' : 'false'
+      else; 'like'
+        value ? model_class.connection.quoted_true : model_class.connection.quoted_false
+    end
+  end
+  
   # recursively create a case statement to do the comparison
   # because and ... and ... and filters on *each* one rather than
   # consecutively.
   # operator is either '<' or '>'
   def build_recursive_comparison( operator, index = 0 )
     # end recursion
-    return 'false' if index == @order_attributes.size
+    return sql_boolean( false ) if index == @order_attributes.size
     
     # fetch the current attribute
     attribute = @order_attributes[index]
@@ -120,11 +130,12 @@ class CacheTable < Array
     # build case statement, including recusion
     st = <<-EOF
 case
-  when #{quote_column attribute} #{operator} :#{attribute} then true
+  when #{quote_column attribute} #{operator} :#{attribute} then #{sql_boolean true}
   when #{quote_column attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
-  else false
+  else #{sql_boolean false}
 end
 EOF
+    st.gsub!( /^/, '  ' * index )
   end
   
   # return a Hash containing
@@ -143,9 +154,18 @@ EOF
     # build the sql comparison where clause fragment
     sql = build_recursive_comparison( operator )
     
+    # only Postgres seems to understand real booleans
+    # everything else needs the big case statement to be compared
+    # to something
+    unless model_class.connection.adapter_name == 'PostgreSQL'
+      sql += " = #{sql_boolean true}"
+    end
+    
     # build parameter values
     params = {}
     @order_attributes.each {|x| params[x.to_sym] = entity.send( x.attribute )}
+    puts sql
+    puts params.inspect
     { :sql => sql, :params => params }
   end
   

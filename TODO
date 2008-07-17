@@ -7,6 +7,8 @@ wrap description, and allow Access-style zooming
 Undo deletes and other commands. Possibly via ActiveRecord callbacks?
 
 Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
+search in relational fields doesn't work because the search value is compared to the id of the related record
+Use Webrick as a way to export CSV reports?
 
 OSX
 ---

@@ -8,10 +8,12 @@ RUBYFORGE_PROJECT = 'clevic' # The unix name for your project
 HOMEPATH = "http://#{RUBYFORGE_PROJECT}.rubyforge.org"
 DOWNLOAD_PATH = "http://rubyforge.org/projects/#{RUBYFORGE_PROJECT}"
 EXTRA_DEPENDENCIES = [
-    ['qtext', '>=0.2.0'],
-    ['activerecord', '>=2.0.2']
+    ['qtext', '>=0.3.0'],
+    ['activerecord', '=2.0.2'],
+    ['fastercsv', '>=1.2.3']
     # This isn't always installed from gems
     #~ ['qtruby4', '>=1.4.9']
+    # bsearch can't be installed from gems
 ]    # An array of rubygem dependencies [name, version]
 
 @config_file = "~/.rubyforge/user-config.yml"

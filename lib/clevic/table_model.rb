@@ -392,6 +392,13 @@ class TableModel < Qt::AbstractTableModel
     end
   end
   
+  def like_operator
+    case model_class.connection.adapter_name
+      when 'PostgreSQL'; 'ilike'
+      else; 'like'
+    end
+  end
+  
   # return a set of indexes that match the search criteria
   def search( start_index, search_criteria )
     # get the search value parameter, in SQL format
@@ -404,7 +411,7 @@ class TableModel < Qt::AbstractTableModel
 
     # build up the conditions
     bits = collection.build_sql_find( start_index.entity, search_criteria.direction )
-    conditions = "#{model_class.connection.quote_column_name( start_index.field_name )} ilike :search_value"
+    conditions = "#{model_class.connection.quote_column_name( start_index.field_name )} #{like_operator} :search_value"
     conditions += ( " and " + bits[:sql] ) unless search_criteria.from_start?
     params = { :search_value => search_value }
     params.merge!( bits[:params] ) unless search_criteria.from_start?
