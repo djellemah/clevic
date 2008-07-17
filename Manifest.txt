@@ -25,8 +25,10 @@ lib/clevic/search_dialog.rb
 lib/clevic/table_model.rb
 lib/clevic/table_view.rb
 lib/clevic/ui/browser.ui
+lib/clevic/ui/browser_ui.rb
 lib/clevic/ui/icon.png
 lib/clevic/ui/search_dialog.ui
+lib/clevic/ui/search_dialog_ui.rb
 lib/clevic/version.rb
 script/console
 script/destroy
