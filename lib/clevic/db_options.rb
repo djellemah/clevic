@@ -8,7 +8,7 @@ connection to a particular database. Like this:
   Clevic::DbOptions.connect( $options ) do
     database :accounts
     adapter :postgresql
-    username 'panic'
+    username 'accounts_user'
   end
 
 When the block ends, a check is done to see that the :database key
@@ -62,7 +62,7 @@ class DbOptions
   #   Clevic::DbOptions.connect( $options ) do
   #     database :accounts
   #     adapter :postgresql
-  #     username 'panic'
+  #     username 'accounts_user'
   #   end
   # the block is evaluated in the context of the a new DbOptions
   # object.

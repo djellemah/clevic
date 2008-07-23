@@ -4,7 +4,7 @@ require 'clevic.rb'
 Clevic::DbOptions.connect( $options ) do
   database :accounts_test
   adapter :postgresql
-  username 'panic'
+  username 'accounts'
 end
 
 # This is a read-only view, which is currently not implemented

@@ -8,7 +8,7 @@ Clevic::DbOptions.connect( $options ) do
     database $options[:database]
   end
   adapter :postgresql
-  username 'panic'
+  username 'accounts'
 end
 
 class Entry < ActiveRecord::Base

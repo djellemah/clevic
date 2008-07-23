@@ -6,7 +6,7 @@ $options ||= {}
 dbo = Clevic::DbOptions.connect( $options ) do
   database( debug? ? :times_test : :times )
   adapter :postgresql
-  username 'panic'
+  username 'times'
 end
 
 # model definitions
