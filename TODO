@@ -1,5 +1,4 @@
 Make sure shortcuts don't edit a read-only field
-Make sure current record is saved when tab loses focus
 Times Ctrl-Shift-" should not copy date if it already exists, and should not copy time if it's a different date.
 Times Ctrl-Shift-" after it's done, tab doesn't change fields
 Times look up invoice for project leaves the wrong fields highlighted, and focus in the wrong field.

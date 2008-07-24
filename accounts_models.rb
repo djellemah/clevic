@@ -1,11 +1,14 @@
 require 'clevic.rb'
 
 # db connection
-Clevic::DbOptions.connect( $options = {} ) do
-  if $options[:database].nil? || $options[:database].empty?
-    database( debug? ? :accounts_test : :accounts )
+Clevic::DbOptions.connect( $options ) do
+  if options[:database].nil? || options[:database].empty?
+    db = debug? ? :accounts_test : :accounts
+    puts "db: #{db.inspect}"
+    database( db )
   else
-    database $options[:database]
+    puts "options[:database]: #{options[:database].inspect}"
+    database options[:database]
   end
   adapter :postgresql
   username 'accounts'
@@ -102,4 +105,5 @@ class Account < ActiveRecord::Base
 end
 
 # order of tab display
+$options ||= {}
 $options[:models] = [ Entry, Account ]

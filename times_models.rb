@@ -1,9 +1,7 @@
 require 'clevic.rb'
 
-$options ||= {}
-
 # db connection options
-dbo = Clevic::DbOptions.connect( $options ) do
+db = Clevic::DbOptions.connect( $options ) do
   database( debug? ? :times_test : :times )
   adapter :postgresql
   username 'times'
@@ -161,4 +159,5 @@ class Invoice < ActiveRecord::Base
 end
 
 # tab widget order
+$options ||= {}
 $options[:models] = [ Entry, Invoice, Project, Activity ]

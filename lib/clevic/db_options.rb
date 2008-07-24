@@ -23,8 +23,8 @@ Values have to_s called on them so they can be symbols or strings.
 class DbOptions
   attr_reader :options
   
-  def initialize( options )
-    @options = options || {}
+  def initialize( options = {} )
+    @options = options
     # make sure the relevant entries exist, so method_missing works
     @options[:adapter] ||= ''
     @options[:host] ||= ''
@@ -54,7 +54,7 @@ class DbOptions
     ActiveRecord::Base.establish_connection( options )
     ActiveRecord::Base.logger = Logger.new(STDOUT) if options[:verbose]
     #~ ActiveRecord.colorize_logging = @options[:verbose]
-    #~ puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if options[:debug]
+    puts "using database #{ActiveRecord::Base.connection.raw_connection.db}" if options[:debug]
     self
   end
   

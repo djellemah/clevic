@@ -45,12 +45,6 @@ class TableModel < Qt::AbstractTableModel
     @builder = builder
   end
   
-  def hasChildren( *args )
-    puts 'hasChildren'
-    puts "args: #{args.inspect}"
-    super
-  end
-  
   def sort( col, order )
     puts 'sort'
     puts "col: #{col.inspect}"
@@ -171,23 +165,6 @@ class TableModel < Qt::AbstractTableModel
     retval
   end
   
-  def fetchMore( parent )
-    #~ puts "fetchMore"
-    #~ reload_data if canFetchMore( parent )
-  end
-  
-  def canFetchMore( parent )
-    false
-    #~ puts "canFetchMore"
-    #~ puts "self.collection.size: #{self.collection.size.inspect}"
-    #~ puts "self.collection.sql_count: #{self.collection.sql_count.inspect}"
-    # Here, test for self.collection.size - new_records != self.collection.sql_count
-    # maintaining new_records will be the tricky part
-    #~ result = self.collection.size != self.collection.sql_count
-    #~ puts "result: #{result.inspect}"
-    #~ result
-  end
-
   def reload_data( options = {} )
     # renew cache
     self.collection = self.collection.renew( options )

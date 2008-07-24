@@ -352,9 +352,17 @@ class TableView < Qt::TableView
     end
   end
   
+  def save_current_row
+    if !current_index.nil? && current_index.valid?
+      save_row( current_index )
+    end
+  end
+  
   # save the entity in the row of the given index
+  # actually, model.save will check if the record
+  # is really changed before writing to DB.
   def save_row( index )
-    if index.valid?
+    if !index.nil? && index.valid?
       saved = model.save( index )
       if !saved
         error_message = Qt::ErrorMessage.new( self )
@@ -362,6 +370,7 @@ class TableView < Qt::TableView
         error_message.show_message( msg )
         error_message.show
       end
+      saved
     end
   end
   
@@ -392,10 +401,42 @@ class TableView < Qt::TableView
     end
     @index_override = false
   end
+  
+  # work around situation where an ItemDelegate is open
+  # when the surrouding tab is changed, but the right events
+  # don't arrive.
+  def hideEvent( event )
+    super
+    @hiding = true
+  end
+  
+  # work around situation where an ItemDelegate is open
+  # when the surrouding tab is changed, but the right events
+  # don't arrive.
+  def showEvent( event )
+    super
+    @hiding = false
+  end
     
+  def focusOutEvent( event )
+    super
+    save_current_row
+  end
+  
+  # this is the only method that is called when an itemDelegate is open
+  # and the tabs are changed.
+  # Work around situation where an ItemDelegate is open
+  # when the surrouding tab is changed, but the right events
+  # don't arrive.
+  def commitData( editor )
+    super
+    save_current_row if @hiding
+  end
+  
   # override to prevent tab pressed from editing next field
   # also takes into account that override_next_index may have been called
   def closeEditor( editor, end_edit_hint )
+    puts "end_edit_hint: #{end_edit_hint.inspect}"
     case end_edit_hint
       when Qt::AbstractItemDelegate.EditNextItem
         super( editor, Qt::AbstractItemDelegate.NoHint )

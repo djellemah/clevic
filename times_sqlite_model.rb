@@ -158,4 +158,5 @@ class Invoice < ActiveRecord::Base
 end
 
 # tab widget order
+$options ||= {}
 $options[:models] = [ Entry, Invoice, Project, Activity ]

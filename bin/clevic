@@ -31,10 +31,10 @@ oparser.on( '-h', '-?', '--help' ) do |o|
   exit( 1 )
 end
 
+args = oparser.parse( ARGV )
+
 require 'pp'
 pp $options
-
-args = oparser.parse( ARGV )
 
 if args.size > 0
   $options[:definition] = args.shift

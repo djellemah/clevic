@@ -164,8 +164,6 @@ EOF
     # build parameter values
     params = {}
     @order_attributes.each {|x| params[x.to_sym] = entity.send( x.attribute )}
-    puts sql
-    puts params.inspect
     { :sql => sql, :params => params }
   end
   
@@ -254,10 +252,8 @@ EOF
     
     # only load one record at a time
     preload_limit( 1 ) do
-      #~ puts "entity: #{entity.inspect}"
       # do the binary search based on what we know about the search order
       bsearch do |candidate|
-        #~ puts "candidate: #{candidate.inspect}"
         # find using all sort attributes
         order_attributes.inject(0) do |result,attribute|
           if result == 0
