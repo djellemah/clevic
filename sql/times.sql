@@ -20,7 +20,7 @@ SET default_tablespace = '';
 SET default_with_oids = true;
 
 --
--- Name: activities; Type: TABLE; Schema: public; Owner: panic; Tablespace: 
+-- Name: activities; Type: TABLE; Schema: public; Owner: times; Tablespace: 
 --
 
 CREATE TABLE activities (
@@ -30,10 +30,10 @@ CREATE TABLE activities (
 );
 
 
-ALTER TABLE public.activities OWNER TO panic;
+ALTER TABLE public.activities OWNER TO times;
 
 --
--- Name: entries; Type: TABLE; Schema: public; Owner: panic; Tablespace: 
+-- Name: entries; Type: TABLE; Schema: public; Owner: times; Tablespace: 
 --
 
 CREATE TABLE entries (
@@ -54,10 +54,10 @@ CREATE TABLE entries (
 );
 
 
-ALTER TABLE public.entries OWNER TO panic;
+ALTER TABLE public.entries OWNER TO times;
 
 --
--- Name: entries_id_seq; Type: SEQUENCE; Schema: public; Owner: panic
+-- Name: entries_id_seq; Type: SEQUENCE; Schema: public; Owner: times
 --
 
 CREATE SEQUENCE entries_id_seq
@@ -67,10 +67,10 @@ CREATE SEQUENCE entries_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.entries_id_seq OWNER TO panic;
+ALTER TABLE public.entries_id_seq OWNER TO times;
 
 --
--- Name: invoices; Type: TABLE; Schema: public; Owner: panic; Tablespace: 
+-- Name: invoices; Type: TABLE; Schema: public; Owner: times; Tablespace: 
 --
 
 CREATE TABLE invoices (
@@ -86,10 +86,10 @@ CREATE TABLE invoices (
 );
 
 
-ALTER TABLE public.invoices OWNER TO panic;
+ALTER TABLE public.invoices OWNER TO times;
 
 --
--- Name: invoices_id_seq; Type: SEQUENCE; Schema: public; Owner: panic
+-- Name: invoices_id_seq; Type: SEQUENCE; Schema: public; Owner: times
 --
 
 CREATE SEQUENCE invoices_id_seq
@@ -99,10 +99,10 @@ CREATE SEQUENCE invoices_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.invoices_id_seq OWNER TO panic;
+ALTER TABLE public.invoices_id_seq OWNER TO times;
 
 --
--- Name: projects; Type: TABLE; Schema: public; Owner: panic; Tablespace: 
+-- Name: projects; Type: TABLE; Schema: public; Owner: times; Tablespace: 
 --
 
 CREATE TABLE projects (
@@ -116,20 +116,20 @@ CREATE TABLE projects (
 );
 
 
-ALTER TABLE public.projects OWNER TO panic;
+ALTER TABLE public.projects OWNER TO times;
 
 --
--- Name: nice_entries; Type: VIEW; Schema: public; Owner: panic
+-- Name: nice_entries; Type: VIEW; Schema: public; Owner: times
 --
 
 CREATE VIEW nice_entries AS
     SELECT entries.id, invoices.invoice_number, invoices.status, projects.project, activities.activity, ((entries."end" - entries."start"))::time without time zone AS elapsed, entries.date, entries."start", entries."end", entries.description, entries.person, entries.order_number, entries.out_of_spec, entries.module, entries.rate, entries.charge FROM (((entries JOIN activities ON ((entries.activity_id = activities.id))) JOIN projects ON ((entries.project_id = projects.id))) JOIN invoices ON ((entries.invoice_id = invoices.id)));
 
 
-ALTER TABLE public.nice_entries OWNER TO panic;
+ALTER TABLE public.nice_entries OWNER TO times;
 
 --
--- Name: projects_id_seq; Type: SEQUENCE; Schema: public; Owner: panic
+-- Name: projects_id_seq; Type: SEQUENCE; Schema: public; Owner: times
 --
 
 CREATE SEQUENCE projects_id_seq
@@ -139,47 +139,47 @@ CREATE SEQUENCE projects_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.projects_id_seq OWNER TO panic;
+ALTER TABLE public.projects_id_seq OWNER TO times;
 
 --
--- Name: activities_pkey; Type: CONSTRAINT; Schema: public; Owner: panic; Tablespace: 
+-- Name: activities_pkey; Type: CONSTRAINT; Schema: public; Owner: times; Tablespace: 
 --
 
 ALTER TABLE ONLY activities
     ADD CONSTRAINT activities_pkey PRIMARY KEY (id);
 
 
-ALTER INDEX public.activities_pkey OWNER TO panic;
+ALTER INDEX public.activities_pkey OWNER TO times;
 
 --
--- Name: entries_pkey; Type: CONSTRAINT; Schema: public; Owner: panic; Tablespace: 
+-- Name: entries_pkey; Type: CONSTRAINT; Schema: public; Owner: times; Tablespace: 
 --
 
 ALTER TABLE ONLY entries
     ADD CONSTRAINT entries_pkey PRIMARY KEY (id);
 
 
-ALTER INDEX public.entries_pkey OWNER TO panic;
+ALTER INDEX public.entries_pkey OWNER TO times;
 
 --
--- Name: invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: panic; Tablespace: 
+-- Name: invoices_pkey; Type: CONSTRAINT; Schema: public; Owner: times; Tablespace: 
 --
 
 ALTER TABLE ONLY invoices
     ADD CONSTRAINT invoices_pkey PRIMARY KEY (id);
 
 
-ALTER INDEX public.invoices_pkey OWNER TO panic;
+ALTER INDEX public.invoices_pkey OWNER TO times;
 
 --
--- Name: projects_pkey; Type: CONSTRAINT; Schema: public; Owner: panic; Tablespace: 
+-- Name: projects_pkey; Type: CONSTRAINT; Schema: public; Owner: times; Tablespace: 
 --
 
 ALTER TABLE ONLY projects
     ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
 
 
-ALTER INDEX public.projects_pkey OWNER TO panic;
+ALTER INDEX public.projects_pkey OWNER TO times;
 
 --
 -- Name: public; Type: ACL; Schema: -; Owner: postgres
