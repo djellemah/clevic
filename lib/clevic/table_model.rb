@@ -248,7 +248,7 @@ class TableModel < Qt::AbstractTableModel
             begin
               value = index.gui_value
               unless value.nil?
-                field = @builder.fields[index.column]
+                field = field_for_index( index )
                 field.do_format( value )
               end
             rescue Exception => e
@@ -262,7 +262,7 @@ class TableModel < Qt::AbstractTableModel
           end
           
         when qt_text_alignment_role
-          @builder.fields[index.column].alignment
+          field_for_index( index ).alignment
 
         # these are just here to make debug output quieter
         when qt_size_hint_role;
@@ -274,7 +274,7 @@ class TableModel < Qt::AbstractTableModel
         # provide a tooltip when an empty relational field is encountered
         when qt_tooltip_role
           if index.metadata.type == :association
-            @builder.fields[index.column].delegate.if_empty_message
+            field_for_index( index ).delegate.if_empty_message
           end
           
         else
@@ -369,7 +369,7 @@ class TableModel < Qt::AbstractTableModel
       # TODO this only works with single-dotted paths
       when qt_paste_role
         if index.metadata.type == :association
-          field = @builder.fields[index.column]
+          field = field_for_index( index )
           association_class = field.class_name.constantize
           candidates = association_class.find( :all, :conditions => [ "#{field.attribute_path[1]} = ?", variant.value ] )
           case candidates.size
@@ -431,6 +431,10 @@ class TableModel < Qt::AbstractTableModel
     else
       []
     end
+  end
+  
+  def field_for_index( model_index )
+    @builder.fields[model_index.column]
   end
   
 end

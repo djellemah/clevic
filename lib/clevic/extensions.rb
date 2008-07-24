@@ -48,8 +48,12 @@ module Qt
   class ModelIndex
     # the value to be displayed in the gui for this index
     def gui_value
-      return nil if entity.nil?
-      entity.evaluate_path( attribute_path )
+      field.value_for( entity )
+    end
+    
+    # return the Clevic::Field for this index
+    def field
+      model.field_for_index( self )
     end
     
     # set the value returned from the gui, as whatever the underlying

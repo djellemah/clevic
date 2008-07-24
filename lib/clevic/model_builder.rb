@@ -30,8 +30,15 @@ For example, a the UI for a model called Entry would be defined like this:
     # :set is mandatory
     restricted  :vat, :label => 'VAT', :set => %w{ yes no all }, :tooltip => 'Is VAT included?'
     distinct    :description, :conditions => 'now() - date <= interval( 1 year )'
-    relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
-    relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+    
+    # for these, :format will be a dotted attribute accessor for the related
+    # ActiveRecord entity, in this case an instance of Account
+    relational  :debit, :format => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+    relational  :credit, :format => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+    
+    # or like this to have an on-the-fly transform
+    # item will be an instance of Account
+    relational  :credit, :format => lambda {|item| item.name.downcase}, :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
     
     # this is optional
     records :order => 'date,start'
@@ -83,12 +90,25 @@ class ModelBuilder
 
   # for foreign keys. Edited with a combo box using values from the specified
   # path on the foreign key model object
-  def relational( attribute, path, options = {} )
+  # if options[:format] has a value, it's used either as a block
+  # or as a dotted path
+  def relational( attribute, options = {}, &block )
+    unless options.has_key? :format
+      options[:format] = 'to_s'
+    end
+
     unless options.has_key? :class_name
       options[:class_name] = attribute.to_s.classify
     end
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.path = path
+    
+    # TODO could convert everything to a block here, even paths
+    if options[:format].kind_of?( Proc )
+      field.path_block = options[:format]
+    else
+      field.path = options[:format]
+    end
+    
     field.delegate = RelationalDelegate.new( @table_view, field.attribute_path, options )
     @fields << field
   end

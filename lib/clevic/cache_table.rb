@@ -111,7 +111,7 @@ class CacheTable < Array
     case model_class.connection.adapter_name
       when 'PostgreSQL'
         value ? 'true' : 'false'
-      else; 'like'
+      else
         value ? model_class.connection.quoted_true : model_class.connection.quoted_false
     end
   end

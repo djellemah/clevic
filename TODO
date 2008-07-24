@@ -1,4 +1,3 @@
-Need a way to have composites in dropdown. Pass a block?
 Make sure current record is saved when tab loses focus
 Times Ctrl-Shift-" should not copy date if it already exists, and should not copy time if it's a different date.
 Times Ctrl-Shift-" after it's done, tab doesn't change fields

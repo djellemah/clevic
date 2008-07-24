@@ -259,10 +259,13 @@ class DistinctDelegate < ComboDelegate
     # to be in the select list where distinct is involved
     conn = @ar_model.connection
     query =
-    if @options[:frequency]
-      query_order_frequency( conn, model_index )
-    else
-      query_order_description( conn, model_index )
+    case
+      when @options[:description]
+        query_order_description( conn, model_index )
+      when @options[:frequency]
+        query_order_frequency( conn, model_index )
+      else
+        query_order_frequency( conn, model_index )
     end
     rs = conn.execute( query )
     rs.each do |row|
@@ -304,16 +307,16 @@ end
 
 # Edit a relation from an id and display a list of relevant entries.
 #
-# attribute_path is the full dotted path to get from the entity in the
-# model to the values displayed in the combo box.
+# attribute is the method to call on the row entity to retrieve the related object.
 # 
 # The ids of the ActiveRecord models are stored in the item data
 # and the item text is fetched from them using attribute_path.
 class RelationalDelegate < ComboDelegate
-
-  def initialize( parent, attribute_path, options )
-    @model_class = ( options[:class_name] || attribute_path[0].to_s.classify ).constantize
-    @attribute_path = attribute_path[1..-1].join('.')
+  
+  def initialize( parent, attribute, options )
+    @model_class = ( options[:class_name] || attribute.to_s.classify ).constantize
+    # TODO this doesn't seem to be used
+    @attribute = attribute.to_s
     @options = options.clone
     @options[:conditions].gsub!( /true/, @model_class.connection.quoted_true )
     @options[:conditions].gsub!( /false/, @model_class.connection.quoted_false )
@@ -340,7 +343,7 @@ class RelationalDelegate < ComboDelegate
       if item
         item_index = editor.find_data( item.id.to_variant )
         if item_index == -1
-          editor.add_item( item[@attribute_path], item.id.to_variant )
+          add_to_list( editor, model_index, item )
         end
       end
     end
@@ -349,8 +352,12 @@ class RelationalDelegate < ComboDelegate
   def populate( editor, model_index )
     # add set of all possible related entities
     @model_class.find( :all, collect_finder_options( @options ) ).each do |x|
-      editor.add_item( x[@attribute_path], x.id.to_variant )
+      add_to_list( editor, model_index, x )
     end
+  end
+  
+  def add_to_list( editor, model_index, item )
+    editor.add_item( model_index.field.transform_attribute( item ), item.id.to_variant )
   end
   
   # send data to the editor

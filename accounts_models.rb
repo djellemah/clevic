@@ -1,7 +1,7 @@
 require 'clevic.rb'
 
 # db connection
-Clevic::DbOptions.connect( $options ) do
+Clevic::DbOptions.connect( $options = {} ) do
   if $options[:database].nil? || $options[:database].empty?
     database( debug? ? :accounts_test : :accounts )
   else
@@ -21,8 +21,8 @@ class Entry < ActiveRecord::Base
     Clevic::TableView.new( self, parent ).create_model do
       plain       :date, :sample => '88-WWW-99'
       distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26, :frequency => true
-      relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
-      relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      relational  :debit, :format => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      relational  :credit, :format => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan' do |item|
       plain       :amount, :sample => 999999.99
       distinct    :category
       plain       :cheque_number
@@ -94,6 +94,10 @@ class Account < ActiveRecord::Base
       
       records  :order => 'name,account_type'
     end
+  end
+  
+  def name_and_pastel
+    "#{name}:#{pastel_number}"
   end
 end
 

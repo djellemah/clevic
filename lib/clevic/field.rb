@@ -8,7 +8,8 @@ This defines a field in the UI, and how it hooks up to a field in the DB.
 class Field
   include QtFlags
   
-  attr_accessor :attribute, :path, :label, :delegate, :class_name, :alignment, :format, :tooltip
+  attr_accessor :attribute, :path, :label, :delegate, :class_name
+  attr_accessor :alignment, :format, :tooltip, :path_block
   attr_writer :sample
   
   # attribute is the symbol for the attribute on the model_class
@@ -53,6 +54,31 @@ EOF
     end
   end
   
+  # Return the attribute value for the given entity, which may
+  # be an ActiveRecord instance
+  # entity is an ActiveRecord instance
+  def value_for( entity )
+    return nil if entity.nil?
+    transform_attribute( entity.send( attribute ) )
+  end
+  
+  # apply path, or path_block, to the given
+  # attribute value. Otherwise just return
+  # attribute_value itself
+  def transform_attribute( attribute_value )
+    return nil if attribute_value.nil?
+    case
+      when !path_block.nil?
+        path_block.call( attribute_value )
+        
+      when !path.nil?
+        attribute_value.evaluate_path( path.split( /\./ ) )
+        
+      else
+        attribute_value
+    end
+  end
+  
   # return true if it's a date, a time or a datetime
   # cache result because the type won't change in the lifetime of the field
   def is_date_time?
@@ -70,6 +96,7 @@ EOF
     @model_class.connection.quote_column_name( meta.name )
   end
 
+  # return the result of the attribute + the path
   def column
     [attribute.to_s, path].compact.join('.')
   end
