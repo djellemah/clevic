@@ -20,12 +20,12 @@ class Entry < ActiveRecord::Base
   def self.ui( parent )
     Clevic::TableView.new( self, parent ).create_model do
       plain       :date, :sample => '28-Dec-08'
-      relational  :project, :format => 'project', :conditions => 'active = true', :order => 'lower(project)'
-      relational  :invoice, :format => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
+      relational  :project, :display => 'project', :conditions => 'active = true', :order => 'lower(project)'
+      relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
       plain       :start
       plain       :end
       plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
-      relational  :activity, :format => 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = true'
+      relational  :activity, :display => 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = true'
       distinct    :module, :tooltip => 'Module or sub-project'
       plain       :charge, :tooltip => 'Is this time billable?'
       distinct    :person, :tooltip => 'The person who did the work'

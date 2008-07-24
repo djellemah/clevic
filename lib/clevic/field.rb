@@ -28,7 +28,7 @@ EOF
     @model_class = model_class
     
     options.each do |key,value|
-      self.send( "#{key}=", value ) if respond_to?( key )
+      self.send( "#{key}=", value ) if respond_to?( "#{key}=" )
     end
     
     # default the label

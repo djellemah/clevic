@@ -93,9 +93,7 @@ class ModelBuilder
   # if options[:format] has a value, it's used either as a block
   # or as a dotted path
   def relational( attribute, options = {}, &block )
-    unless options.has_key? :format
-      options[:format] = 'to_s'
-    end
+    options[:display] ||= 'to_s'
 
     unless options.has_key? :class_name
       options[:class_name] = attribute.to_s.classify
@@ -103,10 +101,10 @@ class ModelBuilder
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
     
     # TODO could convert everything to a block here, even paths
-    if options[:format].kind_of?( Proc )
-      field.path_block = options[:format]
+    if options[:display].kind_of?( Proc )
+      field.path_block = options[:display]
     else
-      field.path = options[:format]
+      field.path = options[:display]
     end
     
     field.delegate = RelationalDelegate.new( @table_view, field.attribute_path, options )
