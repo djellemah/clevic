@@ -318,8 +318,10 @@ class RelationalDelegate < ComboDelegate
     # TODO this doesn't seem to be used
     @attribute = attribute.to_s
     @options = options.clone
-    @options[:conditions].gsub!( /true/, @model_class.connection.quoted_true )
-    @options[:conditions].gsub!( /false/, @model_class.connection.quoted_false )
+    unless @options[:conditions].nil?
+      @options[:conditions].gsub!( /true/, @model_class.connection.quoted_true )
+      @options[:conditions].gsub!( /false/, @model_class.connection.quoted_false )
+    end
     [ :class_name, :sample, :format ].each {|x| @options.delete x }
     super( parent )
   end
