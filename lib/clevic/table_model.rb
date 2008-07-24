@@ -162,11 +162,12 @@ class TableModel < Qt::AbstractTableModel
   end
   
   def flags( model_index )
+    retval = super
     # TODO don't return IsEditable if the model is read-only
-    retval = qt_item_is_editable | super( model_index )
     if model_index.metadata.type == :boolean
       retval = item_boolean_flags
     end
+    retval |= qt_item_is_editable.to_i unless model_index.field.read_only?
     retval
   end
   

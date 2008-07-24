@@ -8,7 +8,6 @@ wrap description, and allow Access-style zooming
 Undo deletes and other commands. Possibly via ActiveRecord callbacks?
 
 Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
-distinct should default to frequency
 search in relational fields doesn't work because the search value is compared to the id of the related record
 Use Webrick as a way to export CSV reports?
 See Ruport and Documatic for reports
@@ -50,7 +49,6 @@ make sure bsearch easier to install
 
 ORDER BY allow functions, ie lower(project)
 handle db errors
-test with sqlite
 easier way to run models, search LOAD_PATH
 
 generate models - DrySQL

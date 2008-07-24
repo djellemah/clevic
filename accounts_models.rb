@@ -20,9 +20,9 @@ class Entry < ActiveRecord::Base
   def self.ui( parent )
     Clevic::TableView.new( self, parent ).create_model do
       plain       :date, :sample => '88-WWW-99'
-      distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26, :frequency => true
-      relational  :debit, :display => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
-      relational  :credit, :display => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
+      relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      relational  :credit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
       plain       :amount, :sample => 999999.99
       distinct    :category
       plain       :cheque_number

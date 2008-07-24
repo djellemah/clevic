@@ -144,7 +144,7 @@ class Invoice < ActiveRecord::Base
   def self.ui( parent )
     Clevic::TableView.new( Invoice, parent ).create_model do
       plain :date
-      distinct :client, :frequency => true
+      distinct :client
       plain :invoice_number
       restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff', 'internal']
       restricted :billing, :set => %w{Hours Quote Internal}

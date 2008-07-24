@@ -10,12 +10,12 @@ class Field
   
   attr_accessor :attribute, :path, :label, :delegate, :class_name
   attr_accessor :alignment, :format, :tooltip, :path_block
-  attr_writer :sample
+  attr_writer :sample, :read_only
   
   # attribute is the symbol for the attribute on the model_class
   def initialize( attribute, model_class, options )
     # sanity checking
-    unless model_class.has_attribute?( attribute )
+    unless model_class.has_attribute?( attribute ) or model_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
 #{attribute} not found in #{model_class.name}. Possibilities are:
 #{model_class.attribute_names.join("\n")}
@@ -29,6 +29,13 @@ EOF
     
     options.each do |key,value|
       self.send( "#{key}=", value ) if respond_to?( "#{key}=" )
+    end
+    
+    # TODO could convert everything to a block here, even paths
+    if options[:display].kind_of?( Proc )
+      @path_block = options[:display]
+    else
+      @path = options[:display]
     end
     
     # default the label
@@ -106,6 +113,11 @@ EOF
     pieces = [ attribute.to_s ]
     pieces.concat( path.split( /\./ ) ) unless path.nil?
     pieces.map{|x| x.to_sym}
+  end
+  
+  # is the field read-only. Defaults to false.
+  def read_only?
+    @read_only || false
   end
   
   # format this value. Use strftime for date_time types, or % for everything else

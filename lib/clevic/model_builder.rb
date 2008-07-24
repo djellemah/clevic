@@ -31,6 +31,9 @@ For example, a the UI for a model called Entry would be defined like this:
     restricted  :vat, :label => 'VAT', :set => %w{ yes no all }, :tooltip => 'Is VAT included?'
     distinct    :description, :conditions => 'now() - date <= interval( 1 year )'
     
+    # this is a read-only field
+    plain       :origin, :read_only => true
+    
     # for these, :format will be a dotted attribute accessor for the related
     # ActiveRecord entity, in this case an instance of Account
     relational  :debit, :format => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
@@ -39,6 +42,19 @@ For example, a the UI for a model called Entry would be defined like this:
     # or like this to have an on-the-fly transform
     # item will be an instance of Account
     relational  :credit, :format => lambda {|item| item.name.downcase}, :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+    
+    # this is a read-only display field from a related table
+    # the Entry class should then define a method called currency
+    # which returns an object that responds to 'short'.
+    # You can also use a Proc for :display
+    plain :currency, :display => 'short', :label => 'Currency'
+    
+    # this is a read-only display field from a related table
+    # the Entry class should then define a method called currency
+    # which returns an object that responds to 'currency', which
+    # returns an object that responds to 'rate'.
+    # You can also use a Proc for :display
+    plain :some_field, :display => 'currency.rate', :label => 'Exchange Rate'
     
     # this is optional
     records :order => 'date,start'
@@ -70,6 +86,7 @@ class ModelBuilder
 
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {} )
+    options[:read_only] = true if options.has_key?( :display )
     @fields << Clevic::Field.new( attribute.to_sym, model_class, options )
   end
   
@@ -94,18 +111,10 @@ class ModelBuilder
   # or as a dotted path
   def relational( attribute, options = {}, &block )
     options[:display] ||= 'to_s'
-
     unless options.has_key? :class_name
-      options[:class_name] = attribute.to_s.classify
+      options[:class_name] = model_class.reflections[attribute].class_name || attribute.to_s.classify
     end
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    
-    # TODO could convert everything to a block here, even paths
-    if options[:display].kind_of?( Proc )
-      field.path_block = options[:display]
-    else
-      field.path = options[:display]
-    end
     
     field.delegate = RelationalDelegate.new( @table_view, field.attribute_path, options )
     @fields << field
