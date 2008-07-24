@@ -413,7 +413,13 @@ class TableView < Qt::TableView
   # If self.filter is false, use the data in the indexes to filter the data set;
   # otherwise turn filtering off.
   # Sets self.filter to true if filtering worked, false otherwise.
+  # indexes is a collection of Qt::ModelIndex
   def filter_by_indexes( indexes )
+    unless indexes[0].field.filterable?
+      emit status_text( "Can't filter on #{indexes[0].field.label}" )
+      return
+    end
+    
     save_entity = current_index.entity
     save_index = current_index
     

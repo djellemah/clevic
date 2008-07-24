@@ -98,6 +98,13 @@ EOF
     @model_class.columns_hash[attribute.to_s] || @model_class.reflections[attribute]
   end
 
+  # return true if this field can be used in a filter
+  # virtual fields (ie those that don't exist in this field's
+  # table) can't be filtered on.
+  def filterable?
+    !meta.nil?
+  end
+  
   # return the name of the field for this Field, quoted for the dbms
   def quoted_field
     @model_class.connection.quote_column_name( meta.name )
