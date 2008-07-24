@@ -2,6 +2,7 @@ require 'clevic.rb'
 
 # db connection
 Clevic::DbOptions.connect( $options ) do
+  # use a different db for testing, so real data doesn't get broken.
   if options[:database].nil? || options[:database].empty?
     database( debug? ? :accounts_test : :accounts )
   else

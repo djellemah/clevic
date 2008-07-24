@@ -42,16 +42,18 @@ the new item description is found in the table.</p>
 <pre><code>
 require 'clevic.rb'
 
-# db connection options
-$options ||= {}
-$options[:database] ||= $options[:debug] ? 'accounts_test' : 'accounts'
-$options[:adapter]  ||= 'postgresql'
-$options[:host] ||= 'localhost'
-$options[:username] ||= 'panic'
-$options[:password] ||= ''
+# db connection
+Clevic::DbOptions.connect( $options ) do
+  if options[:database].nil? || options[:database].empty?
+    database( debug? ? :accounts_test : :accounts )
+  else
+    database options[:database]
+  end
+  adapter :postgresql
+  username 'accounts'
+end
 
-class Entry < ActiveRecord::Base
-  include ActiveRecord::Dirty
+class Entry < Clevic::Record
   belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
 
@@ -59,9 +61,9 @@ class Entry < ActiveRecord::Base
   def self.ui( parent )
     Clevic::TableView.new( self, parent ).create_model do
       plain       :date, :sample => '88-WWW-99'
-      distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26, :frequency => true
-      relational  :debit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
-      relational  :credit, 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
+      relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      relational  :credit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
       plain       :amount, :sample => 999999.99
       distinct    :category
       plain       :cheque_number
@@ -116,8 +118,7 @@ class Entry < ActiveRecord::Base
   end
 end
 
-class Account < ActiveRecord::Base
-  include ActiveRecord::Dirty
+class Account < Clevic::Record  
   has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   
@@ -137,6 +138,7 @@ class Account < ActiveRecord::Base
 end
 
 # order of tab display
+$options ||= {}
 $options[:models] = [ Entry, Account ]
 
 </code></pre>

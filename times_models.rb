@@ -2,6 +2,7 @@ require 'clevic.rb'
 
 # db connection options
 db = Clevic::DbOptions.connect( $options ) do
+  # use a different db for testing, so real data doesn't get broken.
   database( debug? ? :times_test : :times )
   adapter :postgresql
   username 'times'

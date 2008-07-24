@@ -1,11 +1,9 @@
+Clevic::Record to keep track of ordering
 Make sure shortcuts don't edit a read-only field
-Times Ctrl-Shift-" should not copy date if it already exists, and should not copy time if it's a different date.
-Times Ctrl-Shift-" after it's done, tab doesn't change fields
-Times look up invoice for project leaves the wrong fields highlighted, and focus in the wrong field.
+Undo deletes and other commands. Possibly via ActiveRecord callbacks?
 
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 wrap description, and allow Access-style zooming
-Undo deletes and other commands. Possibly via ActiveRecord callbacks?
 
 Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
 search in relational fields doesn't work because the search value is compared to the id of the related record
@@ -112,5 +110,8 @@ restricted type for Account Type record
 Times
 -----
 
+Ctrl-Shift-" should not copy date if it already exists, and should not copy time if it's a different date.
+Ctrl-Shift-" after it's done, tab doesn't change fields
+look up invoice for project leaves the wrong fields highlighted, and focus in the wrong field.
 warnings on overlap times (in status bar)
 warnings on large intervals (in status bar)
