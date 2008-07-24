@@ -249,8 +249,7 @@ class TableModel < Qt::AbstractTableModel
             begin
               value = index.gui_value
               unless value.nil?
-                field = field_for_index( index )
-                field.do_format( value )
+                index.field.do_format( value )
               end
             rescue Exception => e
               puts e.backtrace
@@ -263,21 +262,23 @@ class TableModel < Qt::AbstractTableModel
           end
           
         when qt_text_alignment_role
-          field_for_index( index ).alignment
+          index.field.alignment
 
         # these are just here to make debug output quieter
         when qt_size_hint_role;
         when qt_background_role;
         when qt_font_role;
-        when qt_foreground_role;
+        when qt_foreground_role
+          Qt::Color.new( 'darkgray' ) if index.field.read_only?
         when qt_decoration_role;
         
         # provide a tooltip when an empty relational field is encountered
         when qt_tooltip_role
           if index.metadata.type == :association
-            field_for_index( index ).delegate.if_empty_message
+            index.field.delegate.if_empty_message
           end
           
+          'Read-only' if index.field.read_only?
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
           nil
@@ -370,7 +371,7 @@ class TableModel < Qt::AbstractTableModel
       # TODO this only works with single-dotted paths
       when qt_paste_role
         if index.metadata.type == :association
-          field = field_for_index( index )
+          field = index.field
           association_class = field.class_name.constantize
           candidates = association_class.find( :all, :conditions => [ "#{field.attribute_path[1]} = ?", variant.value ] )
           case candidates.size
@@ -416,8 +417,6 @@ class TableModel < Qt::AbstractTableModel
     conditions += ( " and " + bits[:sql] ) unless search_criteria.from_start?
     params = { :search_value => search_value }
     params.merge!( bits[:params] ) unless search_criteria.from_start?
-    #~ puts "conditions: #{conditions.inspect}"
-    #~ puts "params: #{params.inspect}"
     # find the first match
     entity = model_class.find(
       :first,

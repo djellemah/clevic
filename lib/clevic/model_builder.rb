@@ -146,8 +146,8 @@ class ModelBuilder
   def build
     # build the model with all it's collections
     # using @model here because otherwise the view's
-    # reference to this very same model is mysteriously
-    # set to nil
+    # reference to this very same model is garbage collected.
+    # TODO put @fields into TableModel, and access from there?
     @model = Clevic::TableModel.new( self )
     @model.object_name = @table_view.model_class.name
     @model.dots = @fields.map {|x| x.column }
@@ -157,7 +157,7 @@ class ModelBuilder
     
     # the data
     @model.collection = records
-    # fill in an empty record
+    # fill in an empty record for data entry
     @model.collection << model_class.new if @model.collection.size == 0
     
     # now set delegates

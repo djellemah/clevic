@@ -53,7 +53,7 @@ module Qt
     
     # return the Clevic::Field for this index
     def field
-      model.field_for_index( self )
+      @field ||= model.field_for_index( self )
     end
     
     # set the value returned from the gui, as whatever the underlying
