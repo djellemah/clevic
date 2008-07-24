@@ -6,7 +6,6 @@ module Qt
       "<Qt::KeyEvent text=#{text} key=#{key}"
     end
   end
-  
 end
 
 module Clevic
@@ -15,14 +14,6 @@ class ItemDelegate < Qt::ItemDelegate
   
   def initialize( parent )
     super
-    connect SIGNAL( 'closeEditor( QWidget *, QAbstractItemDelegate::EndEditHint )' ) do |widget, hint|
-      puts "ItemDelegate.closeEditor"
-      puts "widget: #{widget.inspect}"
-      puts "hint: #{hint.inspect}"
-    end
-    connect SIGNAL( 'commitData(QWidget*)' ) do |widget|
-      puts "ItemDelegate.commitData: #{widget.inspect}"
-    end
   end
   
   # This catches the event that begins the edit process.

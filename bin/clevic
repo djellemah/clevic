@@ -33,8 +33,10 @@ end
 
 args = oparser.parse( ARGV )
 
-require 'pp'
-pp $options
+if $options[:debug]
+  require 'pp'
+  pp $options
+end
 
 if args.size > 0
   $options[:definition] = args.shift

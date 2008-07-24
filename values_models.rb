@@ -8,8 +8,7 @@ Clevic::DbOptions.connect( $options ) do
 end
 
 # This is a read-only view, which is currently not implemented
-class Values < ActiveRecord::Base
-  include ActiveRecord::Dirty
+class Values < Clevic::Record
   set_table_name 'values'
   has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'

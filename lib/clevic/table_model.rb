@@ -246,7 +246,7 @@ class TableModel < Qt::AbstractTableModel
         when qt_background_role;
         when qt_font_role;
         when qt_foreground_role
-          Qt::Color.new( 'darkgray' ) if index.field.read_only?
+          Qt::Color.new( 'dimgray' ) if index.field.read_only?
         when qt_decoration_role;
         
         # provide a tooltip when an empty relational field is encountered

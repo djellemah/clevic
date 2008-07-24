@@ -23,8 +23,8 @@ Values have to_s called on them so they can be symbols or strings.
 class DbOptions
   attr_reader :options
   
-  def initialize( options = {} )
-    @options = options
+  def initialize( options = nil )
+    @options = options || {}
     # make sure the relevant entries exist, so method_missing works
     @options[:adapter] ||= ''
     @options[:host] ||= ''
@@ -66,7 +66,7 @@ class DbOptions
   #   end
   # the block is evaluated in the context of the a new DbOptions
   # object.
-  def self.connect( args, &block )
+  def self.connect( args = nil, &block )
     inst = self.new( args )
     # using the Rails implementation, included in Qt
     block.bind( inst )[*args]

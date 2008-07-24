@@ -7,8 +7,7 @@ Clevic::DbOptions.connect( $options ) do
 end
 
 # model definitions
-class Entry < ActiveRecord::Base
-  include ActiveRecord::Dirty
+class Entry < Clevic::Record
   belongs_to :invoice
   belongs_to :activity
   belongs_to :project
@@ -93,8 +92,7 @@ class Entry < ActiveRecord::Base
   end
 end
 
-class Project < ActiveRecord::Base
-  include ActiveRecord::Dirty
+class Project < Clevic::Record
   has_many :entries
 
   def self.ui( parent )
@@ -121,8 +119,7 @@ class Project < ActiveRecord::Base
 
 end
 
-class Activity < ActiveRecord::Base
-  include ActiveRecord::Dirty
+class Activity < Clevic::Record
   has_many :entries
 
   # define how fields are displayed
@@ -136,8 +133,7 @@ class Activity < ActiveRecord::Base
   end
 end
 
-class Invoice < ActiveRecord::Base
-  include ActiveRecord::Dirty
+class Invoice < Clevic::Record
   has_many :entries
 
   # define how fields are displayed

@@ -3,19 +3,15 @@ require 'clevic.rb'
 # db connection
 Clevic::DbOptions.connect( $options ) do
   if options[:database].nil? || options[:database].empty?
-    db = debug? ? :accounts_test : :accounts
-    puts "db: #{db.inspect}"
-    database( db )
+    database( debug? ? :accounts_test : :accounts )
   else
-    puts "options[:database]: #{options[:database].inspect}"
     database options[:database]
   end
   adapter :postgresql
   username 'accounts'
 end
 
-class Entry < ActiveRecord::Base
-  include ActiveRecord::Dirty
+class Entry < Clevic::Record
   belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
 
@@ -80,8 +76,7 @@ class Entry < ActiveRecord::Base
   end
 end
 
-class Account < ActiveRecord::Base
-  include ActiveRecord::Dirty
+class Account < Clevic::Record  
   has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   
@@ -97,10 +92,6 @@ class Account < ActiveRecord::Base
       
       records  :order => 'name,account_type'
     end
-  end
-  
-  def name_and_pastel
-    "#{name}:#{pastel_number}"
   end
 end
 

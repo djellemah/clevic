@@ -160,10 +160,34 @@ class Browser < Qt::Widget
   def find_models( models = $options[:models] )
     if models.nil? || models.empty?
       models = []
-      ObjectSpace.each_object( Class ) {|x| models << x if x.superclass == ActiveRecord::Base }
-      models
-    else
-      models
+      ObjectSpace.each_object( Class ) {|x| models << x if x.superclass == Clevic::Record }
+    end
+    models
+  end
+  
+  # define a default ui with plain fields for all
+  # columns (except id) in the model. Could combine this with
+  # DrySQL to automate the process.
+  def define_default_ui( model )
+    reflections = model.reflections.keys.map{|x| x.to_s}
+    ui_columns = model.columns.reject{|x| x.name == 'id' }.map do |x|
+      att = x.name.gsub( '_id', '' )
+      if reflections.include?( att )
+        att
+      else
+        x.name
+      end
+    end
+    
+    Clevic::TableView.new( model, tables_tab ).create_model do
+      ui_columns.each do |column|
+        if model.reflections.has_key?( column.to_sym )
+          relational column.to_sym
+        else
+          plain column.to_sym
+        end
+      end
+      records :order => 'id'
     end
   end
   
@@ -176,12 +200,13 @@ class Browser < Qt::Widget
     
     # Add all existing model objects as tabs, one each
     find_models( models ).each do |model|
+      tab = 
       if model.respond_to?( :ui )
-        tab = model.ui( tables_tab )
-        tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 20000 ) }
+        model.ui( tables_tab )
       else
-        raise "Can't build ui for #{model.name}. Provide a self.ui method."
+        define_default_ui( model )
       end
+      tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 20000 ) }
       tables_tab.add_tab( tab, translate( model.name.humanize ) )
     end
   end

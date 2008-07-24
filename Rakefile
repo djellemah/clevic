@@ -54,7 +54,7 @@ end
 desc "Runs Clevic in warning mode, with test databases and debug flag on"
 task :run => :ui do |t|
   ARGV.shift()
-  exec "ruby -w -Ilib bin/clevic -D #{ARGV.join(' ')}"
+  exec "ruby -Ilib bin/clevic #{ARGV.join(' ')}"
 end
 
 desc "Runs Clevic in warning mode, with test databases and debug flag on"
