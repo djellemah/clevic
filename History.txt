@@ -1,3 +1,146 @@
+2008-07-24 21:07  panic
+
+	* TODO, accounts_models.rb, times_models.rb, website/index.html:
+	  notes and comments
+
+2008-07-24 21:03  panic
+
+	* sql/accounts.sql, sql/times.sql:
+	  remove panic
+
+2008-07-24 21:00  panic
+
+	* Rakefile, accounts_models.rb, bin/clevic, lib/clevic.rb,
+	  lib/clevic/browser.rb, lib/clevic/db_options.rb,
+	  lib/clevic/item_delegate.rb, lib/clevic/record.rb,
+	  lib/clevic/table_model.rb, minimal_models.rb, times_models.rb,
+	  times_sqlite_model.rb, values_models.rb:
+	  Inherit models from Clevic::Record. Allow for minimal model
+	  definitions.
+
+2008-07-24 19:03  panic
+
+	* TODO, accounts_models.rb, bin/clevic, lib/clevic/cache_table.rb,
+	  lib/clevic/db_options.rb, lib/clevic/item_delegate.rb,
+	  lib/clevic/table_model.rb, lib/clevic/table_view.rb,
+	  times_models.rb, times_sqlite_model.rb:
+	  make sure current record is saved when tab loses focus
+
+2008-07-24 15:59  panic
+
+	* TODO, lib/clevic/field.rb, lib/clevic/table_view.rb:
+	  don't allow filtering on virtual fields
+
+2008-07-24 13:54  panic
+
+	* lib/clevic/extensions.rb, lib/clevic/model_builder.rb,
+	  lib/clevic/table_model.rb, lib/clevic/ui/browser.ui:
+	  UI and code tweaks
+
+2008-07-24 13:38  panic
+
+	* TODO, accounts_models.rb, lib/clevic/field.rb,
+	  lib/clevic/model_builder.rb, lib/clevic/table_model.rb,
+	  times_models.rb, times_sqlite_model.rb:
+	  Allow display of related fields as read-only. New read-only
+	  attribute for fields. Distinct now default sorts by frequency.
+	  All field types can now use a Proc for :display.
+
+2008-07-24 11:35  panic
+
+	* accounts_models.rb, lib/clevic/field.rb,
+	  lib/clevic/model_builder.rb, times_models.rb,
+	  times_sqlite_model.rb:
+	  fix some issue with display of relational fields
+
+2008-07-24 10:50  panic
+
+	* lib/clevic/delegates.rb:
+	  check before doing true/false gsub
+
+2008-07-24 10:44  panic
+
+	* TODO, accounts_models.rb, lib/clevic/cache_table.rb,
+	  lib/clevic/delegates.rb, lib/clevic/extensions.rb,
+	  lib/clevic/field.rb, lib/clevic/model_builder.rb,
+	  lib/clevic/table_model.rb, lib/clevic/version.rb,
+	  times_models.rb, times_sqlite_model.rb:
+	  allow for blocks to format relational delegates
+
+2008-07-23 09:46  panic
+
+	* Rakefile, TODO, accounts_models.rb, lib/clevic/db_options.rb,
+	  times_models.rb, values_models.rb:
+	  remove username. Do clobber list.
+
+2008-07-21 18:12  panic
+
+	* TODO:
+	  update todo
+
+2008-07-17 18:41  panic
+
+	* Rakefile, TODO, bin/clevic, config/hoe.rb,
+	  lib/clevic/cache_table.rb, lib/clevic/db_options.rb,
+	  lib/clevic/table_model.rb, lib/clevic/version.rb:
+	  fix search with sqlite
+
+2008-07-17 16:50  panic
+
+	* TODO, lib/clevic/db_options.rb, lib/clevic/delegates.rb,
+	  lib/clevic/field.rb, lib/clevic/item_delegate.rb, sql/times.sql,
+	  sql/times_sqlite.sql, times_models.rb, times_sqlite_model.rb:
+	  check that it works with sqlite
+
+2008-07-17 11:15  panic
+
+	* accounts_models.rb:
+	  really fix use of test database
+
+2008-07-17 10:48  panic
+
+	* Manifest.txt:
+	  add necessary generated files to Manifest
+
+2008-07-07 20:42  panic
+
+	* Manifest.txt, website/javascripts/rounded_corners_lite.inc.js:
+	  fix manifest
+
+2008-07-07 20:39  panic
+
+	* INSTALL, Rakefile, accounts_models.rb, bin/clevic,
+	  config/jamis.rb, lib/clevic.rb, lib/clevic/cache_table.rb,
+	  lib/clevic/db_options.rb, lib/clevic/version.rb, template,
+	  times_models.rb, values_models.rb:
+	  new DbOptions class. Move jamis.rb into config.
+
+2008-07-07 19:39  panic
+
+	* README.txt, Rakefile, accounts_models.rb, config, config/hoe.rb,
+	  config/requirements.rb, lib/clevic/version.rb, script,
+	  script/console, script/destroy, script/generate,
+	  script/txt2html, tasks, tasks/website.rake, values_models.rb,
+	  website, website/index.html, website/index.txt,
+	  website/javascripts,
+	  website/javascripts/rounded_corners_lite.inc.js,
+	  website/screenshot.png, website/stylesheets,
+	  website/stylesheets/screen.css, website/template.html.erb:
+	  pull in rubigen scripts and things from another project
+
+2008-07-05 20:53  panic
+
+	* README.txt:
+	  update README slightly
+
+2008-07-04 20:16  panic
+
+	* History.txt, Manifest.txt, README.txt, Rakefile, TODO,
+	  bin/clevic, lib/clevic/db_options.rb,
+	  lib/clevic/model_builder.rb, lib/clevic/version.rb, template,
+	  template/jamis.rb:
+	  improve docs and comments. Do gem dependencies.
+
 2008-06-26 14:56  panic
 
 	* README.txt:

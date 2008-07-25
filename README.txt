@@ -6,30 +6,21 @@ http://clevic.rubyforge.org/
 
 Database framework and Qt Model/View GUI for data capture and
 editing of tables in a pre-existing relational DBMS. Thanks to ActiveRecord,
-Postgresql, Mysql and so on are supported. Has only been tested with Postgres.
-
-There is a mild focus on reducing keystrokes for repetitive data capture,
-so it provides
-nice keyboard shortcuts for all sorts of things. Model (table) objects
-are extensible to allow for model (table) specific cleverness, like
-auto-filling-in of fields.
+Postgresql, Mysql and so on are supported. Has been tested with Postgres and sqlite.
 
 Start with Clevic::Browser
 
 == FEATURES:
 
+=== User Interface
+
+* edit data in a table
+* in-place combo boxes for choosing values from related tables (foreign keys)
+* distinct combo boxes to list previous values for a field
+* display read-only fields from related tables
 * Filter by current field.
 * search by field contents.
-* uses ActiveRecord for data access. Does *not* use the Qt SQL models.
-* sensible caching to handle large data sets without unnecessary memory and cpu usage
-* in-place Combo boxes for related table and foreign keys
-* distinct combo boxes to list previous values for a field
 * cut and paste in CSV format
-* sortable by row headers (not yet)
-* color highlighting of fields and records on definable criteria (not yet).
-* extensions to various Qt classes to make db programming easier.
-* leverages SQL whenever possible to handle large datasets, sorting, filtering
-  etc. So it's probably not suitable for talking to a remote db across a slow link.
 
 === Shortcuts:
 
@@ -43,11 +34,32 @@ Start with Clevic::Browser
 
 === Model definition:
 
-Right now, models must be defined in Ruby. The framework provides
-an easy Rails-migrations-like syntax for that.
-Start with account_models.rb and times_models.rb, with associated SQL
-schemas in the sql subdirectory. For implementation and more extensive
+Models and their UI representation must be defined in Ruby. A class that
+inherits from Clevic::Record (which itself inherits from ActiveRecord::Base) will provide
+a minimally functional UI.
+Beyond that, the framework provides
+an easy Rails-migrations-like syntax for defining more complex and useful behaviour.
+
+In the models/ subdirectory, start with minimal_models.rb.
+account_models.rb and times_models.rb provide definitions for more real-world examples.
+Associated SQL schemas are in the sql subdirectory.
+
+For implementation and more extensive
 comments, see Clevic::Browser and Clevic::ModelBuilder.
+
+=== Framework
+
+* use blocks to format values for particular fields.
+* sensible caching to handle large data sets without unnecessary memory and cpu usage
+* extensions to various Qt classes to make db programming easier.
+* uses ActiveRecord for data access. Does *not* use the Qt SQL models.
+* leverages SQL whenever possible to handle large datasets, sorting, filtering
+  etc. So it's probably not suitable for talking to a remote db across a slow link.
+
+=== Plans
+
+* sortable by row headers
+* color highlighting of fields and records on definable criteria
 
 == PROBLEMS:
 
@@ -62,7 +74,7 @@ See TODO file.
 === Gems
 * fastercsv
 * ruby-qt4
-* qtext (not available on rubyforge yet. Download from http://www.semiosix.com/qtext-0.2.0.gem)
+* qtext
 * ActiveRecord
 
 === Other

@@ -3,7 +3,6 @@ Manifest.txt
 README.txt
 Rakefile
 TODO
-accounts_models.rb
 bin/clevic
 bin/import-times
 config/hoe.rb
@@ -21,6 +20,7 @@ lib/clevic/field.rb
 lib/clevic/item_delegate.rb
 lib/clevic/model_builder.rb
 lib/clevic/model_column.rb
+lib/clevic/record.rb
 lib/clevic/search_dialog.rb
 lib/clevic/table_model.rb
 lib/clevic/table_view.rb
@@ -30,15 +30,19 @@ lib/clevic/ui/icon.png
 lib/clevic/ui/search_dialog.ui
 lib/clevic/ui/search_dialog_ui.rb
 lib/clevic/version.rb
+models/accounts_models.rb
+models/minimal_models.rb
+models/times_models.rb
+models/times_sqlite_models.rb
+models/values_models.rb
 script/console
 script/destroy
 script/generate
 script/txt2html
 sql/accounts.sql
 sql/times.sql
+sql/times_sqlite.sql
 tasks/website.rake
-times_models.rb
-values_models.rb
 website/index.html
 website/index.txt
 website/screenshot.png

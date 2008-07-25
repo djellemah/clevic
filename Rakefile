@@ -121,3 +121,9 @@ Rake::RDocTask.new(:docs) do |rd|
 
   rd.options << "-t #{title}"
 end
+
+desc "Update History.txt from the SVN log"
+task :history do |t|
+  ARGV.shift
+  exec "svn2cl --break-before-msg -o History.txt #{ARGV.join(' ')}"
+end
