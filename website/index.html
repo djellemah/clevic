@@ -25,12 +25,39 @@
   </script>
 </head>
 <body>
+
 <div id="main">
 	<h1>Clevic</h1>
 	<p><a href="rdoc">RDoc</a> | <a href="http://rubyforge.org/projects/clevic/">Rubyforge Project</a></p>
 
 
-	<p>Screenshot of a table with the foreign-key dropdown in place. Tabs contain
+	<p>Minimal UI definition</p>
+
+
+<pre><code>
+require 'clevic.rb'
+
+# db connection
+Clevic::DbOptions.connect do
+  database 'accounts_test'
+  adapter :postgresql
+  username 'accounts'
+end
+
+# minimal definition to get combo boxes to show up
+class Entry &lt; Clevic::Record
+  belongs_to :debit, :class_name =&gt; 'Account', :foreign_key =&gt; 'debit_id'
+  belongs_to :credit, :class_name =&gt; 'Account', :foreign_key =&gt; 'credit_id'
+end
+
+# minimal definition to get sensible values in combo boxes
+class Account &lt; Clevic::Record
+  def to_s; name; end
+end
+
+</code></pre>
+
+	<p>Screenshot of a more fully defined UI with the foreign-key dropdown in place. Tabs contain
 the two tables, model definition file is below the screenshot. The Entry
 model has some code to do update the credit and debit fields when
 the new item description is found in the table.</p>
@@ -44,6 +71,7 @@ require 'clevic.rb'
 
 # db connection
 Clevic::DbOptions.connect( $options ) do
+  # use a different db for testing, so real data doesn't get broken.
   if options[:database].nil? || options[:database].empty?
     database( debug? ? :accounts_test : :accounts )
   else
