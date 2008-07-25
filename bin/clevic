@@ -20,7 +20,7 @@ BANNER
 oparser.separator ''
 
 oparser.on( '-H', '--host HOST', 'RDBMS host', String ) { |o| $options[:host] = o }
-oparser.on( '-u', '--user USERNAME', String ) { |o| $options[:user] = o }
+oparser.on( '-u', '--user USERNAME', String ) { |o| $options[:username] = o }
 oparser.on( '-p', '--pass PASSWORD', String ) { |o| $options[:password] = o }
 oparser.on( '-t', '--table TABLE', 'Table to display', String ) { |o| $options[:table] = o }
 oparser.on( '-d', '--database DATABASE', 'Database name', String ) { |o| $options[:database] = o }

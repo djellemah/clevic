@@ -73,7 +73,7 @@ class DbOptions
   # variable
   def method_missing(meth, *args, &block)
     if @options.has_key? meth.to_sym
-      @options[meth.to_sym] = args[0].to_s
+      @options[meth.to_sym] = args[0].to_s if @options[meth.to_sym].empty?
     else
       super
     end
