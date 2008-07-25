@@ -31,11 +31,6 @@ class DbOptions
     @options[:username] ||= ''
     @options[:password] ||= ''
     @options[:database] ||= ''
-    @options[:models] ||= []
-  end
-  
-  def models=( arr )
-    @options[:models] ||= arr
   end
   
   def connect( *args, &block )

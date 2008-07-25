@@ -152,7 +152,3 @@ class Invoice < Clevic::Record
     end
   end
 end
-
-# tab widget order
-$options ||= {}
-$options[:models] = [ Entry, Invoice, Project, Activity ]

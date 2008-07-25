@@ -8,8 +8,6 @@ Database framework and Qt Model/View GUI for data capture and
 editing of tables in a pre-existing relational DBMS. Thanks to ActiveRecord,
 Postgresql, Mysql and so on are supported. Has been tested with Postgres and sqlite.
 
-Start with Clevic::Browser
-
 == FEATURES:
 
 === User Interface

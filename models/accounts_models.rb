@@ -95,7 +95,3 @@ class Account < Clevic::Record
     end
   end
 end
-
-# order of tab display
-$options ||= {}
-$options[:models] = [ Entry, Account ]

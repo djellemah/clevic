@@ -1,4 +1,3 @@
-Clevic::Record to keep track of ordering
 Make sure shortcuts don't edit a read-only field
 generate models - DrySQL
 Ctrl-PgDn to last row in this column. Also extend selection

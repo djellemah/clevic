@@ -52,6 +52,7 @@ class Browser < Qt::Widget
     
     # as an example
     #~ tables_tab.connect SIGNAL( 'currentChanged(int)' ) { |index| puts "other current_changed: #{index}" }
+    load_models
   end
   
   # activated by Ctrl-D for debugging
@@ -155,13 +156,10 @@ class Browser < Qt::Widget
     Qt::Application.translate("Browser", st, nil, Qt::Application::UnicodeUTF8)
   end
 
-  # return the list of models in $options[:models] or find them
-  # as descendants of ActiveRecord::Base
-  def find_models( models = $options[:models] )
-    if models.nil? || models.empty?
-      models = []
-      ObjectSpace.each_object( Class ) {|x| models << x if x.superclass == Clevic::Record }
-    end
+  # return the list of descendants of ActiveRecord::Base
+  def find_models
+    models = []
+    ObjectSpace.each_object( Class ) {|x| models << x if x.ancestors.include?( Clevic::Record ) }
     models
   end
   
@@ -195,11 +193,11 @@ class Browser < Qt::Widget
   #
   # models parameter can be an array of Model objects, in order of display.
   # if models is nil, find_models is called
-  def open( *models )
-    models = $options[:models] if models.empty?
+  def load_models
+    models = Clevic::Record.models || find_models
     
     # Add all existing model objects as tabs, one each
-    find_models( models ).each do |model|
+    models.each do |model|
       tab = 
       if model.respond_to?( :ui )
         model.ui( tables_tab )

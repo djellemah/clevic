@@ -94,6 +94,26 @@ class Entry < Clevic::Record
   end
 end
 
+class Invoice < Clevic::Record
+  has_many :entries
+
+  # define how fields are displayed
+  def self.ui( parent )
+    Clevic::TableView.new( self, parent ).create_model do
+      plain :date
+      distinct :client
+      plain :invoice_number
+      restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff', 'internal']
+      restricted :billing, :set => %w{Hours Quote Internal}
+      plain :quote_date
+      plain :quote_amount
+      plain :description
+      
+      records :order => 'invoice_number'
+    end
+  end
+end
+
 class Project < Clevic::Record
   has_many :entries
 
@@ -134,27 +154,3 @@ class Activity < Clevic::Record
     end
   end
 end
-
-class Invoice < Clevic::Record
-  has_many :entries
-
-  # define how fields are displayed
-  def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do
-      plain :date
-      distinct :client
-      plain :invoice_number
-      restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff', 'internal']
-      restricted :billing, :set => %w{Hours Quote Internal}
-      plain :quote_date
-      plain :quote_amount
-      plain :description
-      
-      records :order => 'invoice_number'
-    end
-  end
-end
-
-# tab widget order
-$options ||= {}
-$options[:models] = [ Entry, Invoice, Project, Activity ]
