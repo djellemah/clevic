@@ -86,6 +86,11 @@ EOF
     end
   end
   
+  # return true if this is a field for a related table, false otherwise.
+  def is_association?
+    meta.type == ActiveRecord::Reflection::AssociationReflection
+  end
+  
   # return true if it's a date, a time or a datetime
   # cache result because the type won't change in the lifetime of the field
   def is_date_time?
@@ -93,7 +98,8 @@ EOF
   end
   
   # return ActiveRecord::Base.columns_hash[attribute]
-  # in other words an ActiveRecord::ConnectionAdapters::Column object
+  # in other words an ActiveRecord::ConnectionAdapters::Column object,
+  # or an ActiveRecord::Reflection::AssociationReflection object
   def meta
     @model_class.columns_hash[attribute.to_s] || @model_class.reflections[attribute]
   end

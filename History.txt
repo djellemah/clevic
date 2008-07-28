@@ -1,3 +1,42 @@
+2008-07-25 12:04  panic
+
+	* bin/clevic, lib/clevic/db_options.rb:
+	  fix username not being overridden by command-line options
+
+2008-07-25 11:55  panic
+
+	* README.txt, Rakefile, TODO, bin/clevic, config/hoe.rb,
+	  lib/clevic/browser.rb, lib/clevic/db_options.rb,
+	  lib/clevic/record.rb, models/accounts_models.rb,
+	  models/times_models.rb, models/times_sqlite_models.rb:
+	  Automatically keep track of model definition order, and show
+	  tabs in that order. Group models under one Rake namespace.
+
+2008-07-25 11:35  panic
+
+	* website/index.html, website/index.txt,
+	  website/template.html.erb:
+	  more documentation
+
+2008-07-25 11:22  panic
+
+	* TODO:
+	  rearrange TODO
+
+2008-07-25 11:17  panic
+
+	* History.txt, Manifest.txt, README.txt, Rakefile, script/console:
+	  update packaging
+
+2008-07-24 21:09  panic
+
+	* accounts_models.rb, minimal_models.rb, models,
+	  models/accounts_models.rb, models/minimal_models.rb,
+	  models/times_models.rb, models/times_sqlite_models.rb,
+	  models/values_models.rb, times_models.rb, times_sqlite_model.rb,
+	  values_models.rb:
+	  move model definition files to their own directory
+
 2008-07-24 21:07  panic
 
 	* TODO, accounts_models.rb, times_models.rb, website/index.html:

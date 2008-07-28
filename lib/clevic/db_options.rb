@@ -12,8 +12,8 @@ connection to a particular database. Like this:
   end
 
 When the block ends, a check is done to see that the :database key
-exists. If not and exception is thrown. Finally the relevant calls to
-ActiveRecord are performed.
+exists. If not, an exception is thrown. Finally the relevant calls to
+establish the ActiveRecord connection are performed.
 
 Method calls are translated to insertions into a hash with the same
 key as the method being called. The hash is initialised
@@ -87,10 +87,13 @@ end
 
 end
 
-# workaround for the date freeze issue
-class Date
-  def freeze
-    self
+# workaround for the date freeze issue, if it exists
+begin
+  Date.new.freeze.to_s
+rescue TypeError
+  class Date
+    def freeze
+      self
+    end
   end
 end
-

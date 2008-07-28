@@ -130,11 +130,12 @@ class CacheTable < Array
     # build case statement, including recusion
     st = <<-EOF
 case
-  when #{quote_column attribute} #{operator} :#{attribute} then #{sql_boolean true}
-  when #{quote_column attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
+  when #{model_class.table_name}.#{quote_column attribute} #{operator} :#{attribute} then #{sql_boolean true}
+  when #{model_class.table_name}.#{quote_column attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
   else #{sql_boolean false}
 end
 EOF
+    # indent
     st.gsub!( /^/, '  ' * index )
   end
   

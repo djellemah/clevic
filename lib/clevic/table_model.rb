@@ -379,6 +379,7 @@ class TableModel < Qt::AbstractTableModel
   end
   
   # return a set of indexes that match the search criteria
+  # TODO this implementation is very un-ruby.
   def search( start_index, search_criteria )
     # get the search value parameter, in SQL format
     search_value =
@@ -388,17 +389,32 @@ class TableModel < Qt::AbstractTableModel
       "%#{search_criteria.search_text}%"
     end
 
-    # build up the conditions
+    # build up the ordering conditions
     bits = collection.build_sql_find( start_index.entity, search_criteria.direction )
-    conditions = "#{model_class.connection.quote_column_name( start_index.field_name )} #{like_operator} :search_value"
+    
+    # do the conditions for the search value
+    conditions =
+    if start_index.field.is_association?
+      # for related tables
+      # TODO this will only work with a path value with no dots
+      "#{start_index.field.path} #{like_operator} :search_value"
+    else
+      # for this table
+      "#{model_class.connection.quote_column_name( start_index.field_name )} #{like_operator} :search_value"
+    end
+    
+    # add ordering conditions
     conditions += ( " and " + bits[:sql] ) unless search_criteria.from_start?
+    
     params = { :search_value => search_value }
     params.merge!( bits[:params] ) unless search_criteria.from_start?
+    
     # find the first match
     entity = model_class.find(
       :first,
       :conditions => [ conditions, params ],
-      :order => search_criteria.direction == :forwards ? collection.order : collection.reverse_order
+      :order => search_criteria.direction == :forwards ? collection.order : collection.reverse_order,
+      :joins => ( start_index.field.meta.name if start_index.field.is_association? )
     )
     
     # return matched indexes

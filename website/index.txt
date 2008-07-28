@@ -2,7 +2,7 @@ h1. Clevic
 
 "RDoc":rdoc | "Rubyforge Project":http://rubyforge.org/projects/clevic/
 
-Code for inimal UI definition
+Code for minimal UI definition
 
 <pre><code>
 <%= File.read 'models/minimal_models.rb' %>

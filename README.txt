@@ -1,12 +1,15 @@
 = clevic
 
-http://clevic.rubyforge.org/
+http://clevic.rubyforge.org
 
 == DESCRIPTION:
 
 Database framework and Qt Model/View GUI for data capture and
-editing of tables in a pre-existing relational DBMS. Thanks to ActiveRecord,
-Postgresql, Mysql and so on are supported. Has been tested with Postgres and sqlite.
+editing of tables in a pre-existing relational DBMS.
+
+Using ActiveRecord means Clevic supports Postgresql, Mysql and so on. It's been tested with Postgres and sqlite.
+
+Using Qt means it runs on Linux, Windows and OSX.
 
 == FEATURES:
 

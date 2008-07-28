@@ -275,21 +275,19 @@ class TableView < Qt::TableView
         selection_model.clear
         self.current_index = new_row_index
       
-      # handle deletion of entire rows
+      # handle clear cells / delete rows
       when event.delete?
         # translate from ModelIndex objects to row indices
         rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
         unless rows.empty?
           # header rows are selected, so delete them
           model.remove_rows( rows ) 
-          # make sure no other handlers get this event
-          return true
         else
           # otherwise various cells are selected, so delete the cells
           delete_cells
-          # nobody else handles this
-          return true
         end
+        # make sure no other handlers get this event
+        return true
         
       # f4 should open editor immediately
       when event.f4?

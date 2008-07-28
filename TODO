@@ -5,17 +5,20 @@ sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder
 - layoutChanged
 
 search with acts_as_searchable and hyperestraier
-acts_as_trashable to undo deletes
-implement undo of field changes
-Undo deletes and other commands. Possibly via ActiveRecord callbacks?
+Criteria for SQL statement building http://criteria.rubyforge.org/
+acts_as_shellable looks nices
+ActiveMDB for migrating.
+undo
+- acts_as_trashable to undo deletes
+- other commands. Possibly via ActiveRecord callbacks?
+- Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
 
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 wrap description, and allow Access-style zooming
 
-Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
-search in relational fields doesn't work because the search value is compared to the id of the related record
 Use Webrick as a way to export CSV reports?
 See Ruport and Documatic for reports
+Ruby Datavision Bridge for reports
 
 generate models - DrySQL
 Ctrl-PgDn to last row in this column. Also extend selection
