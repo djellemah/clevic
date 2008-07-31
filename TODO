@@ -1,5 +1,12 @@
 Make sure shortcuts don't edit a read-only field
+Fix menus.
+Put shortcuts in menus.
 generate models - DrySQL
+SqlCache
+SqlStatement
+Csv2Sql
+QueryBuilder
+generate schema from definition? See rubyforge
 Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 - layoutChanged
@@ -12,15 +19,10 @@ undo
 - acts_as_trashable to undo deletes
 - other commands. Possibly via ActiveRecord callbacks?
 - Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
+- Use Transaction::Simple?
 
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 wrap description, and allow Access-style zooming
-
-Use Webrick as a way to export CSV reports?
-See Ruport and Documatic for reports
-Ruby Datavision Bridge for reports
-
-generate models - DrySQL
 Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 - layoutChanged
@@ -52,6 +54,12 @@ QAbstractItemView::ScrollHint
     \value PositionAtTop  Scroll to position the item at the top of the viewport.
     \value PositionAtBottom  Scroll to position the item at the bottom of the viewport.
     \value PositionAtCenter  Scroll to position the item at the center of the viewport.
+
+Reports
+-------
+Use Webrick as a way to export CSV reports?
+See Ruport and Documatic for reports
+Ruby Datavision Bridge for reports
 
 OSX
 ---
@@ -85,7 +93,7 @@ shortcut sets, depending on which OS you're used. use QKeyEvent::matches ( QKeyS
 
 Doing data capture, sort by id, but unfilter reverts to date/id rather than entry order
 optional warnings for back-dated entries. Highlighting 
-make sure bsearch easier to install
+make bsearch easier to install
 
 handle db errors
 easier way to run models, search LOAD_PATH

@@ -34,6 +34,43 @@ class TableView < Qt::TableView
     
     # turn off "Object#type deprecated" messages
     $VERBOSE = nil
+    
+    init_actions
+    self.context_menu_policy = Qt::ActionsContextMenu
+    puts "actions: #{actions.inspect}"
+  end
+  
+  def contextMenuEvent( event )
+    puts "event: #{event.inspect}"
+  end
+  
+  def new_action( name = '', text = '' )
+    action = Qt::Action.construct_exec( self ) do
+      setObjectName name
+      setText text
+    end
+    self.add_action action
+    action
+  end
+  
+  def init_actions
+    @action_cut = new_action "action_cut", 'Cu&t'
+    @action_copy = new_action "action_copy", '&Copy'
+    @action_paste = new_action "action_paste", '&Paste'
+    @action_filter = new_action "action_filter", 'Fil&ter'
+    @action_filter.checkable = true
+    @action_find = new_action "action_find", '&Find'
+    @action_dump = new_action "action_dump", 'D&ump'
+    @action_refresh = new_action "action_refresh", '&Refresh'
+    @action_highlight = new_action "action_highlight", '&Highlight'
+    @action_highlight.visible = false
+    @action_find_next = new_action "action_find_next", 'Find &Next'
+    @action_new_row = new_action "action_new_row", 'New Ro&w'
+    @action_ditto = new_action "action_ditto", '&Ditto'
+    @action_ditto_right = new_action "action_ditto_right", 'Ditto R&ight'
+    @action_ditto_left = new_action "action_ditto_left", '&Ditto L&eft'
+    @action_insert_date = new_action "action_insert_date", 'Insert Date'
+    @action_open_editor = new_action "action_open_editor", '&Open Editor'
   end
   
   def create_model( &block )

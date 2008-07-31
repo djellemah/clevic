@@ -38,26 +38,34 @@ class Browser < Qt::Widget
     @layout.main_widget.layout.add_widget @tables_tab
     @tables_tab.tab_bar.focus_policy = Qt::NoFocus
     
-    # connect slots
+    # hide the file menu, for now
+    @layout.menubar.remove_action( @layout.menu_file.menu_action )
+    
+    # actions for browser
+    @layout.action_next.connect       SIGNAL( 'triggered()' ),          &method( :next_tab )
+    @layout.action_previous.connect   SIGNAL( 'triggered()' ),          &method( :previous_tab )
+
+    # actions for current tab
+    @layout.action_dump.visible = $options[:debug]
     @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
     @layout.action_refresh.connect    SIGNAL( 'triggered()' ),          &method( :refresh_table )
     @layout.action_filter.connect     SIGNAL( 'triggered(bool)' ),      &method( :filter_by_current )
-    @layout.action_next.connect       SIGNAL( 'triggered()' ),          &method( :next_tab )
-    @layout.action_previous.connect   SIGNAL( 'triggered()' ),          &method( :previous_tab )
     @layout.action_find.connect       SIGNAL( 'triggered()' ),          &method( :find )
     @layout.action_find_next.connect  SIGNAL( 'triggered()' ),          &method( :find_next )
     @layout.action_new_row.connect    SIGNAL( 'triggered()' ),          &method( :new_row )
     
     tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
     
-    # as an example
-    #~ tables_tab.connect SIGNAL( 'currentChanged(int)' ) { |index| puts "other current_changed: #{index}" }
     load_models
+    
+    @layout.action_ditto.connect     SIGNAL( 'triggered()' ) do
+      puts "ditto"
+    end
   end
   
-  # activated by Ctrl-D for debugging
+  # activated by Ctrl-Shift-D for debugging
   def dump
-    puts "table_view.model: #{table_view.model.inspect}" if table_view.class == Clevic::TableView
+    puts "table_view.current_index.entity: #{table_view.current_index.entity.inspect}"
   end
   
   # return the Clevic::TableView object in the currently displayed tab
@@ -168,12 +176,13 @@ class Browser < Qt::Widget
   # DrySQL to automate the process.
   def define_default_ui( model )
     reflections = model.reflections.keys.map{|x| x.to_s}
-    ui_columns = model.columns.reject{|x| x.name == 'id' }.map do |x|
-      att = x.name.gsub( '_id', '' )
+    ui_columns = model.columns.reject{|x| x.name == 'id' }.map do |column|
+      # TODO there must be a better way to do this
+      att = column.name.gsub( '_id', '' )
       if reflections.include?( att )
         att
       else
-        x.name
+        column.name
       end
     end
     

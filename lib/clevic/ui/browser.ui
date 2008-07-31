@@ -22,10 +22,13 @@
      <x>0</x>
      <y>0</y>
      <width>727</width>
-     <height>28</height>
+     <height>31</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_file" >
+    <property name="enabled" >
+     <bool>false</bool>
+    </property>
     <property name="title" >
      <string>&amp;File</string>
     </property>
@@ -36,11 +39,15 @@
    </widget>
    <widget class="QMenu" name="menu_edit" >
     <property name="title" >
-     <string>Edit</string>
+     <string>&amp;Edit</string>
     </property>
-    <addaction name="action_cut" />
     <addaction name="action_copy" />
     <addaction name="action_paste" />
+    <addaction name="action_ditto" />
+    <addaction name="action_ditto_right" />
+    <addaction name="action_ditto_left" />
+    <addaction name="action_insert_date" />
+    <addaction name="action_open_editor" />
    </widget>
    <widget class="QMenu" name="menu_search" >
     <property name="title" >
@@ -71,15 +78,24 @@
    <property name="text" >
     <string>&amp;Open</string>
    </property>
+   <property name="visible" >
+    <bool>false</bool>
+   </property>
   </action>
   <action name="action_close" >
    <property name="text" >
     <string>&amp;Close</string>
    </property>
+   <property name="visible" >
+    <bool>false</bool>
+   </property>
   </action>
   <action name="action_recent" >
    <property name="text" >
     <string>&amp;Recent</string>
+   </property>
+   <property name="visible" >
+    <bool>false</bool>
    </property>
   </action>
   <action name="action_cut" >
@@ -89,12 +105,18 @@
   </action>
   <action name="action_copy" >
    <property name="text" >
-    <string>Copy</string>
+    <string>&amp;Copy</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+C</string>
    </property>
   </action>
   <action name="action_paste" >
    <property name="text" >
-    <string>Paste</string>
+    <string>&amp;Paste</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+V</string>
    </property>
   </action>
   <action name="action_filter" >
@@ -176,10 +198,16 @@
    <property name="shortcut" >
     <string>Ctrl+H</string>
    </property>
+   <property name="visible" >
+    <bool>false</bool>
+   </property>
   </action>
   <action name="action_new_window" >
    <property name="text" >
     <string>&amp;New Window</string>
+   </property>
+   <property name="visible" >
+    <bool>false</bool>
    </property>
   </action>
   <action name="action_find_next" >
@@ -193,6 +221,70 @@
   <action name="action_new_row" >
    <property name="text" >
     <string>New &amp;Row</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+N</string>
+   </property>
+   <property name="shortcutContext" >
+    <enum>Qt::WidgetShortcut</enum>
+   </property>
+  </action>
+  <action name="action_ditto" >
+   <property name="text" >
+    <string>&amp;Ditto</string>
+   </property>
+   <property name="toolTip" >
+    <string>Copy same field from previous row</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+'</string>
+   </property>
+   <property name="shortcutContext" >
+    <enum>Qt::WidgetShortcut</enum>
+   </property>
+  </action>
+  <action name="action_ditto_right" >
+   <property name="text" >
+    <string>Ditto &amp;Right</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+]</string>
+   </property>
+   <property name="shortcutContext" >
+    <enum>Qt::WidgetShortcut</enum>
+   </property>
+  </action>
+  <action name="action_ditto_left" >
+   <property name="text" >
+    <string>Ditto &amp;Left</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+[</string>
+   </property>
+   <property name="shortcutContext" >
+    <enum>Qt::WidgetShortcut</enum>
+   </property>
+  </action>
+  <action name="action_insert_date" >
+   <property name="text" >
+    <string>&amp;Insert Date</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+;</string>
+   </property>
+   <property name="shortcutContext" >
+    <enum>Qt::WidgetShortcut</enum>
+   </property>
+  </action>
+  <action name="action_open_editor" >
+   <property name="text" >
+    <string>Open Cell &amp;Editor</string>
+   </property>
+   <property name="shortcut" >
+    <string>F4</string>
+   </property>
+   <property name="shortcutContext" >
+    <enum>Qt::WidgetShortcut</enum>
    </property>
   </action>
  </widget>
