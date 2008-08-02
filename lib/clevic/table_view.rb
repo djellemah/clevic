@@ -12,8 +12,9 @@ class TableView < Qt::TableView
   # TODO better in QAbstractSortFilter?
   attr_accessor :filtered
   
-  # this is emitted when this object was to display something in the status bar
-  signals 'status_text(QString)'
+  # status_text is emitted when this object was to display something in the status bar
+  # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
+  signals 'status_text(QString)', 'filter_status(bool)'
   
   def initialize( model_class, parent, *args )
     super( parent )
@@ -37,40 +38,265 @@ class TableView < Qt::TableView
     
     init_actions
     self.context_menu_policy = Qt::ActionsContextMenu
-    puts "actions: #{actions.inspect}"
   end
   
-  def contextMenuEvent( event )
-    puts "event: #{event.inspect}"
-  end
-  
-  def new_action( name = '', text = '' )
-    action = Qt::Action.construct_exec( self ) do
-      setObjectName name
-      setText text
+  # Create an action for this widget.
+  # block takes predence over options[:method], which is a method
+  # on self to be called.
+  def new_action( name, text, options = {}, &block )
+    if options.has_key?( :method ) && !block.nil?
+      raise "you can't specify both :method and a block"
     end
-    self.add_action action
-    action
+    
+    Qt::Action.construct( self ) do |action|
+      action.object_name = name.to_s
+      action.text = text
+      options.each do |k,v|
+        next if k == :method
+        if k == :shortcut
+          action.shortcut = Qt::KeySequence.new( v )
+        else
+          action.send( "#{k.to_s}=", v )
+        end
+      end
+      
+      # add action for Qt
+      add_action action
+      
+      # add actions for builder. Yes, it's a side-effect. Is there a better way?
+      @actions << action
+      
+      signal_name = "triggered(#{options.has_key?( :checkable ) ? 'bool' : ''})"
+      
+      # connect the action to some code
+      if options.has_key?( :method )
+        action.connect SIGNAL( signal_name ) do |active|
+          puts "triggered method #{options[:method]}"
+          send_args = [ options[:method], options.has_key?( :checkable ) ? active : nil ].compact
+          self.send( *send_args )
+        end
+      else
+        unless block.nil?
+          puts "triggered block for #{options[:method]}"
+          action.connect SIGNAL( signal_name ) do |active|
+            yield( active )
+          end
+        end
+      end
+    end
   end
   
+  def action_separator
+    Qt::Action.construct( self ) do |action|
+      action.separator = true
+      add_action action
+    end
+  end
+  
+  # the set of actions to display in the edit menu
+  attr_reader :edit_actions
+  def build_edit_actions( &block )
+    @actions = []
+    yield
+    @edit_actions = @actions.dup
+  end
+  
+  # the set of actions to display in the search menu
+  attr_reader :search_actions
+  def build_search_actions( &block )
+    @actions = []
+    yield
+    @search_actions = @actions.dup
+  end
+  
+  # return actions for the model
+  def model_actions
+    @model_actions ||= model_class.actions( self )
+  end
+  
+  # create actions for this widget. Partition them nicely
+  # TODO metaprogramming for build_xxxx_actions
   def init_actions
-    @action_cut = new_action "action_cut", 'Cu&t'
-    @action_copy = new_action "action_copy", '&Copy'
-    @action_paste = new_action "action_paste", '&Paste'
-    @action_filter = new_action "action_filter", 'Fil&ter'
-    @action_filter.checkable = true
-    @action_find = new_action "action_find", '&Find'
-    @action_dump = new_action "action_dump", 'D&ump'
-    @action_refresh = new_action "action_refresh", '&Refresh'
-    @action_highlight = new_action "action_highlight", '&Highlight'
-    @action_highlight.visible = false
-    @action_find_next = new_action "action_find_next", 'Find &Next'
-    @action_new_row = new_action "action_new_row", 'New Ro&w'
-    @action_ditto = new_action "action_ditto", '&Ditto'
-    @action_ditto_right = new_action "action_ditto_right", 'Ditto R&ight'
-    @action_ditto_left = new_action "action_ditto_left", '&Ditto L&eft'
-    @action_insert_date = new_action "action_insert_date", 'Insert Date'
-    @action_open_editor = new_action "action_open_editor", '&Open Editor'
+    build_edit_actions do
+      new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
+      new_action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
+      new_action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
+      action_separator
+      new_action :action_new_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :new_row
+      new_action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
+      new_action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
+      new_action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto
+      new_action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right
+      new_action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left
+      new_action :action_insert_date, 'Insert Date', :shortcut => 'Ctrl+;', :method => :insert_current_date
+      new_action :action_open_editor, '&Open Editor', :shortcut => 'F4', :method => :open_editor
+      
+      if $options[:debug]
+        new_action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
+          puts model.collection[current_index.row].inspect
+        end
+      end
+    end
+    
+    action_separator
+    
+    build_search_actions do
+      new_action :action_find, '&Find', :shortcut => Qt::KeySequence::Find, :method => :find
+      new_action :action_find_next, 'Find &Next', :shortcut => Qt::KeySequence::FindNext, :method => :find_next
+      new_action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
+      new_action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
+    end
+    
+    if model_class.respond_to?( :actions )
+      action_separator
+      model_actions.each do |action|
+        add_action( action )
+      end
+    end
+  end
+  
+  def copy_current_selection
+    text = String.new
+    selection_model.selection.each do |selection_range|
+      (selection_range.top..selection_range.bottom).each do |row|
+        row_ary = Array.new
+        selection_model.selected_indexes.each do |index|
+          row_ary << index.gui_value if index.row == row
+        end
+        text << row_ary.to_csv
+      end
+    end
+    Qt::Application::clipboard.text = text
+  end
+  
+  def paste
+    # remove trailing "\n" if there is one
+    text = Qt::Application::clipboard.text.chomp
+    arr = FasterCSV.parse( text )
+    
+    return true if selection_model.selection.size != 1
+    
+    selection_range = selection_model.selection[0]
+    selected_index = selection_model.selected_indexes[0]
+    
+    if selection_range.single_cell?
+      # only one cell selected, so paste like a spreadsheet
+      if text.empty?
+        # just clear the current selection
+        model.setData( selected_index, nil.to_variant )
+      else
+        paste_to_index( selected_index, arr )
+      end
+    else
+      return true if selection_range.height != arr.size
+      return true if selection_range.width != arr[0].size
+      
+      # size is the same, so do the paste
+      paste_to_index( selected_index, arr )
+    end
+  end
+  
+  def ditto
+    if current_index.row > 0
+      one_up_index = model.create_index( current_index.row - 1, current_index.column )
+      previous_value = one_up_index.attribute_value
+      if current_index.attribute_value != previous_value
+        current_index.attribute_value = previous_value
+        emit model.dataChanged( current_index, current_index )
+      end
+    end
+  end
+  
+  def ditto_right
+    if current_index.row > 0 && current_index.column < model.column_count
+      one_up_right_index = model.create_index( current_index.row - 1, current_index.column + 1 )
+      current_index.attribute_value = one_up_right_index.attribute_value
+      emit model.dataChanged( current_index, current_index )
+    end
+  end
+  
+  def ditto_left
+    if current_index.row > 0 && current_index.column > 0
+      one_up_left_index = model.create_index( current_index.row - 1, current_index.column - 1 )
+      current_index.attribute_value = one_up_left_index.attribute_value
+      emit model.dataChanged( current_index, current_index )
+    end
+  end
+  
+  def insert_current_date
+    current_index.attribute_value = Time.now
+    emit model.dataChanged( current_index, current_index )
+  end
+  
+  def open_editor
+    edit( current_index, Qt::AbstractItemView::AllEditTriggers, event )
+    delegate = item_delegate( current_index )
+    delegate.full_edit
+  end
+  
+  def new_row
+    model.add_new_item
+    new_row_index = model.index( model.collection.size - 1, 0 )
+    currentChanged( new_row_index, current_index )
+    selection_model.clear
+    self.current_index = new_row_index
+  end
+  
+  def deleted_selection
+    # translate from ModelIndex objects to row indices
+    rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
+    unless rows.empty?
+      # header rows are selected, so delete them
+      model.remove_rows( rows ) 
+    else
+      # otherwise various cells are selected, so delete the cells
+      delete_cells
+    end
+  end
+  
+  # display a search dialog, and find the entered text
+  def find
+    @search_dialog ||= SearchDialog.new
+    result = @search_dialog.exec( current_index.gui_value )
+    
+    override_cursor( Qt::BusyCursor ) do
+      case result
+        when Qt::Dialog::Accepted
+          search_for = @search_dialog.search_text
+          search( @search_dialog )
+        when Qt::Dialog::Rejected
+          puts "Don't search"
+        else
+          puts "unknown dialog code #{result}"
+      end
+    end
+  end
+  
+  def find_next
+    if @search_dialog.nil?
+      emit status_text( 'No previous find' )
+    else
+      override_cursor( Qt::BusyCursor ) do
+        save_from_start = @search_dialog.from_start?
+        @search_dialog.from_start = false
+        search( @search_dialog )
+        @search_dialog.from_start = save_from_start
+      end
+    end
+  end
+  
+  # force a complete reload of the current tab's data
+  def refresh
+    override_cursor( Qt::BusyCursor ) do
+      model.reload_data
+    end
+  end
+  
+  # toggle the filter, based on current selection.
+  def filter_by_current( bool_filter )
+    # TODO if there's no selection, use the current index instead
+    filter_by_indexes( selection_model.selected_indexes )
+    emit filter_status( bool_filter )
   end
   
   def create_model( &block )
@@ -232,10 +458,14 @@ class TableView < Qt::TableView
     end
   end
   
+  def delete_rows
+    if delete_multiple_cells?
+      model.remove_rows( selection_model.selected_indexes.map{|index| index.row} )
+    end
+  end
+  
+  # handle certain key combinations that aren't shortcuts
   def keyPressEvent( event )
-    # for some reason, trying to call another method inside
-    # the begin .. rescue block throws a superclass method not
-    # found error. Weird.
     begin
       # call to model class for shortcuts
       if model.model_class.respond_to?( :key_press_event )
@@ -250,129 +480,21 @@ class TableView < Qt::TableView
         end
       end
       
-      # now do all the usual shortcuts
       case
       # on the last row, and down is pressed
       # add a new row
       when event.down? && last_row?
-        model.add_new_item
+        new_row
         
       # on the right-bottom cell, and tab is pressed
       # then add a new row
       when event.tab? && last_cell?
-        model.add_new_item
-        
-      # delete the current row
-      when event.ctrl? && event.delete?
-        if delete_multiple_cells?
-          model.remove_rows( selection_model.selected_indexes.map{|index| index.row} )
-        end
-      
-      # copy the value from the row one above  
-      when event.ctrl? && event.apostrophe?
-        if current_index.row > 0
-          one_up_index = model.create_index( current_index.row - 1, current_index.column )
-          previous_value = one_up_index.attribute_value
-          if current_index.attribute_value != previous_value
-            current_index.attribute_value = previous_value
-            emit model.dataChanged( current_index, current_index )
-          end
-        end
-        
-      # copy the value from the previous row, one cell right
-      when event.ctrl? && event.bracket_right?
-        if current_index.row > 0 && current_index.column < model.column_count
-          one_up_right_index = model.create_index( current_index.row - 1, current_index.column + 1 )
-          current_index.attribute_value = one_up_right_index.attribute_value
-          emit model.dataChanged( current_index, current_index )
-        end
-        
-      # copy the value from the previous row, one cell left
-      when event.ctrl? && event.bracket_left?
-        if current_index.row > 0 && current_index.column > 0
-          one_up_left_index = model.create_index( current_index.row - 1, current_index.column - 1 )
-          current_index.attribute_value = one_up_left_index.attribute_value
-          emit model.dataChanged( current_index, current_index )
-        end
-        
-      # insert today's date in the current field
-      when event.ctrl? && event.semicolon?
-        current_index.attribute_value = Time.now
-        emit model.dataChanged( current_index, current_index )
-        
-      # dump current record to stdout
-      when event.ctrl? && event.d?
-        puts model.collection[current_index.row].inspect
+        new_row
         
       # add new record and go to it
-      when event.ctrl? && ( event.n? || event.return? )
-        model.add_new_item
-        new_row_index = model.index( model.collection.size - 1, 0 )
-        currentChanged( new_row_index, current_index )
-        selection_model.clear
-        self.current_index = new_row_index
-      
-      # handle clear cells / delete rows
-      when event.delete?
-        # translate from ModelIndex objects to row indices
-        rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
-        unless rows.empty?
-          # header rows are selected, so delete them
-          model.remove_rows( rows ) 
-        else
-          # otherwise various cells are selected, so delete the cells
-          delete_cells
-        end
-        # make sure no other handlers get this event
-        return true
-        
-      # f4 should open editor immediately
-      when event.f4?
-        edit( current_index, Qt::AbstractItemView::AllEditTriggers, event )
-        delegate = item_delegate( current_index )
-        delegate.full_edit
-        
-      # copy currently selected data in csv format
-      when event.ctrl? && event.c?
-        text = String.new
-        selection_model.selection.each do |selection_range|
-          (selection_range.top..selection_range.bottom).each do |row|
-            row_ary = Array.new
-            selection_model.selected_indexes.each do |index|
-              row_ary << index.gui_value if index.row == row
-            end
-            text << row_ary.to_csv
-          end
-        end
-        Qt::Application::clipboard.text = text
-        return true
-        
-      when event.ctrl? && event.v?
-        # remove trailing "\n" if there is one
-        text = Qt::Application::clipboard.text.chomp
-        arr = FasterCSV.parse( text )
-        
-        return true if selection_model.selection.size != 1
-        
-        selection_range = selection_model.selection[0]
-        selected_index = selection_model.selected_indexes[0]
-        
-        if selection_range.single_cell?
-          # only one cell selected, so paste like a spreadsheet
-          if text.empty?
-            # just clear the current selection
-            model.setData( selected_index, nil.to_variant )
-          else
-            paste_to_index( selected_index, arr )
-          end
-        else
-          return true if selection_range.height != arr.size
-          return true if selection_range.width != arr[0].size
-          
-          # size is the same, so do the paste
-          paste_to_index( selected_index, arr )
-        end
-        return true
+      # TODO this is actually a shortcut
+      when event.ctrl? && event.return?
+        new_row
         
       else
         #~ puts event.inspect
@@ -490,6 +612,7 @@ class TableView < Qt::TableView
   # otherwise turn filtering off.
   # Sets self.filter to true if filtering worked, false otherwise.
   # indexes is a collection of Qt::ModelIndex
+  # TODO combine with filter_by_current
   def filter_by_indexes( indexes )
     unless indexes[0].field.filterable?
       emit status_text( "Can't filter on #{indexes[0].field.label}" )

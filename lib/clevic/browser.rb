@@ -48,24 +48,34 @@ class Browser < Qt::Widget
     # actions for current tab
     @layout.action_dump.visible = $options[:debug]
     @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
-    @layout.action_refresh.connect    SIGNAL( 'triggered()' ),          &method( :refresh_table )
-    @layout.action_filter.connect     SIGNAL( 'triggered(bool)' ),      &method( :filter_by_current )
-    @layout.action_find.connect       SIGNAL( 'triggered()' ),          &method( :find )
-    @layout.action_find_next.connect  SIGNAL( 'triggered()' ),          &method( :find_next )
-    @layout.action_new_row.connect    SIGNAL( 'triggered()' ),          &method( :new_row )
+    @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
     
     tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
     
     load_models
+    update_menus
+  end
+  
+  def update_menus
+    @layout.menu_edit.clear
+    table_view.edit_actions.each do |action|
+      @layout.menu_edit.add_action( action )
+    end
+    @layout.menu_edit.add_action( Qt::Action.construct_exec(table_view) { setSeparator true } )
+    table_view.model_actions.each do |action|
+      @layout.menu_edit.add_action( action )
+    end
     
-    @layout.action_ditto.connect     SIGNAL( 'triggered()' ) do
-      puts "ditto"
+    @layout.menu_search.clear
+    table_view.search_actions.each do |action|
+      @layout.menu_search.add_action( action )
     end
   end
   
   # activated by Ctrl-Shift-D for debugging
   def dump
-    puts "table_view.current_index.entity: #{table_view.current_index.entity.inspect}"
+    puts "table_view.model: #{table_view.model.inspect}"
+    puts "table_view.model.model_class: #{table_view.model.model_class.inspect}"
   end
   
   # return the Clevic::TableView object in the currently displayed tab
@@ -75,57 +85,6 @@ class Browser < Qt::Widget
   
   def tables_tab
     @tables_tab
-  end
-  
-  # display a search dialog, and find the entered text
-  def find
-    @search_dialog ||= SearchDialog.new
-    result = @search_dialog.exec( table_view.current_index.gui_value )
-    
-    override_cursor( Qt::BusyCursor ) do
-      case result
-        when Qt::Dialog::Accepted
-          search_for = @search_dialog.search_text
-          table_view.search( @search_dialog )
-        when Qt::Dialog::Rejected
-          puts "Don't search"
-        else
-          puts "unknown dialog code #{result}"
-      end
-    end
-  end
-  
-  def find_next
-    if @search_dialog.nil?
-      @layout.statusbar.show_message( 'No previous find' )
-    else
-      override_cursor( Qt::BusyCursor ) do
-        save_from_start = @search_dialog.from_start?
-        @search_dialog.from_start = false
-        table_view.search( @search_dialog )
-        @search_dialog.from_start = save_from_start
-      end
-    end
-  end
-  
-  # force a complete reload of the current tab's data
-  def refresh_table
-    override_cursor( Qt::BusyCursor ) do
-      table_view.model.reload_data
-    end
-  end
-  
-  # toggle the filter, based on current selection.
-  def filter_by_current( bool_filter )
-    # TODO if there's no selection, use the current index instead
-    table_view.filter_by_indexes( table_view.selection_model.selected_indexes )
-    
-    # set the checkbox in the menu item
-    @layout.action_filter.checked = table_view.filtered
-    
-    # update the tab, so there's a visual indication of filtering
-    tab_title = table_view.filtered ? translate( '| ' + table_view.model_class.name.humanize ) : translate( table_view.model_class.name.humanize )
-    tables_tab.set_tab_text( tables_tab.current_index, tab_title )
   end
   
   # slot to handle Ctrl-Tab and move to next tab, or wrap around
@@ -148,15 +107,13 @@ class Browser < Qt::Widget
     end
   end
   
-  def new_row
-    table_view.model.add_new_item
-  end
-  
   # slot to handle the currentChanged signal from tables_tab, and
   # set focus on the grid
   def current_changed( current_tab_index )
     tables_tab.current_widget.setFocus
     @layout.action_filter.checked = table_view.filtered
+    
+    update_menus
   end
   
   # shortcut for the Qt translate call
@@ -215,6 +172,14 @@ class Browser < Qt::Widget
       end
       tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 20000 ) }
       tables_tab.add_tab( tab, translate( model.name.humanize ) )
+      
+      # handle filter status changed
+      tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
+        # update the tab, so there's a visual indication of filtering
+        tab_title = tab.filtered ? translate( '| ' + tab.model_class.name.humanize ) : translate( tab.model_class.name.humanize )
+        tables_tab.set_tab_text( tables_tab.current_index, tab_title )
+      end
+      
     end
   end
   

@@ -1,6 +1,5 @@
 Make sure shortcuts don't edit a read-only field
-Fix menus.
-Put shortcuts in menus.
+put menu action code in a module
 generate models - DrySQL
 SqlCache
 SqlStatement

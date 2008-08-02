@@ -31,50 +31,61 @@ class Entry < Clevic::Record
       records     :order => 'date, start, id'
     end
   end
-
-  # called when a key is pressed in this model's table view
-  def self.key_press_event( event, current_index, view )
-    case
-      # copy almost all of the previous line
-      when event.ctrl? && event.quote_dbl?
-        if current_index.row > 1
-          # fetch previous item
-          model = current_index.model
-          previous_item = model.collection[current_index.row - 1]
-          
-          # copy the relevant fields
-          current_index.entity.start = previous_item.end
-          [:date, :project, :invoice, :activity, :module, :charge, :person].each do |attr|
-            current_index.entity.send( "#{attr.to_s}=", previous_item.send( attr ) )
-          end
-          
-          # tell view to update
-          top_left_index = model.create_index( current_index.row, 0 )
-          bottom_right_index = model.create_index( current_index.row, current_index.column + view.builder.fields.size )
-          view.dataChanged( top_left_index, bottom_right_index )
-          
-          # move to end time field
-          view.override_next_index( model.create_index( current_index.row, view.builder.index( :end ) ) )
-        end
-        # don't let anybody else handle the keypress
-        return true
-      
-      when event.ctrl? && event.i?
-        invoice_from_project( current_index, view )
-        # don't let anybody else handle the keypress
-        return true
+  
+  def self.actions( view )
+    actions = []
+    
+    actions << Qt::Action.construct( view ) do |action|
+      action.object_name = 'smart_copy'
+      action.text = 'Smart Copy'
+      action.shortcut = 'Ctrl+"'
+      action.connect SIGNAL('triggered()' ) do
+        smart_copy( view )
+      end
+    end
+    
+    actions << Qt::Action.construct( view ) do |action|
+      action.object_name = 'invoice_from_project'
+      action.text = 'Invoice from Project'
+      action.shortcut = 'Ctrl+Shift+I'
+      action.connect SIGNAL('triggered()' ) do
+        invoice_from_project( view.current_index, view )
+      end
     end
   end
   
+  # do a smart copy from the previous line
+  def self.smart_copy( view )
+    if view.current_index.row > 1
+      # fetch previous item
+      model = view.model
+      previous_item = model.collection[view.current_index.row - 1]
+      
+      # copy the relevant fields
+      view.current_index.entity.start = previous_item.end
+      [:date, :project, :invoice, :activity, :module, :charge, :person].each do |attr|
+        view.current_index.entity.send( "#{attr.to_s}=", previous_item.send( attr ) )
+      end
+      
+      # tell view to update
+      top_left_index = model.create_index( view.current_index.row, 0 )
+      bottom_right_index = model.create_index( view.current_index.row, view.current_index.column + view.builder.fields.size )
+      view.dataChanged( top_left_index, bottom_right_index )
+      
+      # move to end time field
+      view.override_next_index( model.create_index( view.current_index.row, view.builder.index( :end ) ) )
+    end
+  end
+
   # called when data is changed in this model's table view
   def self.data_changed( top_left, bottom_right, view )
     invoice_from_project( top_left, view ) if ( top_left == bottom_right )
   end
   
+  # auto-complete invoice number field from project
   def self.invoice_from_project( current_index, view )
-    # auto-complete invoice number field from project
     current_field = current_index.attribute
-    if current_field == :project && current_index.entity.project != nil
+    if [:project,:invoice].include?( current_field ) && current_index.entity.project != nil
       # most recent entry, ordered in reverse
       invoice = current_index.entity.project.latest_invoice
       

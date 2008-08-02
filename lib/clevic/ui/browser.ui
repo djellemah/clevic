@@ -22,7 +22,7 @@
      <x>0</x>
      <y>0</y>
      <width>727</width>
-     <height>31</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_file" >
@@ -41,32 +41,19 @@
     <property name="title" >
      <string>&amp;Edit</string>
     </property>
-    <addaction name="action_copy" />
-    <addaction name="action_paste" />
-    <addaction name="action_ditto" />
-    <addaction name="action_ditto_right" />
-    <addaction name="action_ditto_left" />
-    <addaction name="action_insert_date" />
-    <addaction name="action_open_editor" />
    </widget>
    <widget class="QMenu" name="menu_search" >
     <property name="title" >
      <string>&amp;Search</string>
     </property>
-    <addaction name="action_filter" />
-    <addaction name="action_find" />
-    <addaction name="action_find_next" />
     <addaction name="action_highlight" />
    </widget>
    <widget class="QMenu" name="menu_model" >
     <property name="title" >
      <string>&amp;Table</string>
     </property>
-    <addaction name="action_new_row" />
     <addaction name="action_next" />
     <addaction name="action_previous" />
-    <addaction name="separator" />
-    <addaction name="action_refresh" />
     <addaction name="action_dump" />
    </widget>
    <addaction name="menu_file" />
@@ -146,10 +133,10 @@
   </action>
   <action name="action_dump" >
    <property name="text" >
-    <string>Dump</string>
+    <string>&amp;Dump</string>
    </property>
    <property name="shortcut" >
-    <string>Ctrl+Shift+D</string>
+    <string>Alt+Shift+D</string>
    </property>
   </action>
   <action name="action_refresh" >

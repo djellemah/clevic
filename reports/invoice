@@ -13,7 +13,7 @@ ActiveRecord::Base.establish_connection({
   :adapter  => 'postgresql',
   :database => ARGV[1] || 'times',
   :host => ARGV[2] || 'localhost',
-  :username => 'panic',
+  :username => 'times',
   :password => ''
 })
 

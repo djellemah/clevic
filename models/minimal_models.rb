@@ -1,5 +1,7 @@
 require 'clevic.rb'
 
+# see sql/accounts.sql for schema
+
 # db connection
 Clevic::DbOptions.connect do
   database 'accounts_test'
