@@ -41,13 +41,12 @@ class Browser < Qt::Widget
     # hide the file menu, for now
     @layout.menubar.remove_action( @layout.menu_file.menu_action )
     
-    # actions for browser
+    # tab navigation
     @layout.action_next.connect       SIGNAL( 'triggered()' ),          &method( :next_tab )
     @layout.action_previous.connect   SIGNAL( 'triggered()' ),          &method( :previous_tab )
 
-    # actions for current tab
+    # dump model for current tab
     @layout.action_dump.visible = $options[:debug]
-    @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
     @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
     
     tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
@@ -58,11 +57,13 @@ class Browser < Qt::Widget
   
   def update_menus
     @layout.menu_edit.clear
-    table_view.edit_actions.each do |action|
+    table_view.model_actions.each do |action|
       @layout.menu_edit.add_action( action )
     end
-    @layout.menu_edit.add_action( Qt::Action.construct_exec(table_view) { setSeparator true } )
-    table_view.model_actions.each do |action|
+    unless table_view.model_actions.empty?
+      @layout.menu_edit.add_action( Qt::Action.construct_exec(table_view) { setSeparator true } )
+    end
+    table_view.edit_actions.each do |action|
       @layout.menu_edit.add_action( action )
     end
     
@@ -111,7 +112,6 @@ class Browser < Qt::Widget
   # set focus on the grid
   def current_changed( current_tab_index )
     tables_tab.current_widget.setFocus
-    @layout.action_filter.checked = table_view.filtered
     
     update_menus
   end

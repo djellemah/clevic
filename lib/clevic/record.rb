@@ -3,7 +3,7 @@ module Clevic
   # The base class for all Clevic model and UI definitions.
   # minimal definition is like this
   #   class User < Clevic::Record; end
-  # This will automatically keep track of the order
+  # Record automatically keeps track of the order
   # in which models are defined, so that tabs can
   # be constructed in that order.
   class Record < ActiveRecord::Base

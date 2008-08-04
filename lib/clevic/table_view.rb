@@ -71,13 +71,12 @@ class TableView < Qt::TableView
       # connect the action to some code
       if options.has_key?( :method )
         action.connect SIGNAL( signal_name ) do |active|
-          puts "triggered method #{options[:method]}"
           send_args = [ options[:method], options.has_key?( :checkable ) ? active : nil ].compact
           self.send( *send_args )
         end
       else
         unless block.nil?
-          puts "triggered block for #{options[:method]}"
+          puts "triggered block for #{action.text}"
           action.connect SIGNAL( signal_name ) do |active|
             yield( active )
           end
@@ -111,23 +110,28 @@ class TableView < Qt::TableView
   
   # return actions for the model
   def model_actions
-    @model_actions ||= model_class.actions( self )
+    @model_actions ||= 
+    if model_class.respond_to?( :actions )
+      model_class.actions( self )
+    else
+      []
+    end
   end
   
   # create actions for this widget. Partition them nicely
   # TODO metaprogramming for build_xxxx_actions
   def init_actions
     build_edit_actions do
-      new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
+      #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
       new_action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
       new_action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
       action_separator
       new_action :action_new_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :new_row
       new_action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
       new_action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
-      new_action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto
-      new_action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right
-      new_action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left
+      new_action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
+      new_action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
+      new_action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left, :tool_tip => 'Copy field one to left from previous record'
       new_action :action_insert_date, 'Insert Date', :shortcut => 'Ctrl+;', :method => :insert_current_date
       new_action :action_open_editor, '&Open Editor', :shortcut => 'F4', :method => :open_editor
       
@@ -229,7 +233,7 @@ class TableView < Qt::TableView
   end
   
   def open_editor
-    edit( current_index, Qt::AbstractItemView::AllEditTriggers, event )
+    edit( current_index )
     delegate = item_delegate( current_index )
     delegate.full_edit
   end

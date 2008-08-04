@@ -27,7 +27,7 @@ class DbOptions
     @options = options || {}
     # make sure the relevant entries exist, so method_missing works
     @options[:adapter] ||= ''
-    @options[:host] ||= ''
+    @options[:host] ||= 'localhost'
     @options[:username] ||= ''
     @options[:password] ||= ''
     @options[:database] ||= ''

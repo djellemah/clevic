@@ -1,24 +1,21 @@
 Make sure shortcuts don't edit a read-only field
+allow directories for a setup. Problem here is tab order.
 put menu action code in a module
 generate models - DrySQL
-SqlCache
-SqlStatement
-Csv2Sql
-QueryBuilder
+allow moving of tabs
 generate schema from definition? See rubyforge
 Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 - layoutChanged
 
 search with acts_as_searchable and hyperestraier
-Criteria for SQL statement building http://criteria.rubyforge.org/
 acts_as_shellable looks nices
-ActiveMDB for migrating.
 undo
 - acts_as_trashable to undo deletes
 - other commands. Possibly via ActiveRecord callbacks?
 - Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
 - Use Transaction::Simple?
+- undo of field changes
 
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 wrap description, and allow Access-style zooming
@@ -27,8 +24,6 @@ sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder
 - layoutChanged
 
 search with acts_as_searchable and hyperestraier
-acts_as_trashable to undo deletes
-implement undo of field changes
 
 moving of columns
 /-style keyboard search by selected column, or everything if no column selected
@@ -108,6 +103,7 @@ maybe
 -----
 Look at DataMapper. Not suitable - need to declare properties.
 use rubigen for creating model definition files
+ActiveMDB for migrating.
 allow moving of rows
 discontiguous copying of entities/csv
 multi-row copying
@@ -115,6 +111,11 @@ pasting of csv, into rectangular regions
 collect a set of data requests to the model, and do them in one SQL query. See EntryTableView#moveCursor
 Use SQL cursors for find & find_next?
 Use roo to parse spreadsheets?
+Criteria for SQL statement building http://criteria.rubyforge.org/
+SqlCache
+SqlStatement
+Csv2Sql
+QueryBuilder
 
 Accounts
 --------
