@@ -11,6 +11,7 @@ class TableView < Qt::TableView
   # whether the model is currently filtered
   # TODO better in QAbstractSortFilter?
   attr_accessor :filtered
+  def filtered?; self.filtered; end
   
   # status_text is emitted when this object was to display something in the status bar
   # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
@@ -71,14 +72,18 @@ class TableView < Qt::TableView
       # connect the action to some code
       if options.has_key?( :method )
         action.connect SIGNAL( signal_name ) do |active|
-          send_args = [ options[:method], options.has_key?( :checkable ) ? active : nil ].compact
-          self.send( *send_args )
+          catch :insane do
+            send_args = [ options[:method], options.has_key?( :checkable ) ? active : nil ].compact
+            self.send( *send_args )
+          end
         end
       else
         unless block.nil?
           puts "triggered block for #{action.text}"
-          action.connect SIGNAL( signal_name ) do |active|
-            yield( active )
+          catch :insane do
+            action.connect SIGNAL( signal_name ) do |active|
+              yield( active )
+            end
           end
         end
       end
@@ -174,6 +179,8 @@ class TableView < Qt::TableView
   end
   
   def paste
+    sanity_check_read_only
+    
     # remove trailing "\n" if there is one
     text = Qt::Application::clipboard.text.chomp
     arr = FasterCSV.parse( text )
@@ -200,19 +207,43 @@ class TableView < Qt::TableView
     end
   end
   
+  def sanity_check_ditto
+    if current_index.row == 0
+      emit status_text( 'No previous record to copy.' )
+      throw :insane
+    end
+  end
+  
+  def sanity_check_read_only
+    if current_index.field.read_only?
+      emit status_text( 'Can\'t copy into read-only field.' )
+    elsif current_index.entity.readonly?
+      emit status_text( 'Can\'t copy into read-only record.' )
+    elsif builder.read_only?
+      emit status_text( 'Can\'t modify a read-only table.' )
+    else
+      return
+    end
+    throw :insane
+  end
+  
   def ditto
-    if current_index.row > 0
-      one_up_index = model.create_index( current_index.row - 1, current_index.column )
-      previous_value = one_up_index.attribute_value
-      if current_index.attribute_value != previous_value
-        current_index.attribute_value = previous_value
-        emit model.dataChanged( current_index, current_index )
-      end
+    sanity_check_ditto
+    sanity_check_read_only
+    one_up_index = model.create_index( current_index.row - 1, current_index.column )
+    previous_value = one_up_index.attribute_value
+    if current_index.attribute_value != previous_value
+      current_index.attribute_value = previous_value
+      emit model.dataChanged( current_index, current_index )
     end
   end
   
   def ditto_right
-    if current_index.row > 0 && current_index.column < model.column_count
+    sanity_check_ditto
+    sanity_check_read_only
+    if current_index.column < model.column_count
+      emit status_text( 'No column to the right' )
+    else
       one_up_right_index = model.create_index( current_index.row - 1, current_index.column + 1 )
       current_index.attribute_value = one_up_right_index.attribute_value
       emit model.dataChanged( current_index, current_index )
@@ -220,7 +251,11 @@ class TableView < Qt::TableView
   end
   
   def ditto_left
-    if current_index.row > 0 && current_index.column > 0
+    sanity_check_ditto
+    sanity_check_read_only
+    if current_index.column > 0
+      emit status_text( 'No column to the left' )
+    else
       one_up_left_index = model.create_index( current_index.row - 1, current_index.column - 1 )
       current_index.attribute_value = one_up_left_index.attribute_value
       emit model.dataChanged( current_index, current_index )
@@ -228,6 +263,7 @@ class TableView < Qt::TableView
   end
   
   def insert_current_date
+    sanity_check_read_only
     current_index.attribute_value = Time.now
     emit model.dataChanged( current_index, current_index )
   end
@@ -247,6 +283,8 @@ class TableView < Qt::TableView
   end
   
   def deleted_selection
+    sanity_check_read_only
+
     # translate from ModelIndex objects to row indices
     rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
     unless rows.empty?
@@ -425,6 +463,8 @@ class TableView < Qt::TableView
   end
   
   def delete_multiple_cells?
+    sanity_check_read_only
+    
     # go ahead with delete if there's only 1 cell, or the user says OK
     delete_ok =
     if selection_model.selected_indexes.size > 1
@@ -658,6 +698,11 @@ class TableView < Qt::TableView
     # create a new index and move to it
     unless found_row.nil?
       self.current_index = model.create_index( found_row, save_index.column )
+      if self.filtered?
+        emit status_text( "Filtered on #{current_index.field_name} = #{current_index.gui_value}" )
+      else
+        emit status_text( nil )
+      end
     end
   end
   

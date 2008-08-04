@@ -83,6 +83,14 @@ class ModelBuilder
   def model_class
     @table_view.model_class
   end
+  
+  def read_only!
+    @read_only = true
+  end
+  
+  def read_only?
+    @read_only ||= false
+  end
 
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {} )

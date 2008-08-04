@@ -72,6 +72,7 @@ end
 desc "irb in this project's context"
 task :irb do |t|
   ARGV.shift()
+  ENV['RUBYLIB'] ||= ''
   ENV['RUBYLIB'] += ":#{File.expand_path('.')}/lib"
   exec "irb -Ilib -rclevic"
 end

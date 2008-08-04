@@ -54,6 +54,7 @@ class TableModel < Qt::AbstractTableModel
     super
   end
   
+  # this is called for read-only tables.
   def match( start_index, role, search_value, hits, match_flags )
     #~ Qt::MatchExactly	0	Performs QVariant-based matching.
     #~ Qt::MatchFixedString	8	Performs string-based matching. String-based comparisons are case-insensitive unless the MatchCaseSensitive flag is also specified.
@@ -64,7 +65,8 @@ class TableModel < Qt::AbstractTableModel
     #~ Qt::MatchRegExp	4	Performs string-based matching using a regular expression as the search term.
     #~ Qt::MatchWildcard	5	Performs string-based matching using a string with wildcards as the search term.
     #~ Qt::MatchWrap	32	Perform a search that wraps around, so that when the search reaches the last item in the model, it begins again at the first item and continues until all items have been examined.
-    super
+    #~ super
+    []
   end
   
   def build_dots( dots, attrs, prefix="" )
@@ -161,7 +163,11 @@ class TableModel < Qt::AbstractTableModel
     if model_index.metadata.type == :boolean
       retval = item_boolean_flags
     end
-    retval |= qt_item_is_editable.to_i unless model_index.field.read_only?
+    
+    # read-only
+    unless model_index.field.read_only? || model_index.entity.readonly? || @builder.read_only?
+      retval |= qt_item_is_editable.to_i 
+    end
     retval
   end
   
@@ -246,7 +252,9 @@ class TableModel < Qt::AbstractTableModel
         when qt_background_role;
         when qt_font_role;
         when qt_foreground_role
-          Qt::Color.new( 'dimgray' ) if index.field.read_only?
+          if index.field.read_only? || index.entity.readonly? || @builder.read_only?
+            Qt::Color.new( 'dimgray' )
+          end
         when qt_decoration_role;
         
         # provide a tooltip when an empty relational field is encountered

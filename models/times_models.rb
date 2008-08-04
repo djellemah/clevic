@@ -56,6 +56,9 @@ class Entry < Clevic::Record
   
   # do a smart copy from the previous line
   def self.smart_copy( view )
+    view.sanity_check_read_only
+    view.sanity_check_ditto
+    
     if view.current_index.row > 1
       # fetch previous item
       model = view.model

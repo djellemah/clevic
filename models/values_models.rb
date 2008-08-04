@@ -8,13 +8,13 @@ Clevic::DbOptions.connect( $options ) do
 end
 
 # This is a read-only view, which is currently not implemented
-class Values < Clevic::Record
-  set_table_name 'values'
+class Value < Clevic::Record
+  #~ set_table_name 'values'
   has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   def self.ui( parent )
     Clevic::TableView.new( self, parent ).create_model do
-      readonly
+      read_only!
       plain       :date
       plain       :description
       plain       :debit

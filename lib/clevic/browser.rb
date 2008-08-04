@@ -170,7 +170,7 @@ class Browser < Qt::Widget
       else
         define_default_ui( model )
       end
-      tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 20000 ) }
+      tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 60000 ) }
       tables_tab.add_tab( tab, translate( model.name.humanize ) )
       
       # handle filter status changed

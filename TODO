@@ -1,4 +1,3 @@
-Make sure shortcuts don't edit a read-only field
 allow directories for a setup. Problem here is tab order.
 put menu action code in a module
 generate models - DrySQL
@@ -101,6 +100,7 @@ store previous searches, by model & app
 
 maybe
 -----
+consolidate read-only-ness checks 
 Look at DataMapper. Not suitable - need to declare properties.
 use rubigen for creating model definition files
 ActiveMDB for migrating.
