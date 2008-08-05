@@ -1,5 +1,6 @@
 allow directories for a setup. Problem here is tab order.
-put menu action code in a module
+understand Rails structure, and db config file. How to get around the Clevic::Record question?
+crash when ditto-left/right to a field with a different type
 generate models - DrySQL
 allow moving of tabs
 generate schema from definition? See rubyforge

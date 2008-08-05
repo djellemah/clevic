@@ -2,6 +2,7 @@ require 'rubygems'
 require 'Qt4'
 require 'fastercsv'
 require 'clevic/model_builder.rb'
+require 'qtext/action_builder.rb'
 
 module Clevic
 
@@ -41,125 +42,69 @@ class TableView < Qt::TableView
     self.context_menu_policy = Qt::ActionsContextMenu
   end
   
-  # Create an action for this widget.
-  # block takes predence over options[:method], which is a method
-  # on self to be called.
-  def new_action( name, text, options = {}, &block )
-    if options.has_key?( :method ) && !block.nil?
-      raise "you can't specify both :method and a block"
-    end
-    
-    Qt::Action.construct( self ) do |action|
-      action.object_name = name.to_s
-      action.text = text
-      options.each do |k,v|
-        next if k == :method
-        if k == :shortcut
-          action.shortcut = Qt::KeySequence.new( v )
-        else
-          action.send( "#{k.to_s}=", v )
-        end
-      end
-      
-      # add action for Qt
-      add_action action
-      
-      # add actions for builder. Yes, it's a side-effect. Is there a better way?
-      @actions << action
-      
-      signal_name = "triggered(#{options.has_key?( :checkable ) ? 'bool' : ''})"
-      
-      # connect the action to some code
-      if options.has_key?( :method )
-        action.connect SIGNAL( signal_name ) do |active|
-          catch :insane do
-            send_args = [ options[:method], options.has_key?( :checkable ) ? active : nil ].compact
-            self.send( *send_args )
-          end
-        end
-      else
-        unless block.nil?
-          puts "triggered block for #{action.text}"
-          catch :insane do
-            action.connect SIGNAL( signal_name ) do |active|
-              yield( active )
-            end
-          end
-        end
-      end
-    end
-  end
-  
-  def action_separator
-    Qt::Action.construct( self ) do |action|
-      action.separator = true
-      add_action action
-    end
-  end
-  
   # the set of actions to display in the edit menu
-  attr_reader :edit_actions
-  def build_edit_actions( &block )
-    @actions = []
-    yield
-    @edit_actions = @actions.dup
+  def edit_actions
+    @action_builder.edit_actions
   end
-  
+    
   # the set of actions to display in the search menu
-  attr_reader :search_actions
-  def build_search_actions( &block )
-    @actions = []
-    yield
-    @search_actions = @actions.dup
+  def search_actions
+    @action_builder.search_actions
   end
   
   # return actions for the model
   def model_actions
-    @model_actions ||= 
-    if model_class.respond_to?( :actions )
-      model_class.actions( self )
-    else
-      []
+    @action_builder.model_actions
+  end
+  
+  # hook for the sanity_check_xxx methods
+  def action_method_or_block( &block )
+    catch :insane do
+      yield
     end
   end
   
-  # create actions for this widget. Partition them nicely
-  # TODO metaprogramming for build_xxxx_actions
   def init_actions
-    build_edit_actions do
-      #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
-      new_action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
-      new_action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
-      action_separator
-      new_action :action_new_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :new_row
-      new_action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
-      new_action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
-      new_action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
-      new_action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
-      new_action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left, :tool_tip => 'Copy field one to left from previous record'
-      new_action :action_insert_date, 'Insert Date', :shortcut => 'Ctrl+;', :method => :insert_current_date
-      new_action :action_open_editor, '&Open Editor', :shortcut => 'F4', :method => :open_editor
-      
-      if $options[:debug]
-        new_action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
-          puts model.collection[current_index.row].inspect
+    @action_builder = ActionBuilder.new( self ) do
+      # list of actions called edit
+      list( :edit ) do
+        #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
+        action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
+        action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
+        separator
+        action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
+        action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
+        action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left, :tool_tip => 'Copy field one to left from previous record'
+        action :action_insert_date, 'Insert Date', :shortcut => 'Ctrl+;', :method => :insert_current_date
+        action :action_open_editor, '&Open Editor', :shortcut => 'F4', :method => :open_editor
+        separator
+        action :action_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :new_row
+        action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
+        action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
+        
+        if $options[:debug]
+          action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
+            puts model.collection[current_index.row].inspect
+          end
         end
       end
-    end
+      
+      separator
     
-    action_separator
-    
-    build_search_actions do
-      new_action :action_find, '&Find', :shortcut => Qt::KeySequence::Find, :method => :find
-      new_action :action_find_next, 'Find &Next', :shortcut => Qt::KeySequence::FindNext, :method => :find_next
-      new_action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
-      new_action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
-    end
-    
-    if model_class.respond_to?( :actions )
-      action_separator
-      model_actions.each do |action|
-        add_action( action )
+      # list of actions called search
+      list( :search ) do
+        action :action_find, '&Find', :shortcut => Qt::KeySequence::Find, :method => :find
+        action :action_find_next, 'Find &Next', :shortcut => Qt::KeySequence::FindNext, :method => :find_next
+        action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
+        action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
+      end
+      
+      # add model actions, if they're defined
+      if model_class.respond_to?( :actions )
+        separator
+        list( :model ) do |ab|
+          model_class.actions( parent, ab )
+        end
       end
     end
   end
@@ -219,12 +164,18 @@ class TableView < Qt::TableView
       emit status_text( 'Can\'t copy into read-only field.' )
     elsif current_index.entity.readonly?
       emit status_text( 'Can\'t copy into read-only record.' )
-    elsif builder.read_only?
-      emit status_text( 'Can\'t modify a read-only table.' )
     else
+      sanity_check_read_only_table
       return
     end
     throw :insane
+  end
+  
+  def sanity_check_read_only_table
+    if builder.read_only?
+      emit status_text( 'Can\'t modify a read-only table.' )
+      throw :insane
+    end
   end
   
   def ditto
@@ -241,7 +192,7 @@ class TableView < Qt::TableView
   def ditto_right
     sanity_check_ditto
     sanity_check_read_only
-    if current_index.column < model.column_count
+    unless current_index.column < model.column_count
       emit status_text( 'No column to the right' )
     else
       one_up_right_index = model.create_index( current_index.row - 1, current_index.column + 1 )
@@ -253,7 +204,7 @@ class TableView < Qt::TableView
   def ditto_left
     sanity_check_ditto
     sanity_check_read_only
-    if current_index.column > 0
+    unless current_index.column > 0
       emit status_text( 'No column to the left' )
     else
       one_up_left_index = model.create_index( current_index.row - 1, current_index.column - 1 )
@@ -275,6 +226,7 @@ class TableView < Qt::TableView
   end
   
   def new_row
+    sanity_check_read_only_table
     model.add_new_item
     new_row_index = model.index( model.collection.size - 1, 0 )
     currentChanged( new_row_index, current_index )
@@ -524,24 +476,26 @@ class TableView < Qt::TableView
         end
       end
       
-      case
-      # on the last row, and down is pressed
-      # add a new row
-      when event.down? && last_row?
-        new_row
-        
-      # on the right-bottom cell, and tab is pressed
-      # then add a new row
-      when event.tab? && last_cell?
-        new_row
-        
-      # add new record and go to it
-      # TODO this is actually a shortcut
-      when event.ctrl? && event.return?
-        new_row
-        
-      else
-        #~ puts event.inspect
+      catch :insane do
+        case
+        # on the last row, and down is pressed
+        # add a new row
+        when event.down? && last_row?
+          new_row
+          
+        # on the right-bottom cell, and tab is pressed
+        # then add a new row
+        when event.tab? && last_cell?
+          new_row
+          
+        # add new record and go to it
+        # TODO this is actually a shortcut
+        when event.ctrl? && event.return?
+          new_row
+          
+        else
+          #~ puts event.inspect
+        end
       end
       super
     rescue Exception => e
@@ -728,6 +682,7 @@ class TableView < Qt::TableView
     puts "itemDelegateForColumn #{column}"
     super
   end
+  
 end
 
 end

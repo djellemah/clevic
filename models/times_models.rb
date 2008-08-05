@@ -32,25 +32,13 @@ class Entry < Clevic::Record
     end
   end
   
-  def self.actions( view )
-    actions = []
-    
-    actions << Qt::Action.construct( view ) do |action|
-      action.object_name = 'smart_copy'
-      action.text = 'Smart Copy'
-      action.shortcut = 'Ctrl+"'
-      action.connect SIGNAL('triggered()' ) do
-        smart_copy( view )
-      end
+  def self.actions( view, action_builder )
+    action_builder.action :smart_copy, 'Smart Copy', :shortcut => 'Ctrl+"' do
+      smart_copy( view )
     end
     
-    actions << Qt::Action.construct( view ) do |action|
-      action.object_name = 'invoice_from_project'
-      action.text = 'Invoice from Project'
-      action.shortcut = 'Ctrl+Shift+I'
-      action.connect SIGNAL('triggered()' ) do
-        invoice_from_project( view.current_index, view )
-      end
+    action_builder.action :invoice_from_project, 'Invoice from Project', :shortcut => 'Ctrl+Shift+I' do
+      invoice_from_project( view.current_index, view )
     end
   end
   
