@@ -8,6 +8,8 @@ module Clevic
 
 # The view class, implementing neat shortcuts and other pleasantness
 class TableView < Qt::TableView
+  include ActionBuilder
+  
   attr_reader :model_class, :builder
   # whether the model is currently filtered
   # TODO better in QAbstractSortFilter?
@@ -42,74 +44,60 @@ class TableView < Qt::TableView
     self.context_menu_policy = Qt::ActionsContextMenu
   end
   
-  # the set of actions to display in the edit menu
-  def edit_actions
-    @action_builder.edit_actions || []
-  end
-    
-  # the set of actions to display in the search menu
-  def search_actions
-    @action_builder.search_actions || []
-  end
-  
   # return actions for the model, or an empty array if there aren't any
   def model_actions
-    if @action_builder.respond_to?( :model_actions )
-      @action_builder.model_actions
-    end || []
+    @model_actions ||= []
   end
   
   # hook for the sanity_check_xxx methods
   # called for the actions set up by ActionBuilder
   # it just wraps the action block/method in the catch
-  def action_method_or_block( &block )
+  def action_triggered( &block )
     catch :insane do
       yield
     end
   end
   
   def init_actions
-    @action_builder = ActionBuilder.new( self ) do
-      # add model actions, if they're defined
-      if model_class.respond_to?( :actions )
-        list( :model ) do |ab|
-          model_class.actions( parent, ab )
-        end
-        separator
+    # add model actions, if they're defined
+    if model_class.respond_to?( :actions )
+      list( :model ) do |ab|
+        model_class.actions( self, ab )
       end
-      
-      # list of actions called edit
-      list( :edit ) do
-        #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
-        action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
-        action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
-        separator
-        action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
-        action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
-        action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left, :tool_tip => 'Copy field one to left from previous record'
-        action :action_insert_date, 'Insert Date', :shortcut => 'Ctrl+;', :method => :insert_current_date
-        action :action_open_editor, '&Open Editor', :shortcut => 'F4', :method => :open_editor
-        separator
-        action :action_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :new_row
-        action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
-        action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
-        
-        if $options[:debug]
-          action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
-            puts model.collection[current_index.row].inspect
-          end
-        end
-      end
-      
       separator
+    end
+    
+    # list of actions called edit
+    list( :edit ) do
+      #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
+      action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
+      action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
+      separator
+      action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
+      action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
+      action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left, :tool_tip => 'Copy field one to left from previous record'
+      action :action_insert_date, 'Insert Date', :shortcut => 'Ctrl+;', :method => :insert_current_date
+      action :action_open_editor, '&Open Editor', :shortcut => 'F4', :method => :open_editor
+      separator
+      action :action_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :new_row
+      action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
+      action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
       
-      # list of actions called search
-      list( :search ) do
-        action :action_find, '&Find', :shortcut => Qt::KeySequence::Find, :method => :find
-        action :action_find_next, 'Find &Next', :shortcut => Qt::KeySequence::FindNext, :method => :find_next
-        action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
-        action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
+      if $options[:debug]
+        action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
+          puts model.collection[current_index.row].inspect
+        end
       end
+    end
+    
+    separator
+    
+    # list of actions called search
+    list( :search ) do
+      action :action_find, '&Find', :shortcut => Qt::KeySequence::Find, :method => :find
+      action :action_find_next, 'Find &Next', :shortcut => Qt::KeySequence::FindNext, :method => :find_next
+      action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
+      action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
     end
   end
   
