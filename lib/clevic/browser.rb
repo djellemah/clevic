@@ -56,17 +56,20 @@ class Browser < Qt::Widget
   end
   
   def update_menus
+    # update edit menu
     @layout.menu_edit.clear
+    
+    # do the model-specific menu items first
     table_view.model_actions.each do |action|
       @layout.menu_edit.add_action( action )
     end
-    unless table_view.model_actions.empty?
-      @layout.menu_edit.add_action( Qt::Action.construct_exec(table_view) { setSeparator true } )
-    end
+    
+    # now do the generic edit items
     table_view.edit_actions.each do |action|
       @layout.menu_edit.add_action( action )
     end
     
+    # update search menu
     @layout.menu_search.clear
     table_view.search_actions.each do |action|
       @layout.menu_search.add_action( action )

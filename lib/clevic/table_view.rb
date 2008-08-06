@@ -44,20 +44,24 @@ class TableView < Qt::TableView
   
   # the set of actions to display in the edit menu
   def edit_actions
-    @action_builder.edit_actions
+    @action_builder.edit_actions || []
   end
     
   # the set of actions to display in the search menu
   def search_actions
-    @action_builder.search_actions
+    @action_builder.search_actions || []
   end
   
-  # return actions for the model
+  # return actions for the model, or an empty array if there aren't any
   def model_actions
-    @action_builder.model_actions
+    if @action_builder.respond_to?( :model_actions )
+      @action_builder.model_actions
+    end || []
   end
   
   # hook for the sanity_check_xxx methods
+  # called for the actions set up by ActionBuilder
+  # it just wraps the action block/method in the catch
   def action_method_or_block( &block )
     catch :insane do
       yield
@@ -66,6 +70,14 @@ class TableView < Qt::TableView
   
   def init_actions
     @action_builder = ActionBuilder.new( self ) do
+      # add model actions, if they're defined
+      if model_class.respond_to?( :actions )
+        list( :model ) do |ab|
+          model_class.actions( parent, ab )
+        end
+        separator
+      end
+      
       # list of actions called edit
       list( :edit ) do
         #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
@@ -90,21 +102,13 @@ class TableView < Qt::TableView
       end
       
       separator
-    
+      
       # list of actions called search
       list( :search ) do
         action :action_find, '&Find', :shortcut => Qt::KeySequence::Find, :method => :find
         action :action_find_next, 'Find &Next', :shortcut => Qt::KeySequence::FindNext, :method => :find_next
         action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
         action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
-      end
-      
-      # add model actions, if they're defined
-      if model_class.respond_to?( :actions )
-        separator
-        list( :model ) do |ab|
-          model_class.actions( parent, ab )
-        end
       end
     end
   end
