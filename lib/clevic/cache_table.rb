@@ -282,6 +282,7 @@ EOF
     end
   end
   
+  # make sure there's always at least one empty record
   def delete_at( index )
     retval = super
     if self.size == 0

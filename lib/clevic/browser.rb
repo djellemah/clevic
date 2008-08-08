@@ -1,5 +1,7 @@
 require 'clevic/search_dialog.rb'
 require 'clevic/ui/browser_ui.rb'
+require 'clevic/record.rb'
+require 'clevic.rb'
 
 module Clevic
 
@@ -127,7 +129,15 @@ class Browser < Qt::Widget
   # return the list of descendants of ActiveRecord::Base
   def find_models
     models = []
-    ObjectSpace.each_object( Class ) {|x| models << x if x.ancestors.include?( Clevic::Record ) }
+    ObjectSpace.each_object( Class ) do |x|
+      if x.ancestors.include?( ActiveRecord::Base )
+        case
+          when x == ActiveRecord::Base;
+          when x == Clevic::Record;
+          else; models << x
+        end
+      end
+    end
     models
   end
   
@@ -163,24 +173,30 @@ class Browser < Qt::Widget
   # models parameter can be an array of Model objects, in order of display.
   # if models is nil, find_models is called
   def load_models
-    models = Clevic::Record.models || find_models
+    models = Clevic::Record.models
+    models = find_models if models.empty?
     
     # Add all existing model objects as tabs, one each
     models.each do |model|
-      tab = 
-      if model.respond_to?( :ui )
-        model.ui( tables_tab )
-      else
-        define_default_ui( model )
-      end
-      tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 60000 ) }
-      tables_tab.add_tab( tab, translate( model.name.humanize ) )
-      
-      # handle filter status changed
-      tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
-        # update the tab, so there's a visual indication of filtering
-        tab_title = tab.filtered ? translate( '| ' + tab.model_class.name.humanize ) : translate( tab.model_class.name.humanize )
-        tables_tab.set_tab_text( tables_tab.current_index, tab_title )
+      begin
+        puts "model: #{model.inspect}"
+        tab = 
+        if model.respond_to?( :ui )
+          model.ui( tables_tab )
+        else
+          define_default_ui( model )
+        end
+        tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 60000 ) }
+        tables_tab.add_tab( tab, translate( model.name.humanize ) )
+        
+        # handle filter status changed
+        tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
+          # update the tab, so there's a visual indication of filtering
+          tab_title = tab.filtered ? translate( '| ' + tab.model_class.name.humanize ) : translate( tab.model_class.name.humanize )
+          tables_tab.set_tab_text( tables_tab.current_index, tab_title )
+        end
+      rescue Exception => e
+        puts "Model #{model} will not be available: #{e.message}"
       end
       
     end

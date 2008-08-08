@@ -1,7 +1,11 @@
 #! /usr/bin/ruby
 
+require 'pathname'
+
 require 'clevic/browser.rb'
+require 'clevic/db_options.rb'
 require 'optparse'
+require 'active_support'
 
 # find and require variations on file_path
 def require_if( file_path )
@@ -22,6 +26,7 @@ oparser.separator ''
 oparser.on( '-H', '--host HOST', 'RDBMS host', String ) { |o| $options[:host] = o }
 oparser.on( '-u', '--user USERNAME', String ) { |o| $options[:username] = o }
 oparser.on( '-p', '--pass PASSWORD', String ) { |o| $options[:password] = o }
+oparser.on( '-P', '--profile PROFILE', String ) { |o| $options[:profile] = o }
 oparser.on( '-t', '--table TABLE', 'Table to display', String ) { |o| $options[:table] = o }
 oparser.on( '-d', '--database DATABASE', 'Database name', String ) { |o| $options[:database] = o }
 oparser.on( '-D', '--debug' ) { |o| $options[:debug] = true }
@@ -38,10 +43,75 @@ if $options[:debug]
   pp $options
 end
 
+def old_rails_init
+  # connect to the db
+  database_config = YAML.load_file( config + 'database.yml' )
+  dc = database_config[ $options[:profile] || 'development']
+  require 'active_support/core_ext/hash/keys.rb'
+  require 'active_support/dependencies.rb'
+  dc.extend ActiveSupport::CoreExtensions::Hash::Keys
+  dc.symbolize_keys!
+
+  Clevic::DbOptions.new( dc ).do_connection
+  #~ ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
+  
+  # load everything in lib
+  $: << ( arg + 'lib' ).realpath.to_s
+  ( arg + 'lib' ).children.each do |filename|
+    puts "filename: #{filename.inspect}"
+    load filename if filename.file?
+  end
+  
+  # load all models
+  1.upto 2 do
+    models.children.each do |filename|
+      begin
+        load filename if filename.file?
+      rescue Exception => e
+        puts "Error loading #{filename.basename.to_s}: #{e.message.inspect}"
+      end
+    end
+  end
+end
+
 if args.size > 0
   $options[:definition] = args.shift
-  require_if "#{$options[:definition]}_models"
-  require_if $options[:definition]
+  arg = Pathname.new( $options[:definition] )
+  if arg.directory?
+    config = Pathname.new( arg + 'config' )
+    app = Pathname.new( arg + 'app' )
+    models = Pathname.new( app + 'models' )
+    # check if this is a Rails directory
+    if config.exist? && app.exist?
+      if models.exist?
+        # this is probably a Rails project"
+        # initialize Rails
+        load config + 'environment.rb'
+        require 'initializer.rb'
+        RAILS_ROOT = arg.realpath.to_s
+        Rails::Initializer.run do |config|
+          config.frameworks -= [ :action_mailer, :action_pack, :active_resource ]
+        end
+        
+        # TODO check for Dirty in 2.1.x
+        ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
+        
+        # load models
+        models.children.each_with_index do |filename,i|
+          break if i >= 3
+          begin
+            load filename if filename.file?
+          rescue Exception => e
+            puts "Error loading #{filename.basename.to_s}: #{e.message.inspect}"
+          end
+        end
+      end
+    end
+  else
+    # assume we have a single file
+    require_if "#{$options[:definition]}_models"
+    require_if $options[:definition]
+  end
 else
   raise "no model definition file specified"
 end

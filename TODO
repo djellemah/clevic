@@ -1,6 +1,6 @@
 allow directories for a setup. Problem here is tab order.
 understand Rails structure, and db config file. How to get around the Clevic::Record question?
-crash when ditto-left/right to a field with a different type
+exception when ditto-left/right to a field with incompatible type
 generate models - DrySQL
 allow moving of tabs
 generate schema from definition? See rubyforge
@@ -8,8 +8,6 @@ Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
 - layoutChanged
 
-search with acts_as_searchable and hyperestraier
-acts_as_shellable looks nices
 undo
 - acts_as_trashable to undo deletes
 - other commands. Possibly via ActiveRecord callbacks?
@@ -39,7 +37,7 @@ filtering by various things. http://doc.trolltech.com/4.3/qsortfilterproxymodel.
 highlighting by various things
 cut and paste (in model format)
 
-drop cached model objects from CacheTable when they're not in use
+drop cached model objects from CacheTable when they're not in use. WeakRef?
 
 allow scroll viewport to centre when at end of dataset
 QAbstractItemView::ScrollHint
@@ -101,6 +99,7 @@ store previous searches, by model & app
 
 maybe
 -----
+acts_as_shellable looks nices
 consolidate read-only-ness checks 
 Look at DataMapper. Not suitable - need to declare properties.
 use rubigen for creating model definition files

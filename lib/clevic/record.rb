@@ -1,3 +1,6 @@
+require 'active_record'
+require 'active_record/dirty.rb'
+
 module Clevic
 
   # The base class for all Clevic model and UI definitions.

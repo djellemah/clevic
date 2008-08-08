@@ -25,12 +25,16 @@ class DbOptions
   
   def initialize( options = nil )
     @options = options || {}
+    puts "@options: #{@options.inspect}"
+    
     # make sure the relevant entries exist, so method_missing works
     @options[:adapter] ||= ''
     @options[:host] ||= 'localhost'
     @options[:username] ||= ''
     @options[:password] ||= ''
     @options[:database] ||= ''
+    
+    puts "@options: #{@options.inspect}"
   end
   
   def connect( *args, &block )
