@@ -54,6 +54,7 @@
     <addaction name="action_next" />
     <addaction name="action_previous" />
     <addaction name="action_dump" />
+    <addaction name="separator" />
    </widget>
    <addaction name="menu_file" />
    <addaction name="menu_edit" />

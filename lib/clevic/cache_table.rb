@@ -169,8 +169,12 @@ EOF
   end
   
   # add an id to options[:order] if it's not in there
-  # also create @order_attributes
+  # also create @order_attributes, and @auto_new
   def sanitise_options( options )
+    # save this for later
+    @auto_new = options[:auto_new]
+    options.delete :auto_new
+    
     options[:order] ||= ''
     @order_attributes = options[:order].split( /, */ ).map{|x| OrderAttribute.new(@model_class, x)}
     
@@ -282,10 +286,14 @@ EOF
     end
   end
   
+  def auto_new?
+    @auto_new
+  end
+  
   # make sure there's always at least one empty record
   def delete_at( index )
     retval = super
-    if self.size == 0
+    if self.size == 0 && auto_new?
       self << @model_class.new
     end
     retval

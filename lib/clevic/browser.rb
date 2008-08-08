@@ -157,6 +157,7 @@ class Browser < Qt::Widget
     end
     
     Clevic::TableView.new( model, tables_tab ).create_model do
+      auto_new false
       ui_columns.each do |column|
         if model.reflections.has_key?( column.to_sym )
           begin
@@ -196,7 +197,15 @@ class Browser < Qt::Widget
           define_default_ui( model )
         end
         tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 60000 ) }
-        tables_tab.add_tab( tab, translate( model.name.humanize ) )
+        tables_tab.add_tab( tab, translate( model.name.demodulize.tableize.humanize ) )
+        
+        # add the table to the menu
+        action = Qt::Action.new( @layout.menu_model )
+        action.text = translate( model.name.demodulize.tableize.humanize )
+        action.connect SIGNAL( 'triggered()' ) do
+          tables_tab.current_widget = tab
+        end
+        @layout.menu_model.add_action( action )
         
         # handle filter status changed
         tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
@@ -208,7 +217,6 @@ class Browser < Qt::Widget
         puts e.backtrace if $options[:debug]
         puts "Model #{model} will not be available: #{e.message}"
       end
-      
     end
   end
   

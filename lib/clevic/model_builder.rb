@@ -68,6 +68,7 @@ class ModelBuilder
   attr_reader :fields
   
   def initialize( table_view )
+    @auto_new ||= true
     @table_view = table_view
     @fields = []
   end
@@ -90,6 +91,15 @@ class ModelBuilder
   
   def read_only?
     @read_only ||= false
+  end
+  
+  # should this table automatically show a new blank recsord?
+  def auto_new( bool )
+    @auto_new = bool
+  end
+  
+  def auto_new?
+    @auto_new
   end
 
   # an ordinary field, edited in place with a text box
@@ -166,8 +176,11 @@ class ModelBuilder
     
     # the data
     @model.collection = records
+    
     # fill in an empty record for data entry
-    @model.collection << model_class.new if @model.collection.size == 0
+    if @model.collection.size == 0 && auto_new?
+      @model.collection << model_class.new
+    end
     
     # now set delegates
     @table_view.item_delegate = Clevic::ItemDelegate.new( @table_view )
@@ -200,6 +213,7 @@ private
   def get_records
     if @records.nil?
       #~ add_include_options
+      @options[:auto_new] = auto_new?
       @records = CacheTable.new( model_class, @options )
     end
     @records
