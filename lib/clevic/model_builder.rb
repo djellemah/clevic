@@ -125,6 +125,7 @@ class ModelBuilder
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
     
     field.delegate = RelationalDelegate.new( @table_view, field.attribute_path, options )
+    
     @fields << field
   end
 

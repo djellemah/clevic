@@ -98,7 +98,6 @@ if args.size > 0
         
         # load models
         models.children.each_with_index do |filename,i|
-          break if i >= 3
           begin
             load filename if filename.file?
           rescue Exception => e

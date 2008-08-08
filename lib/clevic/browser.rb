@@ -138,7 +138,7 @@ class Browser < Qt::Widget
         end
       end
     end
-    models
+    models.sort{|a,b| a.name <=> b.name}
   end
   
   # define a default ui with plain fields for all
@@ -159,7 +159,16 @@ class Browser < Qt::Widget
     Clevic::TableView.new( model, tables_tab ).create_model do
       ui_columns.each do |column|
         if model.reflections.has_key?( column.to_sym )
-          relational column.to_sym
+          begin
+            # check that the class for this relationship can be loaded
+            # This throws an exception with Taggable, but I can't
+            # figure out why
+            model.reflections[column.to_sym].class_name.constantize
+            relational column.to_sym
+          rescue
+            # just do a plain
+            plain column.to_sym
+          end
         else
           plain column.to_sym
         end
@@ -179,7 +188,7 @@ class Browser < Qt::Widget
     # Add all existing model objects as tabs, one each
     models.each do |model|
       begin
-        puts "model: #{model.inspect}"
+        next unless model.table_exists?
         tab = 
         if model.respond_to?( :ui )
           model.ui( tables_tab )
@@ -196,6 +205,7 @@ class Browser < Qt::Widget
           tables_tab.set_tab_text( tables_tab.current_index, tab_title )
         end
       rescue Exception => e
+        puts e.backtrace if $options[:debug]
         puts "Model #{model} will not be available: #{e.message}"
       end
       

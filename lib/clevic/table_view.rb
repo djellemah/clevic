@@ -513,7 +513,7 @@ class TableView < Qt::TableView
       saved = model.save( index )
       if !saved
         error_message = Qt::ErrorMessage.new( self )
-        msg = model.collection[index.row].errors.join("\n")
+        msg = model.collection[index.row].errors.to_a.join("\n")
         error_message.show_message( msg )
         error_message.show
       end
