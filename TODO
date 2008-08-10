@@ -3,6 +3,7 @@ exception when ditto-left/right to a field with incompatible type
 generate models - DrySQL
 allow moving of tabs
 habtm relations
+aggregates
 generate schema from definition? See rubyforge
 Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )

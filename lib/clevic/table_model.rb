@@ -206,8 +206,27 @@ class TableModel < Qt::AbstractTableModel
         nil
         
       when qt_tooltip_role
-        if orientation == Qt::Horizontal
-          @builder.fields[section].tooltip
+        case orientation
+          when Qt::Horizontal
+            @builder.fields[section].tooltip
+            
+          when Qt::Vertical
+            case
+              when !collection[section].errors.empty?
+                'Invalid data'
+              when collection[section].changed?
+                'Unsaved changes'
+            end
+        end
+        
+      when qt_background_role
+        if orientation == Qt::Vertical
+          case
+            when !collection[section].errors.empty?
+              Qt::Color.new( 'orange' )
+            when collection[section].changed?
+              Qt::Color.new( 'yellow' )
+          end
         end
         
       else
@@ -246,24 +265,34 @@ class TableModel < Qt::AbstractTableModel
           
         when qt_text_alignment_role
           index.field.alignment
-
+        
         # these are just here to make debug output quieter
         when qt_size_hint_role;
-        when qt_background_role;
+        when qt_background_role
+          Qt::Color.new( 'red' ) if index.has_errors?
+          
         when qt_font_role;
         when qt_foreground_role
           if index.field.read_only? || index.entity.readonly? || @builder.read_only?
             Qt::Color.new( 'dimgray' )
           end
+          
         when qt_decoration_role;
         
-        # provide a tooltip when an empty relational field is encountered
         when qt_tooltip_role
-          if index.metadata.type == :association
-            index.field.delegate.if_empty_message
-          end
-          
-          'Read-only' if index.field.read_only?
+          case
+            # show ActiveRecord validation errors
+            when index.has_errors?
+              index.errors.join("\n")
+              
+            # provide a tooltip when an empty relational field is encountered
+            when index.metadata.type == :association
+              index.field.delegate.if_empty_message
+            
+            # read-only field
+            when index.field.read_only?
+              'Read-only'
+          end    
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
           nil
@@ -272,7 +301,7 @@ class TableModel < Qt::AbstractTableModel
       # return a variant
       retval.to_variant
     rescue Exception => e
-      puts e.backtrace.join( "\n" )
+      puts e.backtrace
       puts "#{index.inspect} #{value.inspect} #{index.entity.inspect} #{e.message}"
       nil.to_variant
     end
@@ -346,7 +375,7 @@ class TableModel < Qt::AbstractTableModel
         
       when qt_checkstate_role
         if index.metadata.type == :boolean
-          index.entity.toggle!( index.attribute )
+          index.entity.toggle( index.attribute )
           true
         else
           false

@@ -491,7 +491,7 @@ class TableView < Qt::TableView
       end
       super
     rescue Exception => e
-      puts e.backtrace.join( "\n" )
+      puts e.backtrace
       puts e.message
       error_message = Qt::ErrorMessage.new( self )
       error_message.show_message( "Error in #{current_index.attribute.to_s}: \"#{e.message}\"" )
@@ -567,7 +567,7 @@ class TableView < Qt::TableView
     
   def focusOutEvent( event )
     super
-    save_current_row
+    #~ save_current_row
   end
   
   # this is the only method that is called when an itemDelegate is open

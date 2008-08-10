@@ -25,7 +25,6 @@ class DbOptions
   
   def initialize( options = nil )
     @options = options || {}
-    puts "@options: #{@options.inspect}"
     
     # make sure the relevant entries exist, so method_missing works
     @options[:adapter] ||= ''
@@ -33,8 +32,6 @@ class DbOptions
     @options[:username] ||= ''
     @options[:password] ||= ''
     @options[:database] ||= ''
-    
-    puts "@options: #{@options.inspect}"
   end
   
   def connect( *args, &block )
@@ -65,6 +62,7 @@ class DbOptions
   #   end
   # the block is evaluated in the context of the a new DbOptions
   # object.
+  # TODO use instance_eval
   def self.connect( args = nil, &block )
     inst = self.new( args )
     # using the Rails implementation, included in Qt

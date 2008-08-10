@@ -164,10 +164,11 @@ class Browser < Qt::Widget
             # check that the class for this relationship can be loaded
             # This throws an exception with Taggable, but I can't
             # figure out why
-            model.reflections[column.to_sym].class_name.constantize
+            #~ model.reflections[column.to_sym].class_name.constantize
             relational column.to_sym
           rescue
             # just do a plain
+            puts "Doing plain for #{model}.#{column}"
             plain column.to_sym
           end
         else

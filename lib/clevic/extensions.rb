@@ -132,6 +132,17 @@ module Qt
     
     attr_writer :entity
     
+    # return true if validation failed for this indexes field
+    def has_errors?
+      entity.errors.invalid?( field_name.to_sym )
+    end
+    
+    # return a collection of errors. Unlike AR, this
+    # will always return an array that will have zero, one
+    # or many elements.
+    def errors
+      [ entity.errors[field_name.to_sym] ].flatten
+    end
   end
 
 end

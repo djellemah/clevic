@@ -365,7 +365,9 @@ class RelationalDelegate < ComboDelegate
   # send data to the editor
   def setEditorData( editor, model_index )
     if is_combo?( editor )
-      editor.current_index = editor.find_data( model_index.attribute_value.id.to_variant )
+      unless model_index.attribute_value.nil?
+        editor.current_index = editor.find_data( model_index.attribute_value.id.to_variant )
+      end
       editor.line_edit.select_all
     end
   end

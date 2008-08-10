@@ -43,37 +43,6 @@ if $options[:debug]
   pp $options
 end
 
-def old_rails_init
-  # connect to the db
-  database_config = YAML.load_file( config + 'database.yml' )
-  dc = database_config[ $options[:profile] || 'development']
-  require 'active_support/core_ext/hash/keys.rb'
-  require 'active_support/dependencies.rb'
-  dc.extend ActiveSupport::CoreExtensions::Hash::Keys
-  dc.symbolize_keys!
-
-  Clevic::DbOptions.new( dc ).do_connection
-  #~ ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
-  
-  # load everything in lib
-  $: << ( arg + 'lib' ).realpath.to_s
-  ( arg + 'lib' ).children.each do |filename|
-    puts "filename: #{filename.inspect}"
-    load filename if filename.file?
-  end
-  
-  # load all models
-  1.upto 2 do
-    models.children.each do |filename|
-      begin
-        load filename if filename.file?
-      rescue Exception => e
-        puts "Error loading #{filename.basename.to_s}: #{e.message.inspect}"
-      end
-    end
-  end
-end
-
 if args.size > 0
   $options[:definition] = args.shift
   arg = Pathname.new( $options[:definition] )
@@ -93,15 +62,24 @@ if args.size > 0
           config.frameworks -= [ :action_mailer, :action_pack, :active_resource ]
         end
         
+        # load lib/ files
+        $: << ( arg + 'lib' ).realpath.to_s
+        ( arg + 'lib' ).children.each do |filename|
+          puts "filename: #{filename.inspect}"
+          load filename if filename.file?
+        end
+        
         # TODO check for Dirty in 2.1.x
         ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
         
         # load models
         models.children.each_with_index do |filename,i|
+        #~ %W{subscriber item comment}.map{|x| models + "#{x}.rb"}.each_with_index do |filename,i|
           begin
             load filename if filename.file?
           rescue Exception => e
             puts "Error loading #{filename.basename.to_s}: #{e.message.inspect}"
+            puts e.backtrace
           end
         end
       end
