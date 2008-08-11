@@ -7,11 +7,6 @@ require 'clevic/db_options.rb'
 require 'optparse'
 require 'active_support'
 
-# find and require variations on file_path
-def require_if( file_path )
-  require file_path if File.exist?( file_path ) || File.exist?( file_path + '.rb' )
-end
-  
 $options = {}
 oparser = OptionParser.new
 oparser.banner = <<BANNER
@@ -43,55 +38,65 @@ if $options[:debug]
   pp $options
 end
 
-if args.size > 0
-  $options[:definition] = args.shift
-  arg = Pathname.new( $options[:definition] )
-  if arg.directory?
-    config = Pathname.new( arg + 'config' )
-    app = Pathname.new( arg + 'app' )
-    models = Pathname.new( app + 'models' )
+class Pathname
+  # require this pathname if it exists
+  def require_if_exists
+    require realpath.to_s if exist?
+  end
+end
+
+def load_rails_models( root, config, models )
+  # initialize Rails
+  load config + 'environment.rb'
+  #~ puts "RAILS_ROOT: #{RAILS_ROOT.inspect}"
+  require 'initializer.rb'
+  Rails::Initializer.run do |config|
+    config.frameworks -= [ :action_mailer, :action_pack, :active_resource ]
+  end
+  
+  # load lib/ files
+  $: << ( root + 'lib' ).realpath.to_s
+  ( root + 'lib' ).children.each do |filename|
+    puts "filename: #{filename.inspect}"
+    load filename if filename.file?
+  end
+  
+  # TODO check for Dirty in 2.1.x
+  ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
+  
+  # load models
+  models.children.each_with_index do |filename,i|
+    begin
+      load filename if filename.file?
+    rescue Exception => e
+      puts "Error loading #{filename.basename.to_s}: #{e.message.inspect}"
+      puts e.backtrace
+    end
+  end
+end
+
+def load_models( pathname )
+  if pathname.directory?
+    config = pathname + 'config'
+    app = pathname + 'app'
+    models = app + 'models'
     # check if this is a Rails directory
-    if config.exist? && app.exist?
-      if models.exist?
-        # this is probably a Rails project"
-        # initialize Rails
-        load config + 'environment.rb'
-        require 'initializer.rb'
-        RAILS_ROOT = arg.realpath.to_s
-        Rails::Initializer.run do |config|
-          config.frameworks -= [ :action_mailer, :action_pack, :active_resource ]
-        end
-        
-        # load lib/ files
-        $: << ( arg + 'lib' ).realpath.to_s
-        ( arg + 'lib' ).children.each do |filename|
-          puts "filename: #{filename.inspect}"
-          load filename if filename.file?
-        end
-        
-        # TODO check for Dirty in 2.1.x
-        ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
-        
-        # load models
-        models.children.each_with_index do |filename,i|
-        #~ %W{subscriber item comment}.map{|x| models + "#{x}.rb"}.each_with_index do |filename,i|
-          begin
-            load filename if filename.file?
-          rescue Exception => e
-            puts "Error loading #{filename.basename.to_s}: #{e.message.inspect}"
-            puts e.backtrace
-          end
-        end
-      end
+    if config.exist? && app.exist? && models.exist?
+      # this is probably a Rails project"
+      load_rails_models( pathname, config, models )
     end
   else
-    # assume we have a single file
-    require_if "#{$options[:definition]}_models"
-    require_if $options[:definition]
+    # assume we have a single file, and try some variations
+    ( pathname + '.rb' ).require_if_exists
+    pathname.require_if_exists
+    ( pathname + '_models' ).require_if_exists
+    ( pathname + '_models.rb' ).require_if_exists
   end
-else
-  raise "no model definition file specified"
 end
+
+# load model files
+raise "no model definition file specified" if args.empty?
+args.each { |arg| load_models( Pathname.new( arg ) ) }
 
 app = Qt::Application.new( args )
 

@@ -128,7 +128,7 @@ class ModelBuilder
   # if options[:format] has a value, it's used either as a block
   # or as a dotted path
   def relational( attribute, options = {}, &block )
-    options[:display] ||= 'to_s'
+    raise ":display must be specified" if options[:display].nil?
     unless options.has_key? :class_name
       options[:class_name] = model_class.reflections[attribute].class_name || attribute.to_s.classify
     end
@@ -191,6 +191,54 @@ class ModelBuilder
     # give the built model back to the view class
     # see above comment about @model
     @table_view.model = @model
+  end
+  
+  # Build a default UI. All fields except the primary key are displayed
+  # as editable in the table. Any belongs_to relations are used to build
+  # combo boxes.
+  # Try to use a sensible :display option for the related class. In order:
+  # the name of the class, name, title, username
+  # order by the primary key
+  def default_ui
+    reflections = model_class.reflections.keys.map{|x| x.to_s}
+    ui_columns = model_class.columns.reject{|x| x.name == model_class.primary_key }.map do |column|
+      # TODO there must be a better way to do this
+      att = column.name.gsub( '_id', '' )
+      if reflections.include?( att )
+        att
+      else
+        column.name
+      end
+    end
+    
+    auto_new false
+    ui_columns.each do |column|
+      if model_class.reflections.has_key?( column.to_sym )
+        begin
+          reflection = model_class.reflections[column.to_sym]
+          if reflection.class == ActiveRecord::Reflection::AssociationReflection
+            # try to find a sensible display class. Default to to_s
+            related_class = reflection.class_name.constantize
+            display_method =
+            %w{#{model_class.name} name title username}.find( lambda{ 'to_s' } ) do |m|
+              related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
+            end
+            relational column.to_sym, :display => display_method
+          else
+            plain column.to_sym
+          end
+        rescue
+          puts $!.message
+          puts $!.backtrace
+          # just do a plain
+          puts "Doing plain for #{model_class}.#{column}"
+          plain column.to_sym
+        end
+      else
+        plain column.to_sym
+      end
+    end
+    records :order => model_class.primary_key
   end
 
 private

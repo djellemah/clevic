@@ -141,44 +141,6 @@ class Browser < Qt::Widget
     models.sort{|a,b| a.name <=> b.name}
   end
   
-  # define a default ui with plain fields for all
-  # columns (except id) in the model. Could combine this with
-  # DrySQL to automate the process.
-  def define_default_ui( model )
-    reflections = model.reflections.keys.map{|x| x.to_s}
-    ui_columns = model.columns.reject{|x| x.name == 'id' }.map do |column|
-      # TODO there must be a better way to do this
-      att = column.name.gsub( '_id', '' )
-      if reflections.include?( att )
-        att
-      else
-        column.name
-      end
-    end
-    
-    Clevic::TableView.new( model, tables_tab ).create_model do
-      auto_new false
-      ui_columns.each do |column|
-        if model.reflections.has_key?( column.to_sym )
-          begin
-            # check that the class for this relationship can be loaded
-            # This throws an exception with Taggable, but I can't
-            # figure out why
-            #~ model.reflections[column.to_sym].class_name.constantize
-            relational column.to_sym
-          rescue
-            # just do a plain
-            puts "Doing plain for #{model}.#{column}"
-            plain column.to_sym
-          end
-        else
-          plain column.to_sym
-        end
-      end
-      records :order => 'id'
-    end
-  end
-  
   # Create the tabs, each with a collection for a particular model class.
   #
   # models parameter can be an array of Model objects, in order of display.
@@ -195,7 +157,12 @@ class Browser < Qt::Widget
         if model.respond_to?( :ui )
           model.ui( tables_tab )
         else
-          define_default_ui( model )
+          # define a default ui with plain fields for all
+          # columns (except primary key) in the model. Could combine this with
+          # DrySQL to automate finding of relationships.
+          Clevic::TableView.new( model, tables_tab ).create_model do
+            default_ui
+          end
         end
         tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 60000 ) }
         tables_tab.add_tab( tab, translate( model.name.demodulize.tableize.humanize ) )

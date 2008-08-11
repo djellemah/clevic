@@ -313,6 +313,7 @@ class TableModel < Qt::AbstractTableModel
       case role
       when qt_edit_role
         # Don't allow the primary key to be changed
+        # TODO change this to use model_class.primary_key
         return false if index.attribute == :id
         
         if ( index.column < 0 || index.column >= dots.size )
