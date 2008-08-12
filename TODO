@@ -1,9 +1,11 @@
 allow directories for a setup. Problem here is tab order.
-move default_ui to somewhere it can be used easily
+metadata for virtual fields
+allow default_ui to be mildly overridden. @fields in ModelBuilder will need updating.
 exception when ditto-left/right to a field with incompatible type
 generate models - DrySQL
 allow moving of tabs
 habtm relations
+has_many :through
 composed_of & aggregates
 generate schema from definition? See rubyforge
 Ctrl-PgDn to last row in this column. Also extend selection

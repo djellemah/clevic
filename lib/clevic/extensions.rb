@@ -134,7 +134,12 @@ module Qt
     
     # return true if validation failed for this indexes field
     def has_errors?
-      entity.errors.invalid?( field_name.to_sym )
+      # virtual fields don't have metadata
+      if metadata.nil?
+        false
+      else
+        entity.errors.invalid?( field_name.to_sym )
+      end
     end
     
     # return a collection of errors. Unlike AR, this

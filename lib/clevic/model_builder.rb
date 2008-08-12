@@ -101,10 +101,10 @@ class ModelBuilder
   def auto_new?
     @auto_new
   end
-
+  
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {} )
-    options[:read_only] = true if options.has_key?( :display )
+    read_only_default( attribute, options )
     @fields << Clevic::Field.new( attribute.to_sym, model_class, options )
   end
   
@@ -127,7 +127,7 @@ class ModelBuilder
   # path on the foreign key model object
   # if options[:format] has a value, it's used either as a block
   # or as a dotted path
-  def relational( attribute, options = {}, &block )
+  def relational( attribute, options = {} )
     raise ":display must be specified" if options[:display].nil?
     unless options.has_key? :class_name
       options[:class_name] = model_class.reflections[attribute].class_name || attribute.to_s.classify
@@ -167,6 +167,8 @@ class ModelBuilder
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
     # TODO put @fields into TableModel, and access from there?
+    # or else keep fields here and turn the various methods
+    # in TableModel into accessors to here?
     @model = Clevic::TableModel.new( self )
     @model.object_name = @table_view.model_class.name
     @model.dots = @fields.map {|x| x.column }
@@ -200,10 +202,11 @@ class ModelBuilder
   # the name of the class, name, title, username
   # order by the primary key
   def default_ui
+    # combine reflections and attributes into one set
     reflections = model_class.reflections.keys.map{|x| x.to_s}
     ui_columns = model_class.columns.reject{|x| x.name == model_class.primary_key }.map do |column|
       # TODO there must be a better way to do this
-      att = column.name.gsub( '_id', '' )
+      att = column.name.gsub( /_id$/, '' )
       if reflections.include?( att )
         att
       else
@@ -211,7 +214,11 @@ class ModelBuilder
       end
     end
     
+    # don't create an empty record, because sometimes there are
+    # validations that will cause trouble
     auto_new false
+    
+    # build columns
     ui_columns.each do |column|
       if model_class.reflections.has_key?( column.to_sym )
         begin
@@ -242,6 +249,35 @@ class ModelBuilder
   end
 
 private
+
+  # set a sensible read-only value if it isn't already
+  # specified in options doesn't alread
+  def read_only_default( attribute, options )
+    # sensible defaults for read-only-ness
+    options[:read_only] ||= 
+    case
+      when options[:display].respond_to?( :call )
+        # it's a Proc or a Method, so we can't set it
+        true
+        
+      when model_class.column_names.include?( options[:display].to_s )
+        # it's a DB column, so it's not read only
+        false
+        
+      when model_class.reflections.include?( attribute )
+        # one-to-one relationships can be edited. many-to-one certainly can't
+        reflection = model_class.reflections[attribute]
+        reflection.macro != :has_one
+        
+      when model_class.instance_methods.include?( attribute.to_s )
+        puts "attribute: #{attribute.inspect}"
+        # read-only if there's no setter for the attribute
+        !model_class.instance_methods.include?( "#{attribute.to_s}=" )
+      else
+        # default to not read-only
+        false
+    end
+  end
 
   # The collection of model objects to display in a table
   # arg can either be a Hash, in which case a new CacheTable
