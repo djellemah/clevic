@@ -116,9 +116,8 @@ class Browser < Qt::Widget
   # slot to handle the currentChanged signal from tables_tab, and
   # set focus on the grid
   def current_changed( current_tab_index )
-    tables_tab.current_widget.setFocus
-    
     update_menus
+    tables_tab.current_widget.set_focus
   end
   
   # shortcut for the Qt translate call
@@ -126,14 +125,15 @@ class Browser < Qt::Widget
     Qt::Application.translate("Browser", st, nil, Qt::Application::UnicodeUTF8)
   end
 
-  # return the list of descendants of ActiveRecord::Base
+  # return the list of descendants of ActiveRecord::Base, or
+  # of Clevic::Record
   def find_models
     models = []
     ObjectSpace.each_object( Class ) do |x|
       if x.ancestors.include?( ActiveRecord::Base )
         case
-          when x == ActiveRecord::Base;
-          when x == Clevic::Record;
+          when x == ActiveRecord::Base; # don't include this
+          when x == Clevic::Record; # don't include this
           else; models << x
         end
       end
@@ -155,19 +155,26 @@ class Browser < Qt::Widget
         next unless model.table_exists?
         tab = 
         if model.respond_to?( :ui )
+          puts "Clevic::Record.ui deprecated. Use table_view instead"
           model.ui( tables_tab )
+        elsif model.respond_to?( :table_view )
+          model.table_view( tables_tab )
         else
-          # define a default ui with plain fields for all
-          # columns (except primary key) in the model. Could combine this with
-          # DrySQL to automate finding of relationships.
           Clevic::TableView.new( model, tables_tab ).create_model do
             default_ui
           end
         end
-        tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 60000 ) }
+        
+        # this is an interface that doesn't require TableView
+        model.build( tab.builder ) if model.respond_to?( :build )
+        
+        # show status messages
+        tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
+        
+        # add a new tab
         tables_tab.add_tab( tab, translate( model.name.demodulize.tableize.humanize ) )
         
-        # add the table to the menu
+        # add the table to the Table menu
         action = Qt::Action.new( @layout.menu_model )
         action.text = translate( model.name.demodulize.tableize.humanize )
         action.connect SIGNAL( 'triggered()' ) do
@@ -175,7 +182,7 @@ class Browser < Qt::Widget
         end
         @layout.menu_model.add_action( action )
         
-        # handle filter status changed
+        # handle filter status changed, so we can provide a visual indication
         tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
           # update the tab, so there's a visual indication of filtering
           tab_title = tab.filtered ? translate( '| ' + tab.model_class.name.humanize ) : translate( tab.model_class.name.humanize )

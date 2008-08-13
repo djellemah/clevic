@@ -10,6 +10,8 @@ class Field
   
   attr_accessor :attribute, :path, :label, :delegate, :class_name
   attr_accessor :alignment, :format, :tooltip, :path_block
+  attr_accessor :visible
+  
   attr_writer :sample, :read_only
   
   # attribute is the symbol for the attribute on the model_class
@@ -26,6 +28,7 @@ EOF
     # set values
     @attribute = attribute
     @model_class = model_class
+    @visible = true
     
     options.each do |key,value|
       self.send( "#{key}=", value ) if respond_to?( "#{key}=" )

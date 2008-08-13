@@ -64,8 +64,10 @@ For example, a the UI for a model called Entry would be defined like this:
   end
 =end
 class ModelBuilder
-  # The collection of Clevic::Field objects
-  attr_reader :fields
+  # The collection of visible Clevic::Field objects
+  def fields
+    @fields.reject{|x| !x.visible}
+  end
   
   def initialize( table_view )
     @auto_new ||= true
@@ -111,7 +113,7 @@ class ModelBuilder
   # edited with a combo box containing all previous entries in this field
   def distinct( attribute, options = {} )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = DistinctDelegate.new( @table_view, attribute, @table_view.model_class, options )
+    field.delegate = DistinctDelegate.new( @table_view, attribute, model_class, options )
     @fields << field
   end
 
@@ -119,7 +121,7 @@ class ModelBuilder
   def restricted( attribute, options = {} )
     raise "restricted must have a set" unless options.has_key?( :set )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = RestrictedDelegate.new( @table_view, attribute, @table_view.model_class, options )
+    field.delegate = RestrictedDelegate.new( @table_view, attribute, model_class, options )
     @fields << field
   end
 
@@ -142,7 +144,7 @@ class ModelBuilder
   # add AR :include options for foreign keys, but it takes up too much memory,
   # and actually takes longer to load a data set
   def add_include_options
-    @fields.each do |field|
+    fields.each do |field|
       if field.delegate.class == RelationalDelegate
         @options[:include] ||= []
         @options[:include] << field.attribute
@@ -170,11 +172,11 @@ class ModelBuilder
     # or else keep fields here and turn the various methods
     # in TableModel into accessors to here?
     @model = Clevic::TableModel.new( self )
-    @model.object_name = @table_view.model_class.name
-    @model.dots = @fields.map {|x| x.column }
-    @model.labels = @fields.map {|x| x.label }
-    @model.attributes = @fields.map {|x| x.attribute }
-    @model.attribute_paths = @fields.map { |x| x.attribute_path }
+    @model.object_name = model_class.name
+    @model.dots = fields.map {|x| x.column }
+    @model.labels = fields.map {|x| x.label }
+    @model.attributes = fields.map {|x| x.attribute }
+    @model.attribute_paths = fields.map { |x| x.attribute_path }
     
     # the data
     @model.collection = records
@@ -186,7 +188,7 @@ class ModelBuilder
     
     # now set delegates
     @table_view.item_delegate = Clevic::ItemDelegate.new( @table_view )
-    @fields.each_with_index do |field, index|
+    fields.each_with_index do |field, index|
       @table_view.set_item_delegate_for_column( index, field.delegate )
     end
     
@@ -246,6 +248,18 @@ class ModelBuilder
       end
     end
     records :order => model_class.primary_key
+  end
+  
+  def field( attribute )
+    @fields.find {|x| x.attribute == attribute }
+  end
+  
+  # make sure this field doesn't show up
+  # mainly intended to be called after default_ui has been called
+  # TODO implement this
+  def hide( attribute )
+    #~ puts "hide #{field( attribute ).inspect}"
+    #~ field( attribute ).visible = false
   end
 
 private

@@ -66,6 +66,7 @@ def load_rails_models( root, config, models )
   
   # load models
   models.children.each_with_index do |filename,i|
+  #~ %w{subscriber}.map{|x| models + "#{x}.rb"}.each_with_index do |filename,i|
     begin
       load filename if filename.file?
     rescue Exception => e

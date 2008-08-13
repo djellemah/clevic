@@ -44,7 +44,7 @@ class TableView < Qt::TableView
     self.context_menu_policy = Qt::ActionsContextMenu
   end
   
-  # return actions for the model, or an empty array if there aren't any
+  # return menu actions for the model, or an empty array if there aren't any
   def model_actions
     @model_actions ||= []
   end
@@ -290,8 +290,8 @@ class TableView < Qt::TableView
     @builder = Clevic::ModelBuilder.new( self )
     @builder.instance_eval( &block )
     @builder.build
-    model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
-      if @model_class.respond_to?( :data_changed )
+    if @model_class.respond_to?( :data_changed )
+      model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
         @model_class.data_changed( top_left, bottom_right, self )
       end
     end
