@@ -160,13 +160,16 @@ class Browser < Qt::Widget
         elsif model.respond_to?( :table_view )
           model.table_view( tables_tab )
         else
-          Clevic::TableView.new( model, tables_tab ).create_model do
+          Clevic::TableView.new( model, tables_tab ).create_model( false ) do
             default_ui
           end
         end
         
         # this is an interface that doesn't require TableView
         model.build( tab.builder ) if model.respond_to?( :build )
+        
+        # make sure the TableView has a fully-populated TableModel
+        tab.builder.build
         
         # show status messages
         tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }

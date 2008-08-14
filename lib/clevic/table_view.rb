@@ -285,11 +285,17 @@ class TableView < Qt::TableView
     emit filter_status( bool_filter )
   end
   
-  def create_model( &block )
+  # create a block context to build the TableModel
+  # build_now == true will call ModelBuilder.build
+  # build_now == true will not call ModelBuilder.build
+  def create_model( build_now = true, &block )
     raise "provide a block" unless block
     @builder = Clevic::ModelBuilder.new( self )
     @builder.instance_eval( &block )
-    @builder.build
+    @builder.build if build_now
+    
+    # this is only here because model_class.data_changed needs the view.
+    # Should probably fix that.
     if @model_class.respond_to?( :data_changed )
       model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
         @model_class.data_changed( top_left, bottom_right, self )

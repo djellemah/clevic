@@ -64,15 +64,15 @@ For example, a the UI for a model called Entry would be defined like this:
   end
 =end
 class ModelBuilder
-  # The collection of visible Clevic::Field objects
-  def fields
-    @fields.reject{|x| !x.visible}
-  end
-  
   def initialize( table_view )
     @auto_new ||= true
     @table_view = table_view
     @fields = []
+  end
+  
+  # The collection of visible Clevic::Field objects
+  def fields
+    @fields.reject{|x| !x.visible}
   end
   
   # return the index of the named field
@@ -195,6 +195,7 @@ class ModelBuilder
     # give the built model back to the view class
     # see above comment about @model
     @table_view.model = @model
+    
   end
   
   # Build a default UI. All fields except the primary key are displayed
@@ -256,10 +257,8 @@ class ModelBuilder
   
   # make sure this field doesn't show up
   # mainly intended to be called after default_ui has been called
-  # TODO implement this
   def hide( attribute )
-    #~ puts "hide #{field( attribute ).inspect}"
-    #~ field( attribute ).visible = false
+    field( attribute ).visible = false
   end
 
 private
