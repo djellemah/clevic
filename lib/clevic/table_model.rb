@@ -13,8 +13,6 @@ module Clevic
 This table model allows an ActiveRecord or ActiveResource to be used as a
 basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
 
-Initial idea by Richard Dale and Silvio Fonseca.
-
 * labels are the headings in the table view
 
 * dots are the dotted attribute paths that specify how to get values from
@@ -30,8 +28,22 @@ Initial idea by Richard Dale and Silvio Fonseca.
 class TableModel < Qt::AbstractTableModel
   include QtFlags
   
-  attr_accessor :collection, :dots, :attributes, :attribute_paths, :labels
+  # the CacheTable of Clevic::Record or ActiveRecord::Base objects
+  attr_reader :collection
+  
+  # the actual class for the collection objects
+  attr_accessor :model_class
+  
+  # the collection of Clevic::Field objects
+  attr_accessor :fields
+  
+  attr_accessor :read_only
+  def read_only?; read_only; end
 
+  # should this model create a new empty record by default?
+  attr_accessor :auto_new
+  def auto_new?; auto_new; end
+  
   signals(
     # index where error occurred, value, message
     'data_error(QModelIndex,QVariant,QString)',
@@ -39,10 +51,44 @@ class TableModel < Qt::AbstractTableModel
     'dataChanged(const QModelIndex&,const QModelIndex&)'
   )
   
-  def initialize( builder )
+  def initialize
     super()
     @metadatas = []
-    @builder = builder
+  end
+  
+  def fields=( arr )
+    @fields = arr
+    
+    #reset these
+    @metadatas = []
+    @dots = nil
+    @labels = nil
+    @attributes = nil
+    @attribute_paths = nil
+  end
+  
+  def dots
+    @dots ||= fields.map {|x| x.column }
+  end
+  
+  def labels
+    @labels ||= fields.map {|x| x.label }
+  end
+  
+  def attributes
+    @attributes ||= fields.map {|x| x.attribute }
+  end
+  
+  def attribute_paths
+    @attribute_paths ||= fields.map {|x| x.attribute_path }
+  end
+  
+  def collection=( arr )
+    @collection = arr
+    # fill in an empty record for data entry
+    if collection.size == 0 && auto_new?
+      collection << model_class.new
+    end
   end
   
   def sort( col, order )
@@ -69,19 +115,15 @@ class TableModel < Qt::AbstractTableModel
     []
   end
   
-  def build_dots( dots, attrs, prefix="" )
-    attrs.inject( dots ) do |cols, a|
-      if a[1].respond_to? :attributes
-        build_keys(cols, a[1].attributes, prefix + a[0] + ".")
-      else
-        cols << prefix + a[0]
-      end
-    end
-  end
-  
-  def model_class
-    @builder.model_class
-  end
+  #~ def build_dots( dots, attrs, prefix="" )
+    #~ attrs.inject( dots ) do |cols, a|
+      #~ if a[1].respond_to? :attributes
+        #~ build_keys(cols, a[1].attributes, prefix + a[0] + ".")
+      #~ else
+        #~ cols << prefix + a[0]
+      #~ end
+    #~ end
+  #~ end
   
   # cache metadata (ActiveRecord#column_for_attribute) because it's not going
   # to change over the lifetime of the table
@@ -165,7 +207,7 @@ class TableModel < Qt::AbstractTableModel
     end
     
     # read-only
-    unless model_index.field.read_only? || model_index.entity.readonly? || @builder.read_only?
+    unless model_index.field.read_only? || model_index.entity.readonly? || read_only?
       retval |= qt_item_is_editable.to_i 
     end
     retval
@@ -208,7 +250,7 @@ class TableModel < Qt::AbstractTableModel
       when qt_tooltip_role
         case orientation
           when Qt::Horizontal
-            @builder.fields[section].tooltip
+            fields[section].tooltip
             
           when Qt::Vertical
             case
@@ -273,7 +315,7 @@ class TableModel < Qt::AbstractTableModel
           
         when qt_font_role;
         when qt_foreground_role
-          if index.field.read_only? || index.entity.readonly? || @builder.read_only?
+          if index.field.read_only? || index.entity.readonly? || read_only?
             Qt::Color.new( 'dimgray' )
           end
           
@@ -465,7 +507,7 @@ class TableModel < Qt::AbstractTableModel
   end
   
   def field_for_index( model_index )
-    @builder.fields[model_index.column]
+    fields[model_index.column]
   end
   
 end

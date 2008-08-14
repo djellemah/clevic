@@ -20,12 +20,28 @@ class TableView < Qt::TableView
   # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
   signals 'status_text(QString)', 'filter_status(bool)'
   
-  def initialize( model_class, parent, *args )
+  # model_builder_record is:
+  # - a subclass of Clevic::Record or ActiveREcord::Base
+  # - an instance of ModelBuilder
+  # - an instance of TableModel
+  def initialize( model_builder_record, parent )
     super( parent )
     
-    # the AR entity class
-    @model_class = model_class
-    
+    # the model/model_class/builder
+    case 
+      when model_builder_record.kind_of?( TableModel )
+        self.model = model_builder_record
+      
+      when model_builder_record.ancestors.include?( ActiveRecord::Base )
+        with_record( model_builder_record )
+      
+      when model_builder_record.kind_of?( Clevic::ModelBuilder )
+        with_builder( model_builder_record )
+        
+      else
+        raise "Don't know what to do with #{model_builder_record}"
+    end
+      
     # see closeEditor
     @index_override = false
     
@@ -42,6 +58,50 @@ class TableView < Qt::TableView
     
     init_actions
     self.context_menu_policy = Qt::ActionsContextMenu
+  end
+  
+  # create a block context to build the TableModel
+  # build_now == true will call ModelBuilder.build
+  # build_now == true will not call ModelBuilder.build
+  def create_model( build_now = true, &block )
+    raise "provide a block" unless block
+    puts "create_model"
+    builder = Clevic::ModelBuilder.new( model_class, self, &block )
+    builder.build if build_now
+    
+    connect_model_class_signals
+    self
+  end
+
+  def with_record( model_class )
+    if @model.nil?
+      puts "with_record"
+      @model_class = model_class
+      builder = ModelBuilder.new( model_class, self )
+      if model.respond_to?( :ui )
+        model.ui( builder )
+      else
+        # pass false to not call build just yet
+        builder.default_ui
+        
+        # this is an interface that doesn't require TableView
+        model_class.fields( builder ) if model.respond_to?( :fields )
+        
+        # make sure the TableView has a fully-populated TableModel
+        builder.build
+      end
+      connect_model_class_signals
+    end
+  end
+  
+  def connect_model_class_signals
+    # this is only here because model_class.data_changed needs the view.
+    # Should probably fix that.
+    if model_class.respond_to?( :data_changed )
+      model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
+        model_class.data_changed( top_left, bottom_right, self )
+      end
+    end
   end
   
   # return menu actions for the model, or an empty array if there aren't any
@@ -285,25 +345,6 @@ class TableView < Qt::TableView
     emit filter_status( bool_filter )
   end
   
-  # create a block context to build the TableModel
-  # build_now == true will call ModelBuilder.build
-  # build_now == true will not call ModelBuilder.build
-  def create_model( build_now = true, &block )
-    raise "provide a block" unless block
-    @builder = Clevic::ModelBuilder.new( self )
-    @builder.instance_eval( &block )
-    @builder.build if build_now
-    
-    # this is only here because model_class.data_changed needs the view.
-    # Should probably fix that.
-    if @model_class.respond_to?( :data_changed )
-      model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
-        @model_class.data_changed( top_left, bottom_right, self )
-      end
-    end
-    self
-  end
-
   # alternative access for auto_size_column
   def auto_size_attribute( attribute, sample )
     col = model.attributes.index( attribute )
@@ -364,9 +405,20 @@ class TableView < Qt::TableView
   # make sure row size is correct
   # show error messages for data
   def setModel( model )
+    # must do this otherwise model gets garbage collected
+    @model = model
+    
+    # make sure we get nice spacing
     vertical_header.default_section_size = vertical_header.minimum_section_size
     super
     
+    # set delegates
+    @table_view.item_delegate = Clevic::ItemDelegate.new( @table_view )
+    model.fields.each_with_index do |field, index|
+      set_item_delegate_for_column( index, field.delegate )
+    end
+    
+    # data errors
     model.connect( SIGNAL( 'data_error(QModelIndex, QVariant, QString)' ) ) do |index,variant,msg|
       error_message = Qt::ErrorMessage.new( self )
       error_message.show_message( "Incorrect value '#{variant.value}' entered for field [#{index.attribute.to_s}].\nMessage was: #{msg}" )

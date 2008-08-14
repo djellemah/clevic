@@ -22,7 +22,7 @@ In the case of relational fields, all other options are passed to ActiveRecord::
 
 For example, a the UI for a model called Entry would be defined like this:
 
-  Clevic::TableView.new( Entry, parent ).create_model do
+  ModelBuilder.new( Entry, table_view ) do
     # :format is optional
     plain       :date, :format => '%d-%h-%y'
     plain       :start, :format => '%H:%M'
@@ -64,10 +64,18 @@ For example, a the UI for a model called Entry would be defined like this:
   end
 =end
 class ModelBuilder
-  def initialize( table_view )
-    @auto_new ||= true
+  
+  def initialize( model_class, table_view, &block )
+    @model_class = model_class
+    puts "@model_class: #{@model_class.inspect}"
+    @auto_new = true
+    @read_only = false
     @table_view = table_view
     @fields = []
+    
+    puts "instance_eval on #{self.inspect}"
+    self.instance_eval( &block ) unless block.nil?
+    puts "finished instance_eval"
   end
   
   # The collection of visible Clevic::Field objects
@@ -82,27 +90,19 @@ class ModelBuilder
     retval
   end
   
-  # the AR class for this table
-  def model_class
-    @table_view.model_class
-  end
+  # the ActiveRecord::Base or Clevic::Record class
+  attr_reader :model_class
   
   def read_only!
     @read_only = true
   end
   
-  def read_only?
-    @read_only ||= false
-  end
-  
-  # should this table automatically show a new blank recsord?
+  # should this table automatically show a new blank record?
   def auto_new( bool )
     @auto_new = bool
   end
   
-  def auto_new?
-    @auto_new
-  end
+  def auto_new?; @auto_new; end
   
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {} )
@@ -152,7 +152,7 @@ class ModelBuilder
     end
   end
 
-  # mostly used in the create_model block, but may also be
+  # mostly used in the new block, but may also be
   # used as an accessor for records
   def records( *args )
     if args.size == 0
@@ -162,40 +162,23 @@ class ModelBuilder
     end
   end
 
-  # This is intended to be called from the view class which instantiated
-  # this builder object.
+  # This takes all the information collected
+  # by the other methods, and returns the new TableModel
   def build
     # build the model with all it's collections
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
-    # TODO put @fields into TableModel, and access from there?
-    # or else keep fields here and turn the various methods
-    # in TableModel into accessors to here?
-    @model = Clevic::TableModel.new( self )
+    @model = Clevic::TableModel.new
     @model.object_name = model_class.name
-    @model.dots = fields.map {|x| x.column }
-    @model.labels = fields.map {|x| x.label }
-    @model.attributes = fields.map {|x| x.attribute }
-    @model.attribute_paths = fields.map { |x| x.attribute_path }
+    @model.model_class = model_class
+    @model.fields = @fields
+    @model.read_only = @read_only
+    @model.auto_new = auto_new?
     
     # the data
     @model.collection = records
     
-    # fill in an empty record for data entry
-    if @model.collection.size == 0 && auto_new?
-      @model.collection << model_class.new
-    end
-    
-    # now set delegates
-    @table_view.item_delegate = Clevic::ItemDelegate.new( @table_view )
-    fields.each_with_index do |field, index|
-      @table_view.set_item_delegate_for_column( index, field.delegate )
-    end
-    
-    # give the built model back to the view class
-    # see above comment about @model
-    @table_view.model = @model
-    
+    @model
   end
   
   # Build a default UI. All fields except the primary key are displayed

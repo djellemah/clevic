@@ -6,16 +6,12 @@ require 'clevic.rb'
 module Clevic
 
 =begin rdoc
-The main application class. Each model for display should have a self.ui method
+TODO update this
+
+The main application class. Each model for display should have a self.build method
 which returns a Clevic::TableView instance, usually in conjunction with
 a ModelBuilder.
 
-  Clevic::TableView.new( Entry, parent ).create_model.new( Entry, parent ).create_model
-    .
-    .
-    .
-  end
-  
 Model instances may also implement <tt>self.key_press_event( event, current_index, view )</tt>
 and <tt>self.data_changed( top_left_index, bottom_right_index, view )</tt> methods so that
 they can respond to editing events and do Neat Stuff.
@@ -150,36 +146,31 @@ class Browser < Qt::Widget
     models = find_models if models.empty?
     
     # Add all existing model objects as tabs, one each
-    models.each do |model|
+    models.each do |model_class|
       begin
-        next unless model.table_exists?
-        tab = 
-        if model.respond_to?( :ui )
-          puts "Clevic::Record.ui deprecated. Use table_view instead"
-          model.ui( tables_tab )
-        elsif model.respond_to?( :table_view )
-          model.table_view( tables_tab )
+        next unless model_class.table_exists?
+        
+        # create the the table_view and the table_model for the model_class
+        tab =
+        if model_class.respond_to?( :ui )
+          model_class.ui( tables_tab )
+        elsif model_class.respond_to?( :table_view )
+          model_class.table_view( tables_tab )
         else
-          Clevic::TableView.new( model, tables_tab ).create_model( false ) do
+          Clevic::TableView.new( model_class, tables_tab ) do
             default_ui
           end
         end
-        
-        # this is an interface that doesn't require TableView
-        model.build( tab.builder ) if model.respond_to?( :build )
-        
-        # make sure the TableView has a fully-populated TableModel
-        tab.builder.build
         
         # show status messages
         tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
         
         # add a new tab
-        tables_tab.add_tab( tab, translate( model.name.demodulize.tableize.humanize ) )
+        tables_tab.add_tab( tab, translate( model_class.name.demodulize.tableize.humanize ) )
         
         # add the table to the Table menu
         action = Qt::Action.new( @layout.menu_model )
-        action.text = translate( model.name.demodulize.tableize.humanize )
+        action.text = translate( model_class.name.demodulize.tableize.humanize )
         action.connect SIGNAL( 'triggered()' ) do
           tables_tab.current_widget = tab
         end
@@ -188,12 +179,12 @@ class Browser < Qt::Widget
         # handle filter status changed, so we can provide a visual indication
         tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
           # update the tab, so there's a visual indication of filtering
-          tab_title = tab.filtered ? translate( '| ' + tab.model_class.name.humanize ) : translate( tab.model_class.name.humanize )
+          tab_title = ( tab.filtered ? '| ' : '' ) + translate( model_class.name.humanize )
           tables_tab.set_tab_text( tables_tab.current_index, tab_title )
         end
       rescue Exception => e
         puts e.backtrace if $options[:debug]
-        puts "Model #{model} will not be available: #{e.message}"
+        puts "Model #{model_class} will not be available: #{e.message}"
       end
     end
   end
