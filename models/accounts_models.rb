@@ -17,8 +17,8 @@ class Entry < Clevic::Record
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
 
   # define how fields will be displayed
-  def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do
+  def self.build_table_model( model_builder )
+    model_builder.instance_exec do
       plain       :date, :sample => '88-WWW-99'
       distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
       relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
@@ -82,8 +82,8 @@ class Account < Clevic::Record
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   
   # define how fields are displayed
-  def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do
+  def self.build_table_model( model_builder )
+    model_builder.instance_exec do
       plain       :name
       restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
       plain       :account_type

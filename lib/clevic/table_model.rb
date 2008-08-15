@@ -35,7 +35,7 @@ class TableModel < Qt::AbstractTableModel
   attr_accessor :model_class
   
   # the collection of Clevic::Field objects
-  attr_accessor :fields
+  attr_reader :fields
   
   attr_accessor :read_only
   def read_only?; read_only; end

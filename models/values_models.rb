@@ -9,11 +9,12 @@ end
 
 # This is a read-only view, which is currently not implemented
 class Value < Clevic::Record
-  #~ set_table_name 'values'
-  has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
-  has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
-  def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do
+  set_table_name 'values'
+  #~ has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
+  #~ has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
+  
+  def self.build_table_model( model_builder )
+    model_builder.instance_exec do
       read_only!
       plain       :date
       plain       :description

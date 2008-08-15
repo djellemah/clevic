@@ -153,13 +153,10 @@ class Browser < Qt::Widget
         # create the the table_view and the table_model for the model_class
         tab =
         if model_class.respond_to?( :ui )
+          puts "Entity#ui deprecated. Use build_table_model instead."
           model_class.ui( tables_tab )
-        elsif model_class.respond_to?( :table_view )
-          model_class.table_view( tables_tab )
         else
-          Clevic::TableView.new( model_class, tables_tab ) do |mb|
-            mb.default_ui
-          end
+          Clevic::TableView.new( model_class, tables_tab )
         end
         
         # show status messages

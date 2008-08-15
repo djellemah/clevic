@@ -65,6 +65,8 @@ For example, a the UI for a model called Entry would be defined like this:
 =end
 class ModelBuilder
   
+  # TODO move table_view into a UI class, one of them iterates
+  # through all the fields setting delegates anyway.
   def initialize( model_class, table_view, &block )
     @model_class = model_class
     @auto_new = true
@@ -132,9 +134,7 @@ class ModelBuilder
       options[:class_name] = model_class.reflections[attribute].class_name || attribute.to_s.classify
     end
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    
     field.delegate = RelationalDelegate.new( @table_view, field.attribute_path, options )
-    
     @fields << field
   end
 

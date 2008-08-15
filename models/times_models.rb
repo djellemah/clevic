@@ -15,8 +15,9 @@ class Entry < Clevic::Record
   belongs_to :project
   
   # define how fields are displayed
-  def self.fields( model_builder )
-    model_builder.instance_exec do
+  #~ def self.build_table_model( model_builder )
+  def self.build_table_model
+    #~ model_builder.instance_exec do
       plain       :date, :sample => '28-Dec-08'
       relational  :project, :display => 'project', :conditions => 'active = true', :order => 'lower(project)'
       relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
@@ -29,7 +30,7 @@ class Entry < Clevic::Record
       distinct    :person, :tooltip => 'The person who did the work'
       
       records     :order => 'date, start, id'
-    end
+    #~ end
   end
   
   def self.actions( view, action_builder )
@@ -100,8 +101,8 @@ class Invoice < Clevic::Record
   has_many :entries
 
   # define how fields are displayed
-  def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do
+  def self.build_table_model( model_builder )
+    model_builder.instance_exec do
       plain :date
       distinct :client
       plain :invoice_number
@@ -119,8 +120,8 @@ end
 class Project < Clevic::Record
   has_many :entries
 
-  def self.ui( parent )
-    Clevic::TableView.new( Project, parent ).create_model do
+  def self.build_table_model( model_builder )
+    model_builder.instance_exec do
       plain     :project
       plain     :description
       distinct  :client
@@ -147,8 +148,8 @@ class Activity < Clevic::Record
   has_many :entries
 
   # define how fields are displayed
-  def self.ui( parent )
-    Clevic::TableView.new( Activity, parent ).create_model do
+  def self.build_table_model( model_builder )
+    model_builder.instance_exec do
       plain :activity
       plain :active
       

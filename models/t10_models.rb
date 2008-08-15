@@ -1,9 +1,7 @@
 require 'clevic.rb'
 
 class Subscriber
-  def self.build( model_builder )
-    require 'pp'
-    pp model_builder.fields.inspect
+  def self.post_default_ui( model_builder )
     model_builder.instance_eval do
       plain :password
       hide :password_salt

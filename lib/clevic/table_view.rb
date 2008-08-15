@@ -21,7 +21,7 @@ class TableView < Qt::TableView
   signals 'status_text(QString)', 'filter_status(bool)'
   
   # model_builder_record is:
-  # - a subclass of Clevic::Record or ActiveREcord::Base
+  # - a subclass of Clevic::Record or ActiveRecord::Base
   # - an instance of ModelBuilder
   # - an instance of TableModel
   def initialize( model_builder_record, parent, &block )
@@ -34,17 +34,10 @@ class TableView < Qt::TableView
         self.model = model_builder_record
       
       when model_builder_record.ancestors.include?( ActiveRecord::Base )
-        if block.nil?
-          # this is an ordinary old instantiation
-          @model_class = model_builder_record
-        else
-          # there's a block so we need to execute it in
-          # the context of a model builder
-          with_record( model_builder_record, &block )
-        end
+        with_record( model_builder_record, &block )
       
       when model_builder_record.kind_of?( Clevic::ModelBuilder )
-        with_builder( model_builder_record )
+        with_builder( model_builder_record, &block )
         
       else
         raise "Don't know what to do with #{model_builder_record}"
@@ -68,42 +61,42 @@ class TableView < Qt::TableView
     self.context_menu_policy = Qt::ActionsContextMenu
   end
   
-  # create a block context to build the TableModel
-  # build_now == true will call ModelBuilder.build
-  # build_now == true will not call ModelBuilder.build
-  def create_model( build_now = true, &block )
-    puts "deprecated"
-    raise "provide a block" unless block
-    builder = Clevic::ModelBuilder.new( model_class, self, &block )
-    puts "builder: #{builder.inspect}"
-    self.model = builder.build if build_now
-    
-    connect_model_class_signals
-    self
-  end
-
   def with_record( model_class, &block )
-    @model_class = model_class
     builder = ModelBuilder.new( model_class, self )
-    if block.arity == 0
-      builder.instance_eval( &block )
+    if model_class.respond_to?( :build_table_model )
+      # the model_class defines the UI
+      method = model_class.method :build_table_model
+      if method.arity == 0
+        raise "Entity#build_table_model arity== 0 not immplemented"
+        builder.instance_eval { method.to_proc }
+      else
+        method.call( builder )
+      end
     else
-      yield( builder )
+      # build a default UI
+      builder.default_ui
+      
+      # allow for minor tweaks
+      model_class.post_default_ui( builder ) if model_class.respond_to?( :post_default_ui )
     end
-    
-    # pass false to not call build just yet
-    builder.default_ui
-    
-    # this is an interface that doesn't require TableView
-    model_class.fields( builder ) if model.respond_to?( :fields )
-    
+
+    # the block adds to the previous definitions
+    unless block.nil?
+      if block.arity == 0
+        builder.instance_eval( &block )
+      else
+        yield( builder )
+      end
+    end
+
     # make sure the TableView has a fully-populated TableModel
     self.model = builder.build
     
-    connect_model_class_signals
+    # connect data_changed signals for the model_class to respond
+    connect_model_class_signals( model_class )
   end
   
-  def connect_model_class_signals
+  def connect_model_class_signals( model_class )
     # this is only here because model_class.data_changed needs the view.
     # Should probably fix that.
     if model_class.respond_to?( :data_changed )
