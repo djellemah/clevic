@@ -24,8 +24,9 @@ class TableView < Qt::TableView
   # - a subclass of Clevic::Record or ActiveREcord::Base
   # - an instance of ModelBuilder
   # - an instance of TableModel
-  def initialize( model_builder_record, parent )
-    super( parent )
+  def initialize( model_builder_record, parent, &block )
+    # need the empty block here, otherwise Qt bindings grab &block
+    super( parent ) {}
     
     # the model/model_class/builder
     case 
@@ -33,7 +34,14 @@ class TableView < Qt::TableView
         self.model = model_builder_record
       
       when model_builder_record.ancestors.include?( ActiveRecord::Base )
-        with_record( model_builder_record )
+        if block.nil?
+          # this is an ordinary old instantiation
+          @model_class = model_builder_record
+        else
+          # there's a block so we need to execute it in
+          # the context of a model builder
+          with_record( model_builder_record, &block )
+        end
       
       when model_builder_record.kind_of?( Clevic::ModelBuilder )
         with_builder( model_builder_record )
@@ -64,34 +72,35 @@ class TableView < Qt::TableView
   # build_now == true will call ModelBuilder.build
   # build_now == true will not call ModelBuilder.build
   def create_model( build_now = true, &block )
+    puts "deprecated"
     raise "provide a block" unless block
-    puts "create_model"
     builder = Clevic::ModelBuilder.new( model_class, self, &block )
-    builder.build if build_now
+    puts "builder: #{builder.inspect}"
+    self.model = builder.build if build_now
     
     connect_model_class_signals
     self
   end
 
-  def with_record( model_class )
-    if @model.nil?
-      puts "with_record"
-      @model_class = model_class
-      builder = ModelBuilder.new( model_class, self )
-      if model.respond_to?( :ui )
-        model.ui( builder )
-      else
-        # pass false to not call build just yet
-        builder.default_ui
-        
-        # this is an interface that doesn't require TableView
-        model_class.fields( builder ) if model.respond_to?( :fields )
-        
-        # make sure the TableView has a fully-populated TableModel
-        builder.build
-      end
-      connect_model_class_signals
+  def with_record( model_class, &block )
+    @model_class = model_class
+    builder = ModelBuilder.new( model_class, self )
+    if block.arity == 0
+      builder.instance_eval( &block )
+    else
+      yield( builder )
     end
+    
+    # pass false to not call build just yet
+    builder.default_ui
+    
+    # this is an interface that doesn't require TableView
+    model_class.fields( builder ) if model.respond_to?( :fields )
+    
+    # make sure the TableView has a fully-populated TableModel
+    self.model = builder.build
+    
+    connect_model_class_signals
   end
   
   def connect_model_class_signals
@@ -413,7 +422,7 @@ class TableView < Qt::TableView
     super
     
     # set delegates
-    @table_view.item_delegate = Clevic::ItemDelegate.new( @table_view )
+    self.item_delegate = Clevic::ItemDelegate.new( self )
     model.fields.each_with_index do |field, index|
       set_item_delegate_for_column( index, field.delegate )
     end
@@ -436,7 +445,7 @@ class TableView < Qt::TableView
   # resize all fields based on heuristics rather
   # than iterating through the entire data model
   def resize_columns
-    @builder.fields.each_with_index do |field, index|
+    model.fields.each_with_index do |field, index|
       auto_size_column( index, field.sample )
     end
   end

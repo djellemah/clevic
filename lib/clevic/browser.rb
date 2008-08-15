@@ -157,8 +157,8 @@ class Browser < Qt::Widget
         elsif model_class.respond_to?( :table_view )
           model_class.table_view( tables_tab )
         else
-          Clevic::TableView.new( model_class, tables_tab ) do
-            default_ui
+          Clevic::TableView.new( model_class, tables_tab ) do |mb|
+            mb.default_ui
           end
         end
         

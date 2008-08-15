@@ -227,7 +227,7 @@ class TableModel < Qt::AbstractTableModel
       when qt_display_role
         case orientation
           when Qt::Horizontal
-            @labels[section]
+            labels[section]
           when Qt::Vertical
             # don't force a fetch from the db
             if collection.cached_at?( section )

@@ -67,15 +67,12 @@ class ModelBuilder
   
   def initialize( model_class, table_view, &block )
     @model_class = model_class
-    puts "@model_class: #{@model_class.inspect}"
     @auto_new = true
     @read_only = false
     @table_view = table_view
     @fields = []
     
-    puts "instance_eval on #{self.inspect}"
     self.instance_eval( &block ) unless block.nil?
-    puts "finished instance_eval"
   end
   
   # The collection of visible Clevic::Field objects
@@ -266,7 +263,6 @@ private
         reflection.macro != :has_one
         
       when model_class.instance_methods.include?( attribute.to_s )
-        puts "attribute: #{attribute.inspect}"
         # read-only if there's no setter for the attribute
         !model_class.instance_methods.include?( "#{attribute.to_s}=" )
       else

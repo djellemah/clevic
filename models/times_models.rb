@@ -15,8 +15,8 @@ class Entry < Clevic::Record
   belongs_to :project
   
   # define how fields are displayed
-  def self.ui( parent )
-    Clevic::TableView.new( self, parent ).create_model do
+  def self.fields( model_builder )
+    model_builder.instance_exec do
       plain       :date, :sample => '28-Dec-08'
       relational  :project, :display => 'project', :conditions => 'active = true', :order => 'lower(project)'
       relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
