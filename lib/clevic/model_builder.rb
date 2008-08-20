@@ -9,7 +9,8 @@ module Clevic
 
 =begin rdoc
 This is used to define a set of fields in a UI, any related tables,
-restrictions on data entry, formatting and that kind of thing.
+restrictions on data entry, formatting and that kind of thing. So it
+defines a DSL for building a TableModel.
 
 Optional specifiers are:
 * :sample is used to size the columns. Will default to some hopefully sensible value from the db.
@@ -65,13 +66,12 @@ For example, a the UI for a model called Entry would be defined like this:
 =end
 class ModelBuilder
   
-  # TODO move table_view into a UI class, one of them iterates
-  # through all the fields setting delegates anyway.
-  def initialize( model_class, table_view, &block )
+  # Create a definition for model_class (subclass of ActiveRecord::Base
+  # or Clevic::Record). Then execute block using self.instance_eval.
+  def initialize( model_class, &block )
     @model_class = model_class
     @auto_new = true
     @read_only = false
-    @table_view = table_view
     @fields = []
     
     self.instance_eval( &block ) unless block.nil?
@@ -112,7 +112,7 @@ class ModelBuilder
   # edited with a combo box containing all previous entries in this field
   def distinct( attribute, options = {} )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = DistinctDelegate.new( @table_view, attribute, model_class, options )
+    field.delegate = DistinctDelegate.new( nil, attribute, model_class, options )
     @fields << field
   end
 
@@ -120,7 +120,7 @@ class ModelBuilder
   def restricted( attribute, options = {} )
     raise "restricted must have a set" unless options.has_key?( :set )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = RestrictedDelegate.new( @table_view, attribute, model_class, options )
+    field.delegate = RestrictedDelegate.new( nil, attribute, model_class, options )
     @fields << field
   end
 
@@ -134,19 +134,8 @@ class ModelBuilder
       options[:class_name] = model_class.reflections[attribute].class_name || attribute.to_s.classify
     end
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = RelationalDelegate.new( @table_view, field.attribute_path, options )
+    field.delegate = RelationalDelegate.new( nil, field.attribute_path, options )
     @fields << field
-  end
-
-  # add AR :include options for foreign keys, but it takes up too much memory,
-  # and actually takes longer to load a data set
-  def add_include_options
-    fields.each do |field|
-      if field.delegate.class == RelationalDelegate
-        @options[:include] ||= []
-        @options[:include] << field.attribute
-      end
-    end
   end
 
   # mostly used in the new block, but may also be
@@ -161,16 +150,19 @@ class ModelBuilder
 
   # This takes all the information collected
   # by the other methods, and returns the new TableModel
-  def build
+  def build( table_view )
     # build the model with all it's collections
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
-    @model = Clevic::TableModel.new
+    @model = Clevic::TableModel.new( table_view )
     @model.object_name = model_class.name
     @model.model_class = model_class
     @model.fields = @fields
     @model.read_only = @read_only
     @model.auto_new = auto_new?
+    
+    # set parent for all delegates
+    fields.each {|x| x.delegate.parent = table_view unless x.delegate.nil? }
     
     # the data
     @model.collection = records
@@ -242,6 +234,17 @@ class ModelBuilder
   end
 
 private
+
+  # add AR :include options for foreign keys, but it takes up too much memory,
+  # and actually takes longer to load a data set
+  def add_include_options
+    fields.each do |field|
+      if field.delegate.class == RelationalDelegate
+        @options[:include] ||= []
+        @options[:include] << field.attribute
+      end
+    end
+  end
 
   # set a sensible read-only value if it isn't already
   # specified in options doesn't alread

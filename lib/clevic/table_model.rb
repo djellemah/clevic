@@ -51,8 +51,8 @@ class TableModel < Qt::AbstractTableModel
     'dataChanged(const QModelIndex&,const QModelIndex&)'
   )
   
-  def initialize
-    super()
+  def initialize( parent = nil )
+    super
     @metadatas = []
   end
   
@@ -310,6 +310,8 @@ class TableModel < Qt::AbstractTableModel
         
         # these are just here to make debug output quieter
         when qt_size_hint_role;
+        
+        # show field with a red background if there's an error
         when qt_background_role
           Qt::Color.new( 'red' ) if index.has_errors?
           
@@ -355,8 +357,7 @@ class TableModel < Qt::AbstractTableModel
       case role
       when qt_edit_role
         # Don't allow the primary key to be changed
-        # TODO change this to use model_class.primary_key
-        return false if index.attribute == :id
+        return false if index.attribute == model_class.primary_key.to_sym
         
         if ( index.column < 0 || index.column >= dots.size )
           raise "invalid column #{index.column}" 

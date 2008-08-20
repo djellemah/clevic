@@ -62,13 +62,13 @@ class TableView < Qt::TableView
   end
   
   def with_record( model_class, &block )
-    builder = ModelBuilder.new( model_class, self )
+    builder = ModelBuilder.new( model_class )
     if model_class.respond_to?( :build_table_model )
       # the model_class defines the UI
       method = model_class.method :build_table_model
       if method.arity == 0
         raise "Entity#build_table_model arity== 0 not immplemented"
-        builder.instance_eval { method.to_proc }
+        #~ builder.instance_eval { method.to_proc }
       else
         method.call( builder )
       end
@@ -76,7 +76,7 @@ class TableView < Qt::TableView
       # build a default UI
       builder.default_ui
       
-      # allow for minor tweaks
+      # allow for smallish changes to a default build
       model_class.post_default_ui( builder ) if model_class.respond_to?( :post_default_ui )
     end
 
@@ -90,7 +90,7 @@ class TableView < Qt::TableView
     end
 
     # make sure the TableView has a fully-populated TableModel
-    self.model = builder.build
+    self.model = builder.build( self )
     
     # connect data_changed signals for the model_class to respond
     connect_model_class_signals( model_class )
@@ -113,7 +113,8 @@ class TableView < Qt::TableView
   
   # hook for the sanity_check_xxx methods
   # called for the actions set up by ActionBuilder
-  # it just wraps the action block/method in the catch
+  # it just wraps the action block/method in a catch
+  # block for :insane
   def action_triggered( &block )
     catch :insane do
       yield

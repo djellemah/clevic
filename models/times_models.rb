@@ -16,8 +16,8 @@ class Entry < Clevic::Record
   
   # define how fields are displayed
   #~ def self.build_table_model( model_builder )
-  def self.build_table_model
-    #~ model_builder.instance_exec do
+  def self.build_table_model( model_builder )
+    model_builder.instance_exec do
       plain       :date, :sample => '28-Dec-08'
       relational  :project, :display => 'project', :conditions => 'active = true', :order => 'lower(project)'
       relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
@@ -30,7 +30,7 @@ class Entry < Clevic::Record
       distinct    :person, :tooltip => 'The person who did the work'
       
       records     :order => 'date, start, id'
-    #~ end
+    end
   end
   
   def self.actions( view, action_builder )
