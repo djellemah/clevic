@@ -1,5 +1,33 @@
-require 'active_record'
+require 'active_record.rb'
 require 'active_record/dirty.rb'
+
+module Clevic
+
+  module Default
+    module ClassMethods
+      def define_ui_block; nil; end
+
+      def post_default_ui_block
+        @post_default_ui_block
+      end
+      
+      def post_default_ui( &block )
+        @post_default_ui_block = block
+      end
+    end
+    
+    def self.included(base)
+      base.extend(ClassMethods)
+    end
+  end
+
+end
+
+module ActiveRecord
+  class Base
+    include Clevic::Default
+  end
+end
 
 module Clevic
 
@@ -14,6 +42,10 @@ module Clevic
     self.abstract_class = true
     @@subclass_order = []
     
+    def self.define_ui_block
+      @define_ui_block
+    end
+    
     def self.inherited( subclass )
       @@subclass_order << subclass
       super
@@ -25,6 +57,11 @@ module Clevic
 
     def self.models=( array )
       @@subclass_order = array
+    end
+    
+    # use this to define UI blocks using the ModelBuilder DSL
+    def self.define_ui( &block )
+      @define_ui_block = block
     end
   end
   

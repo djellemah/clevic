@@ -63,24 +63,24 @@ class TableView < Qt::TableView
   
   def with_record( model_class, &block )
     builder = ModelBuilder.new( model_class )
+    
+    # TODO should this be in ModelBuilder?
     if model_class.respond_to?( :build_table_model )
-      # the model_class defines the UI
+      # call build_table_model
       method = model_class.method :build_table_model
-      if method.arity == 0
-        raise "Entity#build_table_model arity== 0 not immplemented"
-        #~ builder.instance_eval { method.to_proc }
-      else
-        method.call( builder )
-      end
+      method.call( builder )
+    elsif !model_class.define_ui_block.nil?
+      #define_ui is used, so use that block
+      builder.instance_eval( &model_class.define_ui_block )
     else
       # build a default UI
       builder.default_ui
       
       # allow for smallish changes to a default build
-      model_class.post_default_ui( builder ) if model_class.respond_to?( :post_default_ui )
+      builder.instance_eval( &model_class.post_default_ui_block ) unless model_class.post_default_ui_block.nil?
     end
 
-    # the block adds to the previous definitions
+    # the local block adds to the previous definitions
     unless block.nil?
       if block.arity == 0
         builder.instance_eval( &block )
@@ -227,7 +227,7 @@ class TableView < Qt::TableView
   end
   
   def sanity_check_read_only_table
-    if builder.read_only?
+    if model.read_only?
       emit status_text( 'Can\'t modify a read-only table.' )
       throw :insane
     end

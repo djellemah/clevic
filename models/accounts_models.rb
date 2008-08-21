@@ -16,21 +16,18 @@ class Entry < Clevic::Record
   belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
 
-  # define how fields will be displayed
-  def self.build_table_model( model_builder )
-    model_builder.instance_exec do
-      plain       :date, :sample => '88-WWW-99'
-      distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
-      relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
-      relational  :credit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
-      plain       :amount, :sample => 999999.99
-      distinct    :category
-      plain       :cheque_number
-      plain       :active, :sample => 'WW'
-      plain       :vat, :label => 'VAT', :sample => 'WW', :tooltip => 'Does this include VAT?'
-      
-      records     :order => 'date, id'
-    end
+  define_ui do
+    plain       :date, :sample => '88-WWW-99'
+    distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
+    relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+    relational  :credit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+    plain       :amount, :sample => 999999.99
+    distinct    :category
+    plain       :cheque_number
+    plain       :active, :sample => 'WW'
+    plain       :vat, :label => 'VAT', :sample => 'WW', :tooltip => 'Does this include VAT?'
+    
+    records     :order => 'date, id'
   end
   
   # called when data is changed in the UI
@@ -82,16 +79,14 @@ class Account < Clevic::Record
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   
   # define how fields are displayed
-  def self.build_table_model( model_builder )
-    model_builder.instance_exec do
-      plain       :name
-      restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
-      plain       :account_type
-      plain       :pastel_number, :alignment => Qt::AlignRight, :label => 'Pastel'
-      plain       :fringe, :format => "%.1f"
-      plain       :active
-      
-      records  :order => 'name,account_type'
-    end
+  define_ui do
+    plain       :name
+    restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
+    plain       :account_type
+    plain       :pastel_number, :alignment => Qt::AlignRight, :label => 'Pastel'
+    plain       :fringe, :format => "%.1f"
+    plain       :active
+    
+    records  :order => 'name,account_type'
   end
 end
