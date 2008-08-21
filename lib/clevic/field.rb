@@ -1,5 +1,7 @@
 require 'qtext/flags.rb'
 
+require 'clevic/field_builder.rb'
+
 module Clevic
 
 =begin rdoc

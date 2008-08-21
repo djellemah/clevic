@@ -32,6 +32,13 @@ For example, a the UI for a model called Entry would be defined like this:
     restricted  :vat, :label => 'VAT', :set => %w{ yes no all }, :tooltip => 'Is VAT included?'
     distinct    :description, :conditions => 'now() - date <= interval( 1 year )'
     
+    # or with a block for readability
+    restricted :vat do
+      label   'VAT'
+      set     %w{ yes no all }
+      tooltip 'Is VAT included?'
+    end
+    
     # this is a read-only field
     plain       :origin, :read_only => true
     
@@ -102,15 +109,31 @@ class ModelBuilder
   end
   
   def auto_new?; @auto_new; end
+
+  def gather_block( options, &block )
+    unless block.nil?
+      fb = FieldBuilder.new( options )
+      fb.instance_eval( &block )
+      fb.to_hash
+    else
+      options
+    end
+  end
   
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {} )
+    # get values from block, if it's there
+    options = gather_block( options, &block )
+    
     read_only_default( attribute, options )
     @fields << Clevic::Field.new( attribute.to_sym, model_class, options )
   end
   
   # edited with a combo box containing all previous entries in this field
   def distinct( attribute, options = {} )
+    # get values from block, if it's there
+    options = gather_block( options, &block )
+    
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
     field.delegate = DistinctDelegate.new( nil, attribute, model_class, options )
     @fields << field
@@ -118,6 +141,9 @@ class ModelBuilder
 
   # edited with a combo box, but restricted to a specified set
   def restricted( attribute, options = {} )
+    # get values from block, if it's there
+    options = gather_block( options, &block )
+    
     raise "restricted must have a set" unless options.has_key?( :set )
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
     field.delegate = RestrictedDelegate.new( nil, attribute, model_class, options )
@@ -128,11 +154,17 @@ class ModelBuilder
   # path on the foreign key model object
   # if options[:format] has a value, it's used either as a block
   # or as a dotted path
-  def relational( attribute, options = {} )
-    raise ":display must be specified" if options[:display].nil?
+  def relational( attribute, options = {}, &block )
     unless options.has_key? :class_name
       options[:class_name] = model_class.reflections[attribute].class_name || attribute.to_s.classify
     end
+    
+    # get values from block, if it's there
+    options = gather_block( options, &block )
+    
+    # check after all possible options have been collected
+    raise ":display must be specified" if options[:display].nil?
+    
     field = Clevic::Field.new( attribute.to_sym, model_class, options )
     field.delegate = RelationalDelegate.new( nil, field.attribute_path, options )
     @fields << field

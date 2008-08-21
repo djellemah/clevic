@@ -21,15 +21,13 @@ class Entry < Clevic::Record
     plain       :start
     plain       :end
     plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
-    relational  :activity, :display => 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = true'
     
-    # TODO specify complex fields like this:
-    #~ relational :activity do
-      #~ display 'activity'
-      #~ order 'lower(activity)'
-      #~ sample 'Troubleshooting'
-      #~ conditions 'active = true'
-    #~ end
+    relational :activity do
+      display    'activity'
+      order      'lower(activity)'
+      sample     'Troubleshooting'
+      conditions 'active = true'
+    end
     
     distinct    :module, :tooltip => 'Module or sub-project'
     plain       :charge, :tooltip => 'Is this time billable?'
