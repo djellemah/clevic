@@ -15,15 +15,16 @@ defines a DSL for building a TableModel.
 Optional specifiers are:
 * :sample is used to size the columns. Will default to some hopefully sensible value from the db.
 * :format is something that can be understood by strftime (for time and date
-  fields) or understood by % (for everything else)
+  fields) or understood by % (for everything else). It can also be a Proc
+  that has one parameter - the current entity.
 * :alignment is one of Qt::TextAlignmentRole, ie Qt::AlignRight, Qt::AlignLeft, Qt::AlignCenter
 * :set is the set of strings that are accepted by a RestrictedDelegate
 
 In the case of relational fields, all other options are passed to ActiveRecord::Base#find
 
-For example, a the UI for a model called Entry would be defined like this:
+For example, the UI for a model called Entry could be defined like this:
 
-  ModelBuilder.new( Entry, table_view ) do
+  ModelBuilder.new( Entry ) do
     # :format is optional
     plain       :date, :format => '%d-%h-%y'
     plain       :start, :format => '%H:%M'
@@ -69,6 +70,13 @@ For example, a the UI for a model called Entry would be defined like this:
     
     # could also be like this, where a..e are instances of Entry
     records [ a,b,c,d,e ]
+  end
+  
+The top-level could also be like this
+  class Entry < Clevic::Record
+    define_ui do
+      # same as the "ModelBuilder.new( Entry ) do" block above
+    end
   end
 =end
 class ModelBuilder
@@ -182,28 +190,12 @@ class ModelBuilder
     end
   end
 
-  # This takes all the information collected
-  # by the other methods, and returns the new TableModel
-  def build( table_view )
-    # build the model with all it's collections
-    # using @model here because otherwise the view's
-    # reference to this very same model is garbage collected.
-    @model = Clevic::TableModel.new( table_view )
-    @model.object_name = model_class.name
-    @model.model_class = model_class
-    @model.fields = @fields
-    @model.read_only = @read_only
-    @model.auto_new = auto_new?
-    
-    # set parent for all delegates
-    fields.each {|x| x.delegate.parent = table_view unless x.delegate.nil? }
-    
-    # the data
-    @model.collection = records
-    
-    @model
+  # make sure this field doesn't show up
+  # mainly intended to be called after default_ui has been called
+  def hide( attribute )
+    field( attribute ).visible = false
   end
-  
+
   # Build a default UI. All fields except the primary key are displayed
   # as editable in the table. Any belongs_to relations are used to build
   # combo boxes.
@@ -261,12 +253,28 @@ class ModelBuilder
     @fields.find {|x| x.attribute == attribute }
   end
   
-  # make sure this field doesn't show up
-  # mainly intended to be called after default_ui has been called
-  def hide( attribute )
-    field( attribute ).visible = false
+  # This takes all the information collected
+  # by the other methods, and returns the new TableModel
+  def build( table_view )
+    # build the model with all it's collections
+    # using @model here because otherwise the view's
+    # reference to this very same model is garbage collected.
+    @model = Clevic::TableModel.new( table_view )
+    @model.object_name = model_class.name
+    @model.model_class = model_class
+    @model.fields = @fields
+    @model.read_only = @read_only
+    @model.auto_new = auto_new?
+    
+    # set parent for all delegates
+    fields.each {|x| x.delegate.parent = table_view unless x.delegate.nil? }
+    
+    # the data
+    @model.collection = records
+    
+    @model
   end
-
+  
 private
 
   # add AR :include options for foreign keys, but it takes up too much memory,
