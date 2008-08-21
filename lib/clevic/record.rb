@@ -46,6 +46,9 @@ module Clevic
       @define_ui_block
     end
     
+    # keep track of the order in which subclasses are
+    # defined, so that can be used as the default ordering
+    # of the views.
     def self.inherited( subclass )
       @@subclass_order << subclass
       super
@@ -54,7 +57,7 @@ module Clevic
     def self.models
       @@subclass_order
     end
-
+    
     def self.models=( array )
       @@subclass_order = array
     end

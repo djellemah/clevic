@@ -17,6 +17,7 @@ lib/clevic/db_options.rb
 lib/clevic/delegates.rb
 lib/clevic/extensions.rb
 lib/clevic/field.rb
+lib/clevic/field_builder.rb
 lib/clevic/item_delegate.rb
 lib/clevic/model_builder.rb
 lib/clevic/model_column.rb

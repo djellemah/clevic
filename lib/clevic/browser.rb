@@ -6,15 +6,8 @@ require 'clevic.rb'
 module Clevic
 
 =begin rdoc
-TODO update this
-
-The main application class. Each model for display should have a self.build method
-which returns a Clevic::TableView instance, usually in conjunction with
-a ModelBuilder.
-
-Model instances may also implement <tt>self.key_press_event( event, current_index, view )</tt>
-and <tt>self.data_changed( top_left_index, bottom_right_index, view )</tt> methods so that
-they can respond to editing events and do Neat Stuff.
+The main application class. Display as many tabs as there are Clevic::Record or ActiveRecord::Base
+subclasses. 
 =end
 class Browser < Qt::Widget
   slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab() current_changed(int)}

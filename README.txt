@@ -9,7 +9,8 @@ editing of tables in a pre-existing relational DBMS.
 
 Using ActiveRecord means Clevic supports Postgresql, Mysql and so on. It's been tested with Postgres and sqlite.
 
-Using Qt means it runs on Linux, Windows and OSX.
+Using Qt means it runs on Linux, Windows and OSX. Thoroughly tested
+in Linux, slightly tested in Windows and OSX.
 
 == FEATURES:
 
@@ -22,6 +23,7 @@ Using Qt means it runs on Linux, Windows and OSX.
 * Filter by current field.
 * search by field contents.
 * cut and paste in CSV format
+* point Clevic at a Rails project and see your models in a GUI
 
 === Shortcuts:
 
@@ -37,9 +39,11 @@ Using Qt means it runs on Linux, Windows and OSX.
 
 Models and their UI representation must be defined in Ruby. A class that
 inherits from Clevic::Record (which itself inherits from ActiveRecord::Base) will provide
-a minimally functional UI.
-Beyond that, the framework provides
-an easy Rails-migrations-like syntax for defining more complex and useful behaviour.
+a minimally functional UI. Beyond that, the framework provides
+a DSL for defining more complex and useful behaviour (see Clevic::ModelBuilder).
+
+Clevic also knows how to build a default UI with sensible defaults from
+ActiveRecord::Base subclasses.
 
 In the models/ subdirectory, start with minimal_models.rb.
 account_models.rb and times_models.rb provide definitions for more real-world examples.
@@ -57,18 +61,17 @@ comments, see Clevic::Browser and Clevic::ModelBuilder.
 * leverages SQL whenever possible to handle large datasets, sorting, filtering
   etc. So it's probably not suitable for talking to a remote db across a slow link.
 
-=== Plans
-
-* sortable by row headers
-* color highlighting of fields and records on definable criteria
-
 == PROBLEMS:
 
 See TODO file.
 
 == SYNOPSIS:
 
-	clevic model_definition_file
+	clevic model_definition_file.rb
+	
+	OR
+	
+	clevic path_to_rails_project [model_tweaks.rb]
 
 == REQUIREMENTS:
 

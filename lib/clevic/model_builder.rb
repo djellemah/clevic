@@ -24,60 +24,77 @@ In the case of relational fields, all other options are passed to ActiveRecord::
 
 For example, the UI for a model called Entry could be defined like this:
 
-  ModelBuilder.new( Entry ) do
-    # :format is optional
-    plain       :date, :format => '%d-%h-%y'
-    plain       :start, :format => '%H:%M'
-    plain       :amount, :format => '%.2f'
-    # :set is mandatory
-    restricted  :vat, :label => 'VAT', :set => %w{ yes no all }, :tooltip => 'Is VAT included?'
-    distinct    :description, :conditions => 'now() - date <= interval( 1 year )'
-    
-    # or with a block for readability
-    restricted :vat do
-      label   'VAT'
-      set     %w{ yes no all }
-      tooltip 'Is VAT included?'
+  # inherit from Clevic::Record, which itself inherits from ActiveRecord::Base
+  class Entry < Clevic::Record
+    belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
+    belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
+
+    define_ui do
+      # :format is optional
+      plain       :date, :format => '%d-%h-%y'
+      plain       :start, :format => '%H:%M'
+      plain       :amount, :format => '%.2f'
+      # :set is mandatory for a restricted field
+      restricted  :vat, :label => 'VAT', :set => %w{ yes no all }, :tooltip => 'Is VAT included?'
+      
+      # alternately with a block for readability
+      restricted :vat do
+        label   'VAT'
+        set     %w{ yes no all }
+        tooltip 'Is VAT included?'
+      end
+      
+      # distinct will show other values for this field in the combo
+      distinct    :description, :conditions => 'now() - date <= interval( 1 year )'
+
+      # this is a read-only field
+      plain       :origin, :read_only => true
+      
+      # for these, :format will be a dotted attribute accessor for the related
+      # ActiveRecord entity, in this case an instance of Account
+      relational  :debit, :format => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+      relational  :credit, :format => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
+      
+      # or like this to have an on-the-fly transform
+      # item will be an instance of Account
+      relational  :credit, :format => lambda {|item| item.name.downcase}, :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      
+      # this is a read-only display field from a related table
+      # the Entry class should then define a method called currency
+      # which returns an object that responds to 'short'.
+      # You can also use a Proc for :display
+      plain :currency, :display => 'short', :label => 'Currency'
+      
+      # this is a read-only display field from a related table
+      # the Entry class should then define a method called currency
+      # which returns an object that responds to 'currency', which
+      # returns an object that responds to 'rate'.
+      # You can also use a Proc for :display
+      plain :some_field, :display => 'currency.rate', :label => 'Exchange Rate'
+      
+      # this is optional
+      records :order => 'date,start'
+      
+      # could also be like this, where a..e are instances of Entry
+      records [ a,b,c,d,e ]
     end
-    
-    # this is a read-only field
-    plain       :origin, :read_only => true
-    
-    # for these, :format will be a dotted attribute accessor for the related
-    # ActiveRecord entity, in this case an instance of Account
-    relational  :debit, :format => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
-    relational  :credit, :format => 'name', :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)'
-    
-    # or like this to have an on-the-fly transform
-    # item will be an instance of Account
-    relational  :credit, :format => lambda {|item| item.name.downcase}, :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
-    
-    # this is a read-only display field from a related table
-    # the Entry class should then define a method called currency
-    # which returns an object that responds to 'short'.
-    # You can also use a Proc for :display
-    plain :currency, :display => 'short', :label => 'Currency'
-    
-    # this is a read-only display field from a related table
-    # the Entry class should then define a method called currency
-    # which returns an object that responds to 'currency', which
-    # returns an object that responds to 'rate'.
-    # You can also use a Proc for :display
-    plain :some_field, :display => 'currency.rate', :label => 'Exchange Rate'
-    
-    # this is optional
-    records :order => 'date,start'
-    
-    # could also be like this, where a..e are instances of Entry
-    records [ a,b,c,d,e ]
   end
   
-The top-level could also be like this
-  class Entry < Clevic::Record
-    define_ui do
-      # same as the "ModelBuilder.new( Entry ) do" block above
+For ActiveRecord::Base classes, ModelBuilder knows how to build a
+fairly sensible default UI. For small tweaks, something like this
+can be used (where Subscriber is already defined elsewhere as a subclass
+of ActiveRecord::Base):
+  class Subscriber
+    post_default_ui do
+      plain :password # this field does not exist in the DB
+      hide :password_salt # these should be hidden
+      hide :password_hash
     end
   end
+
+Subclasses of Clevic::Record may also implement <tt>self.key_press_event( event, current_index, view )</tt>
+and <tt>self.data_changed( top_left_index, bottom_right_index, view )</tt> methods so that
+they can respond to editing events and do Neat Stuff.
 =end
 class ModelBuilder
   
@@ -91,32 +108,6 @@ class ModelBuilder
     @read_only = false
     @fields = []
     init_from_model( model_class, can_build_default, &block )
-  end
-  
-  def init_from_model( model_class, can_build_default, &block )
-    if model_class.respond_to?( :build_table_model )
-      # call build_table_model
-      method = model_class.method :build_table_model
-      method.call( builder )
-    elsif !model_class.define_ui_block.nil?
-      #define_ui is used, so use that block
-      instance_eval( &model_class.define_ui_block )
-    elsif can_build_default
-      # build a default UI
-      default_ui
-      
-      # allow for smallish changes to a default build
-      instance_eval( &model_class.post_default_ui_block ) unless model_class.post_default_ui_block.nil?
-    end
-
-    # the local block adds to the previous definitions
-    unless block.nil?
-      if block.arity == 0
-        instance_eval( &block )
-      else
-        yield( builder )
-      end
-    end
   end
   
   # The collection of visible Clevic::Field objects
@@ -134,6 +125,7 @@ class ModelBuilder
   # the ActiveRecord::Base or Clevic::Record class
   attr_reader :model_class
   
+  # set read_only to true
   def read_only!
     @read_only = true
   end
@@ -145,18 +137,6 @@ class ModelBuilder
   
   def auto_new?; @auto_new; end
 
-  # update options with the values in block, using FieldBuilder
-  # to evaluate block
-  def gather_block( options, &block )
-    unless block.nil?
-      fb = FieldBuilder.new( options )
-      fb.instance_eval( &block )
-      fb.to_hash
-    else
-      options
-    end
-  end
-  
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {}, &block )
     # get values from block, if it's there
@@ -207,8 +187,9 @@ class ModelBuilder
     @fields << field
   end
 
-  # mostly used in the new block, but may also be
-  # used as an accessor for records
+  # mostly used in the new block to define the set of records
+  # for the TableModel, but may also be
+  # used as an accessor for records.
   def records( *args )
     if args.size == 0
       get_records
@@ -228,7 +209,8 @@ class ModelBuilder
   # combo boxes.
   # Try to use a sensible :display option for the related class. In order:
   # the name of the class, name, title, username
-  # order by the primary key
+  # order by the primary key. The class can use post_default_ui( &block )
+  # to do small tweaks.
   def default_ui
     # combine reflections and attributes into one set
     reflections = model_class.reflections.keys.map{|x| x.to_s}
@@ -276,6 +258,7 @@ class ModelBuilder
     records :order => model_class.primary_key
   end
   
+  # return the named Clevic::Field object
   def field( attribute )
     @fields.find {|x| x.attribute == attribute }
   end
@@ -304,6 +287,32 @@ class ModelBuilder
   
 private
 
+  def init_from_model( model_class, can_build_default, &block )
+    if model_class.respond_to?( :build_table_model )
+      # call build_table_model
+      method = model_class.method :build_table_model
+      method.call( builder )
+    elsif !model_class.define_ui_block.nil?
+      #define_ui is used, so use that block
+      instance_eval( &model_class.define_ui_block )
+    elsif can_build_default
+      # build a default UI
+      default_ui
+      
+      # allow for smallish changes to a default build
+      instance_eval( &model_class.post_default_ui_block ) unless model_class.post_default_ui_block.nil?
+    end
+
+    # the local block adds to the previous definitions
+    unless block.nil?
+      if block.arity == 0
+        instance_eval( &block )
+      else
+        yield( builder )
+      end
+    end
+  end
+  
   # add AR :include options for foreign keys, but it takes up too much memory,
   # and actually takes longer to load a data set
   def add_include_options
@@ -366,6 +375,19 @@ private
     end
     @records
   end
+  # update options with the values in block, using FieldBuilder
+  # to evaluate block
+
+  def gather_block( options, &block )
+    unless block.nil?
+      fb = FieldBuilder.new( options )
+      fb.instance_eval( &block )
+      fb.to_hash
+    else
+      options
+    end
+  end
+  
 end
 
 end

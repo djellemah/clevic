@@ -66,9 +66,8 @@ EOF
     end
   end
   
-  # Return the attribute value for the given entity, which may
+  # Return the attribute value for the given entity, which will probably
   # be an ActiveRecord instance
-  # entity is an ActiveRecord instance
   def value_for( entity )
     return nil if entity.nil?
     transform_attribute( entity.send( attribute ) )
