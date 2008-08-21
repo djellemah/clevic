@@ -9,7 +9,7 @@ module Clevic
 
 =begin rdoc
 This is used to define a set of fields in a UI, any related tables,
-restrictions on data entry, formatting and that kind of thing. So it
+restrictions on data entry, formatting and that kind of thing. Essentially it
 defines a DSL for building a TableModel.
 
 Optional specifiers are:
@@ -110,6 +110,8 @@ class ModelBuilder
   
   def auto_new?; @auto_new; end
 
+  # update options with the values in block, using FieldBuilder
+  # to evaluate block
   def gather_block( options, &block )
     unless block.nil?
       fb = FieldBuilder.new( options )
@@ -121,7 +123,7 @@ class ModelBuilder
   end
   
   # an ordinary field, edited in place with a text box
-  def plain( attribute, options = {} )
+  def plain( attribute, options = {}, &block )
     # get values from block, if it's there
     options = gather_block( options, &block )
     
@@ -130,7 +132,7 @@ class ModelBuilder
   end
   
   # edited with a combo box containing all previous entries in this field
-  def distinct( attribute, options = {} )
+  def distinct( attribute, options = {}, &block )
     # get values from block, if it's there
     options = gather_block( options, &block )
     
@@ -140,7 +142,7 @@ class ModelBuilder
   end
 
   # edited with a combo box, but restricted to a specified set
-  def restricted( attribute, options = {} )
+  def restricted( attribute, options = {}, &block )
     # get values from block, if it's there
     options = gather_block( options, &block )
     
