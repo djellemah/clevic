@@ -10,7 +10,7 @@ module Clevic
 class TableView < Qt::TableView
   include ActionBuilder
   
-  attr_reader :model_class, :builder
+  attr_reader :model_class
   # whether the model is currently filtered
   # TODO better in QAbstractSortFilter?
   attr_accessor :filtered
@@ -61,39 +61,19 @@ class TableView < Qt::TableView
     self.context_menu_policy = Qt::ActionsContextMenu
   end
   
-  def with_record( model_class, &block )
-    builder = ModelBuilder.new( model_class )
+  def with_builder( model_builder, &block )
+    model_builder.instance_eval( &block ) unless block.nil?
     
-    # TODO should this be in ModelBuilder?
-    if model_class.respond_to?( :build_table_model )
-      # call build_table_model
-      method = model_class.method :build_table_model
-      method.call( builder )
-    elsif !model_class.define_ui_block.nil?
-      #define_ui is used, so use that block
-      builder.instance_eval( &model_class.define_ui_block )
-    else
-      # build a default UI
-      builder.default_ui
-      
-      # allow for smallish changes to a default build
-      builder.instance_eval( &model_class.post_default_ui_block ) unless model_class.post_default_ui_block.nil?
-    end
-
-    # the local block adds to the previous definitions
-    unless block.nil?
-      if block.arity == 0
-        builder.instance_eval( &block )
-      else
-        yield( builder )
-      end
-    end
-
     # make sure the TableView has a fully-populated TableModel
-    self.model = builder.build( self )
+    self.model = model_builder.build( self )
     
     # connect data_changed signals for the model_class to respond
     connect_model_class_signals( model_class )
+  end
+  
+  def with_record( model_class, &block )
+    builder = ModelBuilder.new( model_class )
+    with_builder( builder, &block )
   end
   
   def connect_model_class_signals( model_class )

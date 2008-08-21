@@ -83,13 +83,40 @@ class ModelBuilder
   
   # Create a definition for model_class (subclass of ActiveRecord::Base
   # or Clevic::Record). Then execute block using self.instance_eval.
-  def initialize( model_class, &block )
+  # The builder will construct a default TableModel from the model_class
+  # unless can_build_default == false
+  def initialize( model_class, can_build_default = true, &block )
     @model_class = model_class
     @auto_new = true
     @read_only = false
     @fields = []
-    
-    self.instance_eval( &block ) unless block.nil?
+    init_from_model( model_class, can_build_default, &block )
+  end
+  
+  def init_from_model( model_class, can_build_default, &block )
+    if model_class.respond_to?( :build_table_model )
+      # call build_table_model
+      method = model_class.method :build_table_model
+      method.call( builder )
+    elsif !model_class.define_ui_block.nil?
+      #define_ui is used, so use that block
+      instance_eval( &model_class.define_ui_block )
+    elsif can_build_default
+      # build a default UI
+      default_ui
+      
+      # allow for smallish changes to a default build
+      instance_eval( &model_class.post_default_ui_block ) unless model_class.post_default_ui_block.nil?
+    end
+
+    # the local block adds to the previous definitions
+    unless block.nil?
+      if block.arity == 0
+        instance_eval( &block )
+      else
+        yield( builder )
+      end
+    end
   end
   
   # The collection of visible Clevic::Field objects

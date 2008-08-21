@@ -1,3 +1,4 @@
+tests
 allow directories for a setup. Problem here is tab order.
 metadata for virtual fields
 exception when ditto-left/right to a field with incompatible type
