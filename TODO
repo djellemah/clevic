@@ -21,6 +21,7 @@ undo
 - undo of field changes
 
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
+Allow an arbitrary widget to be used as the editor for a field.
 wrap description, and allow Access-style zooming
 Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
