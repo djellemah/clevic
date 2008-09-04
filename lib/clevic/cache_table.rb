@@ -9,14 +9,14 @@ Store the SQL order_by attributes with ascending and descending values
 class OrderAttribute
   attr_reader :direction, :attribute
   
-  def initialize( model_class, sql_order_fragment )
-    @model_class = model_class
-    if sql_order_fragment =~ /.*\.(.*?) *asc/
+  def initialize( entity_class, sql_order_fragment )
+    @entity_class = entity_class
+    if sql_order_fragment =~ /^(.*?\.)?(.*?) *asc$/i
       @direction = :asc
-      @attribute = $1
-    elsif sql_order_fragment =~ /.*\.(.*?) *desc/
+      @attribute = $2
+    elsif sql_order_fragment =~ /^(.*?\.)?(.*?) *desc$/i
       @direction = :desc
-      @attribute = $1
+      @attribute = $2
     else
       @direction = :asc
       @attribute = sql_order_fragment
@@ -34,7 +34,7 @@ class OrderAttribute
   
   # return 'field ASC' or 'field DESC', depending
   def to_sql
-    "#{@model_class.table_name}.#{attribute} #{direction.to_s}"
+    "#{@entity_class.table_name}.#{attribute} #{direction.to_s}"
   end
   
   def reverse( direction )
@@ -47,9 +47,14 @@ class OrderAttribute
   
   # return the opposite ASC or DESC from to_sql
   def to_reverse_sql
-    "#{@model_class.table_name}.#{attribute} #{reverse(direction).to_s}"
+    "#{@entity_class.table_name}.#{attribute} #{reverse(direction).to_s}"
   end
-  
+
+  def ==( other )
+    @entity_class == other.instance_eval( '@entity_class' ) and
+    self.direction == other.direction and
+    self.attribute == other.attribute
+  end
 end
 
 =begin rdoc
@@ -71,25 +76,25 @@ for each call?
 class CacheTable < Array
   # the number of records loaded in one call to the db
   attr_accessor :preload_count
-  attr_reader :options, :model_class
+  attr_reader :options, :entity_class
   
-  def initialize( model_class, find_options = {} )
+  def initialize( entity_class, find_options = {} )
     @preload_count = 20
     # must be before sanitise_options
-    @model_class = model_class
+    @entity_class = entity_class
     # must be before anything that uses options
     @options = sanitise_options( find_options )
     
     # size the array and fill it with nils. They'll be filled
     # in by the [] operator
     @row_count = sql_count
-    super(@row_count)
+    super( @row_count )
   end
   
   # The count of the records according to the db, which may be different to
   # the records in the cache
   def sql_count
-    @model_class.count( :conditions => @options[:conditions] )
+    @entity_class.count( :conditions => @options[:conditions] )
   end
   
   def order
@@ -101,18 +106,18 @@ class CacheTable < Array
   end
   
   def quote_column( field_name )
-    @model_class.connection.quote_column_name( field_name )
+    @entity_class.connection.quote_column_name( field_name )
   end
   
   # return a string containing the correct
   # boolean value depending on the DB adapter
   # because Postgres wants real true and false in complex statements, not 't' and 'f'
   def sql_boolean( value )
-    case model_class.connection.adapter_name
+    case entity_class.connection.adapter_name
       when 'PostgreSQL'
         value ? 'true' : 'false'
       else
-        value ? model_class.connection.quoted_true : model_class.connection.quoted_false
+        value ? entity_class.connection.quoted_true : entity_class.connection.quoted_false
     end
   end
   
@@ -130,8 +135,8 @@ class CacheTable < Array
     # build case statement, including recusion
     st = <<-EOF
 case
-  when #{model_class.table_name}.#{quote_column attribute} #{operator} :#{attribute} then #{sql_boolean true}
-  when #{model_class.table_name}.#{quote_column attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
+  when #{entity_class.table_name}.#{quote_column attribute} #{operator} :#{attribute} then #{sql_boolean true}
+  when #{entity_class.table_name}.#{quote_column attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
   else #{sql_boolean false}
 end
 EOF
@@ -144,6 +149,7 @@ EOF
   # :params => the parameters corresponding to :sql
   # entity is an AR model object
   # direction is either :forwards or :backwards
+  # TODO I really don't like the interface for this method
   def build_sql_find( entity, direction )
     operator =
     case direction
@@ -158,7 +164,7 @@ EOF
     # only Postgres seems to understand real booleans
     # everything else needs the big case statement to be compared
     # to something
-    unless model_class.connection.adapter_name == 'PostgreSQL'
+    unless entity_class.connection.adapter_name == 'PostgreSQL'
       sql += " = #{sql_boolean true}"
     end
     
@@ -176,16 +182,16 @@ EOF
     options.delete :auto_new
     
     options[:order] ||= ''
-    @order_attributes = options[:order].split( /, */ ).map{|x| OrderAttribute.new(@model_class, x)}
+    @order_attributes = options[:order].split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
     
     # add the primary key if nothing is specified
     # because we need an ordering of some kind otherwise
     # index_for_entity will not work
-    if !@order_attributes.any? {|x| x.attribute == @model_class.primary_key }
-      @order_attributes << OrderAttribute.new( @model_class, @model_class.primary_key )
+    if !@order_attributes.any? {|x| x.attribute == @entity_class.primary_key }
+      @order_attributes << OrderAttribute.new( @entity_class, @entity_class.primary_key )
     end
     
-    # recreate the options[:order] entry
+    # recreate the options[:order] entry to include default
     options[:order] = @order_attributes.map{|x| x.to_sql}.join(',')
     
     # give back the sanitised options
@@ -211,7 +217,7 @@ EOF
     offset = index < 0 ? index + @row_count : index
     
     # fetch self.preload_count records
-    records = @model_class.find( :all, @options.merge( :offset => offset, :limit => preload_count ) )
+    records = @entity_class.find( :all, @options.merge( :offset => offset, :limit => preload_count ) )
     records.each_with_index {|x,i| self[i+index] = x if !cached_at?( i+index )}
     
     # return the first one
@@ -228,20 +234,20 @@ EOF
   # data set. pass in ActiveRecord options to filter
   def renew( options = {} )
     clear
-    self.class.new( @model_class, @options.merge( options ) )
+    self.class.new( @entity_class, @options.merge( options ) )
   end
   
   # Return the set of OrderAttribute objects for this collection
   def order_attributes
     # This is sorted in @options[:order], so use that for the search
     if @order_attributes.nil?
-      @order_attributes = @options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@model_class, x)}
+      @order_attributes = @options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
       
       # add the primary key if nothing is specified
       # because we need an ordering of some kind otherwise
       # index_for_entity will not work
-      if !@order_attributes.any? {|x| x.attribute == @model_class.primary_key }
-        @order_attributes << OrderAttribute.new( @model_class, @model_class.primary_key )
+      if !@order_attributes.any? {|x| x.attribute == @entity_class.primary_key }
+        @order_attributes << OrderAttribute.new( @entity_class, @entity_class.primary_key )
       end
     end
     @order_attributes
@@ -255,7 +261,8 @@ EOF
     return nil if size == 0
     return nil if entity.nil?
     
-    # only load one record at a time
+    # only load one record at a time, because mostly we only
+    # need one for the binary seach. No point in pulling several out.
     preload_limit( 1 ) do
       # do the binary search based on what we know about the search order
       bsearch do |candidate|
@@ -289,18 +296,21 @@ EOF
   def auto_new?
     @auto_new
   end
-  
+
+  # delete the given index. If the size ends up as 0,
   # make sure there's always at least one empty record
   def delete_at( index )
     retval = super
     if self.size == 0 && auto_new?
-      self << @model_class.new
+      self << @entity_class.new
     end
     retval
   end
   
 end
 
+# This is part of Array in case the programmer wants to use
+# a simple array instead of a CacheTable.
 class Array
   # For use with CacheTable. Return true if something is cached, false otherwise
   def cached_at?( index )

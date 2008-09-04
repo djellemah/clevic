@@ -10,7 +10,7 @@ module Clevic
 class TableView < Qt::TableView
   include ActionBuilder
   
-  attr_reader :model_class
+  attr_reader :entity_class
   # whether the model is currently filtered
   # TODO better in QAbstractSortFilter?
   attr_accessor :filtered
@@ -28,7 +28,7 @@ class TableView < Qt::TableView
     # need the empty block here, otherwise Qt bindings grab &block
     super( parent ) {}
     
-    # the model/model_class/builder
+    # the model/entity_class/builder
     case 
       when model_builder_record.kind_of?( TableModel )
         self.model = model_builder_record
@@ -67,21 +67,21 @@ class TableView < Qt::TableView
     # make sure the TableView has a fully-populated TableModel
     self.model = model_builder.build( self )
     
-    # connect data_changed signals for the model_class to respond
-    connect_model_class_signals( model_class )
+    # connect data_changed signals for the entity_class to respond
+    connect_entity_class_signals( entity_class )
   end
   
-  def with_record( model_class, &block )
-    builder = ModelBuilder.new( model_class )
+  def with_record( entity_class, &block )
+    builder = ModelBuilder.new( entity_class )
     with_builder( builder, &block )
   end
   
-  def connect_model_class_signals( model_class )
-    # this is only here because model_class.data_changed needs the view.
+  def connect_entity_class_signals( entity_class )
+    # this is only here because entity_class.data_changed needs the view.
     # Should probably fix that.
-    if model_class.respond_to?( :data_changed )
+    if entity_class.respond_to?( :data_changed )
       model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
-        model_class.data_changed( top_left, bottom_right, self )
+        entity_class.data_changed( top_left, bottom_right, self )
       end
     end
   end
@@ -103,9 +103,9 @@ class TableView < Qt::TableView
   
   def init_actions
     # add model actions, if they're defined
-    if model_class.respond_to?( :actions )
+    if entity_class.respond_to?( :actions )
       list( :model ) do |ab|
-        model_class.actions( self, ab )
+        entity_class.actions( self, ab )
       end
       separator
     end
@@ -337,6 +337,9 @@ class TableView < Qt::TableView
   # set the size of the column from the sample
   def auto_size_column( col, sample )
     self.set_column_width( col, column_size( col, sample ).width )
+    #~ rect = Qt::FontMetrics.new( font ).bounding_rect( sample )
+    #~ puts "width: #{width.inspect}"
+    #~ self.set_column_width( col, rect.width )
   end
 
   # set the size of the column from the string value of the data
@@ -346,13 +349,13 @@ class TableView < Qt::TableView
     
     # fetch font size
     fnt = font
-    #~ fnt.bold = true
+    fnt.bold = true
     opt.fontMetrics = Qt::FontMetrics.new( fnt )
     
-    # set data 
+    # set data
     opt.text = data.to_s
     
-    # icon size. Not needed
+    # icon size. Not needed 
     #~ variant = d->model->headerData(logicalIndex, d->orientation, Qt::DecorationRole);
     #~ opt.icon = qvariant_cast<QIcon>(variant);
     #~ if (opt.icon.isNull())
@@ -496,15 +499,15 @@ class TableView < Qt::TableView
   # handle certain key combinations that aren't shortcuts
   def keyPressEvent( event )
     begin
-      # call to model class for shortcuts
-      if model.model_class.respond_to?( :key_press_event )
+      # call to entity class for shortcuts
+      if model.entity_class.respond_to?( :key_press_event )
         begin
-          model_result = model.model_class.key_press_event( event, current_index, self )
+          model_result = model.entity_class.key_press_event( event, current_index, self )
           return model_result if model_result != nil
         rescue Exception => e
           puts e.backtrace
           error_message = Qt::ErrorMessage.new( self )
-          error_message.show_message( "Error in shortcut handler for #{model.model_class.name}: #{e.message}" )
+          error_message.show_message( "Error in shortcut handler for #{model.entity_class.name}: #{e.message}" )
           error_message.show
         end
       end

@@ -32,7 +32,7 @@ class TableModel < Qt::AbstractTableModel
   attr_reader :collection
   
   # the actual class for the collection objects
-  attr_accessor :model_class
+  attr_accessor :entity_class
   
   # the collection of Clevic::Field objects
   attr_reader :fields
@@ -87,7 +87,7 @@ class TableModel < Qt::AbstractTableModel
     @collection = arr
     # fill in an empty record for data entry
     if collection.size == 0 && auto_new?
-      collection << model_class.new
+      collection << entity_class.new
     end
   end
   
@@ -131,9 +131,9 @@ class TableModel < Qt::AbstractTableModel
   # TODO use ActiveRecord::Base.reflections instead
   def metadata( column )
     if @metadatas[column].nil?
-      meta = model_class.columns_hash[attributes[column].to_s]
+      meta = entity_class.columns_hash[attributes[column].to_s]
       if meta.nil?
-        meta = model_class.columns_hash[ "#{attributes[column]}_id" ]
+        meta = entity_class.columns_hash[ "#{attributes[column]}_id" ]
         if meta.nil?
           return nil
         else
@@ -149,7 +149,7 @@ class TableModel < Qt::AbstractTableModel
   def add_new_item
     # 1 new row
     begin_insert_rows( Qt::ModelIndex.invalid, row_count, row_count )
-    collection << model_class.new
+    collection << entity_class.new
     end_insert_rows
   end
   
@@ -357,7 +357,7 @@ class TableModel < Qt::AbstractTableModel
       case role
       when qt_edit_role
         # Don't allow the primary key to be changed
-        return false if index.attribute == model_class.primary_key.to_sym
+        return false if index.attribute == entity_class.primary_key.to_sym
         
         if ( index.column < 0 || index.column >= dots.size )
           raise "invalid column #{index.column}" 
@@ -453,14 +453,17 @@ class TableModel < Qt::AbstractTableModel
   end
   
   def like_operator
-    case model_class.connection.adapter_name
+    case entity_class.connection.adapter_name
       when 'PostgreSQL'; 'ilike'
       else; 'like'
     end
   end
   
   # return a set of indexes that match the search criteria
-  # TODO this implementation is very un-ruby.
+  # TODO this implementation is very un-ruby. Maybe
+  # use a new Search object that will interact with CacheTable?
+  # and what if CacheTable is a simple Array?
+  # TODO and whole word search searches for a space before and after
   def search( start_index, search_criteria )
     # get the search value parameter, in SQL format
     search_value =
@@ -481,7 +484,7 @@ class TableModel < Qt::AbstractTableModel
       "#{start_index.field.path} #{like_operator} :search_value"
     else
       # for this table
-      "#{model_class.connection.quote_column_name( start_index.field_name )} #{like_operator} :search_value"
+      "#{entity_class.connection.quote_column_name( start_index.field_name )} #{like_operator} :search_value"
     end
     
     # add ordering conditions
@@ -491,7 +494,7 @@ class TableModel < Qt::AbstractTableModel
     params.merge!( bits[:params] ) unless search_criteria.from_start?
     
     # find the first match
-    entity = model_class.find(
+    entity = entity_class.find(
       :first,
       :conditions => [ conditions, params ],
       :order => search_criteria.direction == :forwards ? collection.order : collection.reverse_order,

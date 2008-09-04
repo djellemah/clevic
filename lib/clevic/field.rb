@@ -16,20 +16,20 @@ class Field
   
   attr_writer :sample, :read_only
   
-  # attribute is the symbol for the attribute on the model_class
-  def initialize( attribute, model_class, options )
+  # attribute is the symbol for the attribute on the entity_class
+  def initialize( attribute, entity_class, options )
     # sanity checking
-    unless model_class.has_attribute?( attribute ) or model_class.instance_methods.include?( attribute.to_s )
+    unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
-#{attribute} not found in #{model_class.name}. Possibilities are:
-#{model_class.attribute_names.join("\n")}
+#{attribute} not found in #{entity_class.name}. Possibilities are:
+#{entity_class.attribute_names.join("\n")}
 EOF
       raise msg
     end
     
     # set values
     @attribute = attribute
-    @model_class = model_class
+    @entity_class = entity_class
     @visible = true
     
     options.each do |key,value|
@@ -105,7 +105,7 @@ EOF
   # in other words an ActiveRecord::ConnectionAdapters::Column object,
   # or an ActiveRecord::Reflection::AssociationReflection object
   def meta
-    @model_class.columns_hash[attribute.to_s] || @model_class.reflections[attribute]
+    @entity_class.columns_hash[attribute.to_s] || @entity_class.reflections[attribute]
   end
 
   # return true if this field can be used in a filter
@@ -117,7 +117,11 @@ EOF
   
   # return the name of the field for this Field, quoted for the dbms
   def quoted_field
-    @model_class.connection.quote_column_name( meta.name )
+    quote_field( meta.name )
+  end
+  
+  def quote_field( field )
+    @entity_class.connection.quote_column_name( field )
   end
 
   # return the result of the attribute + the path
@@ -153,6 +157,7 @@ EOF
   # return a sample for the field which can be used to size a column in the table
   def sample
     if @sample.nil?
+      puts "meta.type: #{meta.type.inspect}"
       self.sample =
       case meta.type
         # max width of 40 chars
@@ -168,15 +173,15 @@ EOF
         # TODO return a width, or something like that
         when :boolean; 'W'
         
-        when ActiveRecord::Reflection::AssociationReflection
-          #TODO width for relations
+        when ActiveRecord::Reflection::AssociationReflection.class
+          related_sample
         
         else
-          puts "#{@model_class.name}.#{attribute} is a #{meta.type.inspect}"
+          puts "#{@entity_class.name}.#{attribute} is a #{meta.type.inspect}"
       end
         
-      if $options[:debug]  
-        puts "@sample for #{@model_class.name}.#{attribute} #{meta.type}: #{@sample.inspect}"
+      if $options && $options[:debug]
+        puts "@sample for #{@entity_class.name}.#{attribute} #{meta.type}: #{@sample.inspect}"
       end
     end
     # if we don't know how to figure it out from the data, just return the label size
@@ -194,16 +199,18 @@ private
     end
   end
   
-  def string_sample( max_sample = nil )
-    result_set = @model_class.connection.execute <<-EOF
-      select distinct #{quoted_field}
-      from #{@model_class.table_name}
+  def string_sample( max_sample = nil, entity_class = @entity_class, field_name = meta.name )
+    statement = <<-EOF
+      select distinct #{quote_field field_name}
+      from #{entity_class.table_name}
       where
-        length( #{quoted_field} ) = (
-          select max( length( #{quoted_field} ) )
-          from #{@model_class.table_name}
+        length( #{quote_field field_name} ) = (
+          select max( length( #{quote_field field_name} ) )
+          from #{entity_class.table_name}
         )
     EOF
+    puts "statement: #{statement}"
+    result_set = @entity_class.connection.execute statement
     unless result_set.entries.size == 0
       result = result_set[0][0]
       if max_sample.nil?
@@ -215,9 +222,9 @@ private
   end
   
   def date_time_sample
-    result_set = @model_class.find_by_sql <<-EOF
+    result_set = @entity_class.find_by_sql <<-EOF
       select #{quoted_field}
-      from #{@model_class.table_name}
+      from #{@entity_class.table_name}
       where #{quoted_field} is not null
       limit 1
     EOF
@@ -228,11 +235,20 @@ private
     # TODO Use precision from metadata, not for integers
     # returns nil for floats. So it's probably not useful
     #~ puts "meta.precision: #{meta.precision.inspect}"
-    result_set = @model_class.find_by_sql <<-EOF
+    result_set = @entity_class.find_by_sql <<-EOF
       select max( #{quoted_field} )
-      from #{@model_class.table_name}
+      from #{@entity_class.table_name}
     EOF
     format_result( result_set )
+  end
+  
+  def related_sample
+    #~ return 'WWWWWWWWWWWWWWWWWWW'
+    puts "attribute_path: #{attribute_path.inspect}"
+    puts "meta: #{meta.inspect}"
+    puts "attribute: #{attribute.inspect}"
+    string_sample( nil, meta.klass, attribute_path[1] )
+    #~ .gsub( /\w/, 'm' )
   end
   
 end

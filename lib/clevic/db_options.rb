@@ -23,7 +23,7 @@ Values have to_s called on them so they can be symbols or strings.
 class DbOptions
   attr_reader :options
   
-  def initialize( options = nil )
+  def initialize( options = nil, &block )
     @options = options || {}
     
     # make sure the relevant entries exist, so method_missing works
@@ -32,16 +32,17 @@ class DbOptions
     @options[:username] ||= ''
     @options[:password] ||= ''
     @options[:database] ||= ''
+    
+    unless block.nil?
+      if block.arity == -1
+        instance_eval &block
+      else
+        yield self
+      end
+    end
   end
   
-  def connect( *args, &block )
-    # using the Rails implementation, included in Qt
-    block.bind( self )[*args]
-    do_connection
-  end
-  
-  # do error checking and make the ActiveRecord connection calls.
-  def do_connection
+  def connect
     unless @options[:database]
       raise "Please define database using DbOptions"
     end
@@ -61,13 +62,17 @@ class DbOptions
   #     username 'accounts_user'
   #   end
   # the block is evaluated in the context of the a new DbOptions
-  # object.
-  # TODO use instance_eval
-  def self.connect( args = nil, &block )
-    inst = self.new( args )
-    # using the Rails implementation, included in Qt
-    block.bind( inst )[*args]
-    inst.do_connection
+  # object. You can also pass a block parameter and it will receive
+  # the DbOptions instance, like this:
+  #   Clevic::DbOptions.connect( $options ) do |dbo|
+  #     dbo.database :accounts
+  #     dbo.adapter :postgresql
+  #     dbo.username 'accounts_user'
+  #   end
+  def self.connect( args = {}, &block )
+    inst = self.new( args, &block    )
+    inst.connect
+    inst
   end
   
   # translate method calls in the context of an instance
@@ -75,7 +80,11 @@ class DbOptions
   # variable
   def method_missing(meth, *args, &block)
     if @options.has_key? meth.to_sym
-      @options[meth.to_sym] = args[0].to_s if @options[meth.to_sym].empty?
+      if args.size == 0
+        @options[meth.to_sym]
+      else
+        @options[meth.to_sym] = args[0].to_s
+      end
     else
       super
     end

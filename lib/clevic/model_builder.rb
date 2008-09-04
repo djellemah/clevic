@@ -98,16 +98,16 @@ they can respond to editing events and do Neat Stuff.
 =end
 class ModelBuilder
   
-  # Create a definition for model_class (subclass of ActiveRecord::Base
+  # Create a definition for entity_class (subclass of ActiveRecord::Base
   # or Clevic::Record). Then execute block using self.instance_eval.
-  # The builder will construct a default TableModel from the model_class
+  # The builder will construct a default TableModel from the entity_class
   # unless can_build_default == false
-  def initialize( model_class, can_build_default = true, &block )
-    @model_class = model_class
+  def initialize( entity_class, can_build_default = true, &block )
+    @entity_class = entity_class
     @auto_new = true
     @read_only = false
     @fields = []
-    init_from_model( model_class, can_build_default, &block )
+    init_from_model( entity_class, can_build_default, &block )
   end
   
   # The collection of visible Clevic::Field objects
@@ -123,7 +123,7 @@ class ModelBuilder
   end
   
   # the ActiveRecord::Base or Clevic::Record class
-  attr_reader :model_class
+  attr_reader :entity_class
   
   # set read_only to true
   def read_only!
@@ -143,7 +143,7 @@ class ModelBuilder
     options = gather_block( options, &block )
     
     read_only_default( attribute, options )
-    @fields << Clevic::Field.new( attribute.to_sym, model_class, options )
+    @fields << Clevic::Field.new( attribute.to_sym, entity_class, options )
   end
   
   # edited with a combo box containing all previous entries in this field
@@ -151,8 +151,8 @@ class ModelBuilder
     # get values from block, if it's there
     options = gather_block( options, &block )
     
-    field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = DistinctDelegate.new( nil, attribute, model_class, options )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options )
+    field.delegate = DistinctDelegate.new( nil, attribute, entity_class, options )
     @fields << field
   end
 
@@ -162,8 +162,8 @@ class ModelBuilder
     options = gather_block( options, &block )
     
     raise "restricted must have a set" unless options.has_key?( :set )
-    field = Clevic::Field.new( attribute.to_sym, model_class, options )
-    field.delegate = RestrictedDelegate.new( nil, attribute, model_class, options )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options )
+    field.delegate = RestrictedDelegate.new( nil, attribute, entity_class, options )
     @fields << field
   end
 
@@ -173,7 +173,7 @@ class ModelBuilder
   # or as a dotted path
   def relational( attribute, options = {}, &block )
     unless options.has_key? :class_name
-      options[:class_name] = model_class.reflections[attribute].class_name || attribute.to_s.classify
+      options[:class_name] = entity_class.reflections[attribute].class_name || attribute.to_s.classify
     end
     
     # get values from block, if it's there
@@ -182,7 +182,7 @@ class ModelBuilder
     # check after all possible options have been collected
     raise ":display must be specified" if options[:display].nil?
     
-    field = Clevic::Field.new( attribute.to_sym, model_class, options )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options )
     field.delegate = RelationalDelegate.new( nil, field.attribute_path, options )
     @fields << field
   end
@@ -213,8 +213,8 @@ class ModelBuilder
   # to do small tweaks.
   def default_ui
     # combine reflections and attributes into one set
-    reflections = model_class.reflections.keys.map{|x| x.to_s}
-    ui_columns = model_class.columns.reject{|x| x.name == model_class.primary_key }.map do |column|
+    reflections = entity_class.reflections.keys.map{|x| x.to_s}
+    ui_columns = entity_class.columns.reject{|x| x.name == entity_class.primary_key }.map do |column|
       # TODO there must be a better way to do this
       att = column.name.gsub( /_id$/, '' )
       if reflections.include?( att )
@@ -230,14 +230,14 @@ class ModelBuilder
     
     # build columns
     ui_columns.each do |column|
-      if model_class.reflections.has_key?( column.to_sym )
+      if entity_class.reflections.has_key?( column.to_sym )
         begin
-          reflection = model_class.reflections[column.to_sym]
+          reflection = entity_class.reflections[column.to_sym]
           if reflection.class == ActiveRecord::Reflection::AssociationReflection
             # try to find a sensible display class. Default to to_s
             related_class = reflection.class_name.constantize
             display_method =
-            %w{#{model_class.name} name title username}.find( lambda{ 'to_s' } ) do |m|
+            %w{#{entity_class.name} name title username}.find( lambda{ 'to_s' } ) do |m|
               related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
             end
             relational column.to_sym, :display => display_method
@@ -248,14 +248,14 @@ class ModelBuilder
           puts $!.message
           puts $!.backtrace
           # just do a plain
-          puts "Doing plain for #{model_class}.#{column}"
+          puts "Doing plain for #{entity_class}.#{column}"
           plain column.to_sym
         end
       else
         plain column.to_sym
       end
     end
-    records :order => model_class.primary_key
+    records :order => entity_class.primary_key
   end
   
   # return the named Clevic::Field object
@@ -270,8 +270,8 @@ class ModelBuilder
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
     @model = Clevic::TableModel.new( table_view )
-    @model.object_name = model_class.name
-    @model.model_class = model_class
+    @model.object_name = entity_class.name
+    @model.entity_class = entity_class
     @model.fields = @fields
     @model.read_only = @read_only
     @model.auto_new = auto_new?
@@ -287,20 +287,20 @@ class ModelBuilder
   
 private
 
-  def init_from_model( model_class, can_build_default, &block )
-    if model_class.respond_to?( :build_table_model )
+  def init_from_model( entity_class, can_build_default, &block )
+    if entity_class.respond_to?( :build_table_model )
       # call build_table_model
-      method = model_class.method :build_table_model
+      method = entity_class.method :build_table_model
       method.call( builder )
-    elsif !model_class.define_ui_block.nil?
+    elsif !entity_class.define_ui_block.nil?
       #define_ui is used, so use that block
-      instance_eval( &model_class.define_ui_block )
+      instance_eval( &entity_class.define_ui_block )
     elsif can_build_default
       # build a default UI
       default_ui
       
       # allow for smallish changes to a default build
-      instance_eval( &model_class.post_default_ui_block ) unless model_class.post_default_ui_block.nil?
+      instance_eval( &entity_class.post_default_ui_block ) unless entity_class.post_default_ui_block.nil?
     end
 
     # the local block adds to the previous definitions
@@ -334,18 +334,18 @@ private
         # it's a Proc or a Method, so we can't set it
         true
         
-      when model_class.column_names.include?( options[:display].to_s )
+      when entity_class.column_names.include?( options[:display].to_s )
         # it's a DB column, so it's not read only
         false
         
-      when model_class.reflections.include?( attribute )
+      when entity_class.reflections.include?( attribute )
         # one-to-one relationships can be edited. many-to-one certainly can't
-        reflection = model_class.reflections[attribute]
+        reflection = entity_class.reflections[attribute]
         reflection.macro != :has_one
         
-      when model_class.instance_methods.include?( attribute.to_s )
+      when entity_class.instance_methods.include?( attribute.to_s )
         # read-only if there's no setter for the attribute
-        !model_class.instance_methods.include?( "#{attribute.to_s}=" )
+        !entity_class.instance_methods.include?( "#{attribute.to_s}=" )
       else
         # default to not read-only
         false
@@ -371,7 +371,7 @@ private
     if @records.nil?
       #~ add_include_options
       @options[:auto_new] = auto_new?
-      @records = CacheTable.new( model_class, @options )
+      @records = CacheTable.new( entity_class, @options )
     end
     @records
   end

@@ -70,7 +70,7 @@ class Browser < Qt::Widget
   # activated by Ctrl-Shift-D for debugging
   def dump
     puts "table_view.model: #{table_view.model.inspect}"
-    puts "table_view.model.model_class: #{table_view.model.model_class.inspect}"
+    puts "table_view.model.entity_class: #{table_view.model.entity_class.inspect}"
   end
   
   # return the Clevic::TableView object in the currently displayed tab
@@ -130,7 +130,7 @@ class Browser < Qt::Widget
     models.sort{|a,b| a.name <=> b.name}
   end
   
-  # Create the tabs, each with a collection for a particular model class.
+  # Create the tabs, each with a collection for a particular entity class.
   #
   # models parameter can be an array of Model objects, in order of display.
   # if models is nil, find_models is called
@@ -139,28 +139,28 @@ class Browser < Qt::Widget
     models = find_models if models.empty?
     
     # Add all existing model objects as tabs, one each
-    models.each do |model_class|
+    models.each do |entity_class|
       begin
-        next unless model_class.table_exists?
+        next unless entity_class.table_exists?
         
-        # create the the table_view and the table_model for the model_class
+        # create the the table_view and the table_model for the entity_class
         tab =
-        if model_class.respond_to?( :ui )
+        if entity_class.respond_to?( :ui )
           puts "Entity#ui deprecated. Use build_table_model instead."
-          model_class.ui( tables_tab )
+          entity_class.ui( tables_tab )
         else
-          Clevic::TableView.new( model_class, tables_tab )
+          Clevic::TableView.new( entity_class, tables_tab )
         end
         
         # show status messages
         tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
         
         # add a new tab
-        tables_tab.add_tab( tab, translate( model_class.name.demodulize.tableize.humanize ) )
+        tables_tab.add_tab( tab, translate( entity_class.name.demodulize.tableize.humanize ) )
         
         # add the table to the Table menu
         action = Qt::Action.new( @layout.menu_model )
-        action.text = translate( model_class.name.demodulize.tableize.humanize )
+        action.text = translate( entity_class.name.demodulize.tableize.humanize )
         action.connect SIGNAL( 'triggered()' ) do
           tables_tab.current_widget = tab
         end
@@ -169,12 +169,12 @@ class Browser < Qt::Widget
         # handle filter status changed, so we can provide a visual indication
         tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
           # update the tab, so there's a visual indication of filtering
-          tab_title = ( tab.filtered ? '| ' : '' ) + translate( model_class.name.humanize )
+          tab_title = ( tab.filtered ? '| ' : '' ) + translate( entity_class.name.humanize )
           tables_tab.set_tab_text( tables_tab.current_index, tab_title )
         end
       rescue Exception => e
         puts e.backtrace if $options[:debug]
-        puts "Model #{model_class} will not be available: #{e.message}"
+        puts "Entity #{entity_class} will not be available: #{e.message}"
       end
     end
   end

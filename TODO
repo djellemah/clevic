@@ -1,4 +1,9 @@
-rename model_class to entity_class, and related terminology clarification.
+Done
+----
+fix model_class
+auto-size related field columns (at least for one level)
+start on tests
+
 tests
 allow directories for a setup. Problem here is tab order.
 metadata for virtual fields
