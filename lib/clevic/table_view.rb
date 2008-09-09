@@ -10,7 +10,6 @@ module Clevic
 class TableView < Qt::TableView
   include ActionBuilder
   
-  attr_reader :entity_class
   # whether the model is currently filtered
   # TODO better in QAbstractSortFilter?
   attr_accessor :filtered
@@ -68,7 +67,7 @@ class TableView < Qt::TableView
     self.model = model_builder.build( self )
     
     # connect data_changed signals for the entity_class to respond
-    connect_entity_class_signals( entity_class )
+    connect_entity_class_signals( model.entity_class )
   end
   
   def with_record( entity_class, &block )
@@ -86,6 +85,11 @@ class TableView < Qt::TableView
     end
   end
   
+  # find the row index for the given field
+  def field_column( field )
+    model.fields.each_with_index {|x,i| return i if x.attribute == field }
+  end
+    
   # return menu actions for the model, or an empty array if there aren't any
   def model_actions
     @model_actions ||= []
@@ -103,14 +107,14 @@ class TableView < Qt::TableView
   
   def init_actions
     # add model actions, if they're defined
-    if entity_class.respond_to?( :actions )
+    if model.entity_class.respond_to?( :actions )
       list( :model ) do |ab|
-        entity_class.actions( self, ab )
+        model.entity_class.actions( self, ab )
       end
       separator
     end
     
-    # list of actions called edit
+    # list of actions in the edit menu
     list( :edit ) do
       #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
       action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
@@ -337,9 +341,6 @@ class TableView < Qt::TableView
   # set the size of the column from the sample
   def auto_size_column( col, sample )
     self.set_column_width( col, column_size( col, sample ).width )
-    #~ rect = Qt::FontMetrics.new( font ).bounding_rect( sample )
-    #~ puts "width: #{width.inspect}"
-    #~ self.set_column_width( col, rect.width )
   end
 
   # set the size of the column from the string value of the data
@@ -450,7 +451,8 @@ class TableView < Qt::TableView
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
   
-  def delete_multiple_cells?
+  # ask the question in a dialog. If the user says yes, execute the block
+  def delete_multiple_cells?( question = 'Are you sure you want to delete multiple cells?', &block )
     sanity_check_read_only
     
     # go ahead with delete if there's only 1 cell, or the user says OK
@@ -460,7 +462,7 @@ class TableView < Qt::TableView
       msg = Qt::MessageBox.new(
         Qt::MessageBox::Question,
         'Multiple Delete',
-        'Are you sure you want to delete multiple cells?',
+        question,
         Qt::MessageBox::Yes | Qt::MessageBox::No,
         self
       )
@@ -468,30 +470,32 @@ class TableView < Qt::TableView
     else
       true
     end
+    
+    yield if delete_ok
   end
     
   def delete_cells
-    cells_deleted = false
-    
-    # do delete
-    if delete_multiple_cells?
+    delete_multiple_cells? do
+      cells_deleted = false
+      
+      # do delete
       selection_model.selected_indexes.each do |index|
         index.attribute_value = nil
         cells_deleted = true
       end
-    end
-    
-    # deletes were done, so emit dataChanged
-    if cells_deleted
-      # emit data changed for all ranges
-      selection_model.selection.each do |selection_range|
-        emit dataChanged( selection_range.top_left, selection_range.bottom_right )
+      
+      # deletes were done, so emit dataChanged
+      if cells_deleted
+        # emit data changed for all ranges
+        selection_model.selection.each do |selection_range|
+          emit dataChanged( selection_range.top_left, selection_range.bottom_right )
+        end
       end
     end
   end
   
   def delete_rows
-    if delete_multiple_cells?
+    delete_multiple_cells?( 'Are you sure you want to delete multiple rows?' ) do
       model.remove_rows( selection_model.selected_indexes.map{|index| index.row} )
     end
   end
@@ -662,7 +666,7 @@ class TableView < Qt::TableView
       if indexes.empty?
         self.filtered = false
       elsif indexes.size > 1
-        puts "Can't do multiple selection filters yet"
+        emit status_text( "Can't do multiple selection filters yet" )
         self.filtered = false
       end
       
@@ -702,7 +706,7 @@ class TableView < Qt::TableView
   # * direction ( :forward, :backward )
   # * from_start?
   #
-  # TODO formalise this
+  # TODO formalise this?
   def search( search_criteria )
     indexes = model.search( current_index, search_criteria )
     if indexes.size > 0

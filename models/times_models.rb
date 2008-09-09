@@ -1,9 +1,11 @@
 require 'clevic.rb'
 
 # db connection options
+$options ||= {}
 db = Clevic::DbOptions.connect( $options ) do
   # use a different db for testing, so real data doesn't get broken.
-  database( debug? ? :times_test : :times )
+  # unless the command-line option is specified
+  database( $options[:database] || ( debug? ? :times_test : :times ) )
   adapter :postgresql
   username 'times'
 end
@@ -64,11 +66,11 @@ class Entry < Clevic::Record
       
       # tell view to update
       top_left_index = model.create_index( view.current_index.row, 0 )
-      bottom_right_index = model.create_index( view.current_index.row, view.current_index.column + view.builder.fields.size )
+      bottom_right_index = model.create_index( view.current_index.row, view.current_index.column + view.model.fields.size )
       view.dataChanged( top_left_index, bottom_right_index )
       
       # move to end time field
-      view.override_next_index( model.create_index( view.current_index.row, view.builder.index( :end ) ) )
+      view.override_next_index( model.create_index( view.current_index.row, view.field_column( :end ) ) )
     end
   end
 
@@ -90,11 +92,11 @@ class Entry < Clevic::Record
         
         # update view from top_left to bottom_right
         model = current_index.model
-        changed_index = model.create_index( current_index.row, view.builder.index( :invoice ) )
+        changed_index = model.create_index( current_index.row, view.field_column( :invoice ) )
         view.dataChanged( changed_index, changed_index )
         
         # move edit cursor to start time field
-        view.override_next_index( model.create_index( current_index.row, view.builder.index( :start ) ) )
+        view.override_next_index( model.create_index( current_index.row, view.field_column( :start ) ) )
       end
     end
   end

@@ -234,8 +234,8 @@ class ModelBuilder
         begin
           reflection = entity_class.reflections[column.to_sym]
           if reflection.class == ActiveRecord::Reflection::AssociationReflection
-            # try to find a sensible display class. Default to to_s
             related_class = reflection.class_name.constantize
+            # try to find a sensible display class. Default to to_s
             display_method =
             %w{#{entity_class.name} name title username}.find( lambda{ 'to_s' } ) do |m|
               related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
@@ -315,6 +315,7 @@ private
   
   # add AR :include options for foreign keys, but it takes up too much memory,
   # and actually takes longer to load a data set
+  # ActiveRecord-2.1 has smarter includes
   def add_include_options
     fields.each do |field|
       if field.delegate.class == RelationalDelegate

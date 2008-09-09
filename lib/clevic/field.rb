@@ -209,7 +209,6 @@ private
           from #{entity_class.table_name}
         )
     EOF
-    puts "statement: #{statement}"
     result_set = @entity_class.connection.execute statement
     unless result_set.entries.size == 0
       result = result_set[0][0]
@@ -243,12 +242,9 @@ private
   end
   
   def related_sample
-    #~ return 'WWWWWWWWWWWWWWWWWWW'
-    puts "attribute_path: #{attribute_path.inspect}"
-    puts "meta: #{meta.inspect}"
-    puts "attribute: #{attribute.inspect}"
-    string_sample( nil, meta.klass, attribute_path[1] )
-    #~ .gsub( /\w/, 'm' )
+    if meta.klass.attribute_names.include?( attribute_path[1].to_s )
+      string_sample( nil, meta.klass, attribute_path[1] )
+    end
   end
   
 end

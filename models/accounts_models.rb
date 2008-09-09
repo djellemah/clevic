@@ -63,12 +63,12 @@ class Entry < Clevic::Record
         # emit signal to update view from top_left to bottom_right
         model = current_index.model
         top_left_index = model.create_index( current_index.row, 0 )
-        bottom_right_index = model.create_index( current_index.row, view.builder.fields.size )
+        bottom_right_index = model.create_index( current_index.row, view.model.fields.size )
         view.dataChanged( top_left_index, bottom_right_index )
         
         # move edit cursor to amount field
         view.selection_model.clear
-        view.override_next_index( model.create_index( current_index.row, view.builder.index( :amount ) ) )
+        view.override_next_index( model.create_index( current_index.row, view.field_column( :amount ) ) )
       end
     end
   end

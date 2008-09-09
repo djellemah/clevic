@@ -215,7 +215,7 @@ end
 class DistinctDelegate < ComboDelegate
   
   def initialize( parent, attribute, entity_class, options )
-    @entity_classa = entity_class
+    @entity_class = entity_class
     @attribute = attribute
     @options = options
     # hackery for amateur query building in populate

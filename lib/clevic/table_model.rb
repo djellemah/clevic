@@ -59,7 +59,7 @@ class TableModel < Qt::AbstractTableModel
   def fields=( arr )
     @fields = arr
     
-    #reset these
+    # reset these
     @metadatas = []
     @dots = nil
     @labels = nil
@@ -115,16 +115,6 @@ class TableModel < Qt::AbstractTableModel
     []
   end
   
-  #~ def build_dots( dots, attrs, prefix="" )
-    #~ attrs.inject( dots ) do |cols, a|
-      #~ if a[1].respond_to? :attributes
-        #~ build_keys(cols, a[1].attributes, prefix + a[0] + ".")
-      #~ else
-        #~ cols << prefix + a[0]
-      #~ end
-    #~ end
-  #~ end
-  
   # cache metadata (ActiveRecord#column_for_attribute) because it's not going
   # to change over the lifetime of the table
   # if the column is an attribute, create a ModelColumn
@@ -154,7 +144,8 @@ class TableModel < Qt::AbstractTableModel
   end
   
   # rows is a collection of integers specifying row indices to remove
-  # TODO call begin_remove and end_remove around the whole block
+  # TODO call begin_remove and end_remove around the whole block.
+  # for performance, and maybe later for undo.
   def remove_rows( rows )
     # delete from the end to avoid holes affecting the indexing
     rows.sort.reverse.each do |index|
@@ -287,8 +278,9 @@ class TableModel < Qt::AbstractTableModel
       case role
         when qt_display_role, qt_edit_role
           # boolean values generally don't have text next to them in this context
-          # check explicitly to avoid fetching the entity from
-          # the model's collection when we don't need to
+          # check this explicitly to avoid fetching the entity from
+          # the model's collection (and maybe db) when we
+          # definitely don't need to
           unless index.metadata.type == :boolean
             begin
               value = index.gui_value
@@ -352,6 +344,8 @@ class TableModel < Qt::AbstractTableModel
   end
 
   # data sent from UI
+  # return true if conversion from variant was successful,
+  # or false if something went wrong.
   def setData( index, variant, role = qt_edit_role )
     if index.valid?
       case role
@@ -359,7 +353,7 @@ class TableModel < Qt::AbstractTableModel
         # Don't allow the primary key to be changed
         return false if index.attribute == entity_class.primary_key.to_sym
         
-        if ( index.column < 0 || index.column >= dots.size )
+        if ( index.column < 0 || index.column >= column_count )
           raise "invalid column #{index.column}" 
         end
         

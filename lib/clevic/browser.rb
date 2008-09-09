@@ -140,11 +140,11 @@ class Browser < Qt::Widget
     
     # Add all existing model objects as tabs, one each
     models.each do |entity_class|
-      begin
-        next unless entity_class.table_exists?
+      next unless entity_class.table_exists?
         
+      begin
         # create the the table_view and the table_model for the entity_class
-        tab =
+        tab = 
         if entity_class.respond_to?( :ui )
           puts "Entity#ui deprecated. Use build_table_model instead."
           entity_class.ui( tables_tab )

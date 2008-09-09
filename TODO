@@ -1,8 +1,14 @@
-Done
-----
-fix model_class
-auto-size related field columns (at least for one level)
-start on tests
+start on tests. Use Faker gem.
+Check out ar-extensions
+make sure ActiveRecord doesn't keep updating columns. ie production mode.
+Use ActiveRecord 2.1 for changed. Note will_change! method
+Use scanf for reading OrderAttributes
+use Pathname#find to find the Rails files
+Cairngorm - 7 layer gui builder
+Can ruby access the local variables in a block, inside a yield. transit_is instead of transit =
+ActiveResourceETL
+Hashrocket guest star
+Couch for distributed documents
 
 tests
 allow directories for a setup. Problem here is tab order.
@@ -24,9 +30,9 @@ undo
 - Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
 - Use Transaction::Simple?
 - undo of field changes
+- memoize
 
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
-Allow an arbitrary widget to be used as the editor for a field.
 wrap description, and allow Access-style zooming
 Ctrl-PgDn to last row in this column. Also extend selection
 sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
