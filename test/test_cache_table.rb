@@ -118,6 +118,6 @@ class TestCacheTable < Test::Unit::TestCase
     assert_equal 1, @cache_table.size
   end
   
-  def 
+  #~ def 
   
 end

@@ -453,39 +453,61 @@ class TableModel < Qt::AbstractTableModel
     end
   end
   
+  def quote( value )
+    entity_class.connection.quote( value )
+  end
+  
+  # get the search value parameter, in SQL format
+  def search_clause( search_criteria, field_name )
+    if search_criteria.whole_words?
+      <<-EOF
+      (
+        #{field_name} #{like_operator} #{quote "% #{search_criteria.search_text} %"}
+        or
+        #{field_name} #{like_operator} #{quote "#{search_criteria.search_text} %"}
+        or
+        #{field_name} #{like_operator} #{quote "% #{search_criteria.search_text}"}
+      )
+      EOF
+    else
+      "#{field_name} #{like_operator} #{quote "%#{search_criteria.search_text}%"}"
+    end
+  end
+  
   # return a set of indexes that match the search criteria
   # TODO this implementation is very un-ruby. Maybe
   # use a new Search object that will interact with CacheTable?
   # and what if CacheTable is a simple Array?
-  # TODO and whole word search searches for a space before and after
   def search( start_index, search_criteria )
-    # get the search value parameter, in SQL format
-    search_value =
-    if search_criteria.whole_words?
-      "% #{search_criteria.search_text} %"
-    else
-      "%#{search_criteria.search_text}%"
-    end
-
-    # build up the ordering conditions
-    bits = collection.build_sql_find( start_index.entity, search_criteria.direction )
-    
-    # do the conditions for the search value
-    conditions =
+    search_field_name = 
     if start_index.field.is_association?
       # for related tables
       # TODO this will only work with a path value with no dots
-      "#{start_index.field.path} #{like_operator} :search_value"
+      # otherwise the SQL gets complicated with joins etc
+      start_index.field.path
     else
       # for this table
-      "#{entity_class.connection.quote_column_name( start_index.field_name )} #{like_operator} :search_value"
+      entity_class.connection.quote_column_name( start_index.field_name )
     end
     
-    # add ordering conditions
-    conditions += ( " and " + bits[:sql] ) unless search_criteria.from_start?
+    # do the conditions for the search value
+    conditions = search_clause( search_criteria, search_field_name )
+    params = {}
     
-    params = { :search_value => search_value }
-    params.merge!( bits[:params] ) unless search_criteria.from_start?
+    # if we're not searching from the start, we need
+    # to find the next match. Which complicated from an SQL point of view.
+    # TODO build_sql_find should probably be in an object of its own,
+    # as a better place to store :params and :sql
+    unless search_criteria.from_start?
+      # build up the ordering conditions
+      bits = collection.build_sql_find( start_index.entity, search_criteria.direction )
+      
+      # add ordering conditions
+      conditions += ( " and " + bits[:sql] )
+      
+      #~ params = { :search_value => search_criteria.search_text }
+      params.merge!( bits[:params] )
+    end
     
     # find the first match
     entity = entity_class.find(

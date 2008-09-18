@@ -45,7 +45,7 @@ class Entry < Clevic::Record
   # copy the values for the credit and debit fields
   # from the previous similar entry
   def self.update_credit_debit( current_index, view )
-    return if !current_index.valid?
+    return unless current_index.valid?
     current_field = current_index.attribute
     if current_field == :description
       # most recent entry, ordered in reverse
