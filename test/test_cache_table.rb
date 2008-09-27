@@ -1,52 +1,37 @@
 require File.dirname(__FILE__) + '/test_helper'
-require 'activerecord'
-require 'sqlite3'
 
-class Passenger < ActiveRecord::Base
-end
-
-class CreatePassengers < ActiveRecord::Migration
+class PopulateCachePassengers < ActiveRecord::Migration
   def self.up
-    create_table :passengers do |t|
-      t.string :name
-      t.string :flight
-      t.integer :row
-      t.string :seat
-    end
-    Passenger.reset_column_information
     Passenger.create :name => 'John Anderson', :flight => 'EK211', :row => 36, :seat => 'A'
     Passenger.create :name => 'Genie', :flight => 'CA001', :row => 1, :seat => 'A'
     Passenger.create :name => 'Aladdin', :flight => 'CA001', :row => 2, :seat => 'A'
   end
   
   def self.down
+    Passenger.delete :all
   end
 end
 
 # need to set up a test DB, and test data for this
 class TestCacheTable < Test::Unit::TestCase
-  # I don't really want to run this before every test case
+  def self.startup
+    PopulateCachePassengers.up
+  end
+  
+  def self.shutdown
+    PopulateCachePassengers.down
+  end
+  
+  
   def setup
-    @db_name = 'test_cache_table.sqlite3'
-    File.unlink @db_name if File.exists? @db_name
-    @db = SQLite3::Database.new( @db_name )
-    @db_options = Clevic::DbOptions.connect do |dbo|
-      dbo.database @db_name
-      dbo.adapter :sqlite3
-    end
-    CreatePassengers.migrate :up
     @cache_table = CacheTable.new( Passenger )
-    @passenger_count = @db.execute( 'select count(*) from passengers' )[0][0].to_i
   end
   
   def teardown
-    File.unlink @db_name
   end
   
-  # Test that initialisation was OK
-  def test_init
-    assert_equal @db_options.database, @db_name
-    assert_equal @passenger_count, Passenger.count
+  def test_passenger_count
+    assert_equal 3, Passenger.count
   end
   
   # test that cache is initially empty
@@ -118,7 +103,5 @@ class TestCacheTable < Test::Unit::TestCase
     
     assert_equal 1, @cache_table.size
   end
-  
-  #~ def 
   
 end

@@ -1,3 +1,4 @@
+Use ZenTest to generate tests
 start on tests. Use Faker gem.
 Check out ar-extensions
 make sure ActiveRecord doesn't keep updating columns. ie production mode.
@@ -8,6 +9,7 @@ Can ruby access the local variables in a block, inside a yield. transit_is inste
 ActiveResourceETL
 Hashrocket guest star
 Couch for distributed documents
+Ramen http://ramen.rubyforge.org/ for metadata. MySQL and MSSQL only right now.
 
 tests
 allow directories for a setup. Problem here is tab order.

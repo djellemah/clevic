@@ -20,12 +20,14 @@ describe 'initialise database', :shared => true do
   before :all do
     @onebase = OneBase.new
     ActiveRecord::Migration.verbose = false
-    CreateFakePassengers.migrate :up
+    CreatePassengers.up
+    CreateFakePassengers.up
   end
 
   after :all do
     ActiveRecord::Migration.verbose = false
-    CreateFakePassengers.migrate :down
+    CreateFakePassengers.down
+    CreatePassengers.down
     @onebase.feenesh
   end
 end
@@ -82,8 +84,8 @@ describe TableSearcher, " when searching" do
   after :each do
   end
 
-  it "should have #{MAX_PASSENGERS} passengers" do
-    Passenger.count.should == MAX_PASSENGERS
+  it "should have #{CreateFakePassengers.MAX_PASSENGERS} passengers" do
+    Passenger.count.should == CreateFakePassengers.MAX_PASSENGERS
   end
 
   it "should do more granular testing"

@@ -31,10 +31,9 @@ class TableSearcher
     @conditions = search_clause( search_field_name )
     
     # if we're not searching from the start, we need
-    # to find the next match. Which complicated from an SQL point of view.
-    # TODO build_sql_find should probably be in an object of its own,
-    # as a better place to store :params and :sql
+    # to find the next match. Which is complicated from an SQL point of view.
     unless search_criteria.from_start?
+      raise "start_entity cannot be nil when from_start is false" if start_entity.nil?
       # build up the ordering conditions
       find_from!( start_entity )
     end

@@ -19,7 +19,7 @@ class Field
   # attribute is the symbol for the attribute on the entity_class
   def initialize( attribute, entity_class, options )
     # sanity checking
-    unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
+    unless entity_class.column_names.include?( attribute.to_s ) or entity_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
 #{attribute} not found in #{entity_class.name}. Possibilities are:
 #{entity_class.attribute_names.join("\n")}
