@@ -28,6 +28,7 @@ class TestCacheTable < Test::Unit::TestCase
   # I don't really want to run this before every test case
   def setup
     @db_name = 'test_cache_table.sqlite3'
+    File.unlink @db_name if File.exists? @db_name
     @db = SQLite3::Database.new( @db_name )
     @db_options = Clevic::DbOptions.connect do |dbo|
       dbo.database @db_name

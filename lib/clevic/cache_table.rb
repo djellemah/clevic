@@ -1,61 +1,9 @@
 require 'rubygems'
 require 'active_record'
 require 'active_record/dirty.rb'
+require 'clevic/table_searcher.rb'
+require 'clevic/order_attribute.rb'
 require 'bsearch'
-
-=begin rdoc
-Store the SQL order_by attributes with ascending and descending values
-=end
-class OrderAttribute
-  attr_reader :direction, :attribute
-  
-  def initialize( entity_class, sql_order_fragment )
-    @entity_class = entity_class
-    if sql_order_fragment =~ /^(.*?\.)?(.*?) *asc$/i
-      @direction = :asc
-      @attribute = $2
-    elsif sql_order_fragment =~ /^(.*?\.)?(.*?) *desc$/i
-      @direction = :desc
-      @attribute = $2
-    else
-      @direction = :asc
-      @attribute = sql_order_fragment
-    end
-  end
-  
-  # return ORDER BY field name
-  def to_s
-    @string ||= attribute
-  end
-  
-  def to_sym
-    @sym ||= attribute.to_sym
-  end
-  
-  # return 'field ASC' or 'field DESC', depending
-  def to_sql
-    "#{@entity_class.table_name}.#{attribute} #{direction.to_s}"
-  end
-  
-  def reverse( direction )
-    case direction
-      when :asc; :desc
-      when :desc; :asc
-      else; raise "unknown direction #{direction}"
-    end
-  end
-  
-  # return the opposite ASC or DESC from to_sql
-  def to_reverse_sql
-    "#{@entity_class.table_name}.#{attribute} #{reverse(direction).to_s}"
-  end
-
-  def ==( other )
-    @entity_class == other.instance_eval( '@entity_class' ) and
-    self.direction == other.direction and
-    self.attribute == other.attribute
-  end
-end
 
 =begin rdoc
 Fetch rows from the db on demand, rather than all up front.
@@ -83,7 +31,8 @@ class CacheTable < Array
     # must be before sanitise_options
     @entity_class = entity_class
     # must be before anything that uses options
-    @options = sanitise_options( find_options )
+    @options = find_options.clone
+    sanitise_options!
     
     # size the array and fill it with nils. They'll be filled
     # in by the [] operator
@@ -97,105 +46,37 @@ class CacheTable < Array
     @entity_class.count( :conditions => @options[:conditions] )
   end
   
-  def order
-    @options[:order]
-  end
-  
-  def reverse_order
-    @order_attributes.map{|x| x.to_reverse_sql}.join(',')
-  end
-  
-  def quote_column( field_name )
-    @entity_class.connection.quote_column_name( field_name )
-  end
-  
-  # return a string containing the correct
-  # boolean value depending on the DB adapter
-  # because Postgres wants real true and false in complex statements, not 't' and 'f'
-  def sql_boolean( value )
-    case entity_class.connection.adapter_name
-      when 'PostgreSQL'
-        value ? 'true' : 'false'
-      else
-        value ? entity_class.connection.quoted_true : entity_class.connection.quoted_false
+  # Return the set of OrderAttribute objects for this collection.
+  # If no order attributes are specified, the primary key will be used.
+  # TODO what about compund primary keys?
+  def order_attributes
+    # This is sorted in @options[:order], so use that for the search
+    if @order_attributes.nil?
+      @order_attributes = @options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
+      
+      # add the primary key if nothing is specified
+      # because we need an ordering of some kind otherwise
+      # index_for_entity will not work
+      if !@order_attributes.any? {|x| x.attribute == @entity_class.primary_key }
+        @order_attributes << OrderAttribute.new( @entity_class, @entity_class.primary_key )
+      end
     end
-  end
-  
-  # recursively create a case statement to do the comparison
-  # because and ... and ... and filters on *each* one rather than
-  # consecutively.
-  # operator is either '<' or '>'
-  def build_recursive_comparison( operator, index = 0 )
-    # end recursion
-    return sql_boolean( false ) if index == @order_attributes.size
-    
-    # fetch the current attribute
-    attribute = @order_attributes[index]
-    
-    # build case statement, including recusion
-    st = <<-EOF
-case
-  when #{entity_class.table_name}.#{quote_column attribute} #{operator} :#{attribute} then #{sql_boolean true}
-  when #{entity_class.table_name}.#{quote_column attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
-  else #{sql_boolean false}
-end
-EOF
-    # indent
-    st.gsub!( /^/, '  ' * index )
-  end
-  
-  # return a Hash containing
-  # :sql => the sql statement to be used as part of a where clause
-  # :params => the parameters corresponding to :sql
-  # entity is an AR model object
-  # direction is either :forwards or :backwards
-  # TODO I really don't like the interface for this method
-  def build_sql_find( entity, direction )
-    operator =
-    case direction
-      when :forwards; '>'
-      when :backwards; '<'
-      else; raise "unknown direction #{direction.inspect}"
-    end
-    
-    # build the sql comparison where clause fragment
-    sql = build_recursive_comparison( operator )
-    
-    # only Postgres seems to understand real booleans
-    # everything else needs the big case statement to be compared
-    # to something
-    unless entity_class.connection.adapter_name == 'PostgreSQL'
-      sql += " = #{sql_boolean true}"
-    end
-    
-    # build parameter values
-    params = {}
-    @order_attributes.each {|x| params[x.to_sym] = entity.send( x.attribute )}
-    { :sql => sql, :params => params }
+    @order_attributes
   end
   
   # add an id to options[:order] if it's not in there
   # also create @order_attributes, and @auto_new
-  def sanitise_options( options )
+  def sanitise_options!
     # save this for later
-    @auto_new = options[:auto_new]
-    options.delete :auto_new
+    @auto_new = @options[:auto_new]
+    @options.delete :auto_new
     
-    options[:order] ||= ''
-    @order_attributes = options[:order].split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
-    
-    # add the primary key if nothing is specified
-    # because we need an ordering of some kind otherwise
-    # index_for_entity will not work
-    if !@order_attributes.any? {|x| x.attribute == @entity_class.primary_key }
-      @order_attributes << OrderAttribute.new( @entity_class, @entity_class.primary_key )
-    end
+    # make sure we have a string here
+    @options[:order] ||= ''
     
     # recreate the options[:order] entry to include default
-    options[:order] = @order_attributes.map{|x| x.to_sql}.join(',')
-    
-    # give back the sanitised options
-    options
+    # TODO why though?
+    @options[:order] = order_attributes.map{|x| x.to_sql}.join(',')
   end
 
   # Execute the block with the specified preload_count,
@@ -237,22 +118,6 @@ EOF
     self.class.new( @entity_class, @options.merge( options ) )
   end
   
-  # Return the set of OrderAttribute objects for this collection
-  def order_attributes
-    # This is sorted in @options[:order], so use that for the search
-    if @order_attributes.nil?
-      @order_attributes = @options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
-      
-      # add the primary key if nothing is specified
-      # because we need an ordering of some kind otherwise
-      # index_for_entity will not work
-      if !@order_attributes.any? {|x| x.attribute == @entity_class.primary_key }
-        @order_attributes << OrderAttribute.new( @entity_class, @entity_class.primary_key )
-      end
-    end
-    @order_attributes
-  end
-  
   # find the index for the given entity, using a binary search algorithm (bsearch).
   # The order_by ActiveRecord style options are used to do the binary search.
   # 0 is returned if the entity is nil
@@ -273,6 +138,7 @@ EOF
             # compare taking ordering direction into account
             retval =
             if attribute.direction == :asc
+              # TODO which would be more efficient here?
               #~ candidate.send( method ) <=> entity.send( method )
               candidate[method] <=> entity[method]
             else
@@ -296,6 +162,10 @@ EOF
   def auto_new?
     @auto_new
   end
+  
+  def search( field, search_criteria, start_entity )
+    TableSearcher.new( entity_class, order_attributes, search_criteria, field ).search( start_entity )
+  end
 
   # delete the given index. If the size ends up as 0,
   # make sure there's always at least one empty record
@@ -315,5 +185,9 @@ class Array
   # For use with CacheTable. Return true if something is cached, false otherwise
   def cached_at?( index )
     !at(index).nil?
+  end
+  
+  def searcher
+    raise "not implemented"
   end
 end

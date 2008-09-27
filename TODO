@@ -4,7 +4,6 @@ make sure ActiveRecord doesn't keep updating columns. ie production mode.
 Use ActiveRecord 2.1 for changed. Note will_change! method
 Use scanf for reading OrderAttributes
 use Pathname#find to find the Rails files
-Cairngorm - 7 layer gui builder
 Can ruby access the local variables in a block, inside a yield. transit_is instead of transit =
 ActiveResourceETL
 Hashrocket guest star
