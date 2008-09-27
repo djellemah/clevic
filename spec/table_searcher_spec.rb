@@ -1,6 +1,21 @@
 require File.dirname(__FILE__) + '/spec_helper.rb'
 require 'clevic/table_searcher.rb'
 
+class CreateFakePassengers < ActiveRecord::Migration
+  FLIGHTS = %w{EK211 EK088 EK761 BA264}
+  MAX_PASSENGERS = 100
+  
+  def self.up
+    1.upto( MAX_PASSENGERS ) do |i|
+      Passenger.create :name => Faker::Name.name, :flight => FLIGHTS[i % FLIGHTS.size], :row => i, :seat => %w{A B C D}[i % 4]
+    end
+  end
+  
+  def self.down
+    Passenger.delete_all
+  end
+end
+
 class MockSearchCriteria
 
   def initialize( &block )
@@ -25,7 +40,6 @@ describe 'initialise database', :shared => true do
   end
 
   after :all do
-    ActiveRecord::Migration.verbose = false
     CreateFakePassengers.down
     CreatePassengers.down
     @onebase.feenesh
@@ -69,7 +83,7 @@ describe TableSearcher, " when searching" do
   it_should_behave_like 'initialise database'
   
   before :all do
-    @all_passengers = Passenger.find( :all, :conditions => [ 'flight = ?', CreateFakePassengers.flights[0] ], :order => :id )
+    @all_passengers = Passenger.find( :all, :conditions => [ 'flight = ?', CreateFakePassengers::FLIGHTS[0] ], :order => :id )
     @name_field = Clevic::Field.new( :name, Passenger, {} )
     @id_order_attribute = OrderAttribute.new( Passenger, 'id' )
     @flight_field = Clevic::Field.new( :flight, Passenger, {} )
@@ -77,15 +91,15 @@ describe TableSearcher, " when searching" do
 
   before :each do
     @simple_search_criteria = MockSearchCriteria.new
-    @simple_search_criteria.search_text = CreateFakePassengers.flights[0]
+    @simple_search_criteria.search_text = CreateFakePassengers::FLIGHTS[0]
     @passenger_generator = Generator.new( @all_passengers )
   end
   
   after :each do
   end
 
-  it "should have #{CreateFakePassengers.MAX_PASSENGERS} passengers" do
-    Passenger.count.should == CreateFakePassengers.MAX_PASSENGERS
+  it "should have #{CreateFakePassengers::MAX_PASSENGERS} passengers" do
+    Passenger.count.should == CreateFakePassengers::MAX_PASSENGERS
   end
 
   it "should do more granular testing"
