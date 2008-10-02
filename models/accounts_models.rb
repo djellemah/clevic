@@ -61,14 +61,13 @@ class Entry < Clevic::Record
         current_index.entity.category = similar.category
         
         # emit signal to update view from top_left to bottom_right
-        model = current_index.model
-        top_left_index = model.create_index( current_index.row, 0 )
-        bottom_right_index = model.create_index( current_index.row, view.model.fields.size )
+        top_left_index = current_index.choppy( :column => 0 )
+        bottom_right_index = current_index.choppy( :column => view.model.column_count - 1 )
         view.dataChanged( top_left_index, bottom_right_index )
         
         # move edit cursor to amount field
         view.selection_model.clear
-        view.override_next_index( model.create_index( current_index.row, view.field_column( :amount ) ) )
+        view.override_next_index( current_index.choppy( :column => view.field_column( :amount ) ) )
       end
     end
   end

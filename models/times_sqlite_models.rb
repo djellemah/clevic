@@ -47,12 +47,12 @@ class Entry < Clevic::Record
           end
           
           # tell view to update
-          top_left_index = model.create_index( current_index.row, 0 )
-          bottom_right_index = model.create_index( current_index.row, current_index.column + view.builder.fields.size )
+          top_left_index = current_index.choppy( :column => 0 )
+          bottom_right_index = current_index.choppy{|i| i.column += view.model.column_count }
           view.dataChanged( top_left_index, bottom_right_index )
           
           # move to end time field
-          view.override_next_index( model.create_index( current_index.row, view.builder.index( :end ) ) )
+          view.override_next_index( current_index.choppy( :column => view.field_column( :end ) ) )
         end
         # don't let anybody else handle the keypress
         return true
@@ -81,12 +81,11 @@ class Entry < Clevic::Record
         current_index.entity.invoice = invoice
         
         # update view from top_left to bottom_right
-        model = current_index.model
-        changed_index = model.create_index( current_index.row, view.builder.index( :invoice ) )
+        changed_index = current_index.choppy( :column => view.field_column( :invoice ) )
         view.dataChanged( changed_index, changed_index )
         
         # move edit cursor to start time field
-        view.override_next_index( model.create_index( current_index.row, view.builder.index( :start ) ) )
+        view.override_next_index( current_index.choppy( :column => view.field_column( :start ) ) )
       end
     end
   end

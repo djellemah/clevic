@@ -13,11 +13,11 @@ module Clevic
 This table model allows an ActiveRecord or ActiveResource to be used as a
 basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
 
-* labels are the headings in the table view
+* labels are the headings in the table view (cached field.label)
 
-* each attribute belongs to the underlying model
+* each attribute belongs to the underlying model (cached field.attribute)
 
-* collection is the set of ActiveRecord model objects (also called entities)
+* collection is the set of ActiveRecord model objects, called entities in this documentation.
 =end
 class TableModel < Qt::AbstractTableModel
   include QtFlags
@@ -185,17 +185,6 @@ class TableModel < Qt::AbstractTableModel
     if model_index.metadata.type == :boolean
       retval = item_boolean_flags
     end
-    
-    # read-only
-    #~ if model_index.field.nil?
-      #~ puts "field is nil for model_index: #{model_index.inspect}"
-      #~ return retval 
-    #~ end
-    
-    #~ if model_index.entity.nil?
-      #~ puts "entity is nil for model_index: #{model_index.inspect}"
-      #~ return retval 
-    #~ end
     
     unless model_index.field.read_only? || model_index.entity.readonly? || read_only?
       retval |= qt_item_is_editable.to_i 
@@ -451,7 +440,6 @@ class TableModel < Qt::AbstractTableModel
   end
   
   # return a set of indexes that match the search criteria
-  # TODO implement searcher for Array
   def search( start_index, search_criteria )
     entity = collection.search( start_index.field, search_criteria, start_index.entity )
     
@@ -465,13 +453,7 @@ class TableModel < Qt::AbstractTableModel
   end
   
   def field_for_index( model_index )
-    retval = fields[model_index.column]
-    if retval.nil?
-      puts "model_index: #{model_index.inspect}"
-      puts "fields: #{fields.inspect}"
-      puts "fields.size: #{fields.size}"
-    end
-    retval
+    fields[model_index.column]
   end
   
 end

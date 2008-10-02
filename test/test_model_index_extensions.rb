@@ -29,83 +29,83 @@ class TestModelIndex < Test::Unit::TestCase
     assert !mi.valid?
   end
   
-  should 'be an invalid clone of an invalid index' do
-    clone = Qt::ModelIndex.invalid.clone
-    assert !clone.valid?
+  should 'be an invalid copy of an invalid index' do
+    choppy = Qt::ModelIndex.invalid.choppy
+    assert !choppy.valid?
   end
   
-  should "be a valid exact clone" do
-    clone = @zero_index.clone
-    assert clone.valid?
+  should "be a valid exact copy" do
+    choppy = @zero_index.choppy
+    assert choppy.valid?
   end
 
-  should 'be an invalid clone' do
-    clone = @zero_index.clone( :row => @model.row_count )
-    assert !clone.valid?
+  should 'be an invalid copy' do
+    choppy = @zero_index.choppy( :row => @model.row_count )
+    assert !choppy.valid?
     
-    clone = @zero_index.clone( :column => @model.column_count )
-    assert !clone.valid?
+    choppy = @zero_index.choppy( :column => @model.column_count )
+    assert !choppy.valid?
   end
   
-  should 'be a clone with a changed row and column, from hash' do
-    clone = @zero_index.clone( :row => 1, :column => 2)
-    assert clone.valid?
-    assert_equal 1, clone.row
-    assert_equal 2, clone.column
+  should 'be a copy with a changed row and column, from hash' do
+    choppy = @zero_index.choppy( :row => 1, :column => 2)
+    assert choppy.valid?
+    assert_equal 1, choppy.row
+    assert_equal 2, choppy.column
   end
 
-  should 'be a clone with incremented row and column, from block' do
-    clone = @zero_index.clone do |i|
+  should 'be a choppy with incremented row and column, from block' do
+    choppy = @zero_index.choppy do |i|
       i.row += 1
       i.column += 2
     end
-    assert clone.valid?
-    assert_equal 1, clone.row
-    assert_equal 2, clone.column
+    assert choppy.valid?
+    assert_equal 1, choppy.row
+    assert_equal 2, choppy.column
   end
   
-  should 'be a clone with changed row and column, from parameters' do
-    clone = @zero_index.clone(3,0)
-    assert clone.valid?
-    assert_equal 3, clone.row
-    assert_equal 0, clone.column
+  should 'be a copy with changed row and column, from parameters' do
+    choppy = @zero_index.choppy(3,0)
+    assert choppy.valid?
+    assert_equal 3, choppy.row
+    assert_equal 0, choppy.column
   end
   
   should 'raise an exception because parameters are wrong' do
     assert_raise TypeError do
-      @zero_index.clone( 3 )
+      @zero_index.choppy( 3 )
     end
   end
   
-  should 'be a clone with decremented row and column, from block' do
+  should 'be a copy with decremented row and column, from block' do
     two_index = @model.create_index(2,2)
     
-    clone = two_index.clone do |i|
+    choppy = two_index.choppy do |i|
       i.row -= 1
       i.column -= 2
     end
-    assert clone.valid?
-    assert_equal 1, clone.row
-    assert_equal 0, clone.column
+    assert choppy.valid?
+    assert_equal 1, choppy.row
+    assert_equal 0, choppy.column
   end
 
-  should 'be a clone with changed row and column, from block' do
-    clone = @zero_index.clone do |i|
+  should 'be a copy with changed row and column, from block' do
+    choppy = @zero_index.choppy do |i|
       i.row = 3
       i.column = 2
     end
-    assert clone.valid?
-    assert_equal 3, clone.row
-    assert_equal 2, clone.column
+    assert choppy.valid?
+    assert_equal 3, choppy.row
+    assert_equal 2, choppy.column
   end
 
-  should 'be a clone with changed row and column, from instance_eval' do
-    clone = @zero_index.clone do
+  should 'be a copy with changed row and column, from instance_eval' do
+    choppy = @zero_index.choppy do
       row 3
       column 2
     end
-    assert clone.valid?
-    assert_equal 3, clone.row
-    assert_equal 2, clone.column
+    assert choppy.valid?
+    assert_equal 3, choppy.row
+    assert_equal 2, choppy.column
   end
 end

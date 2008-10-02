@@ -128,16 +128,19 @@ module Qt
       [ entity.errors[field_name.to_sym] ].flatten
     end
     
-    # make a new index based on this one, fetch values from the args hash
-    # the block will instance_eval with no args, or pass self
-    # if there's one arg. Examples:
-    #   new_index = index.clone { row 10; column 13 }
-    #   new_index = index.clone { row 10; column 13 }
-    #   new_index = index.clone( 1,3 )
-    #   new_index = index.clone { |i| i.row += 1 }
-    #   new_index = index.clone :row => 16
-    #   same_index = index.clone
-    def clone( *args, &block  )
+    # CHange and cOP(P)Y - make a new index based on this one,
+    # modify the new index with values from the args hash or the block.
+    # The block will instance_eval with no args, or pass self
+    # if there's one arg. You can also pass two parameters, interpreted
+    # as row, columns.
+    # Examples:
+    #   new_index = index.choppy { row 10; column 13 }
+    #   new_index = index.choppy { row 10; column 13 }
+    #   new_index = index.choppy( 1,3 )
+    #   new_index = index.choppy { |i| i.row += 1 }
+    #   new_index = index.choppy :row => 16
+    #   same_index = index.choppy
+    def choppy( *args, &block  )
       return ModelIndex.invalid unless self.valid?
       
       if args.size == 0
@@ -151,12 +154,13 @@ module Qt
       end
       
       defaults = { :row => self.row, :column => self.column }
+      # TODO use a more specific class here
       hc = Clevic::HashCollector.new( defaults.merge( args ), &block )
       hc.row ||= self.row
       hc.column ||= self.column
     
       # return an invalid index if it's out of bounds,
-      # or the cloned index if it's OK.
+      # or the choppy'd index if it's OK.
       if hc.row >= model.row_count || hc.column >= model.column_count
         ModelIndex.new
       else

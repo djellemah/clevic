@@ -220,7 +220,7 @@ class TableView < Qt::TableView
   def ditto
     sanity_check_ditto
     sanity_check_read_only
-    one_up_index = model.create_index( current_index.row - 1, current_index.column )
+    one_up_index = current_index.choppy { |i| i.row -= 1 }
     previous_value = one_up_index.attribute_value
     if current_index.attribute_value != previous_value
       current_index.attribute_value = previous_value
@@ -234,7 +234,7 @@ class TableView < Qt::TableView
     unless current_index.column < model.column_count
       emit status_text( 'No column to the right' )
     else
-      one_up_right_index = model.create_index( current_index.row - 1, current_index.column + 1 )
+      one_up_right_index = current_index.choppy { |i| i.row -= 1; i.column += 1 }
       current_index.attribute_value = one_up_right_index.attribute_value
       emit model.dataChanged( current_index, current_index )
     end
@@ -246,7 +246,7 @@ class TableView < Qt::TableView
     unless current_index.column > 0
       emit status_text( 'No column to the left' )
     else
-      one_up_left_index = model.create_index( current_index.row - 1, current_index.column - 1 )
+      one_up_left_index = current_index.choppy { |i| i.row -= 1; i.column -= 1 }
       current_index.attribute_value = one_up_left_index.attribute_value
       emit model.dataChanged( current_index, current_index )
     end
@@ -438,15 +438,15 @@ class TableView < Qt::TableView
   def paste_to_index( top_left_index, csv_arr )
     csv_arr.each_with_index do |row,row_index|
       row.each_with_index do |field, field_index|
-        cell_index = model.create_index( top_left_index.row + row_index, top_left_index.column + field_index )
+        cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
         model.setData( cell_index, field.to_variant, Qt::PasteRole )
       end
       # save records to db
-      model.save( model.create_index( top_left_index.row + row_index, 0 ) )
+      model.save( top_left_index.choppy {|i| i.row += row_index; i.column = 0 } )
     end
     
     # make the gui refresh
-    bottom_right_index = model.create_index( top_left_index.row + csv_arr.size - 1, top_left_index.column + csv_arr[0].size - 1 )
+    bottom_right_index = top_left_index.choppy {|i| i.row += csv_arr.size - 1; i.column += csv_arr[0].size - 1 }
     emit model.dataChanged( top_left_index, bottom_right_index )
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
@@ -516,6 +516,7 @@ class TableView < Qt::TableView
         end
       end
       
+      # thrown by the sanity_check_xxx methods
       catch :insane do
         case
         # on the last row, and down is pressed
@@ -635,11 +636,11 @@ class TableView < Qt::TableView
     case end_edit_hint
       when Qt::AbstractItemDelegate.EditNextItem
         super( editor, Qt::AbstractItemDelegate.NoHint )
-        set_current_unless_override( model.create_index( current_index.row, current_index.column + 1 ) )
+        set_current_unless_override( current_index.choppy { |i| i.column += 1 } )
         
       when Qt::AbstractItemDelegate.EditPreviousItem
         super( editor, Qt::AbstractItemDelegate.NoHint )
-        set_current_unless_override( model.create_index( current_index.row, current_index.column - 1 ) )
+        set_current_unless_override( current_index.choppy { |i| i.column -= 1 } )
         
       else
         super
