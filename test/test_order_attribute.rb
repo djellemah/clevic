@@ -12,6 +12,13 @@ class TestOrderAttribute < Test::Unit::TestCase
   def teardown
   end
   
+  def test_reverse
+    oa = OrderAttribute.new Dummy, 'id'
+    assert_equal :asc, oa.reverse( :desc )
+    assert_equal :desc, oa.reverse( :asc )
+    assert_raise( RuntimeError ) { oa.reverse( :something_wrong ) }
+  end
+  
   # Test that initialisation was OK
   def test_equal
     oa1 = OrderAttribute.new Dummy, 'id'
@@ -19,6 +26,8 @@ class TestOrderAttribute < Test::Unit::TestCase
     assert_equal oa1, oa2
     assert_equal oa1.to_sql, 'dummies.id asc'
     assert_equal oa1.to_reverse_sql, 'dummies.id desc'
+    assert_equal oa1.attribute.to_sym, oa1.to_sym
+    
     assert_equal oa2.to_sql, 'dummies.id asc'
     assert_equal oa2.to_reverse_sql, 'dummies.id desc'
   end
@@ -32,9 +41,11 @@ class TestOrderAttribute < Test::Unit::TestCase
   def test_parse_desc
     oa_desc = OrderAttribute.new Dummy, "name desc"
     assert_equal 'name', oa_desc.attribute
+    assert_equal 'name', oa_desc.to_s
     assert_equal :desc, oa_desc.direction
     assert_equal oa_desc.to_sql, 'dummies.name desc'
-
+    assert_equal 'dummies.name asc', oa_desc.to_reverse_sql
+    
     oa_desc = OrderAttribute.new Dummy, "dummies.name desc"
     assert_equal 'name', oa_desc.attribute
     assert_equal :desc, oa_desc.direction

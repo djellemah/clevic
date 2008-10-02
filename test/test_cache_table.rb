@@ -34,11 +34,15 @@ class TestCacheTable < Test::Unit::TestCase
     assert_equal 3, Passenger.count
   end
   
-  # test that cache is initially empty
-  def test_cache_loading
+  should "have a sql_count equal to number of records" do
     assert_equal Passenger.count, @cache_table.sql_count
+  end
+  
+  should "have a size equal to number of records" do
     assert_equal Passenger.count, @cache_table.size
-
+  end
+  
+  def test_cache_loading
     # test not yet cached
     (0...Passenger.count).each do |i|
       assert @cache_table.cached_at?(i) == false, "record #{i} should not be cached yet"
@@ -70,7 +74,7 @@ class TestCacheTable < Test::Unit::TestCase
     end
   end
   
-  def test_default_order_attributes
+  should 'have id as a default order attribute' do
     oa = OrderAttribute.new( Passenger, 'id' )
     assert_equal oa, @cache_table.order_attributes[0]
   end
@@ -104,4 +108,29 @@ class TestCacheTable < Test::Unit::TestCase
     assert_equal 1, @cache_table.size
   end
   
+  should 'return nil for a nil parameter' do
+    assert_nil @cache_table.index_for_entity( nil )
+  end
+    
+  should 'return nil for an empty set' do
+    cache_table = @cache_table.renew( :conditions => "flight = 'nothing'" )
+    assert_nil cache_table.index_for_entity( Passenger.find( :first ) )
+  end
+  
+  def test_index_for_entity
+    # test in ascending order
+    first_passenger = Passenger.find :first
+    index = @cache_table.index_for_entity( first_passenger )
+    assert_equal 0, index, 'first passenger should have an index of 0'
+    
+    # test in descending order
+    @cache_table = @cache_table.renew( :order => 'id desc' )
+    last_passenger = Passenger.find :first, :order => 'id desc'
+    assert_equal 0, @cache_table.index_for_entity( last_passenger ), "last passenger in reverse order should have an index of 0"
+    
+    # test with two order fields
+    @cache_table = @cache_table.renew( :order => 'flight, row' )
+    passenger = Passenger.find :first, :order => 'flight, row'
+    assert_equal 0, @cache_table.index_for_entity( passenger ), "passenger in flight, row order should have an index of 0"
+  end
 end
