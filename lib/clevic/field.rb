@@ -125,7 +125,17 @@ EOF
   # in other words an ActiveRecord::ConnectionAdapters::Column object,
   # or an ActiveRecord::Reflection::AssociationReflection object
   def meta
-    @entity_class.columns_hash[attribute.to_s] || @entity_class.reflections[attribute]
+    @meta ||= @entity_class.columns_hash[attribute.to_s] || @entity_class.reflections[attribute]
+  end
+  
+  # return the type of this attribute. Usually one of :string, :integer
+  # or some entity class (ActiveRecord::Base subclass)
+  def attribute_type
+    if meta.kind_of?( ActiveRecord::Reflection::MacroReflection )
+      meta.klass
+    else
+      meta.type
+    end
   end
 
   # return true if this field can be used in a filter

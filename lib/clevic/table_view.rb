@@ -16,6 +16,7 @@ class TableView < Qt::TableView
   def filtered?; self.filtered; end
   
   # status_text is emitted when this object was to display something in the status bar
+  # error_test is emitted when an error of some kind must be displayed to the user.
   # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
   signals 'status_text(QString)', 'filter_status(bool)'
   
@@ -228,14 +229,24 @@ class TableView < Qt::TableView
     end
   end
   
+  # from and to are ModelIndex instances. Throws :insane if
+  # their fields don't have the same attribute_type.
+  def sanity_check_types( from, to )
+    unless from.field.attribute_type == to.field.attribute_type
+      emit status_text( 'Incompatible data' )
+      throw :insane
+    end
+  end
+  
   def ditto_right
     sanity_check_ditto
     sanity_check_read_only
-    unless current_index.column < model.column_count
+    if current_index.column >= model.column_count - 1
       emit status_text( 'No column to the right' )
     else
-      one_up_right_index = current_index.choppy { |i| i.row -= 1; i.column += 1 }
-      current_index.attribute_value = one_up_right_index.attribute_value
+      one_up_right = current_index.choppy {|i| i.row -= 1; i.column += 1 }
+      sanity_check_types( one_up_right, current_index )
+      current_index.attribute_value = one_up_right.attribute_value
       emit model.dataChanged( current_index, current_index )
     end
   end
@@ -246,8 +257,9 @@ class TableView < Qt::TableView
     unless current_index.column > 0
       emit status_text( 'No column to the left' )
     else
-      one_up_left_index = current_index.choppy { |i| i.row -= 1; i.column -= 1 }
-      current_index.attribute_value = one_up_left_index.attribute_value
+      one_up_left = current_index.choppy { |i| i.row -= 1; i.column -= 1 }
+      sanity_check_types( one_up_left, current_index )
+      current_index.attribute_value = one_up_left.attribute_value
       emit model.dataChanged( current_index, current_index )
     end
   end
