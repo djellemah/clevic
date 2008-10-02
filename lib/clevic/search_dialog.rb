@@ -33,11 +33,11 @@ class SearchDialog
   end
   
   def forwards?
-    @layout.forwards.checked?
+    layout.forwards.checked?
   end
   
   def backwards?
-    @layout.backwards.checked?
+    layout.backwards.checked?
   end
   
   # return either :backwards or :forwards

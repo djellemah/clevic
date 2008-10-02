@@ -72,7 +72,7 @@ class DbOptions
   #     dbo.username 'accounts_user'
   #   end
   def self.connect( args = {}, &block )
-    inst = self.new( args, &block    )
+    inst = self.new( args, &block )
     inst.connect
     inst
   end
