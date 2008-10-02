@@ -15,10 +15,7 @@ basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
 
 * labels are the headings in the table view
 
-* dots are the dotted attribute paths that specify how to get values from
-  the underlying ActiveRecord model
-
-* attributes are the first-level of the dots
+* each attribute belongs to the underlying model
 
 * collection is the set of ActiveRecord model objects (also called entities)
 =end
@@ -58,13 +55,8 @@ class TableModel < Qt::AbstractTableModel
     
     # reset these
     @metadatas = []
-    @dots = nil
     @labels = nil
     @attributes = nil
-  end
-  
-  def dots
-    @dots ||= fields.map {|x| x.column }
   end
   
   def labels
@@ -184,12 +176,27 @@ class TableModel < Qt::AbstractTableModel
   
   def flags( model_index )
     retval = super
+    
+    # sometimes this actually happens. 
+    # TODO probably a bug in the combo editor exit code
+    return retval if model_index.column >= columnCount
+    
     # TODO don't return IsEditable if the model is read-only
     if model_index.metadata.type == :boolean
       retval = item_boolean_flags
     end
     
     # read-only
+    #~ if model_index.field.nil?
+      #~ puts "field is nil for model_index: #{model_index.inspect}"
+      #~ return retval 
+    #~ end
+    
+    #~ if model_index.entity.nil?
+      #~ puts "entity is nil for model_index: #{model_index.inspect}"
+      #~ return retval 
+    #~ end
+    
     unless model_index.field.read_only? || model_index.entity.readonly? || read_only?
       retval |= qt_item_is_editable.to_i 
     end
@@ -360,7 +367,7 @@ class TableModel < Qt::AbstractTableModel
         # translate the value from the ui to something that
         # the AR model will understand
         begin
-          index.gui_value =
+          index.attribute_value =
           case
             when value.class.name == 'Qt::Date'
               Date.new( value.year, value.month, value.day )
@@ -458,7 +465,13 @@ class TableModel < Qt::AbstractTableModel
   end
   
   def field_for_index( model_index )
-    fields[model_index.column]
+    retval = fields[model_index.column]
+    if retval.nil?
+      puts "model_index: #{model_index.inspect}"
+      puts "fields: #{fields.inspect}"
+      puts "fields.size: #{fields.size}"
+    end
+    retval
   end
   
 end

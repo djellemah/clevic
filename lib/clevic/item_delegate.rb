@@ -46,7 +46,7 @@ class ItemDelegate < Qt::ItemDelegate
   #~ end
   
   #~ def setModelData( editor, abstract_item_model, model_index )
-    #~ model_index.gui_value = editor.value
+    #~ model_index.attribute_value = editor.value
     #~ emit abstract_item_model.dataChanged( model_index, model_index )
   #~ end
   

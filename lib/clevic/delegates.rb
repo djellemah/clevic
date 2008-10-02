@@ -186,7 +186,7 @@ class ComboDelegate < Clevic::ItemDelegate
       end
       
     else
-      model_index.gui_value = editor.text
+      model_index.attribute_value = editor.text
     end
     emit abstract_item_model.dataChanged( model_index, model_index )
   end

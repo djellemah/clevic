@@ -58,7 +58,7 @@ class DbOptions
   end
   
   # convenience method so we can do things like
-  #   Clevic::DbOptions.connect( $options ) do
+  #   Clevic::DbOptions.connect do
   #     database :accounts
   #     adapter :postgresql
   #     username 'accounts_user'
@@ -66,7 +66,7 @@ class DbOptions
   # the block is evaluated in the context of the a new DbOptions
   # object. You can also pass a block parameter and it will receive
   # the DbOptions instance, like this:
-  #   Clevic::DbOptions.connect( $options ) do |dbo|
+  #   Clevic::DbOptions.connect do |dbo|
   #     dbo.database :accounts
   #     dbo.adapter :postgresql
   #     dbo.username 'accounts_user'

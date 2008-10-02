@@ -379,11 +379,11 @@ private
     @records
   end
   
-  # update options with the values in block, using FieldBuilder
+  # update options with the values in block, using HashCollector
   # to evaluate block
   def gather_block( options, &block )
     unless block.nil?
-      fb = FieldBuilder.new( options )
+      fb = HashCollector.new( options )
       fb.instance_eval( &block )
       fb.to_hash
     else

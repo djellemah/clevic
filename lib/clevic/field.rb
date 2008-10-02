@@ -1,4 +1,4 @@
-require 'clevic/field_builder.rb'
+require 'clevic/hash_collector.rb'
 
 module Clevic
 

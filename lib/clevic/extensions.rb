@@ -56,13 +56,6 @@ module Qt
       @field ||= model.field_for_index( self )
     end
     
-    # set the value returned from the gui, as whatever the underlying
-    # entity wants it to be
-    # TODO this will break for more than 2 objects in a path
-    def gui_value=( obj )
-      entity.send( "#{model.dots[column]}=", obj )
-    end
-    
     def dump
       <<-EOF
       field_name: #{field_name}
@@ -133,6 +126,42 @@ module Qt
     # or many elements.
     def errors
       [ entity.errors[field_name.to_sym] ].flatten
+    end
+    
+    # make a new index based on this one, fetch values from the args hash
+    # the block will instance_eval with no args, or pass self
+    # if there's one arg. Examples:
+    #   new_index = index.clone { row 10; column 13 }
+    #   new_index = index.clone { row 10; column 13 }
+    #   new_index = index.clone( 1,3 )
+    #   new_index = index.clone { |i| i.row += 1 }
+    #   new_index = index.clone :row => 16
+    #   same_index = index.clone
+    def clone( *args, &block  )
+      return ModelIndex.invalid unless self.valid?
+      
+      if args.size == 0
+        args = {}
+      elsif args.size == 1
+        # args are a hash
+        args = args[0]
+      else
+        # args are two parameters
+        args = { :row => args[0], :column => args[1] }
+      end
+      
+      defaults = { :row => self.row, :column => self.column }
+      hc = Clevic::HashCollector.new( defaults.merge( args ), &block )
+      hc.row ||= self.row
+      hc.column ||= self.column
+    
+      # return an invalid index if it's out of bounds,
+      # or the cloned index if it's OK.
+      if hc.row >= model.row_count || hc.column >= model.column_count
+        ModelIndex.new
+      else
+        model.create_index( hc.row.to_i, hc.column.to_i )
+      end
     end
   end
 
