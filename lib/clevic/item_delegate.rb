@@ -16,6 +16,15 @@ class ItemDelegate < Qt::ItemDelegate
     super
   end
   
+  # Figure out where to put the editor widget, taking into
+  # account the sizes of the headers
+  def updateEditorGeometry( editor, style_option_view_item, model_index )
+    rect = style_option_view_item.rect
+    rect.set_width( [editor.size_hint.width,rect.width].max )
+    rect.set_height( editor.size_hint.height )
+    editor.set_geometry( rect )
+  end
+
   # This catches the event that begins the edit process.
   #~ def editorEvent ( event, model, style_option_view_item, model_index )
   #~ end
@@ -34,14 +43,6 @@ class ItemDelegate < Qt::ItemDelegate
   #~ def setModelData( editor_widget, abstract_item_model, model_index )
   #~ end
   
-  # Figure out where to put the editor widget, taking into
-  # account the sizes of the headers
-  def updateEditorGeometry( editor, style_option_view_item, model_index )
-    rect = style_option_view_item.rect
-    rect.set_width( [editor.size_hint.width,rect.width].max )
-    rect.set_height( editor.size_hint.height )
-    editor.set_geometry( rect )
-  end
 end
 
 end

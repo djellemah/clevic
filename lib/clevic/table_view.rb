@@ -671,6 +671,7 @@ class TableView < Qt::TableView
     end
     
     save_entity = current_index.entity
+    save_entity.save if save_entity.changed?
     save_index = current_index
     
     unless self.filtered

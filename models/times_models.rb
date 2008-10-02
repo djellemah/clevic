@@ -53,23 +53,34 @@ class Entry < Clevic::Record
     view.sanity_check_read_only
     view.sanity_check_ditto
     
-    if view.current_index.row > 1
+    # need a reference to current_index here, because selection_model.clear will invalidate
+    # view.current_index. And anyway, its shorter and easier to read.
+    current_index = view.current_index
+    if current_index.row > 1
       # fetch previous item
-      previous_item = view.model.collection[view.current_index.row - 1]
+      previous_item = view.model.collection[current_index.row - 1]
       
       # copy the relevant fields
-      view.current_index.entity.start = previous_item.end
+      current_index.entity.start = previous_item.end
       [:date, :project, :invoice, :activity, :module, :charge, :person].each do |attr|
-        view.current_index.entity.send( "#{attr.to_s}=", previous_item.send( attr ) )
+        current_index.entity.send( "#{attr.to_s}=", previous_item.send( attr ) )
       end
       
       # tell view to update
-      top_left_index = view.current_index.choppy( :column => 0 )
-      bottom_right_index = view.current_index.choppy{|i| i.column += view.model.fields.size }
+      top_left_index = current_index.choppy( :column => 0 )
+      bottom_right_index = current_index.choppy( :column => view.model.fields.size - 1 )
       view.dataChanged( top_left_index, bottom_right_index )
       
       # move to end time field
-      view.override_next_index( view.current_index.choppy( :column => view.field_column( :end ) ) )
+      view.selection_model.clear
+      next_field =
+      if current_index.entity.start.blank?
+        :start
+      else
+        :end
+      end
+      next_index = current_index.choppy( :column => view.field_column( next_field ) )
+      view.override_next_index( next_index )
     end
   end
 
@@ -90,11 +101,11 @@ class Entry < Clevic::Record
         current_index.entity.invoice = invoice
         
         # update view from top_left to bottom_right
-        model = current_index.model
         changed_index = current_index.choppy( :column => view.field_column( :invoice ) )
         view.dataChanged( changed_index, changed_index )
         
         # move edit cursor to start time field
+        view.selection_model.clear
         view.override_next_index( current_index.choppy( :column => view.field_column( :start ) ) )
       end
     end

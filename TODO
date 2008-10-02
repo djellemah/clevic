@@ -1,3 +1,5 @@
+Ctrl-Del on block selection causes crash.
+paste append if a paste starts on a row at the end
 Use ZenTest to generate tests
 Check out ar-extensions
 make sure ActiveRecord doesn't keep updating columns. ie production mode.
