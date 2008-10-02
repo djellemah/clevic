@@ -1,5 +1,3 @@
-require 'qtext/flags.rb'
-
 require 'clevic/field_builder.rb'
 
 module Clevic
@@ -8,18 +6,63 @@ module Clevic
 This defines a field in the UI, and how it hooks up to a field in the DB.
 =end
 class Field
-  include QtFlags
+  # The attribute on the AR entity that forms the basis for this field.
+  # It will return a simple value in most cases, or another AR entity
+  # in the case of relational fields.
+  attr_accessor :attribute
   
-  attr_accessor :attribute, :path, :label, :delegate, :class_name
-  attr_accessor :alignment, :format, :tooltip, :path_block
+  # For relational fields, a dot-separated path of attributes starting on the object returned by attribute.
+  # Set by :display in options to the constructor. Paths longer than 1 element haven't been
+  # tested much.
+  attr_accessor :path
+  
+  # The label for the field. Defaults to the humanised field name.
+  attr_accessor :label
+  
+  # The UI delegate class for the field.
+  attr_accessor :delegate
+  
+  # For relational fields, this is the class_name for the related AR entity.
+  attr_accessor :class_name
+  
+  # One of the alignment specifiers - :left, :centre, :right or :justified.
+  attr_accessor :alignment
+  
+  # The format string, formatted by strftime for date and time fields, by sprintf for others.
+  # Defaults to something sensible for the type of the field.
+  attr_accessor :format
+  
+  # the tooltip to be displayed. Defaults to empty string.
+  attr_accessor :tooltip
+  
+  # A block used to display the value of the field. This can be used to display 'virtual'
+  # fields from related tables, or calculated fields. Set by :display in the options
+  # to the constructor.
+  attr_accessor :path_block
+  
+  # Whether the field is currently visible or not.
   attr_accessor :visible
   
-  attr_writer :sample, :read_only
+  # Sample is used if the programmer wishes to provide a string that can be used
+  # as the basis for calculating the width of the field. By default this will be
+  # calculated from the database, but this may be an expensive operation. So we
+  # have the option to override that if we wish.
+  attr_writer :sample
   
-  # attribute is the symbol for the attribute on the entity_class
+  # set the field to read-only
+  attr_writer :read_only
+  
+  # Create a new Field object that displays the contents of a database field in
+  # the UI using the given parameters.
+  # - attribute is the symbol for the attribute on the entity_class.
+  # - entity_class is the ActiveRecord class which this Field talks to.
+  # - options is a hash of writable attributes in Field.
   def initialize( attribute, entity_class, options )
     # sanity checking
-    unless entity_class.column_names.include?( attribute.to_s ) or entity_class.instance_methods.include?( attribute.to_s )
+    raise "attribute #{attribute.inspect} must be a symbol" unless attribute.is_a?( Symbol )
+    raise "entity_class must be a descendant of ActiveRecord::Base" unless entity_class.ancestors.include?( ActiveRecord::Base )
+    
+    unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
 #{attribute} not found in #{entity_class.name}. Possibilities are:
 #{entity_class.attribute_names.join("\n")}
@@ -32,42 +75,17 @@ EOF
     @entity_class = entity_class
     @visible = true
     
-    options.each do |key,value|
-      self.send( "#{key}=", value ) if respond_to?( "#{key}=" )
-    end
+    # handle options
+    process_options!( options )
     
-    # TODO could convert everything to a block here, even paths
-    if options[:display].kind_of?( Proc )
-      @path_block = options[:display]
-    else
-      @path = options[:display]
-    end
-    
-    # default the label
-    @label ||= attribute.to_s.humanize
-    
-    # default formats
-    if @format.nil?
-      case meta.type
-        when :time; @format = '%H:%M'
-        when :date; @format = '%d-%h-%y'
-        when :datetime; @format = '%d-%h-%y %H:%M:%S'
-        when :decimal, :float; @format = "%.2f"
-      end
-    end
-    
-    # default alignments
-    if @alignment.nil?
-      @alignment =
-      case meta.type
-        when :decimal, :integer, :float; qt_alignright
-        when :boolean; qt_aligncenter
-      end
-    end
+    # set various sensible defaults
+    default_label!
+    default_format!
+    default_alignment!
   end
   
-  # Return the attribute value for the given entity, which will probably
-  # be an ActiveRecord instance
+  # Return the attribute value for the given ActiveRecord entity, or nil
+  # if entity is nil. Will call transform_attribute.
   def value_for( entity )
     return nil if entity.nil?
     transform_attribute( entity.send( attribute ) )
@@ -75,7 +93,7 @@ EOF
   
   # apply path, or path_block, to the given
   # attribute value. Otherwise just return
-  # attribute_value itself
+  # attribute_value itself.
   def transform_attribute( attribute_value )
     return nil if attribute_value.nil?
     case
@@ -110,18 +128,19 @@ EOF
 
   # return true if this field can be used in a filter
   # virtual fields (ie those that don't exist in this field's
-  # table) can't be filtered on.
+  # table) can't be used to filter on.
   def filterable?
     !meta.nil?
   end
   
-  # return the name of the field for this Field, quoted for the dbms
+  # Return the name of the database field for this Field, quoted for the dbms.
   def quoted_field
     quote_field( meta.name )
   end
   
-  def quote_field( field )
-    @entity_class.connection.quote_column_name( field )
+  # Quote the given string as a field name for SQL.
+  def quote_field( field_name )
+    @entity_class.connection.quote_column_name( field_name )
   end
 
   # return the result of the attribute + the path
@@ -136,7 +155,7 @@ EOF
     pieces.map{|x| x.to_sym}
   end
   
-  # is the field read-only. Defaults to false.
+  # Return true if the field is read-only. Defaults to false.
   def read_only?
     @read_only || false
   end
@@ -154,10 +173,9 @@ EOF
     end
   end
   
-  # return a sample for the field which can be used to size a column in the table
+  # return a sample for the field which can be used to size the UI field widget
   def sample
     if @sample.nil?
-      puts "meta.type: #{meta.type.inspect}"
       self.sample =
       case meta.type
         # max width of 40 chars
@@ -188,14 +206,53 @@ EOF
     @sample || self.label
   end
 
+protected
+
+  def process_options!( options )
+    options.each do |key,value|
+      self.send( "#{key}=", value ) if respond_to?( "#{key}=" )
+    end
+    
+    # TODO could convert everything to a block here, even paths
+    # TODO possibly use :display for both path and path_block
+    if options[:display].kind_of?( Proc )
+      @path_block = options[:display]
+    else
+      @path = options[:display]
+    end
+  end
+  
+  def default_label!
+    @label ||= attribute.to_s.humanize
+  end
+
+  def default_format!
+    if @format.nil?
+      case meta.type
+        when :time; @format = '%H:%M'
+        when :date; @format = '%d-%h-%y'
+        when :datetime; @format = '%d-%h-%y %H:%M:%S'
+        when :decimal, :float; @format = "%.2f"
+      end
+    end
+  end
+  
+  def default_alignment!
+    if @alignment.nil?
+      @alignment =
+      case meta.type
+        when :decimal, :integer, :float; :right
+        when :boolean; :centre
+      end
+    end
+  end
+
 private
 
   def format_result( result_set )
     unless result_set.size == 0
       obj = result_set[0][attribute]
-      unless obj.nil?
-        do_format( obj )
-      end
+      do_format( obj ) unless obj.nil?
     end
   end
   
@@ -242,6 +299,8 @@ private
   end
   
   def related_sample
+    # TODO this isn't really the right way to do this
+    return nil if meta.nil?
     if meta.klass.attribute_names.include?( attribute_path[1].to_s )
       string_sample( nil, meta.klass, attribute_path[1] )
     end
