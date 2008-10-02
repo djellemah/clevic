@@ -18,9 +18,6 @@ basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
 * dots are the dotted attribute paths that specify how to get values from
   the underlying ActiveRecord model
 
-* attribute_paths is a collection of attribute symbols. It comes from
-  dots, and is split on /\./
-
 * attributes are the first-level of the dots
 
 * collection is the set of ActiveRecord model objects (also called entities)
@@ -64,7 +61,6 @@ class TableModel < Qt::AbstractTableModel
     @dots = nil
     @labels = nil
     @attributes = nil
-    @attribute_paths = nil
   end
   
   def dots
@@ -77,10 +73,6 @@ class TableModel < Qt::AbstractTableModel
   
   def attributes
     @attributes ||= fields.map {|x| x.attribute }
-  end
-  
-  def attribute_paths
-    @attribute_paths ||= fields.map {|x| x.attribute_path }
   end
   
   def collection=( arr )

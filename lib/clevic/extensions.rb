@@ -67,8 +67,6 @@ module Qt
       <<-EOF
       field_name: #{field_name}
       field_value: #{field_value}
-      dotted_path: #{dotted_path.inspect}
-      attribute_path: #{attribute_path.inspect}
       attribute: #{attribute.inspect}
       attribute_value: #{attribute_value.inspect}
       metadata: #{metadata.inspect}
@@ -95,17 +93,6 @@ module Qt
       entity.send( "#{attribute.to_s}=", obj )
     end
     
-    # the dotted attribute path, same as a 'column' in the model
-    #~ def dotted_path
-      #~ model.dots[column]
-    #~ end
-    
-    # return an array of path elements from dotted_path
-    #~ def attribute_path
-      #~ return nil if model.nil?
-      #~ model.attribute_paths[column]
-    #~ end
-
     # returns the ActiveRecord column_for_attribute
     def metadata
       # use the optimised version
@@ -118,7 +105,7 @@ module Qt
       metadata.name
     end
     
-    # return the value of the field, it the _id value
+    # return the value of the field, it may be the _id value
     def field_value
       entity.send( field_name )
     end
@@ -126,7 +113,6 @@ module Qt
     # the underlying entity
     def entity
       return nil if model.nil?
-      #~ puts "fetching entity from collection for xy=(#{row},#{column})" if @entity.nil?
       @entity ||= model.collection[row]
     end
     

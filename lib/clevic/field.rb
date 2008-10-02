@@ -7,8 +7,10 @@ This defines a field in the UI, and how it hooks up to a field in the DB.
 =end
 class Field
   # The attribute on the AR entity that forms the basis for this field.
-  # It will return a simple value in most cases, or another AR entity
-  # in the case of relational fields.
+  # Accessing the returned attribute (using send, or the [] method on an entity)
+  # will give a simple value, or another AR entity in the case of relational fields.
+  # In other words, this is *not* the same as the name of the field in the DB, which
+  # would have an _id suffix for relationships.
   attr_accessor :attribute
   
   # For relational fields, a dot-separated path of attributes starting on the object returned by attribute.
