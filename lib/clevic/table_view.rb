@@ -706,7 +706,7 @@ class TableView < Qt::TableView
     unless found_row.nil?
       self.current_index = model.create_index( found_row, save_index.column )
       if self.filtered?
-        emit status_text( "Filtered on #{current_index.field_name} = #{current_index.gui_value}" )
+        emit status_text( "Filtered on #{current_index.field.label} = #{current_index.gui_value}" )
       else
         emit status_text( nil )
       end

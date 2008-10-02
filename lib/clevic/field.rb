@@ -34,6 +34,9 @@ class Field
   # Defaults to something sensible for the type of the field.
   attr_accessor :format
   
+  # The format used for editing
+  attr_accessor :edit_format
+  
   # the tooltip to be displayed. Defaults to empty string.
   attr_accessor :tooltip
   
@@ -80,9 +83,11 @@ EOF
     # handle options
     process_options!( options )
     
-    # set various sensible defaults
+    # set various sensible defaults. They're not lazy accessors because
+    # they might stay nil, and we don't want to keep evaluating them.
     default_label!
     default_format!
+    default_edit_format!
     default_alignment!
   end
   
@@ -131,6 +136,7 @@ EOF
   # return the type of this attribute. Usually one of :string, :integer
   # or some entity class (ActiveRecord::Base subclass)
   def attribute_type
+    @attribute_type ||=
     if meta.kind_of?( ActiveRecord::Reflection::MacroReflection )
       meta.klass
     else
@@ -179,6 +185,18 @@ EOF
         value.strftime( format )
       else
         self.format % value
+      end
+    else
+      value
+    end
+  end
+  
+  def do_edit_format( value )
+    if self.edit_format != nil
+      if is_date_time?
+        value.strftime( edit_format )
+      else
+        self.edit_format % value
       end
     else
       value
@@ -240,15 +258,28 @@ protected
 
   def default_format!
     if @format.nil?
+      @format =
       case meta.type
-        when :time; @format = '%H:%M'
-        when :date; @format = '%d-%h-%y'
-        when :datetime; @format = '%d-%h-%y %H:%M:%S'
-        when :decimal, :float; @format = "%.2f"
+        when :time; '%H:%M'
+        when :date; '%d-%h-%y'
+        when :datetime; '%d-%h-%y %H:%M:%S'
+        when :decimal, :float; "%.2f"
       end
     end
+    @format
   end
   
+  def default_edit_format!
+    if @edit_format.nil?
+      @edit_format =
+      case meta.type
+        when :date; '%d-%h-%Y'
+        when :datetime; '%d-%h-%Y %H:%M:%S'
+      end || default_format!
+    end
+    @edit_format
+  end
+
   def default_alignment!
     if @alignment.nil?
       @alignment =

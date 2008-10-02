@@ -107,5 +107,7 @@ class TestTableSearcher < Test::Unit::TestCase
       end
     end
   end
+  
+  should_eventually 'work for Array'
 
 end

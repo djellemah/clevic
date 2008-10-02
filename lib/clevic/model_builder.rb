@@ -30,8 +30,8 @@ For example, the UI for a model called Entry could be defined like this:
     belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
 
     define_ui do
-      # :format is optional
-      plain       :date, :format => '%d-%h-%y'
+      # :format and :edit_format are optional, in fact these are the defaults
+      plain       :date, :format => '%d-%h-%y', :edit_format => '%d-%h-%Y'
       plain       :start, :format => '%H:%M'
       plain       :amount, :format => '%.2f'
       # :set is mandatory for a restricted field

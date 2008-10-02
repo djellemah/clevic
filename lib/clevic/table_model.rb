@@ -264,7 +264,7 @@ class TableModel < Qt::AbstractTableModel
     begin
       retval =
       case role
-        when qt_display_role, qt_edit_role
+        when qt_display_role
           # boolean values generally don't have text next to them in this context
           # check this explicitly to avoid fetching the entity from
           # the model's collection (and maybe db) when we
@@ -272,12 +272,17 @@ class TableModel < Qt::AbstractTableModel
           unless index.metadata.type == :boolean
             begin
               value = index.gui_value
-              unless value.nil?
-                index.field.do_format( value )
-              end
+              index.field.do_format( value ) unless value.nil?
             rescue Exception => e
               puts e.backtrace
             end
+          end
+          
+        when qt_edit_role
+          # see comment for qt_display_role
+          unless index.metadata.type == :boolean
+            value = index.gui_value
+            index.field.do_edit_format( value ) unless value.nil?
           end
           
         when qt_checkstate_role

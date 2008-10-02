@@ -20,6 +20,7 @@ sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder
 - layoutChanged
 
 undo
+- could possibly handle this in the TableModel
 - acts_as_trashable to undo deletes
 - other commands. Possibly via ActiveRecord callbacks?
 - Keep a history of changes, ie xy, new. xy, changed. x,y copied etc.
