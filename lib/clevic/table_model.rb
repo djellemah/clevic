@@ -183,11 +183,11 @@ class TableModel < Qt::AbstractTableModel
   end
   
   def columnCount( parent = nil )
-    dots.size
+    fields.size
   end
   
   def column_count
-    dots.size
+    fields.size
   end
   
   def flags( model_index )
@@ -298,7 +298,12 @@ class TableModel < Qt::AbstractTableModel
           end
           
         when qt_text_alignment_role
-          index.field.alignment
+          case index.field.alignment
+            when :left; qt_alignleft
+            when :right; qt_alignright
+            when :centre; qt_aligncenter
+            when :justified; qt_alignjustified
+          end
         
         # these are just here to make debug output quieter
         when qt_size_hint_role;

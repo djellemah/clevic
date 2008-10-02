@@ -7,6 +7,9 @@ module Clevic
     end
   end
 
+  # a basic DSL class that allows options to be collected for a field
+  # definition using a block rather than a hash. See Clevic::ModelBuilder for
+  # an example.
   class FieldBuilder < BlankSlate
     def initialize( hash = {} )
       @hash = hash
@@ -15,7 +18,7 @@ module Clevic
     # modified from Jim Freeze's article
     def self.dsl_accessor(*symbols)
       symbols.each do |sym|
-        line, st = __LINE__, <<EOF
+        line, st = __LINE__, <<-EOF
           def #{sym}(*val)
             if val.empty?
               @hash[#{sym.to_sym.inspect}]
@@ -23,7 +26,7 @@ module Clevic
               @hash[#{sym.to_sym.inspect}] = val.size == 1 ? val[0] : val
             end
           end
-EOF
+        EOF
         class_eval st, __FILE__, line + 1
       end
     end
@@ -34,6 +37,7 @@ EOF
       send(sym, *args)
     end
     
+    # return a hash of the collected elements
     def to_hash
       @hash
     end

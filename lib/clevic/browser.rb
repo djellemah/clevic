@@ -137,6 +137,7 @@ class Browser < Qt::Widget
   def load_models
     models = Clevic::Record.models
     models = find_models if models.empty?
+    Kernel.raise "no models to display" if models.empty?
     
     # Add all existing model objects as tabs, one each
     models.each do |entity_class|
@@ -173,7 +174,7 @@ class Browser < Qt::Widget
           tables_tab.set_tab_text( tables_tab.current_index, tab_title )
         end
       rescue Exception => e
-        puts e.backtrace if $options[:debug]
+        puts e.backtrace #if $options[:debug]
         puts "Entity #{entity_class} will not be available: #{e.message}"
       end
     end

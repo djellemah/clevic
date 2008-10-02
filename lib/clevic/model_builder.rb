@@ -17,7 +17,7 @@ Optional specifiers are:
 * :format is something that can be understood by strftime (for time and date
   fields) or understood by % (for everything else). It can also be a Proc
   that has one parameter - the current entity.
-* :alignment is one of Qt::TextAlignmentRole, ie Qt::AlignRight, Qt::AlignLeft, Qt::AlignCenter
+* :alignment is one of :left, :right, :justified, :centre
 * :set is the set of strings that are accepted by a RestrictedDelegate
 
 In the case of relational fields, all other options are passed to ActiveRecord::Base#find
@@ -142,7 +142,7 @@ class ModelBuilder
     # get values from block, if it's there
     options = gather_block( options, &block )
     
-    read_only_default( attribute, options )
+    read_only_default!( attribute, options )
     @fields << Clevic::Field.new( attribute.to_sym, entity_class, options )
   end
   
@@ -235,11 +235,14 @@ class ModelBuilder
           reflection = entity_class.reflections[column.to_sym]
           if reflection.class == ActiveRecord::Reflection::AssociationReflection
             related_class = reflection.class_name.constantize
+            
             # try to find a sensible display class. Default to to_s
             display_method =
             %w{#{entity_class.name} name title username}.find( lambda{ 'to_s' } ) do |m|
               related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
             end
+            
+            # set the display method
             relational column.to_sym, :display => display_method
           else
             plain column.to_sym
@@ -325,9 +328,8 @@ private
     end
   end
 
-  # set a sensible read-only value if it isn't already
-  # specified in options doesn't alread
-  def read_only_default( attribute, options )
+  # set a sensible read-only value if it isn't already specified in options
+  def read_only_default!( attribute, options )
     # sensible defaults for read-only-ness
     options[:read_only] ||= 
     case
@@ -355,8 +357,8 @@ private
 
   # The collection of model objects to display in a table
   # arg can either be a Hash, in which case a new CacheTable
-  # is created, or it can be an array
-  # called by records( *args )
+  # is created, or it can be an array.
+  # Called by records( *args )
   def set_records( arg )
     if arg.class == Hash
       # need to defer this until all fields are collected
@@ -367,7 +369,7 @@ private
   end
 
   # return a collection of records. Usually this will be a CacheTable.
-  # called by records( *args )
+  # Called by records( *args )
   def get_records
     if @records.nil?
       #~ add_include_options
@@ -376,9 +378,9 @@ private
     end
     @records
   end
+  
   # update options with the values in block, using FieldBuilder
   # to evaluate block
-
   def gather_block( options, &block )
     unless block.nil?
       fb = FieldBuilder.new( options )

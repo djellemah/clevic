@@ -96,15 +96,15 @@ module Qt
     end
     
     # the dotted attribute path, same as a 'column' in the model
-    def dotted_path
-      model.dots[column]
-    end
+    #~ def dotted_path
+      #~ model.dots[column]
+    #~ end
     
     # return an array of path elements from dotted_path
-    def attribute_path
-      return nil if model.nil?
-      model.attribute_paths[column]
-    end
+    #~ def attribute_path
+      #~ return nil if model.nil?
+      #~ model.attribute_paths[column]
+    #~ end
 
     # returns the ActiveRecord column_for_attribute
     def metadata

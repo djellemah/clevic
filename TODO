@@ -3,7 +3,6 @@ start on tests. Use Faker gem.
 Check out ar-extensions
 make sure ActiveRecord doesn't keep updating columns. ie production mode.
 Use ActiveRecord 2.1 for changed. Note will_change! method
-Use scanf for reading OrderAttributes
 use Pathname#find to find the Rails files
 Can ruby access the local variables in a block, inside a yield. transit_is instead of transit =
 ActiveResourceETL
