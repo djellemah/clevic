@@ -15,7 +15,7 @@ end
 
 # list of .ui files
 UI_FILES = FileList.new( 'lib/clevic/ui/*.ui' )
-CLEAN.include( 'ChangeLog' )
+CLEAN.include( 'ChangeLog', 'coverage', 'profiling' )
 CLOBBER.include( 'ChangeLog', 'pkg', 'lib/clevic/ui/*_ui.rb' )
 
 UI_FILES.each do |ui_file|
