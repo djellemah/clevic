@@ -1,13 +1,12 @@
-paste append if a paste starts on a row at the end
 Use ZenTest to generate tests
-Check out ar-extensions
+Check out ar-extensions. Like operators look nice.
 make sure ActiveRecord doesn't keep updating columns. ie production mode.
 Test with ActiveRecord 2.1 for changed. Note will_change! method
 Ramen http://ramen.rubyforge.org/ for metadata. MySQL and MSSQL only right now.
 
 tests
 allow directories for a setup. Problem here is tab order.
-metadata for virtual fields
+metadata for virtual fields. Add a member to Field for class_name.constantize
 consolidate metadata across TableModel, and Field. Would like to have it all in Field.
 generate models - DrySQL
 allow moving of tabs

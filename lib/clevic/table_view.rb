@@ -445,11 +445,16 @@ class TableView < Qt::TableView
     super
   end
 
-  # paste a CSV array to the index
-  # TODO make additional rows if we need them, or at least check for enough space
+  # Paste a CSV array to the index, replacing whatever is at that index
+  # and whatever is at other indices matching the size of the pasted
+  # csv array. Create new rows if there aren't enough.
   def paste_to_index( top_left_index, csv_arr )
     csv_arr.each_with_index do |row,row_index|
+      # append row if we need one
+      model.add_new_item if top_left_index.row + row_index >= model.row_count
+        
       row.each_with_index do |field, field_index|
+        # do paste
         cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
         model.setData( cell_index, field.to_variant, Qt::PasteRole )
       end
