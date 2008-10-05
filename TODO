@@ -1,10 +1,8 @@
-Ctrl-Del on block selection causes crash.
 paste append if a paste starts on a row at the end
 Use ZenTest to generate tests
 Check out ar-extensions
 make sure ActiveRecord doesn't keep updating columns. ie production mode.
-Use ActiveRecord 2.1 for changed. Note will_change! method
-use Pathname#find to find the Rails files
+Test with ActiveRecord 2.1 for changed. Note will_change! method
 Ramen http://ramen.rubyforge.org/ for metadata. MySQL and MSSQL only right now.
 
 tests

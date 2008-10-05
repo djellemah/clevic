@@ -128,16 +128,16 @@ class TableModel < Qt::AbstractTableModel
   end
   
   # rows is a collection of integers specifying row indices to remove
-  # TODO call begin_remove and end_remove around the whole block.
-  # for performance, and maybe later for undo.
   def remove_rows( rows )
     # delete from the end to avoid holes affecting the indexing
-    rows.sort.reverse.each do |index|
+    rows.uniq.sort.reverse.each do |index|
       # remove the item from the collection
+      # NOTE call this within each iteration because
+      # the rows array may be non-contiguous
       begin_remove_rows( Qt::ModelIndex.invalid, index, index )
       removed = collection.delete_at( index )
       end_remove_rows
-      # destroy the db object, and its table row
+      # destroy the db object, and its associated table row
       removed.destroy
     end
   end

@@ -8,7 +8,7 @@ RUBYFORGE_PROJECT = 'clevic' # The unix name for your project
 HOMEPATH = "http://#{RUBYFORGE_PROJECT}.rubyforge.org"
 DOWNLOAD_PATH = "http://rubyforge.org/projects/#{RUBYFORGE_PROJECT}"
 EXTRA_DEPENDENCIES = [
-    ['qtext', '>=0.5.0'],
+    ['qtext', '>=0.5.1'],
     ['activerecord', '=2.0.2'],
     ['fastercsv', '>=1.2.3']
     # This isn't always installed from gems

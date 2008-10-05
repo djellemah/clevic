@@ -43,32 +43,40 @@ class Pathname
   def require_if_exists
     require realpath.to_s if exist?
   end
+
+  # just for fun, really
+  alias_method :/, :+
 end
 
 def load_rails_models( root, config, models )
   # initialize Rails
-  load config + 'environment.rb'
-  #~ puts "RAILS_ROOT: #{RAILS_ROOT.inspect}"
+  load config / 'environment.rb'
   require 'initializer.rb'
   Rails::Initializer.run do |config|
     config.frameworks -= [ :action_mailer, :action_pack, :active_resource ]
   end
   
-  # load lib/ files
-  $: << ( root + 'lib' ).realpath.to_s
-  ( root + 'lib' ).children.each do |filename|
-    puts "filename: #{filename.inspect}"
+  # load lib/ files for the rails project
+  $: << ( root / 'lib' ).realpath.to_s
+  ( root / 'lib' ).children.each do |filename|
     load filename if filename.file?
   end
-  
-  # TODO check for Dirty in 2.1.x
-  ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
+
+  # include Dirty if it isn't already
+  begin
+    ActiveRecord::Dirty
+  rescue NameError
+    ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
+  end
   
   # load models
-  models.children.each_with_index do |filename,i|
-  #~ %w{subscriber}.map{|x| models + "#{x}.rb"}.each_with_index do |filename,i|
+  models.find do |dir_entry|
+    # don't load directory entries
+    next unless dir_entry.file?
+    # only load .rb files
+    next unless dir_entry.basename.to_s =~ /\.rb$/
     begin
-      load filename if filename.file?
+      load dir_entry
     rescue Exception => e
       puts "Error loading #{filename.basename.to_s}: #{e.message.inspect}"
       puts e.backtrace
@@ -76,11 +84,18 @@ def load_rails_models( root, config, models )
   end
 end
 
+def load_single_model_file( pathname )
+  ( pathname + '.rb' ).require_if_exists
+  pathname.require_if_exists
+  ( pathname + '_models' ).require_if_exists
+  ( pathname + '_models.rb' ).require_if_exists
+end
+
 def load_models( pathname )
   if pathname.directory?
-    config = pathname + 'config'
-    app = pathname + 'app'
-    models = app + 'models'
+    config = pathname / 'config'
+    app = pathname / 'app'
+    models = app / 'models'
     # check if this is a Rails directory
     if config.exist? && app.exist? && models.exist?
       # this is probably a Rails project"
@@ -88,10 +103,7 @@ def load_models( pathname )
     end
   else
     # assume we have a single file, and try some variations
-    ( pathname + '.rb' ).require_if_exists
-    pathname.require_if_exists
-    ( pathname + '_models' ).require_if_exists
-    ( pathname + '_models.rb' ).require_if_exists
+    load_single_model_file( pathname )
   end
 end
 
