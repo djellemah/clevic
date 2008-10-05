@@ -38,7 +38,6 @@ module Clevic
   # in which models are defined, so that tabs can
   # be constructed in that order.
   class Record < ActiveRecord::Base
-    include ActiveRecord::Dirty
     self.abstract_class = true
     @@subclass_order = []
     
