@@ -174,7 +174,7 @@ module Qt
           stash.row, stash.column = args
           stash.collect( &block )
         else
-          raise TypeError.new "incorrect args #{args.inspect}"
+          raise TypeError.new( "incorrect args #{args.inspect}" )
       end
       
       # return an invalid index if it's out of bounds,
