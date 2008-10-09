@@ -57,12 +57,6 @@ task :run => :ui do |t|
   exec "ruby -Ilib bin/clevic #{ARGV.join(' ')}"
 end
 
-desc "Runs Clevic in warning mode, with test databases and debug flag on"
-task :sqlite => :ui do |t|
-  ARGV.shift()
-  exec "ruby -Ilib bin/clevic #{ARGV.join(' ')} times_sqlite_model.rb"
-end
-
 desc "Runs Clevic in debug mode, with test databases"
 task :debug => :ui do |t|
   ARGV.shift()
@@ -99,6 +93,14 @@ MODELS_LIST.each do |model_file|
   # generate runs
   namespace :run do
     desc "run clevic with #{model_file}"
+    task short_model( model_file )  => :ui do |t|
+      ARGV.shift()
+      exec "ruby -Ilib bin/clevic -D #{model_file} #{ARGV.join(' ')}"
+    end
+  end
+
+  namespace :warn do
+    desc "run clevic with #{model_file} and warnings on"
     task short_model( model_file )  => :ui do |t|
       ARGV.shift()
       exec "ruby -w -Ilib bin/clevic -D #{model_file} #{ARGV.join(' ')}"

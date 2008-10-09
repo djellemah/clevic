@@ -228,9 +228,9 @@ EOF
           puts "#{@entity_class.name}.#{attribute} is a #{meta.type.inspect}"
       end
         
-      if $options && $options[:debug]
-        puts "@sample for #{@entity_class.name}.#{attribute} #{meta.type}: #{@sample.inspect}"
-      end
+      #~ if $options && $options[:debug]
+        #~ puts "@sample for #{@entity_class.name}.#{attribute} #{meta.type}: #{@sample.inspect}"
+      #~ end
     end
     # if we don't know how to figure it out from the data, just return the label size
     @sample || self.label

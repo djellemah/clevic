@@ -19,6 +19,9 @@ Method calls are translated to insertions into a hash with the same
 key as the method being called. The hash is initialised
 with the options value passed in (in this case $options).
 Values have to_s called on them so they can be symbols or strings.
+
+#--
+TODO inherit from HashCollector
 =end
 class DbOptions
   attr_reader :options
@@ -43,8 +46,8 @@ class DbOptions
   end
   
   def connect
-    unless @options[:database]
-      raise "Please define database using DbOptions"
+    if @options[:database].nil? || @options[:database].empty?
+      raise "Please define database using DbOptions. Current value is #{@options[:database].inspect}."
     end
     
     # connect to db

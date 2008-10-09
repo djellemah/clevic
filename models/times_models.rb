@@ -2,10 +2,14 @@ require 'clevic.rb'
 
 # db connection options
 $options ||= {}
-db = Clevic::DbOptions.connect( $options ) do
+Clevic::DbOptions.connect( $options ) do
   # use a different db for testing, so real data doesn't get broken.
   # unless the command-line option is specified
-  database( $options[:database] || ( debug? ? :times_test : :times ) )
+  if $options[:database].nil? || $options[:database].empty?
+    database( debug? ? :times_test : :times )
+  else
+    database $options[:database]
+  end
   adapter :postgresql
   username 'times'
 end

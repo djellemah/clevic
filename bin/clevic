@@ -117,8 +117,6 @@ app = Qt::Application.new( args )
 main_window = Qt::MainWindow.new
 browser = Clevic::Browser.new( main_window )
 # this must come after Clevic::Browser.new
-# TODO should really find a better place for this
-main_window.window_title = $options[:database]
 main_window.show
 # make sure any partially edited records are saved when the window is closed
 app.connect( SIGNAL('lastWindowClosed()') ) { browser.save_all }

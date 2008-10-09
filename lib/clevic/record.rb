@@ -47,9 +47,17 @@ module Clevic
     
     # keep track of the order in which subclasses are
     # defined, so that can be used as the default ordering
-    # of the views.
+    # of the views. Also keep track of the DbOptions instance
     def self.inherited( subclass )
+      # subclass order
       @@subclass_order << subclass
+      
+      # DbOptions instance
+      db_options = nil
+      found = ObjectSpace.each_object( Clevic::DbOptions ){|x| db_options = x}
+      subclass.db_options = db_options
+      
+      # just in case
       super
     end
     
@@ -64,6 +72,14 @@ module Clevic
     # use this to define UI blocks using the ModelBuilder DSL
     def self.define_ui( &block )
       @define_ui_block = block
+    end
+    
+    def self.db_options=( db_options )
+      @db_options = db_options
+    end
+    
+    def self.db_options
+      @db_options
     end
   end
   

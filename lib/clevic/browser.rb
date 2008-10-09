@@ -44,7 +44,13 @@ class Browser < Qt::Widget
     
     load_models
     update_menus
+    main_window.window_title = [database_name, 'Clevic'].compact.join ' '
   end
+  
+  # Set the main window title to the name of the database, if we can find it.
+  def database_name
+    table_view.model.entity_class.db_options.database
+  end  
   
   def update_menus
     # update edit menu

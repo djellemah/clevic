@@ -14,7 +14,7 @@ is specified, the primary key of the entity will be used.
 
 It hasn't been tested with compound primary keys.
 
---
+#--
 
 TODO drop rows when they haven't been accessed for a while
 
