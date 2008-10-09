@@ -41,7 +41,7 @@ class TestModelIndex < Test::Unit::TestCase
 
   should 'be an invalid copy' do
     choppy = @zero_index.choppy( :row => @model.row_count )
-    assert !choppy.valid?
+    assert !choppy.valid?, "choppy: #{choppy.inspect}"
     
     choppy = @zero_index.choppy( :column => @model.column_count )
     assert !choppy.valid?
@@ -49,9 +49,9 @@ class TestModelIndex < Test::Unit::TestCase
   
   should 'be a copy with a changed row and column, from hash' do
     choppy = @zero_index.choppy( :row => 1, :column => 2)
-    assert choppy.valid?
-    assert_equal 1, choppy.row
-    assert_equal 2, choppy.column
+    assert_equal 1, choppy.row, choppy.inspect
+    assert choppy.valid?, choppy.inspect
+    assert_equal 2, choppy.column, choppy.inspect
   end
 
   should 'be a choppy with incremented row and column, from block' do

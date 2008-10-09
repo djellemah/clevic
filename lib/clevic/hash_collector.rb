@@ -12,7 +12,7 @@ module Clevic
   # an example.
   class HashCollector < BlankSlate
     def initialize( hash = {}, &block )
-      @hash = hash
+      @hash = hash || {}
       collect( &block )
     end
     
@@ -42,8 +42,9 @@ module Clevic
       send(sym, *args)
     end
     
-    # evaluate the block and collect options
-    def collect( &block )
+    # evaluate the block and collect options from args. Even if it's nil.
+    def collect( args = {}, &block )
+      @hash.merge!( args || {} )
       unless block.nil?
         if block.arity == -1
           instance_eval &block

@@ -8,6 +8,7 @@ tests
 allow directories for a setup. Problem here is tab order.
 metadata for virtual fields. Add a member to Field for class_name.constantize
 consolidate metadata across TableModel, and Field. Would like to have it all in Field.
+gui_value vs attribute_value vs field_value etc
 generate models - DrySQL
 allow moving of tabs
 habtm relations
@@ -38,7 +39,6 @@ moving of columns
 
 for dates, add year if not specified, with 6 months on either side range. Configurable?
 value parsing not in model
-gui_value vs attribute_value vs field_value etc
 copy a field from a mouse-selection (ctrl-b maybe)
 hiding of fields
 
@@ -106,14 +106,15 @@ changes more or less instantly.
 preferences
 -----------
 store previous searches, by model & app
+store year ranges for 2 digit years in dates.
 
 maybe
 -----
-acts_as_shellable looks nices
+acts_as_shellable looks nice
 consolidate read-only-ness checks 
 Look at DataMapper. Not suitable - need to declare properties.
-use rubigen for creating model definition files
-ActiveMDB for migrating.
+use rubigen for creating model definition files?
+ActiveMDB for migrating?
 allow moving of rows
 discontiguous copying of entities/csv
 multi-row copying

@@ -1,6 +1,7 @@
 # extensions specific to clevic
 
 require 'qtext/flags.rb'
+require 'clevic/hash_collector.rb'
 
 module ActiveRecord
   class Base
@@ -31,6 +32,20 @@ module ActiveRecord
   end
 end
 
+module Clevic
+  # Collect row and column values in various ways
+  class IndexCollector < HashCollector
+    dsl_accessor :row, :column
+
+    def initialize( row, column )
+      super()
+      # MUST use writers here, not instance variables
+      self.row = row
+      self.column = column
+    end
+  end
+end
+
 # convenience methods
 module Qt
 
@@ -57,13 +72,15 @@ module Qt
     end
     
     def dump
+      if valid?
       <<-EOF
-      field_name: #{field_name}
-      field_value: #{field_value}
-      attribute: #{attribute.inspect}
-      attribute_value: #{attribute_value.inspect}
+      field: #{field_name} => #{field_value}
+      attribute: #{attribute.inspect} => #{attribute_value.inspect}
       metadata: #{metadata.inspect}
       EOF
+      else
+        'invalid'
+      end
     end
     
     # return the attribute of the underlying entity corresponding
@@ -81,7 +98,8 @@ module Qt
     end
     
     # set the value of the attribute, without following the
-    # full path
+    # full path.
+    # TODO remove need to constantly recalculate the attribute writer
     def attribute_value=( obj )
       entity.send( "#{attribute.to_s}=", obj )
     end
@@ -129,7 +147,8 @@ module Qt
     end
     
     # CHange and cOP(P)Y - make a new index based on this one,
-    # modify the new index with values from the args hash or the block.
+    # modify the new index with values from the parameters, the
+    # args hash or the block.
     # The block will instance_eval with no args, or pass self
     # if there's one arg. You can also pass two parameters, interpreted
     # as row, columns.
@@ -143,28 +162,27 @@ module Qt
     def choppy( *args, &block  )
       return ModelIndex.invalid unless self.valid?
       
-      if args.size == 0
-        args = {}
-      elsif args.size == 1
-        # args are a hash
-        args = args[0]
-      else
-        # args are two parameters
-        args = { :row => args[0], :column => args[1] }
+      # initialize with defaults
+      stash = Clevic::IndexCollector.new( row, column )
+      
+      case args.size
+        when 0,1
+          # args.first is a hash, or nil
+          stash.collect( args.first, &block )
+        when 2
+          # args are two parameters - row, column
+          stash.row, stash.column = args
+          stash.collect( &block )
+        else
+          raise TypeError.new "incorrect args #{args.inspect}"
       end
       
-      defaults = { :row => self.row, :column => self.column }
-      # TODO use a more specific class here
-      hc = Clevic::HashCollector.new( defaults.merge( args ), &block )
-      hc.row ||= self.row
-      hc.column ||= self.column
-    
       # return an invalid index if it's out of bounds,
       # or the choppy'd index if it's OK.
-      if hc.row >= model.row_count || hc.column >= model.column_count
-        ModelIndex.new
+      if stash.row >= model.row_count || stash.column >= model.column_count
+        ModelIndex.invalid
       else
-        model.create_index( hc.row.to_i, hc.column.to_i )
+        model.create_index( stash.row.to_i, stash.column.to_i )
       end
     end
   end
