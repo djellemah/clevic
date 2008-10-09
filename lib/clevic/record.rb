@@ -39,7 +39,7 @@ module Clevic
   # be constructed in that order.
   class Record < ActiveRecord::Base
     self.abstract_class = true
-    @@subclass_order = []
+    @subclass_order = []
     
     def self.define_ui_block
       @define_ui_block
@@ -50,7 +50,7 @@ module Clevic
     # of the views. Also keep track of the DbOptions instance
     def self.inherited( subclass )
       # subclass order
-      @@subclass_order << subclass
+      @subclass_order << subclass
       
       # DbOptions instance
       db_options = nil
@@ -62,11 +62,11 @@ module Clevic
     end
     
     def self.models
-      @@subclass_order
+      @subclass_order
     end
     
     def self.models=( array )
-      @@subclass_order = array
+      @subclass_order = array
     end
     
     # use this to define UI blocks using the ModelBuilder DSL
