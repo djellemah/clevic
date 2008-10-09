@@ -1,5 +1,14 @@
 require File.dirname(__FILE__) + '/test_helper'
 
+class OtherThing < Clevic::HashCollector
+  dsl_static
+  dsl_accessor :thing, :other
+end
+
+class BuildOn < Clevic::HashCollector
+  dsl_accessor :ook
+end
+
 class TestHashCollector < Test::Unit::TestCase
   def setup
     @hash = { :colour => :red, :hue => 15 }
@@ -9,6 +18,39 @@ class TestHashCollector < Test::Unit::TestCase
   end
   
   def teardown
+  end
+  
+  context 'static hash collector' do
+    setup do
+      @collector = OtherThing.new
+    end
+    
+    should "throw NoMethodError on collection" do
+      assert_raise( NoMethodError ) do
+        @collector.collect { thing 2; blah 3 }
+      end
+      assert_raise( NoMethodError ) do
+        @collector.collect {|c| c.blah = 3 }
+      end
+      assert_raise( NoMethodError ) { @collector.blah }
+      assert_raise( NoMethodError ) { @collector.blah = 5 }
+    end
+
+    should "understand defined attributes" do
+      assert_nothing_raised do
+        @collector.collect do
+          thing 1
+          other 2
+        end
+      end
+      
+      assert_nothing_raised { @collector.thing = 2 }
+      assert_nothing_raised { @collector.other = 4 }
+    end
+    
+    should "be dynamic" do
+      assert BuildOn.dynamic?
+    end
   end
   
   def assert_collected( collector )

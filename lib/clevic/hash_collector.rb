@@ -35,6 +35,25 @@ module Clevic
       collect( &block )
     end
     
+    # evaluate the block and collect options from args. Even if it's nil.
+    def collect( args = {}, &block )
+      @hash.merge!( args || {} )
+      unless block.nil?
+        if block.arity == -1
+          instance_eval &block
+        else
+          yield self
+        end
+      end
+    end
+    
+    # return a hash of the collected elements
+    def to_hash
+      @hash
+    end
+    
+  protected
+    
     # Modified from Jim Freeze's article.
     # For each symbol, add accessors to allow:
     #  instance.symbol as reader
@@ -68,8 +87,9 @@ module Clevic
     #    dsl_accessor :row, :column
     #  end
     # will fail if used like this
-    #  collector = IndexCollector.new
-    #  collector.collect( :other => 'oops' )
+    #  collector = IndexCollector.new( :row => 4, :column => 6 ) do
+    #    other 'oops'
+    #  end
     # because :other isn't added by dsl_accessor.
     def self.dsl_static
       @dynamic = false
@@ -85,31 +105,19 @@ module Clevic
     # the default. If dsl_static is in effect, the normal method_missing
     # behaviour will be invoked.
     def method_missing(sym, *args)
-      @dynamic ||= true
-      if @dynamic
+      if self.class.dynamic?
         self.class.dsl_accessor sym
-        send(sym, *args)
+        send( sym, *args )
       else
         super
       end
     end
     
-    # evaluate the block and collect options from args. Even if it's nil.
-    def collect( args = {}, &block )
-      @hash.merge!( args || {} )
-      unless block.nil?
-        if block.arity == -1
-          instance_eval &block
-        else
-          yield self
-        end
-      end
+    def self.dynamic?
+      @dynamic = true unless instance_variable_defined? '@dynamic'
+      @dynamic
     end
     
-    # return a hash of the collected elements
-    def to_hash
-      @hash
-    end
   end
 
 end
