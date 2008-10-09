@@ -61,11 +61,37 @@ module Clevic
       end
     end
     
+    # Do not allow accessors to be added dynamically. In other words,
+    # a subclass like this
+    #  class IndexCollector < HashCollector
+    #    dsl_static
+    #    dsl_accessor :row, :column
+    #  end
+    # will fail if used like this
+    #  collector = IndexCollector.new
+    #  collector.collect( :other => 'oops' )
+    # because :other isn't added by dsl_accessor.
+    def self.dsl_static
+      @dynamic = false
+    end
+    
+    # Allow accessors to be added dynamically, the default.
+    def self.dsl_dynamic
+      @dynamic = true
+    end
+    
     # Originally from Jim Freeze's article. Add the accessor methods if
-    # they don't already exist.
+    # they don't already exist, and if dsl_dynamic is in effect, which is
+    # the default. If dsl_static is in effect, the normal method_missing
+    # behaviour will be invoked.
     def method_missing(sym, *args)
-      self.class.dsl_accessor sym
-      send(sym, *args)
+      @dynamic ||= true
+      if @dynamic
+        self.class.dsl_accessor sym
+        send(sym, *args)
+      else
+        super
+      end
     end
     
     # evaluate the block and collect options from args. Even if it's nil.

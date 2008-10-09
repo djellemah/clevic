@@ -21,7 +21,7 @@ class Field
   # The label for the field. Defaults to the humanised field name.
   attr_accessor :label
   
-  # The UI delegate class for the field.
+  # The UI delegate class for the field. In Qt, this is a subclass of AbstractItemDelegate.
   attr_accessor :delegate
   
   # For relational fields, this is the class_name for the related AR entity.

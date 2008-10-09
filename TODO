@@ -1,3 +1,4 @@
+:display and :format in ModelBuilder
 Use ZenTest to generate tests
 Check out ar-extensions. Like operators look nice.
 make sure ActiveRecord doesn't keep updating column definitions. ie production mode.
