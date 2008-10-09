@@ -1,3 +1,7 @@
+require 'clevic/sql_dialects.rb'
+
+module Clevic
+
 class TableSearcher
   attr_reader :entity_class, :order_attributes, :search_criteria, :field
   
@@ -8,6 +12,7 @@ class TableSearcher
   def initialize( entity_class, order_attributes, search_criteria, field )
     raise "there must be at least one order_attribute" if order_attributes.nil? or order_attributes.empty?
     raise "field must be specified" if field.nil?
+    raise "unknown order #{search_criteria.direction}" unless [:forwards, :backwards].include?( search_criteria.direction )
     @entity_class = entity_class
     @order_attributes = order_attributes
     @search_criteria = search_criteria
@@ -15,10 +20,11 @@ class TableSearcher
   end
   
   # start_entity is the entity to start from, ie any record found after it will qualify
-  def search( start_entity )
+  def search( start_entity = nil )
     search_field_name = 
     if field.is_association?
       # for related tables
+      raise( "search field #{field.inspect} cannot have a nil path" ) if field.path.nil?
       # TODO this will only work with a path value with no dots
       # otherwise the SQL gets complicated with joins etc
       field.path
@@ -57,32 +63,14 @@ class TableSearcher
   end
 
 protected
-
+  include SqlDialects
+  
   def quote_column( field_name )
     entity_class.connection.quote_column_name( field_name )
   end
   
   def quote( value )
     entity_class.connection.quote( value )
-  end
-  
-  # return a string containing the correct
-  # boolean value depending on the DB adapter
-  # because Postgres wants real true and false in complex statements, not 't' and 'f'
-  def sql_boolean( value )
-    case entity_class.connection.adapter_name
-      when 'PostgreSQL'
-        value ? 'true' : 'false'
-      else
-        value ? entity_class.connection.quoted_true : entity_class.connection.quoted_false
-    end
-  end
-  
-  def like_operator
-    case entity_class.connection.adapter_name
-      when 'PostgreSQL'; 'ilike'
-      else; 'like'
-    end
   end
   
   # recursively create a case statement to do the comparison
@@ -117,7 +105,6 @@ EOF
     case search_criteria.direction
       when :forwards; '>'
       when :backwards; '<'
-      else; raise "unknown direction #{direction.inspect}"
     end
     
     # build the sql comparison where clause fragment
@@ -166,9 +153,9 @@ EOF
     case search_criteria.direction
       when :forwards; ascending_order
       when :backwards; descending_order
-      else
-        raise "unknown direction #{search_criteria.direction}"
     end
   end
   
+end
+
 end

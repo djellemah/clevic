@@ -2,9 +2,9 @@ require File.dirname(__FILE__) + '/test_helper'
 
 class PopulateCachePassengers < ActiveRecord::Migration
   def self.up
-    Passenger.create :name => 'John Anderson', :flight => 'EK211', :row => 36, :seat => 'A'
-    Passenger.create :name => 'Genie', :flight => 'CA001', :row => 1, :seat => 'A'
-    Passenger.create :name => 'Aladdin', :flight => 'CA001', :row => 2, :seat => 'A'
+    Passenger.create :name => 'John Anderson', :flight => Flight.find_by_number('EK211'), :row => 36, :seat => 'A', :nationality => 'UAE'
+    Passenger.create :name => 'Genie', :flight => Flight.find_by_number('CA001'), :row => 1, :seat => 'A', :nationality => 'Canada'
+    Passenger.create :name => 'Aladdin', :flight => Flight.find_by_number('CA001'), :row => 2, :seat => 'A', :nationality => 'Canada'
   end
   
   def self.down
@@ -80,10 +80,10 @@ class TestCacheTable < Test::Unit::TestCase
   end
   
   def test_parse_order_attributes
-    order_string = 'name desc, passengers.flight asc, row'
+    order_string = 'name desc, passengers.nationality asc, row'
     ct = CacheTable.new Passenger, :order => order_string
     assert_equal OrderAttribute.new( Passenger, 'name desc' ), ct.order_attributes[0]
-    assert_equal OrderAttribute.new( Passenger, 'flight' ), ct.order_attributes[1]
+    assert_equal OrderAttribute.new( Passenger, 'nationality' ), ct.order_attributes[1]
     assert_equal OrderAttribute.new( Passenger, 'row asc' ), ct.order_attributes[2]
   end
   
@@ -115,7 +115,7 @@ class TestCacheTable < Test::Unit::TestCase
   end
     
   should 'return nil for an empty set' do
-    cache_table = @cache_table.renew( :conditions => "flight = 'nothing'" )
+    cache_table = @cache_table.renew( :conditions => "nationality = 'nothing'" )
     assert_nil cache_table.index_for_entity( Passenger.find( :first ) )
   end
   
@@ -131,8 +131,8 @@ class TestCacheTable < Test::Unit::TestCase
     assert_equal 0, @cache_table.index_for_entity( last_passenger ), "last passenger in reverse order should have an index of 0"
     
     # test with two order fields
-    @cache_table = @cache_table.renew( :order => 'flight, row' )
-    passenger = Passenger.find :first, :order => 'flight, row'
-    assert_equal 0, @cache_table.index_for_entity( passenger ), "passenger in flight, row order should have an index of 0"
+    @cache_table = @cache_table.renew( :order => 'nationality, row' )
+    passenger = Passenger.find :first, :order => 'nationality, row'
+    assert_equal 0, @cache_table.index_for_entity( passenger ), "passenger in (nationality, row) order should have an index of 0"
   end
 end

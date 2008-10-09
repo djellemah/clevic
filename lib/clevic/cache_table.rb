@@ -164,7 +164,7 @@ class CacheTable < Array
   end
   
   def search( field, search_criteria, start_entity )
-    TableSearcher.new( entity_class, order_attributes, search_criteria, field ).search( start_entity )
+    Clevic::TableSearcher.new( entity_class, order_attributes, search_criteria, field ).search( start_entity )
   end
 
   # delete the given index. If the size ends up as 0,

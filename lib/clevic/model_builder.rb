@@ -76,9 +76,12 @@ For example, the UI for a model called Entry (part of an accounting database) co
       relational  :debit, :format => 'name', :conditions => 'active = true', :order => 'lower(name)'
       relational  :credit, :format => 'name', :conditions => 'active = true', :order => 'lower(name)'
       
-      # or like this to have an on-the-fly transform
-      # item will be an instance of Account
-      relational  :credit, :format => lambda {|item| item.name.downcase}, :class_name => 'Account', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
+      # or like this to have an on-the-fly transform. item will be an instance of Account
+      relational :credit do
+        :format => lambda {|item| item.name.downcase}
+        :conditions => 'active = true'
+        :order => 'lower(name)'
+      end
       
       # this is a read-only display field from a related table
       # the Entry class should then define a method called currency
