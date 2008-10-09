@@ -276,16 +276,20 @@ class TableView < Qt::TableView
     delegate.full_edit
   end
   
+  # Add a new row and move to it, provided we're not in a read-only view.
   def new_row
     sanity_check_read_only_table
     model.add_new_item
-    new_row_index = model.index( model.collection.size - 1, 0 )
+    new_row_index = model.index( model.row_count - 1, 0 )
     currentChanged( new_row_index, current_index )
     selection_model.clear
     self.current_index = new_row_index
   end
   
-  def deleted_selection
+  # Delete the current selection. If it's a set of rows, just delete
+  # them. If it's a rectangular selection, set the cells to nil.
+  # TODO make sure all affected rows are saved.
+  def delete_selection
     sanity_check_read_only
 
     # translate from ModelIndex objects to row indices
@@ -445,6 +449,11 @@ class TableView < Qt::TableView
     super
   end
 
+  # copied from actionpack
+  def pluralize(count, singular, plural = nil)
+    "#{count || 0} " + ((count == 1 || count == '1') ? singular : (plural || singular.pluralize))
+  end
+
   # Paste a CSV array to the index, replacing whatever is at that index
   # and whatever is at other indices matching the size of the pasted
   # csv array. Create new rows if there aren't enough.
@@ -452,11 +461,15 @@ class TableView < Qt::TableView
     csv_arr.each_with_index do |row,row_index|
       # append row if we need one
       model.add_new_item if top_left_index.row + row_index >= model.row_count
-        
+      
       row.each_with_index do |field, field_index|
-        # do paste
-        cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
-        model.setData( cell_index, field.to_variant, Qt::PasteRole )
+        unless top_left_index.column + field_index >= model.column_count
+          # do paste
+          cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
+          model.setData( cell_index, field.to_variant, Qt::PasteRole )
+        else
+          emit status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
+        end
       end
       # save records to db
       model.save( top_left_index.choppy {|i| i.row += row_index; i.column = 0 } )
@@ -490,7 +503,9 @@ class TableView < Qt::TableView
     
     yield if delete_ok
   end
-    
+  
+  # Ask if multiple cell delete is OK, then replace contents
+  # of selected cells with nil.
   def delete_cells
     delete_multiple_cells? do
       cells_deleted = false
@@ -503,6 +518,9 @@ class TableView < Qt::TableView
       
       # deletes were done, so emit dataChanged
       if cells_deleted
+        # save affected rows
+        selection_model.selected_rows.each { |index| index.entity.save }
+        
         # emit data changed for all ranges
         selection_model.selection.each do |selection_range|
           emit dataChanged( selection_range.top_left, selection_range.bottom_right )
@@ -550,7 +568,13 @@ class TableView < Qt::TableView
         # TODO this is actually a shortcut
         when event.ctrl? && event.return?
           new_row
-          
+        
+        when event.delete?
+          if selection_model.selected_indexes.size > 1
+            delete_selection
+            return true
+          end
+        
         else
           #~ puts event.inspect
         end

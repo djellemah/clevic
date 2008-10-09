@@ -162,6 +162,7 @@ class TableModel < Qt::AbstractTableModel
     collection.size
   end
 
+  # Not looked up or aliased properly by Qt bindings
   def row_count
     collection.size
   end
@@ -170,6 +171,7 @@ class TableModel < Qt::AbstractTableModel
     fields.size
   end
   
+  # Not looked up or aliased properly by Qt bindings
   def column_count
     fields.size
   end

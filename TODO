@@ -1,6 +1,6 @@
 Use ZenTest to generate tests
 Check out ar-extensions. Like operators look nice.
-make sure ActiveRecord doesn't keep updating columns. ie production mode.
+make sure ActiveRecord doesn't keep updating column definitions. ie production mode.
 Test with ActiveRecord 2.1 for changed. Note will_change! method
 Ramen http://ramen.rubyforge.org/ for metadata. MySQL and MSSQL only right now.
 
@@ -29,9 +29,6 @@ undo
 
 Using F4 to open list, and then selecting from the combo and exiting using Return (or tab?) doesn't set the correct value
 wrap description, and allow Access-style zooming
-Ctrl-PgDn to last row in this column. Also extend selection
-sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
-- layoutChanged
 
 search with acts_as_searchable and hyperestraier
 
@@ -40,7 +37,8 @@ moving of columns
 /-style filtering?
 
 for dates, add year if not specified, with 6 months on either side range. Configurable?
-value formatting not in model
+value parsing not in model
+gui_value vs attribute_value vs field_value etc
 copy a field from a mouse-selection (ctrl-b maybe)
 hiding of fields
 
