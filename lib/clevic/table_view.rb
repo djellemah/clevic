@@ -54,9 +54,6 @@ class TableView < Qt::TableView
     self.sorting_enabled = false
     @filtered = false
     
-    # turn off "Object#type deprecated" messages
-    $VERBOSE = nil
-    
     init_actions
     self.context_menu_policy = Qt::ActionsContextMenu
   end

@@ -2,7 +2,7 @@
 Use ZenTest to generate tests
 Check out ar-extensions. Like operators look nice.
 make sure ActiveRecord doesn't keep updating column definitions. ie production mode.
-caching of repeated related entity lookups
+caching of repeated related entity lookups. Possibly ActiveRecord::QueryCache
 Test with ActiveRecord 2.1 for changed. Note will_change! method
 Ramen http://ramen.rubyforge.org/ for metadata. MySQL and MSSQL only right now.
 

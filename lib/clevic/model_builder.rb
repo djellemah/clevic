@@ -348,9 +348,10 @@ protected
     end
   end
   
-  # add ActiveRecord :include options for foreign keys, but it takes up too much memory,
-  # and actually takes longer to load a data set
-  # ActiveRecord-2.1 has smarter includes
+  # Add ActiveRecord :include options for foreign keys, but it takes up too much memory,
+  # and actually takes longer to load a data set.
+  #--
+  # TODO ActiveRecord-2.1 has smarter includes
   def add_include_options
     fields.each do |field|
       if field.delegate.class == RelationalDelegate

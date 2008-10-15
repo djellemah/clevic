@@ -38,6 +38,12 @@ if $options[:debug]
   pp $options
 end
 
+unless $options[:verbose]
+  # turn off "Object#type deprecated" messages
+  # and anything else output by rb_warn
+  $VERBOSE = nil
+end
+
 class Pathname
   # require this pathname if it exists
   def require_if_exists
