@@ -32,20 +32,6 @@ module ActiveRecord
   end
 end
 
-module Clevic
-  # Collect row and column values in various ways
-  class IndexCollector < HashCollector
-    dsl_accessor :row, :column
-
-    def initialize( row, column )
-      super()
-      # MUST use writers here, not instance variables
-      self.row = row
-      self.column = column
-    end
-  end
-end
-
 # convenience methods
 module Qt
 
@@ -146,45 +132,6 @@ module Qt
       [ entity.errors[field_name.to_sym] ].flatten
     end
     
-    # CHange and cOP(P)Y - make a new index based on this one,
-    # modify the new index with values from the parameters, the
-    # args hash or the block.
-    # The block will instance_eval with no args, or pass self
-    # if there's one arg. You can also pass two parameters, interpreted
-    # as row, columns.
-    # Examples:
-    #   new_index = index.choppy { row 10; column 13 }
-    #   new_index = index.choppy { row 10; column 13 }
-    #   new_index = index.choppy( 1,3 )
-    #   new_index = index.choppy { |i| i.row += 1 }
-    #   new_index = index.choppy :row => 16
-    #   same_index = index.choppy
-    def choppy( *args, &block  )
-      return ModelIndex.invalid unless self.valid?
-      
-      # initialize with defaults
-      stash = Clevic::IndexCollector.new( row, column )
-      
-      case args.size
-        when 0,1
-          # args.first is a hash, or nil
-          stash.collect( args.first, &block )
-        when 2
-          # args are two parameters - row, column
-          stash.row, stash.column = args
-          stash.collect( &block )
-        else
-          raise TypeError.new( "incorrect args #{args.inspect}" )
-      end
-      
-      # return an invalid index if it's out of bounds,
-      # or the choppy'd index if it's OK.
-      if stash.row >= model.row_count || stash.column >= model.column_count
-        ModelIndex.invalid
-      else
-        model.create_index( stash.row.to_i, stash.column.to_i )
-      end
-    end
   end
 
 end
