@@ -158,7 +158,7 @@ class ModelBuilder
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {}, &block )
     # get values from block, if it's there
-    options = gather_block( options, &block )
+    options = HashCollector.new( options, &block ).to_hash
     
     read_only_default!( attribute, options )
     @fields << Clevic::Field.new( attribute.to_sym, entity_class, options )
@@ -168,7 +168,7 @@ class ModelBuilder
   # a combo box containing all values for this field from the table.
   def distinct( attribute, options = {}, &block )
     # get values from block, if it's there
-    options = gather_block( options, &block )
+    options = HashCollector.new( options, &block ).to_hash
     
     field = Clevic::Field.new( attribute.to_sym, entity_class, options )
     field.delegate = DistinctDelegate.new( nil, attribute, entity_class, options )
@@ -179,7 +179,7 @@ class ModelBuilder
   # a combo box, but restricted to a specified set, from the :set option.
   def restricted( attribute, options = {}, &block )
     # get values from block, if it's there
-    options = gather_block( options, &block )
+    options = HashCollector.new( options, &block ).to_hash
     
     raise "restricted must have a set" unless options.has_key?( :set )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options )
@@ -197,7 +197,7 @@ class ModelBuilder
     end
     
     # get values from block, if it's there
-    options = gather_block( options, &block )
+    options = HashCollector.new( options, &block ).to_hash
     
     # check after all possible options have been collected
     raise ":display must be specified" if options[:display].nil?
@@ -410,18 +410,6 @@ protected
       @records = CacheTable.new( entity_class, @options )
     end
     @records
-  end
-  
-  # update options with the values in block, using HashCollector
-  # to evaluate block
-  def gather_block( options, &block )
-    unless block.nil?
-      fb = HashCollector.new( options )
-      fb.instance_eval( &block )
-      fb.to_hash
-    else
-      options
-    end
   end
   
 end

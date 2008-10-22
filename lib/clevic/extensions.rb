@@ -1,7 +1,7 @@
 # extensions specific to clevic
 
 require 'qtext/flags.rb'
-require 'clevic/hash_collector.rb'
+require 'qtext/hash_collector.rb'
 
 module ActiveRecord
   class Base

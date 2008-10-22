@@ -13,4 +13,10 @@ class TestModelIndex < Test::Unit::TestCase
   def teardown
   end
   
+  should_eventually 'test something'
+  
+  should 'be true' do
+    assert true
+  end
+  
 end

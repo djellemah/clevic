@@ -1,4 +1,4 @@
-require 'clevic/hash_collector.rb'
+require 'qtext/hash_collector.rb'
 
 module Clevic
 
