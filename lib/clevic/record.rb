@@ -1,5 +1,6 @@
-require 'active_record.rb'
-require 'active_record/dirty.rb'
+require 'activerecord'
+
+require 'clevic/dirty.rb'
 
 module Clevic
 

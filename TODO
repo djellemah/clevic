@@ -145,4 +145,3 @@ Ctrl-Shift-" should not copy date if it already exists, and should not copy time
 Ctrl-Shift-" after it's done, tab doesn't change fields
 look up invoice for project leaves the wrong fields highlighted, and focus in the wrong field.
 warnings on overlap times (in status bar, or highlight)
-warnings on large intervals (in status bar, or highlight)

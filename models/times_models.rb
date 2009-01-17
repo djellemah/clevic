@@ -21,14 +21,21 @@ class Entry < Clevic::Record
   belongs_to :project
   
   def time_color
+    return if self.end.nil? || start.nil?
+    'darkviolet' if self.end - start > 8.hours
+  end
+  
+  def time_tooltip
+    return if self.end.nil? || start.nil?
+    'Time interval greater than 8 hours' if self.end - start > 8.hours
   end
   
   define_ui do
     plain       :date, :sample => '28-Dec-08'
     relational  :project, :display => 'project', :conditions => 'active = true', :order => 'lower(project)'
     relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
-    plain       :start, :foreground => lambda{|x| x.time_color}
-    plain       :end
+    plain       :start, :foreground => :time_color, :tooltip => :time_tooltip
+    plain       :end, :foreground => lambda{|x| x.time_color}, :tooltip => :time_tooltip
     plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
     
     relational :activity do

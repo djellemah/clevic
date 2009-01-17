@@ -147,14 +147,18 @@ class Browser < Qt::Widget
     
     # Add all existing model objects as tabs, one each
     models.each do |entity_class|
-      next unless entity_class.table_exists?
+      unless entity_class.table_exists?
+        puts "No table for #{entity_class.inspect}"
+      end
         
       begin
         # create the the table_view and the table_model for the entity_class
         tab = 
         if entity_class.respond_to?( :ui )
-          puts "Entity#ui deprecated. Use build_table_model instead."
+          puts "Entity#ui deprecated. Use define_ui instead."
           entity_class.ui( tables_tab )
+        elsif entity_class.respond_to?( :build_table_model )
+          raise "Entity#build_table_model deprecated. Use define_ui instead."
         else
           Clevic::TableView.new( entity_class, tables_tab )
         end
@@ -180,6 +184,7 @@ class Browser < Qt::Widget
           tables_tab.set_tab_text( tables_tab.current_index, tab_title )
         end
       rescue Exception => e
+        puts
         puts e.backtrace #if $options[:debug]
         puts "Entity #{entity_class} will not be available: #{e.message}"
       end

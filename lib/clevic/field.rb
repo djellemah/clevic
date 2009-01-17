@@ -30,15 +30,17 @@ class Field
   # One of the alignment specifiers - :left, :centre, :right or :justified.
   attr_accessor :alignment
   
+  # something to do with the icon that Qt displays. Not implemented yet.
+  attr_writer :decoration
+  def decoration( entity )
+  end
+  
   # The format string, formatted by strftime for date and time fields, by sprintf for others.
   # Defaults to something sensible for the type of the field.
   attr_accessor :format
   
   # The format used for editing
   attr_accessor :edit_format
-  
-  # the tooltip to be displayed. Defaults to empty string.
-  attr_accessor :tooltip
   
   # A block used to display the value of the field. This can be used to display 'virtual'
   # fields from related tables, or calculated fields. Set by :display in the options
@@ -59,6 +61,8 @@ class Field
   
   # the foreground and background colors
   attr_writer :foreground, :background
+  
+  attr_writer :tooltip
   
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.
@@ -239,19 +243,37 @@ EOF
     @sample || self.label
   end
   
-  def foreground
-    case @foreground
-      when Proc; @foreground.call( entity )
-      when String; @foreground_color ||= Qt::Color.new( @foreground )
-      else; @foreground
+  # convert something that responds to to_s to a Qt::Color
+  # or just return the argument if it's already a Qt::Color
+  def string_color( string_or_color )
+    case string_or_color
+    when Qt::Color; string_or_color
+    else; Qt::Color.new( string_or_color.to_s )
     end
   end
   
-  def background
+  def foreground( entity )
+    case @foreground
+      when Proc; string_color @foreground.call( entity )
+      when Symbol; string_color( entity.send( @foreground ) )
+      else; @foreground_color ||= string_color( @foreground )
+    end
+  end
+  
+  def background( entity )
     case @background
-      when Proc; @background.call( entity )
-      when String; @background_color ||= Qt::Color.new( @background )
-      else; @background
+      when Proc; string_color @background.call( entity )
+      when Symbol; string_color( entity.send( @background ) )
+      else; @background_color ||= string_color( @background )
+    end
+  end
+
+  # the tooltip to be displayed. Defaults to empty string.
+  def tooltip( entity = nil )
+    case @tooltip
+      when Proc; @tooltip.call( entity ) unless entity.nil?
+      when Symbol; entity.send( @tooltip ) unless entity.nil?
+      else; @tooltip.to_s
     end
   end
 
@@ -330,7 +352,15 @@ private
     EOF
     result_set = @entity_class.connection.execute statement
     unless result_set.entries.size == 0
-      result = result_set[0][0]
+      row = result_set[0]
+      result = 
+      case row
+        when Array
+          row[0]
+        when Hash
+          row.values[0]
+      end
+        
       if max_sample.nil?
         result
       else

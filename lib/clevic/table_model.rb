@@ -300,24 +300,22 @@ class TableModel < Qt::AbstractTableModel
             when :justified; qt_alignjustified
           end
         
-        # these are just here to make debug output quieter
+        # just here to make debug output quieter
         when qt_size_hint_role;
         
         # show field with a red background if there's an error
         when qt_background_role
-          index.field.background ||
-          if index.has_errors?
-            Qt::Color.new( 'red' )
-          end
+          index.field.background( index.entity ) || Qt::Color.new( 'red' ) if index.has_errors?
           
         when qt_font_role;
         when qt_foreground_role
-          index.field.foreground ||
+          index.field.foreground( index.entity ) ||
           if index.field.read_only? || index.entity.readonly? || read_only?
             Qt::Color.new( 'dimgray' )
           end
           
         when qt_decoration_role;
+          index.field.decoration( index.entity )
         
         when qt_tooltip_role
           case
@@ -334,7 +332,7 @@ class TableModel < Qt::AbstractTableModel
               'Read-only'
               
             else
-              index.field.tooltip
+              index.field.tooltip( index.entity )
           end    
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]

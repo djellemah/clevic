@@ -12,22 +12,24 @@ class Entry < Clevic::Record
   belongs_to :activity
   belongs_to :project
   
+  def times_color
+    Qt::Color.new( 'red' ) if self.end - start > 8.hours
+  end
+  
   # define how fields are displayed
-  def self.build_table_model( model_builder )
-    model_builder.instance_exec do
-      plain       :date, :sample => '28-Dec-08'
-      relational  :project, :display => 'project', :conditions => "active = true", :order => 'lower(project)'
-      relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
-      plain       :start
-      plain       :end
-      plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
-      relational  :activity, :display => 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = #{connection.quoted_true}'
-      distinct    :module, :tooltip => 'Module or sub-project'
-      plain       :charge, :tooltip => 'Is this time billable?'
-      distinct    :person, :tooltip => 'The person who did the work'
-      
-      records     :order => 'date, start, id'
-    end
+  define_ui do
+    plain       :date, :sample => '28-Dec-08'
+    relational  :project, :display => 'project', :conditions => "active = true", :order => 'lower(project)'
+    relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
+    plain       :start, :foreground => lambda{|x| x.times_color}
+    plain       :end
+    plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
+    relational  :activity, :display => 'activity', :order => 'lower(activity)', :sample => 'Troubleshooting', :conditions => 'active = #{connection.quoted_true}'
+    distinct    :module, :tooltip => 'Module or sub-project'
+    plain       :charge, :tooltip => 'Is this time billable?'
+    distinct    :person, :tooltip => 'The person who did the work'
+    
+    records     :order => 'date, start, id'
   end
 
   # called when a key is pressed in this model's table view
@@ -94,16 +96,14 @@ end
 class Project < Clevic::Record
   has_many :entries
 
-  def self.build_table_model( model_builder )
-    model_builder.instance_exec do
-      plain     :project
-      plain     :description
-      distinct  :client
-      plain     :rate
-      plain     :active
-      
-      records   :order => 'project'
-    end
+  define_ui do
+    plain     :project
+    plain     :description
+    distinct  :client
+    plain     :rate
+    plain     :active
+    
+    records   :order => 'project'
   end
   
   # Return the latest invoice for this project
@@ -122,13 +122,11 @@ class Activity < Clevic::Record
   has_many :entries
 
   # define how fields are displayed
-  def self.build_table_model( model_builder )
-    model_builder.instance_exec do
-      plain :activity
-      plain :active
+  define_ui do
+    plain :activity
+    plain :active
       
-      records :order => 'activity'
-    end
+    records :order => 'activity'
   end
 end
 
@@ -136,18 +134,16 @@ class Invoice < Clevic::Record
   has_many :entries
 
   # define how fields are displayed
-  def self.build_table_model( model_builder )
-    model_builder.instance_exec do
-      plain :date
-      distinct :client
-      plain :invoice_number
-      restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff', 'internal']
-      restricted :billing, :set => %w{Hours Quote Internal}
-      plain :quote_date
-      plain :quote_amount
-      plain :description
-      
-      records :order => 'invoice_number'
-    end
+  define_ui do
+    plain :date
+    distinct :client
+    plain :invoice_number
+    restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff', 'internal']
+    restricted :billing, :set => %w{Hours Quote Internal}
+    plain :quote_date
+    plain :quote_amount
+    plain :description
+    
+    records :order => 'invoice_number'
   end
 end
