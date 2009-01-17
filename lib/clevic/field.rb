@@ -16,7 +16,9 @@ class Field
   # For relational fields, a dot-separated path of attributes starting on the object returned by attribute.
   # Set by :display in options to the constructor. Paths longer than 1 element haven't been
   # tested much.
-  attr_accessor :path
+  # It can also be a block used to display the value of the field. This can be used to display 'virtual'
+  # fields from related tables, or calculated fields.
+  attr_accessor :display
   
   # The label for the field. Defaults to the humanised field name.
   attr_accessor :label
@@ -41,11 +43,6 @@ class Field
   
   # The format used for editing
   attr_accessor :edit_format
-  
-  # A block used to display the value of the field. This can be used to display 'virtual'
-  # fields from related tables, or calculated fields. Set by :display in the options
-  # to the constructor.
-  attr_accessor :path_block
   
   # Whether the field is currently visible or not.
   attr_accessor :visible
@@ -105,17 +102,17 @@ EOF
     transform_attribute( entity.send( attribute ) )
   end
   
-  # apply path, or path_block, to the given
+  # apply display, to the given
   # attribute value. Otherwise just return
   # attribute_value itself.
   def transform_attribute( attribute_value )
     return nil if attribute_value.nil?
-    case
-      when !path_block.nil?
-        path_block.call( attribute_value )
+    case display
+      when Proc
+        display.call( attribute_value )
         
-      when !path.nil?
-        attribute_value.evaluate_path( path.split( /\./ ) )
+      when String
+        attribute_value.evaluate_path( display.split( '.' ) )
         
       else
         attribute_value
@@ -176,7 +173,7 @@ EOF
   # return an array of the various attribute parts
   def attribute_path
     pieces = [ attribute.to_s ]
-    pieces.concat( path.split( /\./ ) ) unless path.nil?
+    pieces.concat( display.to_s.split( '.' ) ) unless display.is_a? Proc
     pieces.map{|x| x.to_sym}
   end
   
@@ -282,14 +279,6 @@ protected
   def process_options!( options )
     options.each do |key,value|
       self.send( "#{key}=", value ) if respond_to?( "#{key}=" )
-    end
-    
-    # TODO could convert everything to a block here, even paths
-    # TODO possibly use :display for both path and path_block
-    if options[:display].kind_of?( Proc )
-      @path_block = options[:display]
-    else
-      @path = options[:display]
     end
   end
   
