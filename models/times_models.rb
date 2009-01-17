@@ -20,11 +20,14 @@ class Entry < Clevic::Record
   belongs_to :activity
   belongs_to :project
   
+  def time_color
+  end
+  
   define_ui do
     plain       :date, :sample => '28-Dec-08'
     relational  :project, :display => 'project', :conditions => 'active = true', :order => 'lower(project)'
     relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
-    plain       :start
+    plain       :start, :foreground => lambda{|x| x.time_color}
     plain       :end
     plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
     

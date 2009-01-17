@@ -57,6 +57,9 @@ class Field
   # set the field to read-only
   attr_writer :read_only
   
+  # the foreground and background colors
+  attr_writer :foreground, :background
+  
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.
   # - attribute is the symbol for the attribute on the entity_class.
@@ -234,6 +237,22 @@ EOF
     end
     # if we don't know how to figure it out from the data, just return the label size
     @sample || self.label
+  end
+  
+  def foreground
+    case @foreground
+      when Proc; @foreground.call( entity )
+      when String; @foreground_color ||= Qt::Color.new( @foreground )
+      else; @foreground
+    end
+  end
+  
+  def background
+    case @background
+      when Proc; @background.call( entity )
+      when String; @background_color ||= Qt::Color.new( @background )
+      else; @background
+    end
   end
 
 protected
