@@ -1,3 +1,6 @@
+need a text field, and a map field (For ie -1 = short, 1 = long)
+:records missing in define_ui causes a crash
+
 :display and :format in ModelBuilder
 Use ZenTest to generate tests
 Check out ar-extensions. Like operators look nice.

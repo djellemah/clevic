@@ -17,13 +17,13 @@ lib/clevic/db_options.rb
 lib/clevic/delegates.rb
 lib/clevic/extensions.rb
 lib/clevic/field.rb
-lib/clevic/hash_collector.rb
 lib/clevic/item_delegate.rb
 lib/clevic/model_builder.rb
 lib/clevic/model_column.rb
 lib/clevic/order_attribute.rb
 lib/clevic/record.rb
 lib/clevic/search_dialog.rb
+lib/clevic/sql_dialects.rb
 lib/clevic/table_model.rb
 lib/clevic/table_searcher.rb
 lib/clevic/table_view.rb
@@ -51,6 +51,7 @@ test/test_cache_table.rb
 test/test_helper.rb
 test/test_model_index_extensions.rb
 test/test_order_attribute.rb
+test/test_sql_dialects.rb
 test/test_table_searcher.rb
 website/index.html
 website/index.txt
