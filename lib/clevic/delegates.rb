@@ -300,9 +300,21 @@ class RestrictedDelegate < ComboDelegate
   
   def populate( editor, model_index )
     @set.each do |item|
-      editor.add_item( item, item.to_variant )
+      if item.is_a?( Array )
+        # this is a hash, so use key as db value
+        # and value as display value
+        editor.add_item( item.last, item.first.to_variant )
+      else
+        editor.add_item( item, item.to_variant )
+      end
     end
   end
+
+  #~ def translate_from_editor_text( editor, text )
+    #~ item_index = editor.find_text( text )
+    #~ item_data = editor.item_data( item_index )
+    #~ item_data.to_int
+  #~ end
 end
 
 # Edit a relation from an id and display a list of relevant entries.

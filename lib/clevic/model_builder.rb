@@ -182,6 +182,10 @@ class ModelBuilder
     options = HashCollector.new( options, &block ).to_hash
     
     raise "restricted must have a set" unless options.has_key?( :set )
+    
+    if options[:set].is_a? Hash
+      options[:format] = lambda{|x| options[:set][x]}
+    end
     field = Clevic::Field.new( attribute.to_sym, entity_class, options )
     field.delegate = RestrictedDelegate.new( nil, attribute, entity_class, options )
     @fields << field

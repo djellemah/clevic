@@ -102,8 +102,8 @@ EOF
     transform_attribute( entity.send( attribute ) )
   end
   
-  # apply display, to the given
-  # attribute value. Otherwise just return
+  # Apply display, to the given
+  # attribute value. Otherwise just return the
   # attribute_value itself.
   def transform_attribute( attribute_value )
     return nil if attribute_value.nil?
@@ -188,7 +188,11 @@ EOF
       if is_date_time?
         value.strftime( format )
       else
-        self.format % value
+        if self.format.is_a? Proc
+          self.format.call( value )
+        else
+          self.format % value
+        end
       end
     else
       value
