@@ -82,6 +82,15 @@ module Clevic
     def self.db_options
       @db_options
     end
+    
+    def header_color
+      case 
+        when !errors.empty?
+          Qt::Color.new( 'orange' )
+        when changed?
+          Qt::Color.new( 'yellow' )
+      end
+    end
   end
   
 end

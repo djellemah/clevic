@@ -9,7 +9,7 @@ config/hoe.rb
 config/jamis.rb
 config/requirements.rb
 env.sh
-lib/active_record/dirty.rb
+lib/clevic/dirty.rb
 lib/clevic.rb
 lib/clevic/browser.rb
 lib/clevic/cache_table.rb

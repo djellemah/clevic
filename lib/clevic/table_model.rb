@@ -244,11 +244,9 @@ class TableModel < Qt::AbstractTableModel
         
       when qt_background_role
         if orientation == Qt::Vertical
-          case
-            when !collection[section].errors.empty?
-              Qt::Color.new( 'orange' )
-            when collection[section].changed?
-              Qt::Color.new( 'yellow' )
+          item = collection[section]
+          if !item.nil? && item.respond_to?( :header_color )
+            item.header_color
           end
         end
         
