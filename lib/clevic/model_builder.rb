@@ -162,6 +162,7 @@ class ModelBuilder
     
     read_only_default!( attribute, options )
     @fields << Clevic::Field.new( attribute.to_sym, entity_class, options )
+    @fields << Clevic::Field.new( attribute.to_sym, entity_class, options )
   end
   
   # Returns a Clevic::Field with a DistinctDelegate, in other words
@@ -333,7 +334,11 @@ protected
       method.call( builder )
     elsif !entity_class.define_ui_block.nil?
       #define_ui is used, so use that block
-      instance_eval( &entity_class.define_ui_block )
+      if entity_class.define_ui_block.arity == -1
+        instance_eval( &entity_class.define_ui_block )
+      else
+        entity_class.define_ui_block.call( self )
+      end
     elsif can_build_default
       # build a default UI
       default_ui
