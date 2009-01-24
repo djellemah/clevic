@@ -1,11 +1,12 @@
 require 'clevic.rb'
 
 # model definitions
-class Entry < Clevic::Record
+class Entry < ActiveRecord::Base
   belongs_to :invoice
   belongs_to :activity
   belongs_to :project
   
+  include Clevic::Record
   def time_color
     return if self.end.nil? || start.nil?
     'darkviolet' if self.end - start > 8.hours
@@ -112,7 +113,8 @@ class Entry < Clevic::Record
   end
 end
 
-class Invoice < Clevic::Record
+class Invoice < ActiveRecord::Base
+  include Clevic::Record
   has_many :entries
 
   define_ui do
@@ -129,7 +131,8 @@ class Invoice < Clevic::Record
   end
 end
 
-class Project < Clevic::Record
+class Project < ActiveRecord::Base
+  include Clevic::Record
   has_many :entries
 
   define_ui do
@@ -154,7 +157,8 @@ class Project < Clevic::Record
 
 end
 
-class Activity < Clevic::Record
+class Activity < ActiveRecord::Base
+  include Clevic::Record
   has_many :entries
 
   # define how fields are displayed

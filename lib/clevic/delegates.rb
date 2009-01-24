@@ -198,12 +198,6 @@ end
 # the options are sorted in order of most frequently used first.
 class DistinctDelegate < ComboDelegate
   
-  def initialize( parent, field )
-    super
-    # hackery for amateur query building in populate
-    find_options[:conditions] ||= '1=1'
-  end
-  
   def needs_combo?
     # works except when there is a '' in the column
     entity_class.count( attribute.to_s, find_options ) > 0
@@ -217,7 +211,7 @@ class DistinctDelegate < ComboDelegate
     <<-EOF
       select distinct #{attribute.to_s}, lower(#{attribute.to_s})
       from #{entity_class.table_name}
-      where (#{find_options[:conditions]})
+      where (#{find_options[:conditions] || '1=1'})
       or #{conn.quote_column_name( attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
       order by lower(#{attribute.to_s})
     EOF
@@ -227,7 +221,7 @@ class DistinctDelegate < ComboDelegate
     <<-EOF
       select distinct #{attribute.to_s}, count(#{attribute.to_s})
       from #{entity_class.table_name}
-      where (#{find_options[:conditions]})
+      where (#{find_options[:conditions] || '1=1'})
       or #{conn.quote_column_name( attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
       group by #{attribute.to_s}
       order by count(#{attribute.to_s}) desc
@@ -248,6 +242,7 @@ class DistinctDelegate < ComboDelegate
       else
         query_order_frequency( conn, model_index )
     end
+    puts "query: #{query}"
     rs = conn.execute( query )
     rs.each do |row|
       value = row[attribute.to_s]
