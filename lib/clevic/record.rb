@@ -38,6 +38,16 @@ module Clevic
   # be constructed in that order.
   module Record
     include Default
+    
+    def entity_class
+      self.class.entity_class
+    end
+    
+    def model_builder( &block )
+      @model_builder ||= ModelBuilder.new( entity_class )
+      @model_builder.exec_ui_block( &block )
+    end
+    
     @subclass_order = []
     
     def self.models

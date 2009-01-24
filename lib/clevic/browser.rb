@@ -181,7 +181,7 @@ class Browser < Qt::Widget
         # handle filter status changed, so we can provide a visual indication
         tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
           # update the tab, so there's a visual indication of filtering
-          tab_title = ( tab.filtered ? '| ' : '' ) + translate( entity_class.name.humanize )
+          tab_title = ( tab.filtered ? '| ' : '' ) + translate( model.name.humanize )
           tables_tab.set_tab_text( tables_tab.current_index, tab_title )
         end
       rescue Exception => e

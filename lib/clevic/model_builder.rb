@@ -13,6 +13,19 @@ includes any related tables,
 restrictions on data entry, formatting and so on. Then the build method
 uses the set of fields to construct a Clevic::TableModel.
 
+There are at least 2 ways to define UIs: as part of the ActiveRecord object (which is useful
+if you want minimal framework overhead); or in a separate class (which is useful when you 
+want several diffent views of the same underlying table).
+
+For ActiveRecord::Base classes, ModelBuilder has a default_ui method
+which knows how to build a
+fairly sensible default UI.
+
+Subclasses of Clevic::Record may also implement
+* <tt>self.key_press_event( event, current_index, table_view )</tt>
+* <tt>self.data_changed( top_left_index, bottom_right_index, table_view )</tt>
+so that they can respond to editing events and do Neat Stuff.
+
 The type of the field (plain, relational, distinct, restricted, hide) defines
 must be followed by the attribute on the current entity (an ActiveRecord or descendant).
 
@@ -104,15 +117,41 @@ For example, the UI for a model called Entry (part of an accounting database) co
       records [ a,b,c,d,e ]
     end
   end
-  
-For ActiveRecord::Base classes, ModelBuilder has a default_ui method
-which knows how to build a
-fairly sensible default UI.
 
-Subclasses of Clevic::Record may also implement
-* <tt>self.key_press_event( event, current_index, table_view )</tt>
-* <tt>self.data_changed( top_left_index, bottom_right_index, table_view )</tt>
-so that they can respond to editing events and do Neat Stuff.
+To define a separate ui class, do something like this:
+  class Prospect
+    include Clevic::Record
+    
+    # This is the ActiveRecord::Base descendant
+    entity_class Position
+    
+    # must return a ModelBuilder instance
+    def define_ui
+      model_builder do |mb|
+        # use the define_ui block from Position
+        mb.exec_ui_block( Position )
+        
+        # use a different recordset
+        mb.records :conditions => "status in ('prospect','open')", :order => 'date desc,code'
+      end
+    end
+  end
+  
+And you can even do
+
+  class Extinct < Prospect
+    def define_ui
+      # reuse all UI definitions from Prospect
+      super
+      # and again another recordset
+      model_builder do |mb|
+        mb.records :conditions => "status in ('dead')", :order => 'date desc,code'
+      end
+    end
+  end
+
+Obviously you can use any of the Clevic::ModelBuilder calls inside of the model_builder block
+in the defin_ui methods in the previous two examples.
 =end
 class ModelBuilder
   
@@ -125,6 +164,17 @@ class ModelBuilder
     @auto_new = true
     @read_only = false
     @fields = []
+    exec_ui_block( &block )
+  end
+  
+  # arg can be something that responds to define_ui_block,
+  # or just the block will be executed. If both are present,
+  # values in the block will overwrite values in arg's block.
+  def exec_ui_block( arg = nil, &block )
+    if !arg.nil? and arg.respond_to?( :define_ui_block )
+      exec_ui_block( &arg.define_ui_block )
+    end
+
     unless block.nil?
       if block.arity == -1
         instance_eval( &block )
@@ -132,6 +182,7 @@ class ModelBuilder
         block.call( self )
       end
     end
+    self
   end
   
   def self.from_entity( ui_definer, can_build_default = true, &block )
@@ -334,27 +385,17 @@ class ModelBuilder
       method.call( builder )
     elsif !ui_definer.define_ui_block.nil?
       #define_ui is used, so use that block
-      if ui_definer.define_ui_block.arity == -1
-        instance_eval( &ui_definer.define_ui_block )
-      else
-        ui_definer.define_ui_block.call( self )
-      end
+      exec_ui_block( &ui_definer.define_ui_block )
     elsif can_build_default
       # build a default UI
       default_ui
       
       # allow for smallish changes to a default build
-      instance_eval( &entity_class.post_default_ui_block ) unless entity_class.post_default_ui_block.nil?
+      exec_ui_block( &entity_class.post_default_ui_block ) unless entity_class.post_default_ui_block.nil?
     end
 
     # the local block adds to the previous definitions
-    unless block.nil?
-      if block.arity == 0
-        instance_eval( &block )
-      else
-        yield( builder )
-      end
-    end
+    exec_ui_block( &block )
   end
   
 protected
