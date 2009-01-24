@@ -84,6 +84,7 @@ MODELS_LIST.each do |model_file|
   namespace :irb do
     task short_model( model_file ) do |t|
       ARGV.shift()
+      ARGV.shift() if ARGV[0] == '--'
       ENV['RUBYLIB'] ||= '.'
       ENV['RUBYLIB'] += ":#{File.expand_path('.')}/lib"
       exec "irb -Ilib -rclevic -r#{model_file} -rclevic/db_options.rb"
@@ -95,7 +96,10 @@ MODELS_LIST.each do |model_file|
     desc "run clevic with #{model_file}"
     task short_model( model_file )  => :ui do |t|
       ARGV.shift()
-      exec "ruby -Ilib bin/clevic -D #{model_file} #{ARGV.join(' ')}"
+      ARGV.shift() if ARGV[0] == '--'
+      cmd = "ruby -Ilib bin/clevic -D #{model_file} #{ARGV.join(' ')}"
+      puts "cmd: #{cmd.inspect}"
+      exec cmd
     end
   end
 

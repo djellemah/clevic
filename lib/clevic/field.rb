@@ -1,4 +1,4 @@
-require 'qtext/hash_collector.rb'
+require 'gather.rb'
 
 module Clevic
 
@@ -6,67 +6,78 @@ module Clevic
 This defines a field in the UI, and how it hooks up to a field in the DB.
 =end
 class Field
+  include Gather
+  
   # The attribute on the AR entity that forms the basis for this field.
   # Accessing the returned attribute (using send, or the [] method on an entity)
   # will give a simple value, or another AR entity in the case of relational fields.
   # In other words, this is *not* the same as the name of the field in the DB, which
   # would have an _id suffix for relationships.
-  attr_accessor :attribute
+  property :attribute
   
   # For relational fields, a dot-separated path of attributes starting on the object returned by attribute.
   # Set by :display in options to the constructor. Paths longer than 1 element haven't been
   # tested much.
   # It can also be a block used to display the value of the field. This can be used to display 'virtual'
   # fields from related tables, or calculated fields.
-  attr_accessor :display
+  property :display
   
   # The label for the field. Defaults to the humanised field name.
-  attr_accessor :label
+  property :label
   
   # The UI delegate class for the field. In Qt, this is a subclass of AbstractItemDelegate.
-  attr_accessor :delegate
+  property :delegate
   
   # For relational fields, this is the class_name for the related AR entity.
-  attr_accessor :class_name
+  property :class_name
   
   # One of the alignment specifiers - :left, :centre, :right or :justified.
-  attr_accessor :alignment
+  property :alignment
   
   # something to do with the icon that Qt displays. Not implemented yet.
-  attr_writer :decoration
-  def decoration( entity )
-  end
+  property :decoration
   
   # The format string, formatted by strftime for date and time fields, by sprintf for others.
   # Defaults to something sensible for the type of the field.
-  attr_accessor :format
+  property :format
   
   # The format used for editing
-  attr_accessor :edit_format
+  property :edit_format
   
   # Whether the field is currently visible or not.
-  attr_accessor :visible
+  property :visible
   
   # Sample is used if the programmer wishes to provide a string that can be used
   # as the basis for calculating the width of the field. By default this will be
   # calculated from the database, but this may be an expensive operation. So we
   # have the option to override that if we wish.
-  attr_writer :sample
+  property :sample
   
   # set the field to read-only
-  attr_writer :read_only
+  property :read_only
   
   # the foreground and background colors
-  attr_writer :foreground, :background
+  property :foreground, :background
   
-  attr_writer :tooltip
+  property :tooltip
+  
+  # for restricted fields
+  property :set
+  
+  # default value for new records. Not sure how to populate it though
+  property :default
+  
+  # properties for ActiveRecord options
+  # There are actually from VALID_FIND_OPTIONS, but it's protected
+  AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
+  AR_FIND_OPTIONS.each{|x| property x}
   
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.
   # - attribute is the symbol for the attribute on the entity_class.
   # - entity_class is the ActiveRecord class which this Field talks to.
   # - options is a hash of writable attributes in Field.
-  def initialize( attribute, entity_class, options )
+  def initialize( attribute, entity_class, options, &block )
     # sanity checking
     raise "attribute #{attribute.inspect} must be a symbol" unless attribute.is_a?( Symbol )
     raise "entity_class must be a descendant of ActiveRecord::Base" unless entity_class.ancestors.include?( ActiveRecord::Base )
@@ -85,7 +96,7 @@ EOF
     @visible = true
     
     # handle options
-    process_options!( options )
+    gather( options, &block )
     
     # set various sensible defaults. They're not lazy accessors because
     # they might stay nil, and we don't want to keep evaluating them.
@@ -113,7 +124,10 @@ EOF
         
       when String
         attribute_value.evaluate_path( display.split( '.' ) )
-        
+      
+      when Symbol
+        attribute_value.send( display )
+      
       else
         attribute_value
     end
@@ -212,7 +226,12 @@ EOF
   end
   
   # return a sample for the field which can be used to size the UI field widget
-  def sample
+  def sample( *args )
+    if !args.empty?
+      self.sample = *args
+      return
+    end
+    
     if @sample.nil?
       self.sample =
       case meta.type
@@ -244,48 +263,54 @@ EOF
     @sample || self.label
   end
   
+  def self.conversion_blocks
+    @conversion_blocks ||= {}
+  end
+  
+  def self.value_for( *symbols, &conversion_block )
+    symbols.each do |sym|
+      #~ class_eval( "@#{}_conversion_block" ) = conversion_block || lambda{|x| x.to_s}
+      conversion_blocks[sym] = = conversion_block || lambda{|x| x.to_s}
+      name = sym.to_s
+      line, st = __LINE__, <<-EOF
+        def #{name}_for( entity )
+          puts "#{name}: \#\{#{name}.inspect\}"
+          
+          for_retval =
+          case #{name}
+            when Proc; #{name}.call( entity ) unless entity.nil?
+            when Symbol; entity.send( #{name} ) unless entity.nil?
+            else; @#{name}_cache ||= self.class.conversion_blocks[:#{name}].call( #{name} )
+          end
+          puts "for_retval: \#\{for_retval.inspect\}"
+          for_retval
+        end
+      EOF
+      puts st
+      class_eval st, __FILE__, line + 1
+    end
+  end
+  
+  value_for :tooltip
+
   # convert something that responds to to_s to a Qt::Color
   # or just return the argument if it's already a Qt::Color
-  def string_color( string_or_color )
+  value_for( :background, :foreground ) do |string_or_color|
+    puts "string_or_color: #{string_or_color.inspect}"
     case string_or_color
-    when Qt::Color; string_or_color
-    else; Qt::Color.new( string_or_color.to_s )
+    when Qt::Color
+      string_or_color
+    else
+      Qt::Color.new( string_or_color.to_s )
     end
   end
   
-  def foreground( entity )
-    case @foreground
-      when Proc; string_color @foreground.call( entity )
-      when Symbol; string_color( entity.send( @foreground ) )
-      else; @foreground_color ||= string_color( @foreground )
-    end
-  end
-  
-  def background( entity )
-    case @background
-      when Proc; string_color @background.call( entity )
-      when Symbol; string_color( entity.send( @background ) )
-      else; @background_color ||= string_color( @background )
-    end
-  end
-
-  # the tooltip to be displayed. Defaults to empty string.
-  def tooltip( entity = nil )
-    case @tooltip
-      when Proc; @tooltip.call( entity ) unless entity.nil?
-      when Symbol; entity.send( @tooltip ) unless entity.nil?
-      else; @tooltip.to_s
-    end
+  def decoration_for( entity )
+    nil
   end
 
 protected
 
-  def process_options!( options )
-    options.each do |key,value|
-      self.send( "#{key}=", value ) if respond_to?( "#{key}=" )
-    end
-  end
-  
   def default_label!
     @label ||= attribute.to_s.humanize
   end

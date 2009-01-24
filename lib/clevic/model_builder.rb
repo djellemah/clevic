@@ -157,38 +157,31 @@ class ModelBuilder
 
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {}, &block )
-    # get values from block, if it's there
-    options = HashCollector.new( options, &block ).to_hash
-    
     read_only_default!( attribute, options )
-    @fields << Clevic::Field.new( attribute.to_sym, entity_class, options )
-    @fields << Clevic::Field.new( attribute.to_sym, entity_class, options )
+    @fields << Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
   end
   
   # Returns a Clevic::Field with a DistinctDelegate, in other words
   # a combo box containing all values for this field from the table.
   def distinct( attribute, options = {}, &block )
-    # get values from block, if it's there
-    options = HashCollector.new( options, &block ).to_hash
-    
-    field = Clevic::Field.new( attribute.to_sym, entity_class, options )
-    field.delegate = DistinctDelegate.new( nil, attribute, entity_class, options )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    field.delegate = DistinctDelegate.new( nil, attribute, entity_class, field.to_hash )
     @fields << field
   end
 
   # Returns a Clevic::Field with a RestrictedDelegate, 
   # a combo box, but restricted to a specified set, from the :set option.
   def restricted( attribute, options = {}, &block )
-    # get values from block, if it's there
-    options = HashCollector.new( options, &block ).to_hash
     
-    raise "restricted must have a set" unless options.has_key?( :set )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    raise "field #{attribute} restricted must have a set" if field.set.nil?
     
-    if options[:set].is_a? Hash
-      options[:format] = lambda{|x| options[:set][x]}
+    # TODO this really belongs in a separate 'map' field
+    if field.set.is_a? Hash
+      field.format = lambda{|x| field.set[x]}
     end
-    field = Clevic::Field.new( attribute.to_sym, entity_class, options )
-    field.delegate = RestrictedDelegate.new( nil, attribute, entity_class, options )
+    
+    field.delegate = RestrictedDelegate.new( nil, attribute, entity_class, field.to_hash )
     @fields << field
   end
 
@@ -197,18 +190,14 @@ class ModelBuilder
   # if options[:format] has a value, it's used either as a block
   # or as a dotted path
   def relational( attribute, options = {}, &block )
-    unless options.has_key? :class_name
-      options[:class_name] = entity_class.reflections[attribute].class_name || attribute.to_s.classify
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    if field.class_name.nil?
+      field.class_name = entity_class.reflections[attribute].class_name || attribute.to_s.classify
     end
     
-    # get values from block, if it's there
-    options = HashCollector.new( options, &block ).to_hash
-    
     # check after all possible options have been collected
-    raise ":display must be specified" if options[:display].nil?
-    
-    field = Clevic::Field.new( attribute.to_sym, entity_class, options )
-    field.delegate = RelationalDelegate.new( nil, field.attribute_path, options )
+    raise ":display must be specified" if field.display.nil?
+    field.delegate = RelationalDelegate.new( nil, field.attribute, field.to_hash )
     @fields << field
   end
 

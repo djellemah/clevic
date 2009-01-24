@@ -260,7 +260,7 @@ class TableModel < Qt::AbstractTableModel
   
   # Provide data to UI.
   def data( index, role = qt_display_role )
-    #~ puts "data for index: #{index.inspect} and role: #{const_as_string role}"
+    puts "data for index: #{index.inspect}, field #{index.field.attribute.inspect} and role: #{const_as_string role}"
     begin
       retval =
       case role
@@ -270,12 +270,8 @@ class TableModel < Qt::AbstractTableModel
           # the model's collection (and maybe db) when we
           # definitely don't need to
           unless index.metadata.type == :boolean
-            begin
-              value = index.gui_value
-              index.field.do_format( value ) unless value.nil?
-            rescue Exception => e
-              puts e.backtrace
-            end
+            value = index.gui_value
+            index.field.do_format( value ) unless value.nil?
           end
           
         when qt_edit_role
@@ -303,17 +299,18 @@ class TableModel < Qt::AbstractTableModel
         
         # show field with a red background if there's an error
         when qt_background_role
-          index.field.background( index.entity ) || Qt::Color.new( 'red' ) if index.has_errors?
-          
+          index.field.background_for( index.entity ) || Qt::Color.new( 'red' ) if index.has_errors?
+        
         when qt_font_role;
+        
         when qt_foreground_role
-          index.field.foreground( index.entity ) ||
+          index.field.foreground_for( index.entity ) ||
           if index.field.read_only? || index.entity.readonly? || read_only?
             Qt::Color.new( 'dimgray' )
           end
-          
+        
         when qt_decoration_role;
-          index.field.decoration( index.entity )
+          index.field.decoration_for( index.entity )
         
         when qt_tooltip_role
           case
@@ -330,7 +327,7 @@ class TableModel < Qt::AbstractTableModel
               'Read-only'
               
             else
-              index.field.tooltip( index.entity )
+              index.field.tooltip_for( index.entity )
           end    
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
@@ -338,10 +335,12 @@ class TableModel < Qt::AbstractTableModel
       end
       
       # return a variant
+      puts "retval: #{retval.inspect}"
       retval.to_variant
     rescue Exception => e
+      puts "#{index.inspect} #{value.inspect} #{index.entity.inspect} for and role: #{const_as_string role}"
+      puts e.message
       puts e.backtrace
-      puts "#{index.inspect} #{value.inspect} #{index.entity.inspect} #{e.message}"
       nil.to_variant
     end
   end
