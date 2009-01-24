@@ -147,32 +147,32 @@ class Browser < Qt::Widget
     Kernel.raise "no models to display" if models.empty?
     
     # Add all existing model objects as tabs, one each
-    models.each do |entity_class|
-      unless entity_class.table_exists?
-        puts "No table for #{entity_class.inspect}"
+    models.each do |model|
+      unless model.entity_class.table_exists?
+        puts "No table for #{model.entity_class.inspect}"
       end
         
       begin
         # create the the table_view and the table_model for the entity_class
         tab = 
-        if entity_class.respond_to?( :ui )
+        if model.entity_class.respond_to?( :ui )
           puts "Entity#ui deprecated. Use define_ui instead."
-          entity_class.ui( tables_tab )
-        elsif entity_class.respond_to?( :build_table_model )
+          model.ui( tables_tab )
+        elsif model.respond_to?( :build_table_model )
           raise "Entity#build_table_model deprecated. Use define_ui instead."
         else
-          Clevic::TableView.new( entity_class, tables_tab )
+          Clevic::TableView.new( model, tables_tab )
         end
         
         # show status messages
         tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
         
         # add a new tab
-        tables_tab.add_tab( tab, translate( entity_class.name.demodulize.tableize.humanize ) )
+        tables_tab.add_tab( tab, translate( model.name.demodulize.tableize.humanize ) )
         
         # add the table to the Table menu
         action = Qt::Action.new( @layout.menu_model )
-        action.text = translate( entity_class.name.demodulize.tableize.humanize )
+        action.text = translate( model.name.demodulize.tableize.humanize )
         action.connect SIGNAL( 'triggered()' ) do
           tables_tab.current_widget = tab
         end
@@ -187,7 +187,7 @@ class Browser < Qt::Widget
       rescue Exception => e
         puts
         puts e.backtrace #if $options[:debug]
-        puts "Entity #{entity_class} will not be available: #{e.message}"
+        puts "UI from #{model} will not be available: #{e.message}"
       end
     end
   end

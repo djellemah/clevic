@@ -66,6 +66,11 @@ module Clevic
         @entity_class = entity_class
         @define_ui_block = block
       end
+      
+      # default entity_class is self
+      def entity_class
+        @entity_class || self
+      end
     end
     
     def self.included( base )

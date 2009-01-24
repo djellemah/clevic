@@ -119,12 +119,12 @@ class ModelBuilder
   # or Clevic::Record). Then execute block using self.instance_eval.
   # The builder will construct a default TableModel from the entity_class
   # unless can_build_default == false
-  def initialize( entity_class, can_build_default = true, &block )
-    @entity_class = entity_class
+  def initialize( ui_class, can_build_default = true, &block )
+    @entity_class = ui_class.entity_class
     @auto_new = true
     @read_only = false
     @fields = []
-    init_from_model( entity_class, can_build_default, &block )
+    init_from_model( ui_class, can_build_default, &block )
   end
   
   # The collection of visible Clevic::Field objects
@@ -316,17 +316,18 @@ class ModelBuilder
   
 protected
 
-  def init_from_model( entity_class, can_build_default, &block )
-    if entity_class.respond_to?( :build_table_model )
+  def init_from_model( ui_class, can_build_default, &block )
+    puts "ui_class: #{ui_class.inspect}"
+    if ui_class.entity_class.respond_to?( :build_table_model )
       # call build_table_model
       method = entity_class.method :build_table_model
       method.call( builder )
-    elsif !entity_class.define_ui_block.nil?
+    elsif !ui_class.define_ui_block.nil?
       #define_ui is used, so use that block
-      if entity_class.define_ui_block.arity == -1
-        instance_eval( &entity_class.define_ui_block )
+      if ui_class.define_ui_block.arity == -1
+        instance_eval( &ui_class.define_ui_block )
       else
-        entity_class.define_ui_block.call( self )
+        ui_class.define_ui_block.call( self )
       end
     elsif can_build_default
       # build a default UI

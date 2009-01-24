@@ -39,8 +39,11 @@ class TableView < Qt::TableView
       when model_builder_record.kind_of?( Clevic::ModelBuilder )
         with_builder( model_builder_record, &block )
         
+      when model_builder_record.included_modules.include?( Clevic::Record )
+        with_record( model_builder_record, &block )
+        
       else
-        raise "Don't know what to do with #{model_builder_record}"
+        raise "Clevic::TableView#initialize does not know what to do with #{model_builder_record}"
     end
       
     # see closeEditor
