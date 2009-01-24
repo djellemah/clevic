@@ -41,7 +41,8 @@ and apply to the set of values displayed in the combo box.
 For example, the UI for a model called Entry (part of an accounting database) could be defined like this:
 
   # inherit from Clevic::Record, which itself inherits from ActiveRecord::Base
-  class Entry < Clevic::Record
+  class Entry < ActiveRecord::Base
+    include Clevic::Record
     # ActiveRecord foreign key definition
     belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
     # ActiveRecord foreign key definition
@@ -119,12 +120,24 @@ class ModelBuilder
   # or Clevic::Record). Then execute block using self.instance_eval.
   # The builder will construct a default TableModel from the entity_class
   # unless can_build_default == false
-  def initialize( ui_class, can_build_default = true, &block )
-    @entity_class = ui_class.entity_class
+  def initialize( entity_class, &block )
+    @entity_class = entity_class
     @auto_new = true
     @read_only = false
     @fields = []
-    init_from_model( ui_class, can_build_default, &block )
+    unless block.nil?
+      if block.arity == -1
+        instance_eval( &block )
+      else
+        block.call( self )
+      end
+    end
+  end
+  
+  def self.from_entity( ui_definer, can_build_default = true, &block )
+    inst = self.new( ui_definer.entity_class )
+    inst.init_from_model( ui_definer, can_build_default, &block )
+    inst
   end
   
   # The collection of visible Clevic::Field objects
@@ -204,11 +217,11 @@ class ModelBuilder
   # mostly used in the new block to define the set of records
   # for the TableModel, but may also be
   # used as an accessor for records.
-  def records( *args )
+  def records( args = {} )
     if args.size == 0
       get_records
     else
-      set_records( args[0] )
+      set_records( args )
     end
   end
 
@@ -314,20 +327,17 @@ class ModelBuilder
     @model
   end
   
-protected
-
-  def init_from_model( ui_class, can_build_default, &block )
-    puts "ui_class: #{ui_class.inspect}"
-    if ui_class.entity_class.respond_to?( :build_table_model )
+  def init_from_model( ui_definer, can_build_default, &block )
+    if ui_definer.entity_class.respond_to?( :build_table_model )
       # call build_table_model
       method = entity_class.method :build_table_model
       method.call( builder )
-    elsif !ui_class.define_ui_block.nil?
+    elsif !ui_definer.define_ui_block.nil?
       #define_ui is used, so use that block
-      if ui_class.define_ui_block.arity == -1
-        instance_eval( &ui_class.define_ui_block )
+      if ui_definer.define_ui_block.arity == -1
+        instance_eval( &ui_definer.define_ui_block )
       else
-        ui_class.define_ui_block.call( self )
+        ui_definer.define_ui_block.call( self )
       end
     elsif can_build_default
       # build a default UI
@@ -347,6 +357,8 @@ protected
     end
   end
   
+protected
+
   # Add ActiveRecord :include options for foreign keys, but it takes up too much memory,
   # and actually takes longer to load a data set.
   #--
@@ -405,8 +417,7 @@ protected
   def get_records
     if @records.nil?
       #~ add_include_options
-      @options[:auto_new] = auto_new?
-      @records = CacheTable.new( entity_class, @options )
+      @records = CacheTable.new( entity_class, @options.merge( :auto_new => auto_new? ) )
     end
     @records
   end

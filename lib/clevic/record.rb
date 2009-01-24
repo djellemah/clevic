@@ -68,8 +68,12 @@ module Clevic
       end
       
       # default entity_class is self
-      def entity_class
-        @entity_class || self
+      def entity_class( *args )
+        if args.size == 0
+          @entity_class || self
+        else
+          @entity_class = args.first
+        end
       end
     end
     

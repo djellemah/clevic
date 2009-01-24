@@ -40,10 +40,10 @@ class TableView < Qt::TableView
         with_builder( model_builder_record, &block )
         
       when model_builder_record.included_modules.include?( Clevic::Record )
-        with_record( model_builder_record, &block )
+        with_ui( model_builder_record.new, &block )
         
       else
-        raise "Clevic::TableView#initialize does not know what to do with #{model_builder_record}"
+        with_builder( model_builder_record.new.define_ui )
     end
       
     # see closeEditor
@@ -72,8 +72,13 @@ class TableView < Qt::TableView
   end
   
   def with_record( entity_class, &block )
-    builder = ModelBuilder.new( entity_class )
+    builder = ModelBuilder.from_entity( entity_class )
     with_builder( builder, &block )
+  end
+  
+  def with_ui( ui_instance, &block )
+    mb = ui_instance.define_ui
+    with_builder( mb, &block )
   end
   
   def connect_entity_class_signals( entity_class )
