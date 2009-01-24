@@ -9,9 +9,8 @@ because ComboBox stupidly doesn't.
 Generally these will be created using a ModelBuilder.
 =end
 class ComboDelegate < Clevic::ItemDelegate
-  def initialize( parent )
+  def initialize( parent, field )
     super
-    @@active_record_options ||= [ :conditions, :class_name, :order ]
   end
   
   # Convert Qt:: constants from the integer value to a string value.
@@ -191,21 +190,6 @@ class ComboDelegate < Clevic::ItemDelegate
     emit abstract_item_model.dataChanged( model_index, model_index )
   end
 
-protected
-
-  # given a hash of options, return only those
-  # which are applicable to a ActiveRecord::Base.find
-  # method call
-  def collect_finder_options( options )
-    new_options = {}
-    options.each do |key,value|
-      if @@active_record_options.include?( key )
-        new_options[key] = value
-      end
-    end
-    new_options
-  end
-
 end
 
 # Provide a list of all values in this field,
@@ -214,18 +198,15 @@ end
 # the options are sorted in order of most frequently used first.
 class DistinctDelegate < ComboDelegate
   
-  def initialize( parent, attribute, entity_class, options )
-    @entity_class = entity_class
-    @attribute = attribute
-    @options = options
+  def initialize( parent, field )
+    super
     # hackery for amateur query building in populate
-    @options[:conditions] ||= '1=1'
-    super( parent )
+    find_options[:conditions] ||= '1=1'
   end
   
   def needs_combo?
     # works except when there is a '' in the column
-    @entity_class.count( @attribute, collect_finder_options( @options ) ) > 0
+    entity_class.count( attribute.to_s, find_options ) > 0
   end
   
   def populate_current( editor, model_index )
@@ -234,22 +215,22 @@ class DistinctDelegate < ComboDelegate
   
   def query_order_description( conn, model_index )
     <<-EOF
-      select distinct #{@attribute.to_s}, lower(#{@attribute.to_s})
-      from #{@entity_class.table_name}
-      where (#{@options[:conditions]})
-      or #{conn.quote_column_name( @attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
-      order by lower(#{@attribute.to_s})
+      select distinct #{attribute.to_s}, lower(#{attribute.to_s})
+      from #{entity_class.table_name}
+      where (#{find_options[:conditions]})
+      or #{conn.quote_column_name( attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
+      order by lower(#{attribute.to_s})
     EOF
   end
   
   def query_order_frequency( conn, model_index )
     <<-EOF
-      select distinct #{@attribute.to_s}, count(#{@attribute.to_s})
-      from #{@entity_class.table_name}
-      where (#{@options[:conditions]})
-      or #{conn.quote_column_name( @attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
-      group by #{@attribute.to_s}
-      order by count(#{@attribute.to_s}) desc
+      select distinct #{attribute.to_s}, count(#{attribute.to_s})
+      from #{entity_class.table_name}
+      where (#{find_options[:conditions]})
+      or #{conn.quote_column_name( attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
+      group by #{attribute.to_s}
+      order by count(#{attribute.to_s}) desc
     EOF
   end
   
@@ -257,19 +238,20 @@ class DistinctDelegate < ComboDelegate
     # we only use the first column, so use the second
     # column to sort by, since SQL requires the order by clause
     # to be in the select list where distinct is involved
-    conn = @entity_class.connection
+    conn = entity_class.connection
     query =
     case
-      when @options[:description]
+      when field.description
         query_order_description( conn, model_index )
-      when @options[:frequency]
+      when field.frequency
         query_order_frequency( conn, model_index )
       else
         query_order_frequency( conn, model_index )
     end
     rs = conn.execute( query )
     rs.each do |row|
-      editor.add_item( row[0], row[0].to_variant )
+      value = row[attribute.to_s]
+      editor.add_item( value, value.to_variant )
     end
   end
   
@@ -281,13 +263,9 @@ end
 # A Combo box which only allows a restricted set of value to be entered.
 class RestrictedDelegate < ComboDelegate
   # options must contain a :set => [ ... ] to specify the set of values.
-  def initialize( parent, attribute, entity_class, options )
-    raise "RestrictedDelegate must have a :set in options" unless options.has_key?( :set )
-    @entity_class = entity_class
-    @attribute = attribute
-    @options = options
-    @set = options[:set]
-    super( parent )
+  def initialize( parent, field )
+    raise "RestrictedDelegate must have a :set in options" if field.set.nil?
+    super
   end
   
   def needs_combo?
@@ -299,7 +277,7 @@ class RestrictedDelegate < ComboDelegate
   end
   
   def populate( editor, model_index )
-    @set.each do |item|
+    field.set.each do |item|
       if item.is_a?( Array )
         # this is a hash, so use key as db value
         # and value as display value
@@ -325,25 +303,24 @@ end
 # and the item text is fetched from them using attribute_path.
 class RelationalDelegate < ComboDelegate
   
-  def initialize( parent, attribute, options )
-    @entity_class = ( options[:class_name] || attribute.to_s.classify ).constantize
-    # TODO this doesn't seem to be used
-    @attribute = attribute.to_s
-    @options = options.clone
-    unless @options[:conditions].nil?
-      @options[:conditions].gsub!( /true/, @entity_class.connection.quoted_true )
-      @options[:conditions].gsub!( /false/, @entity_class.connection.quoted_false )
+  def initialize( parent, field )
+    super
+    unless find_options[:conditions].nil?
+      find_options[:conditions].gsub!( /true/, entity_class.connection.quoted_true )
+      find_options[:conditions].gsub!( /false/, entity_class.connection.quoted_false )
     end
-    [ :class_name, :sample, :format ].each {|x| @options.delete x }
-    super( parent )
+  end
+  
+  def entity_class
+    @entity_class ||= ( field.class_name || field.attribute.to_s.classify ).constantize
   end
   
   def needs_combo?
-    @entity_class.count( :conditions => @options[:conditions] ) > 0
+    entity_class.count( :conditions => find_options[:conditions] ) > 0
   end
   
   def empty_set_message
-    "There must be records in #{@entity_class.name.humanize} for this field to be editable."
+    "There must be records in #{entity_class.name.humanize} for this field to be editable."
   end
   
   # add the current item, unless it's already in the combo data
@@ -365,7 +342,7 @@ class RelationalDelegate < ComboDelegate
 
   def populate( editor, model_index )
     # add set of all possible related entities
-    @entity_class.find( :all, collect_finder_options( @options ) ).each do |x|
+    entity_class.find( :all, find_options ).each do |x|
       add_to_list( editor, model_index, x )
     end
   end
@@ -399,7 +376,7 @@ class RelationalDelegate < ComboDelegate
       # get the entity it refers to, if there is one
       # use find_by_id so that if it's not found, nil will
       # be returned
-      @entity_class.find_by_id( item_data.to_int )
+      entity_class.find_by_id( item_data.to_int )
     end
   end
   

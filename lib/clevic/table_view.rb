@@ -413,7 +413,7 @@ class TableView < Qt::TableView
     super
     
     # set delegates
-    self.item_delegate = Clevic::ItemDelegate.new( self )
+    #~ self.item_delegate = Clevic::ItemDelegate.new( self, field )
     model.fields.each_with_index do |field, index|
       set_item_delegate_for_column( index, field.delegate )
     end

@@ -12,10 +12,12 @@ Clevic::DbOptions.connect( $options ) do
   username 'accounts'
 end
 
-class Entry < Clevic::Record
+class Entry < ActiveRecord::Base
   belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
-
+  
+  include Clevic::Record
+  
   define_ui do
     plain       :date, :sample => '88-WWW-99'
     distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
@@ -73,9 +75,11 @@ class Entry < Clevic::Record
   end
 end
 
-class Account < Clevic::Record  
+class Account < ActiveRecord::Base
   has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
+  
+  include Clevic::Record
   
   # define how fields are displayed
   define_ui do

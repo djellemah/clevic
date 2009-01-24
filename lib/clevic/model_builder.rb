@@ -165,7 +165,7 @@ class ModelBuilder
   # a combo box containing all values for this field from the table.
   def distinct( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    field.delegate = DistinctDelegate.new( nil, attribute, entity_class, field.to_hash )
+    field.delegate = DistinctDelegate.new( nil, field )
     @fields << field
   end
 
@@ -181,7 +181,7 @@ class ModelBuilder
       field.format = lambda{|x| field.set[x]}
     end
     
-    field.delegate = RestrictedDelegate.new( nil, attribute, entity_class, field.to_hash )
+    field.delegate = RestrictedDelegate.new( nil, field )
     @fields << field
   end
 
@@ -197,7 +197,7 @@ class ModelBuilder
     
     # check after all possible options have been collected
     raise ":display must be specified" if field.display.nil?
-    field.delegate = RelationalDelegate.new( nil, field.attribute, field.to_hash )
+    field.delegate = RelationalDelegate.new( nil, field )
     @fields << field
   end
 

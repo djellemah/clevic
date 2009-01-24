@@ -11,9 +11,23 @@ end
 module Clevic
 
 class ItemDelegate < Qt::ItemDelegate
+  attr_reader :field
   
-  def initialize( parent )
-    super
+  def initialize( parent, field )
+    super( parent )
+    @field = field
+  end
+  
+  def attribute
+    field.attribute
+  end
+  
+  def entity_class
+    field.entity_class
+  end
+  
+  def find_options
+    field.find_options
   end
   
   # Figure out where to put the editor widget, taking into

@@ -11,6 +11,9 @@ take a value.
 TODO this class is a bit confused about whether it handles metadata or record data, or both.
 =end
 class Field
+  attr_reader :entity_class
+  
+  # For defining properties
   include Gather
   
   # The attribute on the AR entity that forms the basis for this field.
@@ -69,6 +72,9 @@ class Field
   # for restricted fields
   property :set
   
+  # for sorting distinct delegates
+  property :frequency, :description
+  
   # default value for this field for new records. Not sure how to populate it though.
   property :default
   
@@ -76,6 +82,18 @@ class Field
   # There are actually from VALID_FIND_OPTIONS, but it's protected
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
+  
+  # Return a list of find options and their values, but only
+  # if the values are not nil
+  def find_options
+    AR_FIND_OPTIONS.inject(Hash.new) do |ha,x|
+      option_value = self.send(x)
+      unless option_value.nil?
+        ha[x] = option_value
+      end
+      ha
+    end
+  end
   
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.

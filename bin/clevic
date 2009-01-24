@@ -126,4 +126,9 @@ browser = Clevic::Browser.new( main_window )
 main_window.show
 # make sure any partially edited records are saved when the window is closed
 app.connect( SIGNAL('lastWindowClosed()') ) { browser.save_all }
-app.exec
+begin
+  app.exec
+rescue
+  puts $!.message
+  puts $!.backtrace
+end

@@ -49,7 +49,8 @@ class Browser < Qt::Widget
   
   # Set the main window title to the name of the database, if we can find it.
   def database_name
-    table_view.model.entity_class.db_options.database
+    "Fix This #{__FILE__}:#{__LINE__}"
+    #~ table_view.model.entity_class.db_options.database
   end  
   
   def update_menus
