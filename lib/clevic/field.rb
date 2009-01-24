@@ -4,6 +4,11 @@ module Clevic
 
 =begin rdoc
 This defines a field in the UI, and how it hooks up to a field in the DB.
+
+TODO decide whether value_for type methods take an entity and do_something methods
+take a value.
+
+TODO this class is a bit confused about whether it handles metadata or record data, or both.
 =end
 class Field
   include Gather
@@ -64,7 +69,7 @@ class Field
   # for restricted fields
   property :set
   
-  # default value for new records. Not sure how to populate it though
+  # default value for this field for new records. Not sure how to populate it though.
   property :default
   
   # properties for ActiveRecord options
@@ -94,6 +99,9 @@ EOF
     @attribute = attribute
     @entity_class = entity_class
     @visible = true
+    
+    # initialise
+    @value_cache = {}
     
     # handle options
     gather( options, &block )
@@ -151,7 +159,7 @@ EOF
     @meta ||= @entity_class.columns_hash[attribute.to_s] || @entity_class.reflections[attribute]
   end
   
-  # return the type of this attribute. Usually one of :string, :integer
+  # return the type of this attribute. Usually one of :string, :integer, :float
   # or some entity class (ActiveRecord::Base subclass)
   def attribute_type
     @attribute_type ||=
@@ -263,54 +271,61 @@ EOF
     @sample || self.label
   end
   
-  def self.conversion_blocks
-    @conversion_blocks ||= {}
+  def tooltip_for( entity )
+    cache_value_for( :background, entity )
   end
-  
-  def self.value_for( *symbols, &conversion_block )
-    symbols.each do |sym|
-      #~ class_eval( "@#{}_conversion_block" ) = conversion_block || lambda{|x| x.to_s}
-      conversion_blocks[sym] = = conversion_block || lambda{|x| x.to_s}
-      name = sym.to_s
-      line, st = __LINE__, <<-EOF
-        def #{name}_for( entity )
-          puts "#{name}: \#\{#{name}.inspect\}"
-          
-          for_retval =
-          case #{name}
-            when Proc; #{name}.call( entity ) unless entity.nil?
-            when Symbol; entity.send( #{name} ) unless entity.nil?
-            else; @#{name}_cache ||= self.class.conversion_blocks[:#{name}].call( #{name} )
-          end
-          puts "for_retval: \#\{for_retval.inspect\}"
-          for_retval
-        end
-      EOF
-      puts st
-      class_eval st, __FILE__, line + 1
-    end
-  end
-  
-  value_for :tooltip
 
-  # convert something that responds to to_s to a Qt::Color
-  # or just return the argument if it's already a Qt::Color
-  value_for( :background, :foreground ) do |string_or_color|
-    puts "string_or_color: #{string_or_color.inspect}"
-    case string_or_color
-    when Qt::Color
-      string_or_color
-    else
-      Qt::Color.new( string_or_color.to_s )
-    end
-  end
-  
   def decoration_for( entity )
     nil
   end
 
+  # Convert something that responds to to_s to a Qt::Color,
+  # or just return the argument if it's already a Qt::Color
+  def string_or_color( s_or_c )
+    case s_or_c
+    when Qt::Color
+      s_or_c
+    else
+      Qt::Color.new( s_or_c.to_s )
+    end
+  end
+  
+  def foreground_for( entity )
+    cache_value_for( :foreground, entity ) {|x| string_or_color(x)}
+  end
+  
+  def background_for( entity )
+    cache_value_for( :background, entity ) {|x| string_or_color(x)}
+  end
+  
 protected
 
+  # call the conversion_block with the value, or just return the
+  # value if conversion_block is nil
+  def convert_or_identity( value, &conversion_block )
+    if conversion_block.nil?
+      value
+    else
+      conversion_block.call( value )
+    end
+  end
+  
+  # symbol is the property name to fetch a value for.
+  # It can be a Proc, a symbol, or a value responding to to_s.
+  # In all cases, conversion block will be called
+  # conversion_block takes the value expected back from the property
+  # and converts it to something that Qt will understand. Mostly
+  # this applies to non-strings, ie colors for foreground and background,
+  # and an icon resource for decoration - that kind of thing.
+  def cache_value_for( symbol, entity, &conversion_block )
+    value = send( symbol )
+    case value
+      when Proc; convert_or_identity( value.call( entity ), &conversion_block ) unless entity.nil?
+      when Symbol; convert_or_identity( entity.send( value ), &conversion_block ) unless entity.nil?
+      else; @value_cache[symbol] ||=convert_or_identity( value, &conversion_block )
+    end
+  end
+  
   def default_label!
     @label ||= attribute.to_s.humanize
   end

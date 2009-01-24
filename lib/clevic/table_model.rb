@@ -260,7 +260,7 @@ class TableModel < Qt::AbstractTableModel
   
   # Provide data to UI.
   def data( index, role = qt_display_role )
-    puts "data for index: #{index.inspect}, field #{index.field.attribute.inspect} and role: #{const_as_string role}"
+    #~ puts "data for index: #{index.inspect}, field #{index.field.attribute.inspect} and role: #{const_as_string role}"
     begin
       retval =
       case role
@@ -335,7 +335,7 @@ class TableModel < Qt::AbstractTableModel
       end
       
       # return a variant
-      puts "retval: #{retval.inspect}"
+      #~ puts "retval: #{retval.inspect}"
       retval.to_variant
     rescue Exception => e
       puts "#{index.inspect} #{value.inspect} #{index.entity.inspect} for and role: #{const_as_string role}"
