@@ -32,8 +32,10 @@ end
 
 module Clevic
 
-  # The module for all Clevic model and UI definitions.
-  # Record automatically keeps track of the order
+  # The module for all model-based and UI definitions. Intended
+  # to be used to define one UI per DB model. For more complex
+  # situations, see Clevic::Table.
+  # Clevic::Record automatically keeps track of the order
   # in which UIs are defined, so that tabs can
   # be constructed in that order.
   module Record
