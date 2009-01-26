@@ -49,8 +49,8 @@ class Browser < Qt::Widget
   
   # Set the main window title to the name of the database, if we can find it.
   def database_name
-    "Fix This #{__FILE__}:#{__LINE__}"
-    #~ table_view.model.entity_class.db_options.database
+    #~ FIXME #{__FILE__}:#{__LINE__}"
+    #~ table_view.model.db_options.database
   end  
   
   def update_menus
@@ -142,8 +142,9 @@ class Browser < Qt::Widget
   # models parameter can be an array of Model objects, in order of display.
   # if models is nil, find_models is called
   def load_models
-    models = Clevic::Record.models
+    models = Clevic::Record.models + Clevic::Table.subclasses.map{|x| x.constantize}
     models = find_models if models.empty?
+    models.uniq!
     Kernel.raise "no models to display" if models.empty?
     
     # Add all existing model objects as tabs, one each
@@ -168,11 +169,11 @@ class Browser < Qt::Widget
         tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
         
         # add a new tab
-        tables_tab.add_tab( tab, translate( model.name.demodulize.tableize.humanize ) )
+        tables_tab.add_tab( tab, translate( tab.title ) )
         
         # add the table to the Table menu
         action = Qt::Action.new( @layout.menu_model )
-        action.text = translate( model.name.demodulize.tableize.humanize )
+        action.text = translate( tab.title )
         action.connect SIGNAL( 'triggered()' ) do
           tables_tab.current_widget = tab
         end
@@ -181,8 +182,8 @@ class Browser < Qt::Widget
         # handle filter status changed, so we can provide a visual indication
         tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
           # update the tab, so there's a visual indication of filtering
-          tab_title = ( tab.filtered ? '| ' : '' ) + translate( model.name.humanize )
-          tables_tab.set_tab_text( tables_tab.current_index, tab_title )
+          filter_title = ( tab.filtered ? '| ' : '' ) + translate( tab.title )
+          tables_tab.set_tab_text( tables_tab.current_index, filter_title )
         end
       rescue Exception => e
         puts

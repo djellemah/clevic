@@ -7,7 +7,7 @@ module Clevic
   module Default
     module ClassMethods
       def define_ui_block; nil; end
-
+      
       def post_default_ui_block
         @post_default_ui_block
       end
@@ -15,11 +15,17 @@ module Clevic
       def post_default_ui( &block )
         @post_default_ui_block = block
       end
+      
+      # Used by ModelBuilder to give Qt an object_name for the UI component
+      def widget_name
+        name
+      end
     end
     
     def self.included( base )
       base.extend( ClassMethods )
     end
+    
   end
 
 end
@@ -32,8 +38,10 @@ end
 
 module Clevic
 
-  # The module for all Clevic model and UI definitions.
-  # Record automatically keeps track of the order
+  # The module for all model-based and UI definitions. Intended
+  # to be used to define one UI per DB model. For more complex
+  # situations, see Clevic::Table.
+  # Clevic::Record automatically keeps track of the order
   # in which UIs are defined, so that tabs can
   # be constructed in that order.
   module Record
@@ -72,8 +80,8 @@ module Clevic
       end
       
       # use this to define UI blocks using the ModelBuilder DSL
-      def define_ui( entity_class = self, &block )
-        @entity_class = entity_class
+      def define_ui( &block )
+        @entity_class = self
         @define_ui_block = block
       end
       

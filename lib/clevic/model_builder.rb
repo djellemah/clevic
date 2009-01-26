@@ -119,13 +119,14 @@ For example, the UI for a model called Entry (part of an accounting database) co
   end
 
 To define a separate ui class, do something like this:
-  class Prospect
-    include Clevic::Record
+  class Prospect < Clevic::Table
     
     # This is the ActiveRecord::Base descendant
     entity_class Position
     
     # must return a ModelBuilder instance
+    # with no parameter, the block to model_builder
+    # will be evaluated in the context of a Clevic::ModelBuilder instance
     def define_ui
       model_builder do |mb|
         # use the define_ui block from Position
@@ -363,7 +364,7 @@ class ModelBuilder
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
     @model = Clevic::TableModel.new( table_view )
-    @model.object_name = entity_class.name
+    @model.object_name = @object_name
     @model.entity_class = entity_class
     @model.fields = @fields
     @model.read_only = @read_only
@@ -393,7 +394,7 @@ class ModelBuilder
       # allow for smallish changes to a default build
       exec_ui_block( &entity_class.post_default_ui_block ) unless entity_class.post_default_ui_block.nil?
     end
-
+    
     # the local block adds to the previous definitions
     exec_ui_block( &block )
   end

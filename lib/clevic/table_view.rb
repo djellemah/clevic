@@ -32,18 +32,28 @@ class TableView < Qt::TableView
     case 
       when model_builder_record.kind_of?( TableModel )
         self.model = model_builder_record
+        init_actions( model_builder_record.entity_class )
       
       when model_builder_record.ancestors.include?( ActiveRecord::Base )
         with_record( model_builder_record, &block )
+        init_actions( model_builder_record )
       
       when model_builder_record.kind_of?( Clevic::ModelBuilder )
         with_builder( model_builder_record, &block )
+        init_actions( model_builder_record.entity_class )
         
       when model_builder_record.included_modules.include?( Clevic::Record )
-        with_ui( model_builder_record.new, &block )
+        ui_definer = model_builder_record.new
+        with_ui( ui_definer, &block )
+        init_actions( ui_definer )
+        
+      when model_builder_record.ancestors.include?( Clevic::Table )
+        ui_definer = model_builder_record.new
+        with_ui( ui_definer, &block )
+        init_actions( ui_definer )
         
       else
-        with_builder( model_builder_record.new.define_ui )
+        raise "TableView#initialize doesn't know what to do with #{model_builder_record.inspect}"
     end
       
     # see closeEditor
@@ -57,8 +67,11 @@ class TableView < Qt::TableView
     self.sorting_enabled = false
     @filtered = false
     
-    init_actions
     self.context_menu_policy = Qt::ActionsContextMenu
+  end
+  
+  def title
+    @title || model.entity_class.name.demodulize.tableize.humanize
   end
   
   def with_builder( model_builder, &block )
@@ -79,6 +92,7 @@ class TableView < Qt::TableView
   def with_ui( ui_instance, &block )
     mb = ui_instance.define_ui
     with_builder( mb, &block )
+    @title = ui_instance.title
   end
   
   def connect_entity_class_signals( entity_class )
@@ -104,18 +118,24 @@ class TableView < Qt::TableView
   # hook for the sanity_check_xxx methods
   # called for the actions set up by ActionBuilder
   # it just wraps the action block/method in a catch
-  # block for :insane
+  # block for :insane. Will also catch exceptions thrown in actions to make
+  # core application more robust to model & view errors.
   def action_triggered( &block )
-    catch :insane do
-      yield
+    begin
+      catch :insane do
+        yield
+      end
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
     end
   end
   
-  def init_actions
+  def init_actions( ui_definer )
     # add model actions, if they're defined
-    if model.entity_class.respond_to?( :actions )
+    if ui_definer.respond_to?( :actions )
       list( :model ) do |ab|
-        model.entity_class.actions( self, ab )
+        ui_definer.actions( self, ab )
       end
       separator
     end
