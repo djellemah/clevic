@@ -18,5 +18,10 @@ module Clevic
     def self.transform( symbol, &block )
       # do something that executes in the context of the model
     end
+    
+    # used for the Qt object_name when ModelBuilder is constructing a widget
+    def widget_name
+      self.class.name
+    end
   end
 end

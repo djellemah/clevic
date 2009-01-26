@@ -15,11 +15,17 @@ module Clevic
       def post_default_ui( &block )
         @post_default_ui_block = block
       end
+      
+      # Used by ModelBuilder to give Qt an object_name for the UI component
+      def widget_name
+        name
+      end
     end
     
     def self.included( base )
       base.extend( ClassMethods )
     end
+    
   end
 
 end
