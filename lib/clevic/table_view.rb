@@ -21,39 +21,32 @@ class TableView < Qt::TableView
   signals 'status_text(QString)', 'filter_status(bool)'
   
   # model_builder_record is:
-  # - a subclass of Clevic::Record or ActiveRecord::Base
-  # - an instance of ModelBuilder
+  # - an ActiveRecord::Base subclass that includes Clevic::Record
+  # - an instance of Clevic::View
   # - an instance of TableModel
-  def initialize( model_builder_record, parent, &block )
+  def initialize( arg, parent, &block )
     # need the empty block here, otherwise Qt bindings grab &block
     super( parent ) {}
     
     # the model/entity_class/builder
     case 
-      when model_builder_record.kind_of?( TableModel )
-        self.model = model_builder_record
-        init_actions( model_builder_record.entity_class )
+      when arg.kind_of?( TableModel )
+        self.model = arg
+        init_actions( arg.entity_view )
       
-      when model_builder_record.ancestors.include?( ActiveRecord::Base )
-        with_record( model_builder_record, &block )
-        init_actions( model_builder_record )
-      
-      when model_builder_record.kind_of?( Clevic::ModelBuilder )
-        with_builder( model_builder_record, &block )
-        init_actions( model_builder_record.entity_class )
-        
-      when model_builder_record.included_modules.include?( Clevic::Record )
-        ui_definer = model_builder_record.new
-        with_ui( ui_definer, &block )
-        init_actions( ui_definer )
-        
-      when model_builder_record.ancestors.include?( Clevic::Table )
-        ui_definer = model_builder_record.new
-        with_ui( ui_definer, &block )
-        init_actions( ui_definer )
-        
       else
-        raise "TableView#initialize doesn't know what to do with #{model_builder_record.inspect}"
+        # arg is a subclass of Clevic::View
+        model_builder = arg.define_ui
+        model_builder.exec_ui_block( &block )
+        
+        # make sure the TableView has a fully-populated TableModel
+        # self.model is necessary to invoke the Qt layer
+        self.model = model_builder.build( self )
+        
+        # connect data_changed signals for the entity_class to respond
+        connect_view_signals( arg )
+        
+        init_actions( arg )
     end
       
     # see closeEditor
@@ -74,34 +67,11 @@ class TableView < Qt::TableView
     @title || model.entity_class.name.demodulize.tableize.humanize
   end
   
-  def with_builder( model_builder, &block )
-    model_builder.instance_eval( &block ) unless block.nil?
-    
-    # make sure the TableView has a fully-populated TableModel
-    self.model = model_builder.build( self )
-    
-    # connect data_changed signals for the entity_class to respond
-    connect_entity_class_signals( model.entity_class )
-  end
-  
-  def with_record( entity_class, &block )
-    builder = ModelBuilder.from_entity( entity_class )
-    with_builder( builder, &block )
-  end
-  
-  def with_ui( ui_instance, &block )
-    mb = ui_instance.define_ui
-    with_builder( mb, &block )
-    @title = ui_instance.title
-  end
-  
-  def connect_entity_class_signals( entity_class )
+  def connect_view_signals( entity_view )
     # this is only here because entity_class.data_changed needs the view.
     # Should probably fix that.
-    if entity_class.respond_to?( :data_changed )
-      model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
-        entity_class.data_changed( top_left, bottom_right, self )
-      end
+    model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
+      entity_view.data_changed( top_left, bottom_right, self )
     end
   end
   
@@ -131,14 +101,12 @@ class TableView < Qt::TableView
     end
   end
   
-  def init_actions( ui_definer )
+  def init_actions( entity_view )
     # add model actions, if they're defined
-    if ui_definer.respond_to?( :actions )
-      list( :model ) do |ab|
-        ui_definer.actions( self, ab )
-      end
-      separator
+    list( :model ) do |ab|
+      entity_view.define_actions( self, ab )
     end
+    separator
     
     # list of actions in the edit menu
     list( :edit ) do

@@ -25,9 +25,6 @@ class TableModel < Qt::AbstractTableModel
   # the CacheTable of Clevic::Record or ActiveRecord::Base objects
   attr_reader :collection
   
-  # the actual class for the collection objects
-  attr_accessor :entity_class
-  
   # the collection of Clevic::Field objects
   attr_reader :fields
   
@@ -37,6 +34,12 @@ class TableModel < Qt::AbstractTableModel
   # should this model create a new empty record by default?
   attr_accessor :auto_new
   def auto_new?; auto_new; end
+  
+  attr_accessor :entity_view
+  
+  def entity_class
+    entity_view.entity_class
+  end
   
   signals(
     # index where error occurred, value, message

@@ -1,61 +1,31 @@
-require 'activerecord'
-
-require 'clevic/dirty.rb'
+require 'clevic/view.rb'
 
 module Clevic
 
-  module Default
-    module ClassMethods
-      def define_ui_block; nil; end
-      
-      def post_default_ui_block
-        @post_default_ui_block
-      end
-      
-      def post_default_ui( &block )
-        @post_default_ui_block = block
-      end
-      
-      # Used by ModelBuilder to give Qt an object_name for the UI component
-      def widget_name
-        name
+  class DefaultView < View
+    def method_missing( meth, *args, &block )
+      if entity_class.respond_to?( meth )
+        entity_class.send( meth, *args, &block )
+      else
+        super
       end
     end
     
-    def self.included( base )
-      base.extend( ClassMethods )
+    def self.define_ui_block( &block )
+      @define_ui_block ||= block
+    end
+    
+    def define_ui
+      model_builder( &self.class.define_ui_block )
     end
     
   end
-
-end
-
-module ActiveRecord
-  class Base
-    include Clevic::Default
-  end
-end
-
-module Clevic
-
-  # The module for all model-based and UI definitions. Intended
-  # to be used to define one UI per DB model. For more complex
-  # situations, see Clevic::Table.
-  # Clevic::Record automatically keeps track of the order
-  # in which UIs are defined, so that tabs can
-  # be constructed in that order.
+  
+  # include this in ActiveRecord::Base instances to
+  # get embedded view definitions. The ActiveRecord::Base
+  # subclass will then respond to the same methods
+  # as a Clevic::View instance, and can be passed to ModelBuilder etc.
   module Record
-    include Default
-    
-    def entity_class
-      self.class.entity_class
-    end
-    
-    def model_builder( &block )
-      @model_builder ||= ModelBuilder.new( entity_class )
-      @model_builder.exec_ui_block( &block )
-    end
-    
     @subclass_order = []
     
     def self.models
@@ -75,28 +45,44 @@ module Clevic
     end
     
     module ClassMethods
-      def define_ui_block
-        @define_ui_block
+      def default_view_class_name
+        "::Default#{name}View"
       end
       
-      # use this to define UI blocks using the ModelBuilder DSL
+      #TODO will have to fix modules here
+      def create_view_class
+        # create the default view class
+        eval( "#{default_view_class_name} = Class.new( Clevic::DefaultView )" )
+        eval( "#{default_view_class_name}.entity_class = #{name}" )
+      end
+      
+      def create_default_view
+        @default_view = eval "#{default_view_class_name}.new"
+      end
+    
+      # create a view class. A descendant of DefaultView
+      def default_view
+        @default_view
+      end
+      
+      def default_view_class
+        eval default_view_class_name
+      end
+      
+      # Need to defer the execution of the view definition block
+      # until related models have been defined.
       def define_ui( &block )
-        @entity_class = self
-        @define_ui_block = block
+        default_view_class.define_ui_block( &block )
       end
       
-      # default entity_class is self
-      def entity_class( *args )
-        if args.size == 0
-          @entity_class || self
-        else
-          @entity_class = args.first
-        end
-      end
     end
     
     def self.included( base )
-      base.extend(ClassMethods)
+      base.extend( ClassMethods )
+      
+      # create the default view class
+      base.create_view_class
+      base.create_default_view
 
       # keep track of the order in which subclasses are
       # defined, so that can be used as the default ordering

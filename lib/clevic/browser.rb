@@ -142,28 +142,20 @@ class Browser < Qt::Widget
   # models parameter can be an array of Model objects, in order of display.
   # if models is nil, find_models is called
   def load_models
-    models = Clevic::Record.models + Clevic::Table.subclasses.map{|x| x.constantize}
-    models = find_models if models.empty?
-    models.uniq!
-    Kernel.raise "no models to display" if models.empty?
+    views = Clevic::View.subclasses.map{|x| x.constantize}
+    views.uniq!
+    Kernel.raise "no views to display" if views.empty?
     
     # Add all existing model objects as tabs, one each
-    models.each do |model|
-      unless model.entity_class.table_exists?
-        puts "No table for #{model.entity_class.inspect}"
+    views.each do |view_class|
+      view = view_class.new
+      unless view.entity_class.table_exists?
+        puts "No table for #{view.entity_class.inspect}"
       end
         
       begin
         # create the the table_view and the table_model for the entity_class
-        tab = 
-        if model.entity_class.respond_to?( :ui )
-          puts "Entity#ui deprecated. Use define_ui instead."
-          model.ui( tables_tab )
-        elsif model.respond_to?( :build_table_model )
-          raise "Entity#build_table_model deprecated. Use define_ui instead."
-        else
-          Clevic::TableView.new( model, tables_tab )
-        end
+        tab = Clevic::TableView.new( view, tables_tab )
         
         # show status messages
         tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
@@ -187,8 +179,9 @@ class Browser < Qt::Widget
         end
       rescue Exception => e
         puts
+        puts "UI from #{view} will not be available: #{e.message}"
         puts e.backtrace #if $options[:debug]
-        puts "UI from #{model} will not be available: #{e.message}"
+        puts
       end
     end
   end

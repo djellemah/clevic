@@ -56,6 +56,7 @@ For example, the UI for a model called Entry (part of an accounting database) co
   # inherit from Clevic::Record, which itself inherits from ActiveRecord::Base
   class Entry < ActiveRecord::Base
     include Clevic::Record
+    
     # ActiveRecord foreign key definition
     belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
     # ActiveRecord foreign key definition
@@ -119,7 +120,7 @@ For example, the UI for a model called Entry (part of an accounting database) co
   end
 
 To define a separate ui class, do something like this:
-  class Prospect < Clevic::Table
+  class Prospect < Clevic::View
     
     # This is the ActiveRecord::Base descendant
     entity_class Position
@@ -160,13 +161,15 @@ class ModelBuilder
   # or Clevic::Record). Then execute block using self.instance_eval.
   # The builder will construct a default TableModel from the entity_class
   # unless can_build_default == false
-  def initialize( entity_class, &block )
-    @entity_class = entity_class
+  def initialize( entity_view, &block )
+    @entity_view = entity_view
     @auto_new = true
     @read_only = false
     @fields = []
     exec_ui_block( &block )
   end
+  
+  attr_accessor :entity_view
   
   # arg can be something that responds to define_ui_block,
   # or just the block will be executed. If both are present,
@@ -186,12 +189,6 @@ class ModelBuilder
     self
   end
   
-  def self.from_entity( ui_definer, can_build_default = true, &block )
-    inst = self.new( ui_definer.entity_class )
-    inst.init_from_model( ui_definer, can_build_default, &block )
-    inst
-  end
-  
   # The collection of visible Clevic::Field objects
   def fields
     @fields.reject{|x| !x.visible}
@@ -205,7 +202,9 @@ class ModelBuilder
   end
   
   # the ActiveRecord::Base or Clevic::Record class
-  attr_reader :entity_class
+  def entity_class
+    @entity_view.entity_class
+  end
   
   # set read_only to true
   def read_only!
@@ -365,7 +364,7 @@ class ModelBuilder
     # reference to this very same model is garbage collected.
     @model = Clevic::TableModel.new( table_view )
     @model.object_name = @object_name
-    @model.entity_class = entity_class
+    @model.entity_view = entity_view
     @model.fields = @fields
     @model.read_only = @read_only
     @model.auto_new = auto_new?
@@ -377,26 +376,6 @@ class ModelBuilder
     @model.collection = records
     
     @model
-  end
-  
-  def init_from_model( ui_definer, can_build_default, &block )
-    if ui_definer.entity_class.respond_to?( :build_table_model )
-      # call build_table_model
-      method = entity_class.method :build_table_model
-      method.call( builder )
-    elsif !ui_definer.define_ui_block.nil?
-      #define_ui is used, so use that block
-      exec_ui_block( &ui_definer.define_ui_block )
-    elsif can_build_default
-      # build a default UI
-      default_ui
-      
-      # allow for smallish changes to a default build
-      exec_ui_block( &entity_class.post_default_ui_block ) unless entity_class.post_default_ui_block.nil?
-    end
-    
-    # the local block adds to the previous definitions
-    exec_ui_block( &block )
   end
   
 protected
