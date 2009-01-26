@@ -118,10 +118,16 @@ class TableView < Qt::TableView
   # hook for the sanity_check_xxx methods
   # called for the actions set up by ActionBuilder
   # it just wraps the action block/method in a catch
-  # block for :insane
+  # block for :insane. Will also catch exceptions thrown in actions to make
+  # core application more robust to model & view errors.
   def action_triggered( &block )
-    catch :insane do
-      yield
+    begin
+      catch :insane do
+        yield
+      end
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
     end
   end
   
