@@ -49,7 +49,7 @@ class CacheTable < Array
   # The count of the records according to the db, which may be different to
   # the records in the cache
   def sql_count
-    @entity_class.count( :conditions => @options[:conditions] )
+    @entity_class.count( @options )
   end
   
   # Return the set of OrderAttribute objects for this collection.
