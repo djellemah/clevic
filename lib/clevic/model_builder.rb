@@ -363,7 +363,7 @@ class ModelBuilder
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
     @model = Clevic::TableModel.new( table_view )
-    @model.object_name = @object_name
+    table_view.object_name = @object_name
     @model.entity_view = entity_view
     @model.fields = @fields
     @model.read_only = @read_only

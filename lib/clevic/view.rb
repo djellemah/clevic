@@ -1,10 +1,25 @@
+require 'set'
 require 'clevic/model_builder.rb'
 
 module Clevic
   class View
-    def self.subclasses
-      super.select{|x| x !~ /Clevic::DefaultView/}
-      super.select{|x| x !~ /Clevic::DefaultView/}
+    @order = []
+    def self.order
+      @order
+    end
+    
+    # Handle situations where the array passed to 
+    # Clevic::View.order = has ActiveRecord::Base
+    # objects in it. In other words, if there is one, pass back it's
+    # default view class rather than the ActiveRecord::Base subclass.
+    def self.order=( array )
+      @order = array.map do |x|
+        if x.ancestors.include?( ActiveRecord::Base )
+          x.default_view_class
+        else
+          x
+        end
+      end
     end
     
     def self.entity_class( *args )
@@ -21,6 +36,7 @@ module Clevic
     
     def self.widget_name( *args )
       if args.size == 0
+        # the class name by default
         @widget_name || name
       else
         @widget_name = args.first
@@ -55,31 +71,16 @@ module Clevic
       end
     end
     
-    # deprecated
-    def actions( table_view, action_builder )
-    end
-    
     # define view/model specific actions
     def define_actions( table_view, action_builder )
-      actions( table_view, action_builder )
-    end
-    
-    # deprecated
-    def data_changed( top_left, bottom_right, table_view )
     end
     
     # define data changed events
     def notify_data_changed( table_view, top_left_model_index, bottom_right_model_index )
-      data_changed( top_left_model_index, bottom_right_model_index, table_view )
-    end
-    
-    # deprecated
-    def key_press_event( event, current_index, table_view )
     end
     
     # be notified of key presses
     def notify_key_press( table_view, key_press_event, current_model_index )
-      key_press_event( key_press_event, current_model_index, table_view )
     end
     
   end

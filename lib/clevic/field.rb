@@ -135,8 +135,13 @@ EOF
   # Return the attribute value for the given ActiveRecord entity, or nil
   # if entity is nil. Will call transform_attribute.
   def value_for( entity )
-    return nil if entity.nil?
-    transform_attribute( entity.send( attribute ) )
+    begin
+      return nil if entity.nil?
+      transform_attribute( entity.send( attribute ) )
+    rescue Exception => e
+      puts "error for #{entity} in value_for: #{e.message}"
+      puts e.backtrace
+    end
   end
   
   # Apply display, to the given

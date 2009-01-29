@@ -142,8 +142,7 @@ class Browser < Qt::Widget
   # models parameter can be an array of Model objects, in order of display.
   # if models is nil, find_models is called
   def load_models
-    views = Clevic::View.subclasses.map{|x| x.constantize}
-    views.uniq!
+    views = Clevic::View.order.uniq
     Kernel.raise "no views to display" if views.empty?
     
     # Add all existing model objects as tabs, one each

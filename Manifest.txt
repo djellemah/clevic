@@ -14,6 +14,7 @@ lib/clevic.rb
 lib/clevic/browser.rb
 lib/clevic/cache_table.rb
 lib/clevic/db_options.rb
+lib/clevic/default_view.rb
 lib/clevic/delegates.rb
 lib/clevic/extensions.rb
 lib/clevic/field.rb
@@ -24,7 +25,6 @@ lib/clevic/order_attribute.rb
 lib/clevic/record.rb
 lib/clevic/search_dialog.rb
 lib/clevic/sql_dialects.rb
-lib/clevic/table.rb
 lib/clevic/table_model.rb
 lib/clevic/table_searcher.rb
 lib/clevic/table_view.rb

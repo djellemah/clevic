@@ -42,6 +42,7 @@ class TableView < Qt::TableView
         # make sure the TableView has a fully-populated TableModel
         # self.model is necessary to invoke the Qt layer
         self.model = model_builder.build( self )
+        self.object_name = arg.widget_name
         
         # connect data_changed signals for the entity_class to respond
         connect_view_signals( arg )
@@ -64,14 +65,12 @@ class TableView < Qt::TableView
   end
   
   def title
-    @title || model.entity_class.name.demodulize.tableize.humanize
+    @title ||= model.entity_view.title
   end
   
   def connect_view_signals( entity_view )
-    # this is only here because entity_class.data_changed needs the view.
-    # Should probably fix that.
     model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
-      entity_view.data_changed( top_left, bottom_right, self )
+      entity_view.notify_data_changed( self, top_left, bottom_right )
     end
   end
   
@@ -532,16 +531,14 @@ class TableView < Qt::TableView
   def keyPressEvent( event )
     begin
       # call to entity class for shortcuts
-      if model.entity_class.respond_to?( :key_press_event )
-        begin
-          model_result = model.entity_class.key_press_event( event, current_index, self )
-          return model_result if model_result != nil
-        rescue Exception => e
-          puts e.backtrace
-          error_message = Qt::ErrorMessage.new( self )
-          error_message.show_message( "Error in shortcut handler for #{model.entity_class.name}: #{e.message}" )
-          error_message.show
-        end
+      begin
+        view_result = model.entity_view.notify_key_press( self, event, current_index )
+        return view_result unless view_result.nil?
+      rescue Exception => e
+        puts e.backtrace
+        error_message = Qt::ErrorMessage.new( self )
+        error_message.show_message( "Error in shortcut handler for #{model.entity_view.name}: #{e.message}" )
+        error_message.show
       end
       
       # thrown by the sanity_check_xxx methods
