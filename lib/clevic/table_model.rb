@@ -43,9 +43,7 @@ class TableModel < Qt::AbstractTableModel
   
   signals(
     # index where error occurred, value, message
-    'data_error(QModelIndex,QVariant,QString)',
-    # top_left, bottom_right
-    'dataChanged(const QModelIndex&,const QModelIndex&)'
+    'data_error(QModelIndex,QVariant,QString)'
   )
   
   def initialize( parent = nil )
