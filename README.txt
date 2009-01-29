@@ -37,20 +37,17 @@ in Linux, slightly tested in Windows and OSX.
 
 === Model definition:
 
-Models and their UI representation must be defined in Ruby. A class that
-inherits from Clevic::Record (which itself inherits from ActiveRecord::Base) will provide
-a minimally functional UI. Beyond that, the framework provides
-a DSL for defining more complex and useful behaviour (see Clevic::ModelBuilder).
+Models and their UI representation must be defined in Ruby. A descendant of ActiveRecord::Base
+that includes the Clevic::Record module will provide a minimally functional UI.
 
-Clevic also knows how to build a default UI with sensible defaults from
-ActiveRecord::Base subclasses.
+Beyond that, the framework provides a DSL for defining more complex and useful behaviour
+(see Clevic::ModelBuilder).
 
 In the models/ subdirectory, start with minimal_models.rb.
 account_models.rb and times_models.rb provide definitions for more real-world examples.
 Associated SQL schemas are in the sql subdirectory.
 
-For implementation and more extensive
-comments, see Clevic::Browser and Clevic::ModelBuilder.
+For implementation and more extensive comments, see Clevic::ModelBuilder.
 
 === Framework
 
@@ -84,7 +81,7 @@ See TODO file.
 === Other
 
 * bsearch (http://0xcc.net/ruby-bsearch)
-* active_record/dirty (included)
+* active_record/dirty (included, for active_record < 2.1.x)
 * db driver (ie postgres-pr)
 * rdbms (ie postgres)
 

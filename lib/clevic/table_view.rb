@@ -24,7 +24,7 @@ class TableView < Qt::TableView
   # - an ActiveRecord::Base subclass that includes Clevic::Record
   # - an instance of Clevic::View
   # - an instance of TableModel
-  def initialize( arg, parent, &block )
+  def initialize( arg, parent = nil, &block )
     # need the empty block here, otherwise Qt bindings grab &block
     super( parent ) {}
     
@@ -663,7 +663,7 @@ class TableView < Qt::TableView
   # override to prevent tab pressed from editing next field
   # also takes into account that override_next_index may have been called
   def closeEditor( editor, end_edit_hint )
-    puts "end_edit_hint: #{end_edit_hint.inspect}"
+    puts "end_edit_hint: #{end_edit_hint.inspect}" if $options[:debug]
     case end_edit_hint
       when Qt::AbstractItemDelegate.EditNextItem
         super( editor, Qt::AbstractItemDelegate.NoHint )

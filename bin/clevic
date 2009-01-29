@@ -2,8 +2,8 @@
 
 require 'pathname'
 
+require 'clevic.rb'
 require 'clevic/browser.rb'
-require 'clevic/db_options.rb'
 require 'optparse'
 require 'active_support'
 
@@ -54,6 +54,19 @@ class Pathname
   alias_method :/, :+
 end
 
+def subclasses( base )
+  classes = []
+  ObjectSpace.each_object( Class ) do |x|
+    if x.ancestors.include?( base )
+      case
+        when x == ActiveRecord::Base; # don't include this
+        else; classes << x
+      end
+    end
+  end
+  classes.sort{|a,b| a.name <=> b.name}
+end
+
 def load_rails_models( root, config, models )
   # initialize Rails
   load config / 'environment.rb'
@@ -84,8 +97,16 @@ def load_rails_models( root, config, models )
     begin
       load dir_entry
     rescue Exception => e
-      puts "Error loading #{filename.basename.to_s}: #{e.message.inspect}"
+      puts "Error loading #{dir_entry.basename.to_s}: #{e.message}"
       puts e.backtrace
+    end
+  end
+  
+  # include the Clevic::Record module in each descendant of
+  # ActiveRecord::Base so that the default views will be created.
+  subclasses( ActiveRecord::Base ).each do |model|
+    if model.table_exists?
+      model.send :include, Clevic::Record unless model.abstract_class?
     end
   end
 end

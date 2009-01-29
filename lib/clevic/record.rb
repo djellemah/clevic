@@ -18,7 +18,7 @@ module Clevic
     
     module ClassMethods
       def default_view_class_name
-        "::Default#{name}View"
+        "::Clevic::Default#{name.gsub('::','')}View"
       end
       
       #TODO will have to fix modules here

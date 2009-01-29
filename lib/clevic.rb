@@ -3,5 +3,3 @@ require 'clevic/table_view.rb'
 require 'clevic/model_builder.rb'
 require 'clevic/record.rb'
 require 'clevic/view.rb'
-
-
