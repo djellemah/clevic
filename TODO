@@ -1,6 +1,8 @@
-Need to rethink models as UI definers. But with a better name. Form? View?
+ModelBuilder#modify_field to override default_ui definitions
+rename ModelBuilder to ViewBuilder
 
-need a text field, and a map field (For ie -1 = short, 1 = long)
+need a text field (multiple lines, edit in a separate window)
+need a map field (For ie -1 = short, 1 = long)
 :records missing in define_ui causes a crash
 
 :display and :format in ModelBuilder
