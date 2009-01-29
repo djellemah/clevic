@@ -1,5 +1,3 @@
-require 'clevic/db_options.rb'
-require 'clevic/table_view.rb'
-require 'clevic/model_builder.rb'
+# This provides enough to define UIs.
 require 'clevic/record.rb'
 require 'clevic/view.rb'

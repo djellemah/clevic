@@ -16,6 +16,8 @@ module ActiveRecord
       end
     end
     
+    # checks to see if attribute_sym is either in the column
+    # name list, or in the set of reflections.
     def self.has_attribute?( attribute_sym )
       if column_names.include?(  attribute_sym.to_s )
         true

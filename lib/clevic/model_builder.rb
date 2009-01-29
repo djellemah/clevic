@@ -8,50 +8,29 @@ require 'clevic/field.rb'
 module Clevic
 
 =begin rdoc
-This is used to define a set of Clevic::Field objects in a UI which
-includes any related tables,
-restrictions on data entry, formatting and so on. Then the build method
-uses the set of fields to construct a Clevic::TableModel.
+This defines the DSL used to create a UI definition (which is actually a set of Clevic::Field instances),
+including any related tables,
+restrictions on data entry, formatting and so on.
 
-There are at least 2 ways to define UIs: as part of the ActiveRecord object (which is useful
-if you want minimal framework overhead); or in a separate class (which is useful when you 
-want several diffent views of the same underlying table).
+There are at least 2 ways to define UIs:
+- an Embedded View as part of the ActiveRecord object (which is useful if you want minimal framework overhead)
+- a Separate View in a separate class (which is useful when you want several diffent views of the same underlying table).
 
-For ActiveRecord::Base classes, ModelBuilder has a default_ui method
-which knows how to build a
-fairly sensible default UI.
+I've tried to consistently refer to an instance of an ActiveRecord::Base subclass
+as an 'entity'.
 
-Subclasses of Clevic::Record may also implement
-* <tt>self.key_press_event( event, current_index, table_view )</tt>
-* <tt>self.data_changed( top_left_index, bottom_right_index, table_view )</tt>
-so that they can respond to editing events and do Neat Stuff.
+==Embedded View
+Minimal embedded definition is
 
-The type of the field (plain, relational, distinct, restricted, hide) defines
-must be followed by the attribute on the current entity (an ActiveRecord or descendant).
+  class Position < ActiveRecord::Base
+    include Clevic::Record
+  end
 
-Optional specifiers are:
-* :format is something that can be understood by strftime (for time and date
-  fields) or understood by % (for everything else). It can also be a Proc
-  that has one parameter - the current entity. There are sensible defaults for common field
-  types.
-* :alignment is one of :left, :right, :justified, :centre. Default is :right for numeric,
-  and :left for text and most other things.
-* :label is the text to be displayed in colum headings
-* :display is the value to be displayed, in other words either a dotted accessor path, or a Proc with the current entity as its argument.
-* :read_only is a boolean. Pretty self-explanatory.
-* :edit_format is the format to be used to transform the value for editing. For
-  example, a date that displays a 2-digit year must be edited with a 4-digit year.
-  Defaults to the value of :format.
-* :sample is a string used to size the columns. Default is the longest value in this field from the
-  table, provided it isn't too long.
+which will build a fairly sensible default UI from the
+entity's metadata.
 
-restricted fields also require:
-* :set which is the set of strings that are accepted by a RestrictedDelegate
-
-For relational fields, all other options are passed to ActiveRecord::Base#find,
-and apply to the set of values displayed in the combo box.
-
-For example, the UI for a model called Entry (part of an accounting database) could be defined like this:
+As a more extensive embedded example, the UI for a model called Entry (part of an accounting database)
+could be defined like this:
 
   # inherit from Clevic::Record, which itself inherits from ActiveRecord::Base
   class Entry < ActiveRecord::Base
@@ -119,6 +98,33 @@ For example, the UI for a model called Entry (part of an accounting database) co
     end
   end
 
+The type of the field (plain, relational, distinct, restricted, hide) defines
+must be followed by the attribute on the current entity (an ActiveRecord or descendant).
+
+Optional specifiers are:
+* :format is something that can be understood by strftime (for time and date
+  fields) or understood by % (for everything else). It can also be a Proc
+  that has one parameter - the current entity. There are sensible defaults for common field
+  types.
+* :alignment is one of :left, :right, :justified, :centre. Default is :right for numeric,
+  and :left for text and most other things.
+* :label is the text to be displayed in colum headings
+* :display is the value to be displayed, in other words either a dotted accessor path, or a Proc with the current entity as its argument.
+* :read_only is a boolean. Pretty self-explanatory.
+* :edit_format is the format to be used to transform the value for editing. For
+  example, a date that displays a 2-digit year must be edited with a 4-digit year.
+  Defaults to the value of :format.
+* :sample is a string used to size the columns. Default is the longest value in this field from the
+  table, provided it isn't too long.
+
+restricted fields also require:
+* :set which is the set of strings that are accepted by a RestrictedDelegate. If the value is a hash, the field
+  will display the hash values, and the hash keys will be stored in the db.
+
+For relational fields, a :display specifier is mandatory. All other options are passed to ActiveRecord::Base#find,
+and apply to the set of values displayed in the combo box.
+
+==Separate View
 To define a separate ui class, do something like this:
   class Prospect < Clevic::View
     
@@ -153,14 +159,49 @@ And you can even do
   end
 
 Obviously you can use any of the Clevic::ModelBuilder calls inside of the model_builder block
-in the defin_ui methods in the previous two examples.
+in the define_ui methods in the previous two examples.
+
+Subclasses of Clevic::View (and embedded view definitions) may also implement the following methods:
+
+Define view/model specific actions, ie menu items. These will be added
+to the Edit menu, show up on context-click in the table display, and
+can have optional keyboard shortcuts:
+
+  def define_actions( table_view, action_builder )
+    action_builder.action :smart_copy, 'Smart Copy', :shortcut => 'Ctrl+"' do
+      # a method in the class containing define_actions
+      # view.current_index.entity will return the entity instance.
+      smart_copy( view )
+    end
+    
+    action_builder.action :invoice_from_project, 'Invoice from Project', :shortcut => 'Ctrl+Shift+I' do
+      # a method in the class containing define_actions
+      invoice_from_project( view.current_index, view )
+    end
+  end
+  
+This will be called whenever data is changed, ie a field edit is completed:
+
+  def notify_data_changed( table_view, top_left_model_index, bottom_right_model_index )
+  end
+  
+Key presses will be sent here:
+
+  def notify_key_press( table_view, key_press_event, current_model_index )
+  end
+
+The above may also be defined as self. methods inside an entity class.
+
+==Tab Order
+Using an embedded definition, tab order is defined by the order in which entity classes
+are encountered. The order can be accessed in Clevic::View.order, and specified by
+  Clevic::View.order = [Position, Target, Account]
+
 =end
 class ModelBuilder
   
-  # Create a definition for entity_class (subclass of ActiveRecord::Base
-  # or Clevic::Record). Then execute block using self.instance_eval.
-  # The builder will construct a default TableModel from the entity_class
-  # unless can_build_default == false
+  # Create a definition for entity_view (subclass of Clevic::View).
+  # Then execute block using self.instance_eval.
   def initialize( entity_view, &block )
     @entity_view = entity_view
     @auto_new = true
@@ -171,6 +212,7 @@ class ModelBuilder
   
   attr_accessor :entity_view
   
+  # execute a block containing method calls understood by Clevic::ModelBuilder
   # arg can be something that responds to define_ui_block,
   # or just the block will be executed. If both are present,
   # values in the block will overwrite values in arg's block.
@@ -189,7 +231,7 @@ class ModelBuilder
     self
   end
   
-  # The collection of visible Clevic::Field objects
+  # The collection of Clevic::Field instances where visible == true
   def fields
     @fields.reject{|x| !x.visible}
   end
@@ -201,7 +243,7 @@ class ModelBuilder
     retval
   end
   
-  # the ActiveRecord::Base or Clevic::Record class
+  # The ActiveRecord::Base subclass
   def entity_class
     @entity_view.entity_class
   end
@@ -285,18 +327,19 @@ class ModelBuilder
   # Build a default UI. All fields except the primary key are displayed
   # as editable in the table. Any belongs_to relations are used to build
   # combo boxes. Default ordering is the primary key.
-  # For small tweaks (large changes belong in a proper define_ui block),
-  # something like this
-  # can be used (where Subscriber is already defined elsewhere as a subclass
-  # of ActiveRecord::Base):
+  # Subscriber is already defined elsewhere as a subclass
+  # of ActiveRecord::Base:
   #   class Subscriber
-  #     post_default_ui do
+  #     include Clevic::Record
+  #     define_ui do
+  #       default_ui
   #       plain :password # this field does not exist in the DB
   #       hide :password_salt # these should be hidden
   #       hide :password_hash
   #     end
   #   end
-  # This method will try to use a sensible :display option for the related class. In order:
+  #
+  # An attempt to use a sensible :display option for the related class. In order:
   # * the name of the class
   # * :name
   # * :title
@@ -357,7 +400,8 @@ class ModelBuilder
   end
   
   # This takes all the information collected
-  # by the other methods, and returns the new TableModel
+  # by the other methods, and returns a new TableModel
+  # with the given table_view as its parent.
   def build( table_view )
     # build the model with all it's collections
     # using @model here because otherwise the view's

@@ -64,22 +64,31 @@ class Field
   # set the field to read-only
   property :read_only
   
-  # the foreground and background colors
+  # The foreground and background colors.
+  # Can take a Proc, a string, or a symbol.
+  # - A Proc is called with an entity
+  # - A String is treated as a constant which may be one of the string constants understood by Qt::Color
+  # - A symbol is treated as a method to be call on an entity
   property :foreground, :background
   
+  # Can take a Proc, a string, or a symbol.
+  # - A Proc is called with an entity
+  # - A String is treated as a constant
+  # - A symbol is treated as a method to be call on an entity
   property :tooltip
   
-  # for restricted fields
+  # The set of allowed values for restricted fields
   property :set
   
-  # for sorting distinct delegates
+  # Only for the distinct field type. The values will be sorted either with the
+  # most used values first (:frequency => true) or in alphabetical order (:description => true).
   property :frequency, :description
   
   # default value for this field for new records. Not sure how to populate it though.
   property :default
   
   # properties for ActiveRecord options
-  # There are actually from VALID_FIND_OPTIONS, but it's protected
+  # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
   
@@ -98,12 +107,17 @@ class Field
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.
   # - attribute is the symbol for the attribute on the entity_class.
-  # - entity_class is the ActiveRecord class which this Field talks to.
-  # - options is a hash of writable attributes in Field.
+  # - entity_class is the ActiveRecord::Base subclass which this Field talks to.
+  # - options is a hash of writable attributes in Field, which can be any of the properties defined in this class.
   def initialize( attribute, entity_class, options, &block )
     # sanity checking
-    raise "attribute #{attribute.inspect} must be a symbol" unless attribute.is_a?( Symbol )
-    raise "entity_class must be a descendant of ActiveRecord::Base" unless entity_class.ancestors.include?( ActiveRecord::Base )
+    unless attribute.is_a?( Symbol )
+      raise "attribute #{attribute.inspect} must be a symbol"
+    end
+    
+    unless entity_class.ancestors.include?( ActiveRecord::Base )
+      raise "entity_class must be a descendant of ActiveRecord::Base"
+    end
     
     unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
@@ -113,7 +127,7 @@ EOF
       raise msg
     end
     
-    # set values
+    # instance variables
     @attribute = attribute
     @entity_class = entity_class
     @visible = true
@@ -294,10 +308,12 @@ EOF
     @sample || self.label
   end
   
+  # Called by Clevic::TableModel to get the tooltip value
   def tooltip_for( entity )
     cache_value_for( :background, entity )
   end
 
+  # TODO Doesn't do anything useful yet.
   def decoration_for( entity )
     nil
   end
@@ -313,10 +329,12 @@ EOF
     end
   end
   
+  # Called by Clevic::TableModel to get the foreground color value
   def foreground_for( entity )
     cache_value_for( :foreground, entity ) {|x| string_or_color(x)}
   end
   
+  # Called by Clevic::TableModel to get the background color value
   def background_for( entity )
     cache_value_for( :background, entity ) {|x| string_or_color(x)}
   end

@@ -1,8 +1,13 @@
 module Clevic
 
-  # This is created by Clevic::Record to act as a default
-  # view for an ActiveRecord::Base descendant that has
-  # an embedded UI definition.
+  # A subclass of Clevic::DefaultView is created by Clevic::Record
+  # when the latter is included in an ActiveRecord::Base subclass.
+  # 
+  # The Clevic::DefaultView subclass knows how to:
+  # - build a fairly sensible UI from the the ActiveRecord::Base metadata.
+  # - create a UI definition using a class method called define_ui.
+  #
+  # See Clevic::ModelBuilder for an example.
   class DefaultView < View
     def method_missing( meth, *args, &block )
       if entity_class.respond_to?( meth )

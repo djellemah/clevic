@@ -10,14 +10,9 @@ require 'clevic/model_column'
 module Clevic
 
 =begin rdoc
-This table model allows an ActiveRecord or ActiveResource to be used as a
-basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
-
-* labels are the headings in the table view (cached field.label)
-
-* each attribute belongs to the underlying model (cached field.attribute)
-
-* collection is the set of ActiveRecord model objects, called entities in this documentation.
+An instance of Clevic::TableModel is constructed by Clevic::ModelBuilder from the
+UI definition in a Clevic::View, or from the default Clevic::View created by
+including the Clevic::Record module in a ActiveRecord::Base subclass.
 =end
 class TableModel < Qt::AbstractTableModel
   include QtFlags

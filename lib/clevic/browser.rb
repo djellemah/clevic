@@ -13,6 +13,8 @@ added.
 class Browser < Qt::Widget
   slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab() current_changed(int)}
   
+  attr_reader :tables_tab
+  
   def initialize( main_window )
     super( main_window )
     
@@ -86,10 +88,6 @@ class Browser < Qt::Widget
     tables_tab.current_widget
   end
   
-  def tables_tab
-    @tables_tab
-  end
-  
   # slot to handle Ctrl-Tab and move to next tab, or wrap around
   def next_tab
     tables_tab.current_index = 
@@ -133,6 +131,7 @@ class Browser < Qt::Widget
       view = view_class.new
       unless view.entity_class.table_exists?
         puts "No table for #{view.entity_class.inspect}"
+        next
       end
         
       begin

@@ -4,8 +4,11 @@ require 'clevic/default_view.rb'
 module Clevic
 
   # include this in ActiveRecord::Base instances to
-  # get embedded view definitions. A Default#{model}View
-  # class will be created.
+  # get embedded view definitions. See ModelBuilder.
+  #
+  # A Clevic::Default#{model}View class will be created. If
+  # a define_ui block is not specified in the entity class, 
+  # a default UI will be created.
   module Record
     # TODO not sure if these are necessary here anymore?
     def self.db_options=( db_options )

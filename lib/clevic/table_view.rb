@@ -6,7 +6,7 @@ require 'qtext/action_builder.rb'
 
 module Clevic
 
-# The view class, implementing neat shortcuts and other pleasantness
+# The view class
 class TableView < Qt::TableView
   include ActionBuilder
   
