@@ -4,11 +4,8 @@ README.txt
 Rakefile
 TODO
 bin/clevic
-bin/import-times
 config/hoe.rb
-config/jamis.rb
 config/requirements.rb
-env.sh
 lib/clevic/dirty.rb
 lib/clevic.rb
 lib/clevic/browser.rb
@@ -55,8 +52,3 @@ test/test_model_index_extensions.rb
 test/test_order_attribute.rb
 test/test_sql_dialects.rb
 test/test_table_searcher.rb
-website/index.html
-website/index.txt
-website/screenshot.png
-website/stylesheets/screen.css
-website/template.html.erb
