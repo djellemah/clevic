@@ -10,7 +10,8 @@ DOWNLOAD_PATH = "http://rubyforge.org/projects/#{RUBYFORGE_PROJECT}"
 EXTRA_DEPENDENCIES = [
     ['qtext', '>=0.6.2'],
     ['activerecord', '>=2.0.2'],
-    ['fastercsv', '>=1.2.3']
+    ['fastercsv', '>=1.2.3'],
+    ['gather', '>=0.0.3']
     # This isn't always installed from gems
     #~ ['qtruby4', '>=1.4.9']
     # bsearch can't be installed from gems
