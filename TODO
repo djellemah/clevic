@@ -1,8 +1,9 @@
+update Hoe and Rakefile
 need a :name specified for Field that defaults to the attribute name
 allow directories for a setup.
 implement the :default field option
 ModelBuilder#modify_field to override default_ui definitions
-rename ModelBuilder to ViewBuilder?
+use rubigen for creating model definition files?
 
 need a text field (multiple lines, edit in a separate window)
 need a map field (For ie -1 = short, 1 = long). Already in restricted, but it's kinda clunky.
@@ -122,7 +123,6 @@ maybe
 acts_as_shellable looks nice
 consolidate read-only-ness checks 
 Look at DataMapper. Not suitable - need to declare properties.
-use rubigen for creating model definition files?
 ActiveMDB for migrating?
 allow moving of rows
 discontiguous copying of entities/csv

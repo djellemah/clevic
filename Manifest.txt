@@ -4,8 +4,6 @@ README.txt
 Rakefile
 TODO
 bin/clevic
-config/hoe.rb
-config/requirements.rb
 lib/clevic/dirty.rb
 lib/clevic.rb
 lib/clevic/browser.rb
@@ -46,6 +44,7 @@ sql/accounts.sql
 sql/times.sql
 sql/times_sqlite.sql
 tasks/website.rake
+tasks/clevic.rake
 test/test_cache_table.rb
 test/test_helper.rb
 test/test_model_index_extensions.rb
