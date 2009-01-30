@@ -8,13 +8,23 @@ require 'clevic/field.rb'
 module Clevic
 
 =begin rdoc
-This defines the DSL used to create a UI definition (which is actually a set of Clevic::Field instances),
-including any related tables,
-restrictions on data entry, formatting and so on.
 
-There are at least 2 ways to define UIs:
-- an Embedded View as part of the ActiveRecord object (which is useful if you want minimal framework overhead)
-- a Separate View in a separate class (which is useful when you want several diffent views of the same underlying table).
+== View definition
+
+Clevic::ModelBuilder defines the DSL used to create a UI definition (which is 
+actually a set of Clevic::Field instances), including any related tables, 
+restrictions on data entry, formatting and so on. The intention was to make
+specifying a UI as painless as possible, with framework overhead only where
+you need it.
+
+To that end, there are 2 ways to define UIs:
+
+- an Embedded View as part of the ActiveRecord object (which is useful if you 
+  want minimal framework overhead). Just show me the data, dammit.
+
+- a Separate View in a separate class (which is useful when you want several 
+  diffent views of the same underlying table). I want a neato-nifty UI that does
+  (relatively) complex things.
 
 I've tried to consistently refer to an instance of an ActiveRecord::Base subclass
 as an 'entity'.
@@ -27,12 +37,17 @@ Minimal embedded definition is
   end
 
 which will build a fairly sensible default UI from the
-entity's metadata.
+entity's metadata. Obviously you can use open classes to do
 
-As a more extensive embedded example, the UI for a model called Entry (part of an accounting database)
+  class Position
+    include Clevic::Record
+  end
+
+where Position is previously defined to inherit from ActiveRecord::Base.
+
+A full-featured UI for an entity called Entry (part of an accounting database)
 could be defined like this:
 
-  # inherit from Clevic::Record, which itself inherits from ActiveRecord::Base
   class Entry < ActiveRecord::Base
     include Clevic::Record
     
@@ -70,11 +85,12 @@ could be defined like this:
       relational  :debit, :format => 'name', :conditions => 'active = true', :order => 'lower(name)'
       relational  :credit, :format => 'name', :conditions => 'active = true', :order => 'lower(name)'
       
-      # or like this to have an on-the-fly transform. item will be an instance of Account
-      relational :credit do
-        :format => lambda {|item| item.name.downcase}
-        :conditions => 'active = true'
-        :order => 'lower(name)'
+      # or like this to have an on-the-fly transform. item will be an instance of Account.
+      # This also takes a block parameter
+      relational :credit do |field|
+        field.format = lambda {|item| item.name.downcase}
+        field.conditions = 'active = true'
+        field.order = 'lower(name)'
       end
       
       # this is a read-only display field from a related table
@@ -98,42 +114,21 @@ could be defined like this:
     end
   end
 
-The type of the field (plain, relational, distinct, restricted, hide) defines
-must be followed by the attribute on the current entity (an ActiveRecord or descendant).
+== Separate View
 
-Optional specifiers are:
-* :format is something that can be understood by strftime (for time and date
-  fields) or understood by % (for everything else). It can also be a Proc
-  that has one parameter - the current entity. There are sensible defaults for common field
-  types.
-* :alignment is one of :left, :right, :justified, :centre. Default is :right for numeric,
-  and :left for text and most other things.
-* :label is the text to be displayed in colum headings
-* :display is the value to be displayed, in other words either a dotted accessor path, or a Proc with the current entity as its argument.
-* :read_only is a boolean. Pretty self-explanatory.
-* :edit_format is the format to be used to transform the value for editing. For
-  example, a date that displays a 2-digit year must be edited with a 4-digit year.
-  Defaults to the value of :format.
-* :sample is a string used to size the columns. Default is the longest value in this field from the
-  table, provided it isn't too long.
-
-restricted fields also require:
-* :set which is the set of strings that are accepted by a RestrictedDelegate. If the value is a hash, the field
-  will display the hash values, and the hash keys will be stored in the db.
-
-For relational fields, a :display specifier is mandatory. All other options are passed to ActiveRecord::Base#find,
-and apply to the set of values displayed in the combo box.
-
-==Separate View
 To define a separate ui class, do something like this:
   class Prospect < Clevic::View
     
     # This is the ActiveRecord::Base descendant
     entity_class Position
     
-    # must return a ModelBuilder instance
-    # with no parameter, the block to model_builder
-    # will be evaluated in the context of a Clevic::ModelBuilder instance
+    # This must return a ModelBuilder instance, which is made easier
+    # by putting the block in a call to model_builder.
+    #
+    # With no parameter, the block
+    # will be evaluated in the context of a Clevic::ModelBuilder instance,
+    # otherwise the parameter will have the Clevic::ModelBuilder instance
+    # so you can still access the surrounding scope.
     def define_ui
       model_builder do |mb|
         # use the define_ui block from Position
@@ -145,7 +140,7 @@ To define a separate ui class, do something like this:
     end
   end
   
-And you can even do
+And you can even inherit UIs:
 
   class Extinct < Prospect
     def define_ui
@@ -158,14 +153,77 @@ And you can even do
     end
   end
 
-Obviously you can use any of the Clevic::ModelBuilder calls inside of the model_builder block
-in the define_ui methods in the previous two examples.
+Obviously you can use any of the Clevic::ModelBuilder calls described above, and exemplified
+in the embedded example, inside of the model_builder block.
 
-Subclasses of Clevic::View (and embedded view definitions) may also implement the following methods:
+== DSL detail
 
-Define view/model specific actions, ie menu items. These will be added
-to the Edit menu, show up on context-click in the table display, and
-can have optional keyboard shortcuts:
+This section describes the syntax of the DSL.
+
+=== Field Types and specifiers
+
+There are only a few field types, with lots of options. All field definitions
+start with a field type, have an attribute, and take either a hash of options,
+or a block for options. If the block specifies a parameter, an instance of
+Clevic::Field will be passed. If the block has no parameter, it will be
+evaluated in the context of a Clevic::Field instance. All the options specified
+can use DSL-style acessors (no assignment =) or assignment statement.
+
+  plain
+is an ordinary editable field. Boolean values are displayed as checkboxes.
+
+  relational
+displays a set of values pulled from a belongs_to (many-to-one) relationship.
+In other words all the possible related entities that this one could belong_to. Some
+concise representation of the related entities are displayed in a combo box.
+:display is mandatory. All options applicable to ActiveRecord::Base#find can also be passed.
+
+  distinct
+fetches the set of values already in the field, so you don't have to re-type them.
+New values are added in the text field part of the combo box. There is some prefix matching.
+
+  restricted
+is a combo box that is not editable in the text field part - the user must select
+a value from the :set (an array of strings) supplied. If :set has a hash as its value, the field
+will display the hash values, and the hash keys will be stored in the db.
+
+  hide
+you won't see this field. Actually, it's only useful after a default_ui, or pulling the
+definition from somewhere else. It may go away and be replaced by remove.
+
+=== Attribute
+
+The attribute symbol is required, and is the first parameter after the field type. It must refer
+to a method already defined in the entity. In other words any of:
+- a db column
+- a relationship (belongs_to, has_many, etc)
+- a plain method that takes no parameters.
+
+will work. Named scopes might also work, but I haven't tried them yet.
+
+You can do things like this:
+
+  plain :entries, :label => 'First Entry', :display => 'first.date', :format => '%d-%b-%y'
+  plain :entries, :label => 'Last Entry', :display => 'last.date', :format => '%d-%b-%y'
+
+Where the attribute fetches a collection of related entities, and :display will cause
+exactly one of those values to be passed to :format.
+
+=== Options
+
+Optional specifiers follow the attribute, as hash parameters, or as a block. Many of them will
+accept as a value one of:
+- String, some kind of value
+- Symbol, referring to a method on the entity
+- Proc which takes the entity as a parameter
+
+See Clevic::Field properties for available options.
+
+=== Menu Items
+
+You can define view/model specific actions ( an Action is Qt talk for menu items and shortcuts).
+These will be added to the Edit menu, show up on context-click in the table
+display, and can have optional keyboard shortcuts:
 
   def define_actions( table_view, action_builder )
     action_builder.action :smart_copy, 'Smart Copy', :shortcut => 'Ctrl+"' do
@@ -180,7 +238,9 @@ can have optional keyboard shortcuts:
     end
   end
   
-This will be called whenever data is changed, ie a field edit is completed:
+=== Notifications
+
+The following method will be called whenever data is changed, ie a field edit is completed:
 
   def notify_data_changed( table_view, top_left_model_index, bottom_right_model_index )
   end
@@ -190,11 +250,18 @@ Key presses will be sent here:
   def notify_key_press( table_view, key_press_event, current_model_index )
   end
 
-The above may also be defined as self. methods inside an entity class.
+The above may also be defined as class methods on an entity class.
 
-==Tab Order
-Using an embedded definition, tab order is defined by the order in which entity classes
-are encountered. The order can be accessed in Clevic::View.order, and specified by
+=== Tab Order
+
+Using an embedded definition, tab order in the browser is defined by the order in which view definitions
+are encountered. Which is really useful if you want to have several view definitions in one file and
+just execute clevic on that file.
+
+For more complex situations where your code needs to be separated into
+multiple files, as is traditional and useful for most non-trivial projects,
+the order can be accessed in Clevic::View.order, and specified by
+
   Clevic::View.order = [Position, Target, Account]
 
 =end
@@ -231,7 +298,8 @@ class ModelBuilder
     self
   end
   
-  # The collection of Clevic::Field instances where visible == true
+  # The collection of Clevic::Field instances where visible == true.
+  # the visible may go away.
   def fields
     @fields.reject{|x| !x.visible}
   end

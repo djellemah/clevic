@@ -114,25 +114,30 @@ end
 
 task :package => :ui
 
-# redefine this from the Hoe-1.7.0 sources to use
-# the jamis template.
-Rake::RDocTask.new(:docs) do |rd|
-  rd.main = "README.txt"
-  rd.options << '-d' if RUBY_PLATFORM !~ /win32/ and `which dot` =~ /\/dot/ and not ENV['NODOT']
-  rd.rdoc_dir = 'doc'
-  rd.template = 'config/jamis.rb'
-  files = $hoe.spec.files.grep($hoe.rdoc_pattern)
-  files -= ['Manifest.txt']
-  rd.rdoc_files.push(*files)
-
-  title = "#{$hoe.name}-#{$hoe.version} Documentation"
-  title = "#{$hoe.rubyforge_name}'s " + title if $hoe.rubyforge_name != $hoe.name
-
-  rd.options << "-t #{title}"
-end
-
 desc "Update ChangeLog from the SVN log"
 task :changelog do |t|
   ARGV.shift
   exec "svn2cl --break-before-msg -o ChangeLog #{ARGV.join(' ')}"
+end
+
+# remove hoe documentation task
+Rake::Task['docs'].clear
+
+# make this respond to docs, so it fits in with the rest of the build
+Rake::RDocTask.new do |rdoc|
+  rdoc.name = :docs
+  rdoc.title = "Clevic DB UI builder"
+  rdoc.main = 'README.txt'
+  rdoc.rdoc_dir = 'doc'
+  rdoc.rdoc_files.include %w{History.txt lib/**/*.rb README.txt TODO}
+  rdoc.options += [
+      '-SHN',
+      '-f', 'darkfish',  # This is the important bit
+      '-A', 'property=Property',
+      #~ '--quiet',
+      "--opname=index.html",
+      #~ "--line-numbers",
+      #~ '--format=darkfish',
+      #~ "--inline-source"
+    ]
 end

@@ -20,7 +20,10 @@ will allow
   #writer
   instance.ixnay 'nix baby'
 
---
+Generally properties are for options that can be passed to the field creation
+method in ModelBuilder, whereas ruby attributes are for the internal workings.
+
+#--
 TODO decide whether value_for type methods take an entity and do_something methods
 take a value.
 
@@ -29,57 +32,64 @@ TODO this class is a bit confused about whether it handles metadata or record da
 TODO meta needs to handle virtual fields better. Also is_date_time?
 =end
 class Field
-  # The ActiveRecord::Base subclass this field uses to get data from.
-  attr_reader :entity_class
-  
   # For defining properties
   include Gather
   
-  # The attribute on the AR entity that forms the basis for this field.
-  # Accessing the returned attribute (using send, or the [] method on an entity)
-  # will give a simple value, or another AR entity in the case of relational fields.
-  # In other words, this is *not* the same as the name of the field in the DB, which
-  # would have an _id suffix for relationships.
-  property :attribute
-  
-  # A dot-separated path of attributes starting on the object returned by attribute.
+  # The value to be displayed after being optionally format-ed
+  #
+  # Takes a String, a Symbol, or a Proc.
+  #
+  # A String will be a dot-separated path of attributes starting on the object returned by attribute.
   # Paths longer than 1 element haven't been tested much.
-  # It can also be a block used to display the value of the field. This can be used to display 'virtual'
+  #
+  # A Symbol refers to a method to be called on the current entity
+  #
+  # A Proc will be passed the current entity. This can be used to display 'virtual'
   # fields from related tables, or calculated fields.
+  #
+  # Defaults to nil, in other words the value of the attribute for this field.
   property :display
   
-  # The label for the field. Defaults to the humanised field name.
+  # The label to be displayed in the column headings. Defaults to the humanised field name.
   property :label
   
-  # The UI delegate class for the field. In Qt, this is a subclass of AbstractItemDelegate.
-  property :delegate
-  
   # For relational fields, this is the class_name for the related AR entity.
+  # TODO not used anymore?
   property :class_name
   
   # One of the alignment specifiers - :left, :centre, :right or :justified.
+  # Defaults to right for numeric fields, centre for boolean, and left for
+  # other values.
   property :alignment
   
   # something to do with the icon that Qt displays. Not implemented yet.
   property :decoration
   
-  # The format string, formatted by strftime for date and time fields, by sprintf for others.
-  # Defaults to something sensible for the type of the field.
+  # This defines how to format the value returned by :display. It takes a string or a Proc.
+  # Generally the string is something 
+  # that can be understood by strftime (for time and date fields) or understood 
+  # by % (for everything else). It can also be a Proc that has one parameter - 
+  # the current entity. There are sensible defaults for common field types.
   property :format
   
-  # The format used for editing
+  # This is just like format, except that it's used to format the value just
+  # before it's edited. A good use of this is to display dates with a 2-digit year
+  # but edit them with a 4 digit year.
+  # Defaults to a sensible value for some fields, for others it will default to the value of :format.
   property :edit_format
   
   # Whether the field is currently visible or not.
   property :visible
   
-  # Sample is used if the programmer wishes to provide a string that can be used
+  # Sample is used if the programmer wishes to provide a value (that will be converted
+  # using to_s) that can be used
   # as the basis for calculating the width of the field. By default this will be
-  # calculated from the database, but this may be an expensive operation. So we
+  # calculated from the database, but this may be an expensive operation, and
+  # doesn't always work properly. So we
   # have the option to override that if we wish.
   property :sample
   
-  # set the field to read-only
+  # Takes a boolean. Set the field to read-only.
   property :read_only
   
   # The foreground and background colors.
@@ -87,6 +97,9 @@ class Field
   # - A Proc is called with an entity
   # - A String is treated as a constant which may be one of the string constants understood by Qt::Color
   # - A symbol is treated as a method to be call on an entity
+  #
+  # The result can be a Qt::Color, or one of the strings in 
+  # http://www.w3.org/TR/SVG/types.html#ColorKeywords.
   property :foreground, :background
   
   # Can take a Proc, a string, or a symbol.
@@ -95,18 +108,20 @@ class Field
   # - A symbol is treated as a method to be call on an entity
   property :tooltip
   
-  # The set of allowed values for restricted fields
+  # The set of allowed values for restricted fields. If it's a hash, the
+  # keys will be stored in the db, and the values displayed in the UI.
   property :set
   
   # Only for the distinct field type. The values will be sorted either with the
   # most used values first (:frequency => true) or in alphabetical order (:description => true).
   property :frequency, :description
   
-  # default value for this field for new records. Not sure how to populate it though.
+  # Not implemented. Default value for this field for new records. Not sure how to populate it though.
   property :default
   
   # properties for ActiveRecord options
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected
+  # each element becomes a property.
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
   
@@ -121,6 +136,19 @@ class Field
       ha
     end
   end
+  
+  # The UI delegate class for the field. In Qt, this is a subclass of AbstractItemDelegate.
+  attr_accessor :delegate
+  
+  # The attribute on the AR entity that forms the basis for this field.
+  # Accessing the returned attribute (using send, or the [] method on an entity)
+  # will give a simple value, or another AR entity in the case of relational fields.
+  # In other words, this is *not* the same as the name of the field in the DB, which
+  # would normally have an _id suffix for relationships.
+  attr_accessor :attribute
+  
+  # The ActiveRecord::Base subclass this field uses to get data from.
+  attr_reader :entity_class
   
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.

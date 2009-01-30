@@ -1,20 +1,20 @@
+need a :name specified for Field that defaults to the attribute name
+allow directories for a setup.
+implement the :default field option
 ModelBuilder#modify_field to override default_ui definitions
-rename ModelBuilder to ViewBuilder
+rename ModelBuilder to ViewBuilder?
 
 need a text field (multiple lines, edit in a separate window)
-need a map field (For ie -1 = short, 1 = long)
+need a map field (For ie -1 = short, 1 = long). Already in restricted, but it's kinda clunky.
 :records missing in define_ui causes a crash
 
 :display and :format in ModelBuilder
-Use ZenTest to generate tests
+tests. Use ZenTest to generate tests
 Check out ar-extensions. Like operators look nice.
 make sure ActiveRecord doesn't keep updating column definitions. ie production mode.
 caching of repeated related entity lookups. Possibly ActiveRecord::QueryCache
-Test with ActiveRecord 2.1 for changed. Note will_change! method
 Ramen http://ramen.rubyforge.org/ for metadata. MySQL and MSSQL only right now.
 
-tests
-allow directories for a setup. Problem here is tab order.
 metadata for virtual fields. Add a member to Field for class_name.constantize
 consolidate metadata across TableModel, and Field. Would like to have it all in Field.
 gui_value vs attribute_value vs field_value etc
@@ -82,11 +82,11 @@ Ctrl-; date formatting goes 07--08 instead of 07-Apr-08. But typing the full mon
 
 empty database
 --------------
-resize fields for first record, while it's being entered. use Qt::ExpandingLineEdit for ComboDelegate? Doesn't exist in Ruby bindings
+resize fields for first record, while it's being entered. use Qt::ExpandingLineEdit for ComboDelegate? Doesn't exist in Ruby bindings.
 
 editing
 -------
-F2 for standard edit, F4 for calendar edit
+F2 for standard edit, F4 for full edit, ie text window, or calendar edit
 Only move for data_changed if field was exited with tab, not enter.
 tooltips for tabs
 Help in general for new data capture people
@@ -140,7 +140,6 @@ QueryBuilder
 Accounts
 --------
 paste of "common" records with different dates
-restricted type for Account Type record
 
 Times
 -----
@@ -148,4 +147,3 @@ Times
 Ctrl-Shift-" should not copy date if it already exists, and should not copy time if it's a different date.
 Ctrl-Shift-" after it's done, tab doesn't change fields
 look up invoice for project leaves the wrong fields highlighted, and focus in the wrong field.
-warnings on overlap times (in status bar, or highlight)
