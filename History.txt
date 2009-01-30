@@ -1,3 +1,12 @@
+== 0.11.1
+* Define views in separate classes (subclass of Clevic::View) while
+	maintaining view definition inside the ActiveRecord::Base subclass.
+* foreground and background color specifiers for fields
+* better handling of virtual fields
+* more tests
+* make Clevic::Record a module to be included in an ActiveRecord::Base
+* use Gather for hash/block value collection.
+
 == 0.8.0
 * Big improvements to the way the UI is defined in Entity classes.
 * Show Entity-specific menus, both in the menu bar and as a right-click.

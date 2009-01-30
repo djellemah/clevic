@@ -3,7 +3,10 @@ h1. Clevic
 "RDoc":rdoc | "Rubyforge Project":http://rubyforge.org/projects/clevic/
 
 Screenshot of a fully defined UI with the foreign-key dropdown in place.
-Tabs contain the two tables. See "RDoc":rdoc for feature list.
+Tabs contain the two tables.
+
+See "RDoc":rdoc for feature list.
+See "ModelBuilder":rdoc/Clevic/ModelBuilder.html for how to define views.
 
 !screenshot.png(Screenshot)!
 
