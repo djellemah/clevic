@@ -5,12 +5,31 @@ module Clevic
 =begin rdoc
 This defines a field in the UI, and how it hooks up to a field in the DB.
 
+Attributes marked PROPERTY are DSL-style accessors, where the value can be
+set with either an assignment or by passing a parameter. For example
+  property :ixnay
+
+will allow
+
+  # reader
+  instance.ixnay
+  
+  #writer
+  instance.ixnay = 'nix, baby'
+  
+  #writer
+  instance.ixnay 'nix baby'
+
+--
 TODO decide whether value_for type methods take an entity and do_something methods
 take a value.
 
 TODO this class is a bit confused about whether it handles metadata or record data, or both.
+
+TODO meta needs to handle virtual fields better. Also is_date_time?
 =end
 class Field
+  # The ActiveRecord::Base subclass this field uses to get data from.
   attr_reader :entity_class
   
   # For defining properties
@@ -23,9 +42,8 @@ class Field
   # would have an _id suffix for relationships.
   property :attribute
   
-  # For relational fields, a dot-separated path of attributes starting on the object returned by attribute.
-  # Set by :display in options to the constructor. Paths longer than 1 element haven't been
-  # tested much.
+  # A dot-separated path of attributes starting on the object returned by attribute.
+  # Paths longer than 1 element haven't been tested much.
   # It can also be a block used to display the value of the field. This can be used to display 'virtual'
   # fields from related tables, or calculated fields.
   property :display
@@ -153,7 +171,7 @@ EOF
       return nil if entity.nil?
       transform_attribute( entity.send( attribute ) )
     rescue Exception => e
-      puts "error for #{entity} in value_for: #{e.message}"
+      puts "error for #{entity}.#{entity.send( attribute ).inspect} in value_for: #{e.message}"
       puts e.backtrace
     end
   end
@@ -183,10 +201,22 @@ EOF
     meta.type == ActiveRecord::Reflection::AssociationReflection
   end
   
-  # return true if it's a date, a time or a datetime
-  # cache result because the type won't change in the lifetime of the field
-  def is_date_time?
-    @is_date_time ||= [:time, :date, :datetime].include?( meta.type )
+  # Return true if the field is a date, a time or a datetime.
+  # If display is nil, the value is calculated, so we need
+  # to check the value. Otherwise use the field metadata.
+  # Cache the result for the first non-nil value.
+  def is_date_time?( value )
+    if value.nil?
+      false
+    else
+      @is_date_time ||=
+      if display.nil?
+        [:time, :date, :datetime].include?( meta.type )
+      else
+        # it's a virtual field, so we need to use the value
+        value.is_a?( Date ) || value.is_a?( Time )
+      end
+    end
   end
   
   # return ActiveRecord::Base.columns_hash[attribute]
@@ -241,33 +271,39 @@ EOF
     @read_only || false
   end
   
-  # format this value. Use strftime for date_time types, or % for everything else
-  def do_format( value )
-    if self.format != nil
-      if is_date_time?
-        value.strftime( format )
-      else
-        if self.format.is_a? Proc
-          self.format.call( value )
+  # apply format to value. Use strftime for date_time types, or % for everything else.
+  # If format is a proc, pass value to it.
+  def do_generic_format( format, value )
+    begin
+      unless format.nil?
+        if format.is_a? Proc
+          format.call( value )
         else
-          self.format % value
+          if is_date_time?( value )
+            value.strftime( format )
+          else
+            format % value
+          end
         end
+      else
+        value
       end
-    else
-      value
+    rescue Exception => e
+      puts "format: #{format.inspect}"
+      puts "value.class: #{value.class.inspect}"
+      puts "value: #{value.inspect}"
+      puts e.message
+      puts e.backtrace
+      nil
     end
   end
   
+  def do_format( value )
+    do_generic_format( format, value )
+  end
+  
   def do_edit_format( value )
-    if self.edit_format != nil
-      if is_date_time?
-        value.strftime( edit_format )
-      else
-        self.edit_format % value
-      end
-    else
-      value
-    end
+    do_generic_format( edit_format, value )
   end
   
   # return a sample for the field which can be used to size the UI field widget
