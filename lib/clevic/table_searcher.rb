@@ -2,6 +2,7 @@ require 'clevic/sql_dialects.rb'
 
 module Clevic
 
+# TODO possibly use AR scopes for this?
 class TableSearcher
   attr_reader :entity_class, :order_attributes, :search_criteria, :field
   
@@ -24,10 +25,13 @@ class TableSearcher
     search_field_name = 
     if field.is_association?
       # for related tables
-      raise( "search field #{field.inspect} cannot have a nil path" ) if field.path.nil?
+      unless [String,Symbol].include?( field.display.class )
+        raise( "search field #{field.inspect} cannot have a complex display" ) 
+      end
+      
       # TODO this will only work with a path value with no dots
       # otherwise the SQL gets complicated with joins etc
-      field.path
+      field.display
     else
       # for this table
       entity_class.connection.quote_column_name( field.attribute.to_s )

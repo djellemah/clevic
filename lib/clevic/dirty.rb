@@ -1,11 +1,10 @@
-# Define ActiveRecord::Dirty if it isn't already defined by ActiveRecord,
-# ie 2.1 and up.
 begin
   ActiveRecord::Dirty
 rescue NameError
 
 module ActiveRecord
-  # Track unsaved changes.
+  # Define ActiveRecord::Dirty if it isn't already defined by ActiveRecord,
+  # which it is in 2.1 and up.
   module Dirty
     def self.included(base)
       base.attribute_method_suffix '_changed?', '_change', '_original'
@@ -98,6 +97,5 @@ module ActiveRecord
   end
 
 end # module ActiveRecord
-
 
 end # rescue

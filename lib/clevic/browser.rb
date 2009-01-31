@@ -1,16 +1,19 @@
 require 'clevic/search_dialog.rb'
 require 'clevic/ui/browser_ui.rb'
-require 'clevic/record.rb'
+require 'clevic/table_view.rb'
 require 'clevic.rb'
 
 module Clevic
 
 =begin rdoc
-The main application class. Display as many tabs as there are Clevic::Record or ActiveRecord::Base
-subclasses. 
+The main application class. Display one tabs for each descendant of Clevic::View
+in Clevic::View.order. DefaultView classes created by Clevic::Record are automatically
+added.
 =end
 class Browser < Qt::Widget
   slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab() current_changed(int)}
+  
+  attr_reader :tables_tab
   
   def initialize( main_window )
     super( main_window )
@@ -42,7 +45,7 @@ class Browser < Qt::Widget
     
     tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
     
-    load_models
+    load_views
     update_menus
     main_window.window_title = [database_name, 'Clevic'].compact.join ' '
   end
@@ -85,10 +88,6 @@ class Browser < Qt::Widget
     tables_tab.current_widget
   end
   
-  def tables_tab
-    @tables_tab
-  end
-  
   # slot to handle Ctrl-Tab and move to next tab, or wrap around
   def next_tab
     tables_tab.current_index = 
@@ -121,49 +120,23 @@ class Browser < Qt::Widget
     Qt::Application.translate("Browser", st, nil, Qt::Application::UnicodeUTF8)
   end
 
-  # return the list of descendants of ActiveRecord::Base, or
-  # of Clevic::Record
-  def find_models
-    models = []
-    ObjectSpace.each_object( Class ) do |x|
-      if x.ancestors.include?( ActiveRecord::Base )
-        case
-          when x == ActiveRecord::Base; # don't include this
-          when x == Clevic::Record; # don't include this
-          else; models << x
-        end
-      end
-    end
-    models.sort{|a,b| a.name <=> b.name}
-  end
-  
   # Create the tabs, each with a collection for a particular entity class.
-  #
-  # models parameter can be an array of Model objects, in order of display.
-  # if models is nil, find_models is called
-  def load_models
-    models = Clevic::Record.models + Clevic::Table.subclasses.map{|x| x.constantize}
-    models = find_models if models.empty?
-    models.uniq!
-    Kernel.raise "no models to display" if models.empty?
+  # views come from Clevic::View.order
+  def load_views
+    views = Clevic::View.order.uniq
+    Kernel.raise "no views to display" if views.empty?
     
     # Add all existing model objects as tabs, one each
-    models.each do |model|
-      unless model.entity_class.table_exists?
-        puts "No table for #{model.entity_class.inspect}"
+    views.each do |view_class|
+      view = view_class.new
+      unless view.entity_class.table_exists?
+        puts "No table for #{view.entity_class.inspect}"
+        next
       end
         
       begin
         # create the the table_view and the table_model for the entity_class
-        tab = 
-        if model.entity_class.respond_to?( :ui )
-          puts "Entity#ui deprecated. Use define_ui instead."
-          model.ui( tables_tab )
-        elsif model.respond_to?( :build_table_model )
-          raise "Entity#build_table_model deprecated. Use define_ui instead."
-        else
-          Clevic::TableView.new( model, tables_tab )
-        end
+        tab = Clevic::TableView.new( view )
         
         # show status messages
         tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
@@ -187,8 +160,9 @@ class Browser < Qt::Widget
         end
       rescue Exception => e
         puts
+        puts "UI from #{view} will not be available: #{e.message}"
         puts e.backtrace #if $options[:debug]
-        puts "UI from #{model} will not be available: #{e.message}"
+        puts
       end
     end
   end

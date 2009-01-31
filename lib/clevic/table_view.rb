@@ -6,7 +6,7 @@ require 'qtext/action_builder.rb'
 
 module Clevic
 
-# The view class, implementing neat shortcuts and other pleasantness
+# The view class
 class TableView < Qt::TableView
   include ActionBuilder
   
@@ -21,39 +21,33 @@ class TableView < Qt::TableView
   signals 'status_text(QString)', 'filter_status(bool)'
   
   # model_builder_record is:
-  # - a subclass of Clevic::Record or ActiveRecord::Base
-  # - an instance of ModelBuilder
+  # - an ActiveRecord::Base subclass that includes Clevic::Record
+  # - an instance of Clevic::View
   # - an instance of TableModel
-  def initialize( model_builder_record, parent, &block )
+  def initialize( arg, parent = nil, &block )
     # need the empty block here, otherwise Qt bindings grab &block
     super( parent ) {}
     
     # the model/entity_class/builder
     case 
-      when model_builder_record.kind_of?( TableModel )
-        self.model = model_builder_record
-        init_actions( model_builder_record.entity_class )
+      when arg.kind_of?( TableModel )
+        self.model = arg
+        init_actions( arg.entity_view )
       
-      when model_builder_record.ancestors.include?( ActiveRecord::Base )
-        with_record( model_builder_record, &block )
-        init_actions( model_builder_record )
-      
-      when model_builder_record.kind_of?( Clevic::ModelBuilder )
-        with_builder( model_builder_record, &block )
-        init_actions( model_builder_record.entity_class )
-        
-      when model_builder_record.included_modules.include?( Clevic::Record )
-        ui_definer = model_builder_record.new
-        with_ui( ui_definer, &block )
-        init_actions( ui_definer )
-        
-      when model_builder_record.ancestors.include?( Clevic::Table )
-        ui_definer = model_builder_record.new
-        with_ui( ui_definer, &block )
-        init_actions( ui_definer )
-        
       else
-        raise "TableView#initialize doesn't know what to do with #{model_builder_record.inspect}"
+        # arg is a subclass of Clevic::View
+        model_builder = arg.define_ui
+        model_builder.exec_ui_block( &block )
+        
+        # make sure the TableView has a fully-populated TableModel
+        # self.model is necessary to invoke the Qt layer
+        self.model = model_builder.build( self )
+        self.object_name = arg.widget_name
+        
+        # connect data_changed signals for the entity_class to respond
+        connect_view_signals( arg )
+        
+        init_actions( arg )
     end
       
     # see closeEditor
@@ -71,37 +65,12 @@ class TableView < Qt::TableView
   end
   
   def title
-    @title || model.entity_class.name.demodulize.tableize.humanize
+    @title ||= model.entity_view.title
   end
   
-  def with_builder( model_builder, &block )
-    model_builder.instance_eval( &block ) unless block.nil?
-    
-    # make sure the TableView has a fully-populated TableModel
-    self.model = model_builder.build( self )
-    
-    # connect data_changed signals for the entity_class to respond
-    connect_entity_class_signals( model.entity_class )
-  end
-  
-  def with_record( entity_class, &block )
-    builder = ModelBuilder.from_entity( entity_class )
-    with_builder( builder, &block )
-  end
-  
-  def with_ui( ui_instance, &block )
-    mb = ui_instance.define_ui
-    with_builder( mb, &block )
-    @title = ui_instance.title
-  end
-  
-  def connect_entity_class_signals( entity_class )
-    # this is only here because entity_class.data_changed needs the view.
-    # Should probably fix that.
-    if entity_class.respond_to?( :data_changed )
-      model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
-        entity_class.data_changed( top_left, bottom_right, self )
-      end
+  def connect_view_signals( entity_view )
+    model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
+      entity_view.notify_data_changed( self, top_left, bottom_right )
     end
   end
   
@@ -131,14 +100,12 @@ class TableView < Qt::TableView
     end
   end
   
-  def init_actions( ui_definer )
+  def init_actions( entity_view )
     # add model actions, if they're defined
-    if ui_definer.respond_to?( :actions )
-      list( :model ) do |ab|
-        ui_definer.actions( self, ab )
-      end
-      separator
+    list( :model ) do |ab|
+      entity_view.define_actions( self, ab )
     end
+    separator
     
     # list of actions in the edit menu
     list( :edit ) do
@@ -564,16 +531,14 @@ class TableView < Qt::TableView
   def keyPressEvent( event )
     begin
       # call to entity class for shortcuts
-      if model.entity_class.respond_to?( :key_press_event )
-        begin
-          model_result = model.entity_class.key_press_event( event, current_index, self )
-          return model_result if model_result != nil
-        rescue Exception => e
-          puts e.backtrace
-          error_message = Qt::ErrorMessage.new( self )
-          error_message.show_message( "Error in shortcut handler for #{model.entity_class.name}: #{e.message}" )
-          error_message.show
-        end
+      begin
+        view_result = model.entity_view.notify_key_press( self, event, current_index )
+        return view_result unless view_result.nil?
+      rescue Exception => e
+        puts e.backtrace
+        error_message = Qt::ErrorMessage.new( self )
+        error_message.show_message( "Error in shortcut handler for #{model.entity_view.name}: #{e.message}" )
+        error_message.show
       end
       
       # thrown by the sanity_check_xxx methods
@@ -698,7 +663,7 @@ class TableView < Qt::TableView
   # override to prevent tab pressed from editing next field
   # also takes into account that override_next_index may have been called
   def closeEditor( editor, end_edit_hint )
-    puts "end_edit_hint: #{end_edit_hint.inspect}"
+    puts "end_edit_hint: #{end_edit_hint.inspect}" if $options[:debug]
     case end_edit_hint
       when Qt::AbstractItemDelegate.EditNextItem
         super( editor, Qt::AbstractItemDelegate.NoHint )
@@ -752,19 +717,30 @@ class TableView < Qt::TableView
       self.filtered = false
     end
     
+    found_entity = select_entity( save_entity, save_index.column )
+    if self.filtered? && !found_entity.nil?
+      emit status_text( "Filtered on #{current_index.field.label} = #{current_index.gui_value}" )
+    else
+      emit status_text( nil )
+    end
+  end
+  
+  # move to the given entity and column.
+  def select_entity( entity, column = nil )
+    # sanity check that the entity can actually be found
+    raise "entity is nil" if entity.nil?
+    unless entity.class == model.entity_class
+      raise "entity #{entity.class.name} does not match class #{model.entity_class.name}"
+    end
+    
     # find the row for the saved entity
     found_row = override_cursor( Qt::BusyCursor ) do
-      model.collection.index_for_entity( save_entity )
+      model.collection.index_for_entity( entity )
     end
     
     # create a new index and move to it
     unless found_row.nil?
-      self.current_index = model.create_index( found_row, save_index.column )
-      if self.filtered?
-        emit status_text( "Filtered on #{current_index.field.label} = #{current_index.gui_value}" )
-      else
-        emit status_text( nil )
-      end
+      self.current_index = model.create_index( found_row, column || 0 )
     end
   end
   

@@ -85,7 +85,7 @@ class Account < ActiveRecord::Base
   define_ui do
     plain       :name
     restricted  :vat, :label => 'VAT', :set => %w{ yes no all }
-    plain       :account_type
+    restricted  :account_type, :set => %w{Account Asset Assets Expenses Income Liability Opening Balance Personal Tax VAT}
     plain       :pastel_number, :alignment => Qt::AlignRight, :label => 'Pastel'
     plain       :fringe, :format => "%.1f"
     plain       :active

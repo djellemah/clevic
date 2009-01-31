@@ -10,23 +10,15 @@ require 'clevic/model_column'
 module Clevic
 
 =begin rdoc
-This table model allows an ActiveRecord or ActiveResource to be used as a
-basis for a Qt::AbstractTableModel for viewing in a Qt::TableView.
-
-* labels are the headings in the table view (cached field.label)
-
-* each attribute belongs to the underlying model (cached field.attribute)
-
-* collection is the set of ActiveRecord model objects, called entities in this documentation.
+An instance of Clevic::TableModel is constructed by Clevic::ModelBuilder from the
+UI definition in a Clevic::View, or from the default Clevic::View created by
+including the Clevic::Record module in a ActiveRecord::Base subclass.
 =end
 class TableModel < Qt::AbstractTableModel
   include QtFlags
   
   # the CacheTable of Clevic::Record or ActiveRecord::Base objects
   attr_reader :collection
-  
-  # the actual class for the collection objects
-  attr_accessor :entity_class
   
   # the collection of Clevic::Field objects
   attr_reader :fields
@@ -38,11 +30,15 @@ class TableModel < Qt::AbstractTableModel
   attr_accessor :auto_new
   def auto_new?; auto_new; end
   
+  attr_accessor :entity_view
+  
+  def entity_class
+    entity_view.entity_class
+  end
+  
   signals(
     # index where error occurred, value, message
-    'data_error(QModelIndex,QVariant,QString)',
-    # top_left, bottom_right
-    'dataChanged(const QModelIndex&,const QModelIndex&)'
+    'data_error(QModelIndex,QVariant,QString)'
   )
   
   def initialize( parent = nil )

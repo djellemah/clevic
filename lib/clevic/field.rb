@@ -5,81 +5,123 @@ module Clevic
 =begin rdoc
 This defines a field in the UI, and how it hooks up to a field in the DB.
 
+Attributes marked PROPERTY are DSL-style accessors, where the value can be
+set with either an assignment or by passing a parameter. For example
+  property :ixnay
+
+will allow
+
+  # reader
+  instance.ixnay
+  
+  #writer
+  instance.ixnay = 'nix, baby'
+  
+  #writer
+  instance.ixnay 'nix baby'
+
+Generally properties are for options that can be passed to the field creation
+method in ModelBuilder, whereas ruby attributes are for the internal workings.
+
+#--
 TODO decide whether value_for type methods take an entity and do_something methods
 take a value.
 
 TODO this class is a bit confused about whether it handles metadata or record data, or both.
+
+TODO meta needs to handle virtual fields better. Also is_date_time?
 =end
 class Field
-  attr_reader :entity_class
-  
   # For defining properties
   include Gather
   
-  # The attribute on the AR entity that forms the basis for this field.
-  # Accessing the returned attribute (using send, or the [] method on an entity)
-  # will give a simple value, or another AR entity in the case of relational fields.
-  # In other words, this is *not* the same as the name of the field in the DB, which
-  # would have an _id suffix for relationships.
-  property :attribute
-  
-  # For relational fields, a dot-separated path of attributes starting on the object returned by attribute.
-  # Set by :display in options to the constructor. Paths longer than 1 element haven't been
-  # tested much.
-  # It can also be a block used to display the value of the field. This can be used to display 'virtual'
+  # The value to be displayed after being optionally format-ed
+  #
+  # Takes a String, a Symbol, or a Proc.
+  #
+  # A String will be a dot-separated path of attributes starting on the object returned by attribute.
+  # Paths longer than 1 element haven't been tested much.
+  #
+  # A Symbol refers to a method to be called on the current entity
+  #
+  # A Proc will be passed the current entity. This can be used to display 'virtual'
   # fields from related tables, or calculated fields.
+  #
+  # Defaults to nil, in other words the value of the attribute for this field.
   property :display
   
-  # The label for the field. Defaults to the humanised field name.
+  # The label to be displayed in the column headings. Defaults to the humanised field name.
   property :label
   
-  # The UI delegate class for the field. In Qt, this is a subclass of AbstractItemDelegate.
-  property :delegate
-  
   # For relational fields, this is the class_name for the related AR entity.
+  # TODO not used anymore?
   property :class_name
   
   # One of the alignment specifiers - :left, :centre, :right or :justified.
+  # Defaults to right for numeric fields, centre for boolean, and left for
+  # other values.
   property :alignment
   
   # something to do with the icon that Qt displays. Not implemented yet.
   property :decoration
   
-  # The format string, formatted by strftime for date and time fields, by sprintf for others.
-  # Defaults to something sensible for the type of the field.
+  # This defines how to format the value returned by :display. It takes a string or a Proc.
+  # Generally the string is something 
+  # that can be understood by strftime (for time and date fields) or understood 
+  # by % (for everything else). It can also be a Proc that has one parameter - 
+  # the current entity. There are sensible defaults for common field types.
   property :format
   
-  # The format used for editing
+  # This is just like format, except that it's used to format the value just
+  # before it's edited. A good use of this is to display dates with a 2-digit year
+  # but edit them with a 4 digit year.
+  # Defaults to a sensible value for some fields, for others it will default to the value of :format.
   property :edit_format
   
   # Whether the field is currently visible or not.
   property :visible
   
-  # Sample is used if the programmer wishes to provide a string that can be used
+  # Sample is used if the programmer wishes to provide a value (that will be converted
+  # using to_s) that can be used
   # as the basis for calculating the width of the field. By default this will be
-  # calculated from the database, but this may be an expensive operation. So we
+  # calculated from the database, but this may be an expensive operation, and
+  # doesn't always work properly. So we
   # have the option to override that if we wish.
   property :sample
   
-  # set the field to read-only
+  # Takes a boolean. Set the field to read-only.
   property :read_only
   
-  # the foreground and background colors
+  # The foreground and background colors.
+  # Can take a Proc, a string, or a symbol.
+  # - A Proc is called with an entity
+  # - A String is treated as a constant which may be one of the string constants understood by Qt::Color
+  # - A symbol is treated as a method to be call on an entity
+  #
+  # The result can be a Qt::Color, or one of the strings in 
+  # http://www.w3.org/TR/SVG/types.html#ColorKeywords.
   property :foreground, :background
   
+  # Can take a Proc, a string, or a symbol.
+  # - A Proc is called with an entity
+  # - A String is treated as a constant
+  # - A symbol is treated as a method to be call on an entity
   property :tooltip
   
-  # for restricted fields
+  # The set of allowed values for restricted fields. If it's a hash, the
+  # keys will be stored in the db, and the values displayed in the UI.
   property :set
   
-  # for sorting distinct delegates
+  # Only for the distinct field type. The values will be sorted either with the
+  # most used values first (:frequency => true) or in alphabetical order (:description => true).
   property :frequency, :description
   
-  # default value for this field for new records. Not sure how to populate it though.
+  # Not implemented. Default value for this field for new records. Not sure how to populate it though.
   property :default
   
   # properties for ActiveRecord options
-  # There are actually from VALID_FIND_OPTIONS, but it's protected
+  # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected
+  # each element becomes a property.
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
   
@@ -95,15 +137,33 @@ class Field
     end
   end
   
+  # The UI delegate class for the field. In Qt, this is a subclass of AbstractItemDelegate.
+  attr_accessor :delegate
+  
+  # The attribute on the AR entity that forms the basis for this field.
+  # Accessing the returned attribute (using send, or the [] method on an entity)
+  # will give a simple value, or another AR entity in the case of relational fields.
+  # In other words, this is *not* the same as the name of the field in the DB, which
+  # would normally have an _id suffix for relationships.
+  attr_accessor :attribute
+  
+  # The ActiveRecord::Base subclass this field uses to get data from.
+  attr_reader :entity_class
+  
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.
   # - attribute is the symbol for the attribute on the entity_class.
-  # - entity_class is the ActiveRecord class which this Field talks to.
-  # - options is a hash of writable attributes in Field.
+  # - entity_class is the ActiveRecord::Base subclass which this Field talks to.
+  # - options is a hash of writable attributes in Field, which can be any of the properties defined in this class.
   def initialize( attribute, entity_class, options, &block )
     # sanity checking
-    raise "attribute #{attribute.inspect} must be a symbol" unless attribute.is_a?( Symbol )
-    raise "entity_class must be a descendant of ActiveRecord::Base" unless entity_class.ancestors.include?( ActiveRecord::Base )
+    unless attribute.is_a?( Symbol )
+      raise "attribute #{attribute.inspect} must be a symbol"
+    end
+    
+    unless entity_class.ancestors.include?( ActiveRecord::Base )
+      raise "entity_class must be a descendant of ActiveRecord::Base"
+    end
     
     unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
@@ -113,7 +173,7 @@ EOF
       raise msg
     end
     
-    # set values
+    # instance variables
     @attribute = attribute
     @entity_class = entity_class
     @visible = true
@@ -135,8 +195,13 @@ EOF
   # Return the attribute value for the given ActiveRecord entity, or nil
   # if entity is nil. Will call transform_attribute.
   def value_for( entity )
-    return nil if entity.nil?
-    transform_attribute( entity.send( attribute ) )
+    begin
+      return nil if entity.nil?
+      transform_attribute( entity.send( attribute ) )
+    rescue Exception => e
+      puts "error for #{entity}.#{entity.send( attribute ).inspect} in value_for: #{e.message}"
+      puts e.backtrace
+    end
   end
   
   # Apply display, to the given
@@ -164,10 +229,22 @@ EOF
     meta.type == ActiveRecord::Reflection::AssociationReflection
   end
   
-  # return true if it's a date, a time or a datetime
-  # cache result because the type won't change in the lifetime of the field
-  def is_date_time?
-    @is_date_time ||= [:time, :date, :datetime].include?( meta.type )
+  # Return true if the field is a date, a time or a datetime.
+  # If display is nil, the value is calculated, so we need
+  # to check the value. Otherwise use the field metadata.
+  # Cache the result for the first non-nil value.
+  def is_date_time?( value )
+    if value.nil?
+      false
+    else
+      @is_date_time ||=
+      if display.nil?
+        [:time, :date, :datetime].include?( meta.type )
+      else
+        # it's a virtual field, so we need to use the value
+        value.is_a?( Date ) || value.is_a?( Time )
+      end
+    end
   end
   
   # return ActiveRecord::Base.columns_hash[attribute]
@@ -222,33 +299,39 @@ EOF
     @read_only || false
   end
   
-  # format this value. Use strftime for date_time types, or % for everything else
-  def do_format( value )
-    if self.format != nil
-      if is_date_time?
-        value.strftime( format )
-      else
-        if self.format.is_a? Proc
-          self.format.call( value )
+  # apply format to value. Use strftime for date_time types, or % for everything else.
+  # If format is a proc, pass value to it.
+  def do_generic_format( format, value )
+    begin
+      unless format.nil?
+        if format.is_a? Proc
+          format.call( value )
         else
-          self.format % value
+          if is_date_time?( value )
+            value.strftime( format )
+          else
+            format % value
+          end
         end
+      else
+        value
       end
-    else
-      value
+    rescue Exception => e
+      puts "format: #{format.inspect}"
+      puts "value.class: #{value.class.inspect}"
+      puts "value: #{value.inspect}"
+      puts e.message
+      puts e.backtrace
+      nil
     end
   end
   
+  def do_format( value )
+    do_generic_format( format, value )
+  end
+  
   def do_edit_format( value )
-    if self.edit_format != nil
-      if is_date_time?
-        value.strftime( edit_format )
-      else
-        self.edit_format % value
-      end
-    else
-      value
-    end
+    do_generic_format( edit_format, value )
   end
   
   # return a sample for the field which can be used to size the UI field widget
@@ -289,10 +372,12 @@ EOF
     @sample || self.label
   end
   
+  # Called by Clevic::TableModel to get the tooltip value
   def tooltip_for( entity )
     cache_value_for( :background, entity )
   end
 
+  # TODO Doesn't do anything useful yet.
   def decoration_for( entity )
     nil
   end
@@ -308,10 +393,12 @@ EOF
     end
   end
   
+  # Called by Clevic::TableModel to get the foreground color value
   def foreground_for( entity )
     cache_value_for( :foreground, entity ) {|x| string_or_color(x)}
   end
   
+  # Called by Clevic::TableModel to get the background color value
   def background_for( entity )
     cache_value_for( :background, entity ) {|x| string_or_color(x)}
   end

@@ -1,1 +1,1 @@
-export RUBYLIB=$RUBYLIB:`pwd`/lib
+export RUBYLIB=`pwd`/lib:`pwd`/models

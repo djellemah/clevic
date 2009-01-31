@@ -6,7 +6,7 @@ module Clevic
 Base class for other delegates using Combo boxes. Emit focus out signals,
 because ComboBox stupidly doesn't.
 
-Generally these will be created using a ModelBuilder.
+Generally these will be created using a Clevic::ModelBuilder.
 =end
 class ComboDelegate < Clevic::ItemDelegate
   def initialize( parent, field )

@@ -29,19 +29,13 @@
 <div id="main">
 	<h1>Clevic</h1>
 	<p><a href="rdoc">RDoc</a> | <a href="http://rubyforge.org/projects/clevic/">Rubyforge Project</a></p>
-
-
-	<p>Screenshot of a fully defined UI with the foreign-key dropdown in place.
-Tabs contain the two tables. See <a href="rdoc">RDoc</a> for feature list.</p>
-
-
-	<p><img src="screenshot.png" title="Screenshot" alt="Screenshot" /></p>
-
-
-	<p>Code for minimal UI definition. Clevic will create a fairly sensible
+<p>Screenshot of a fully defined UI with the foreign-key dropdown in place.<br />
+Tabs contain the two tables.</p>
+<p>See <a href="rdoc">RDoc</a> for feature list.<br />
+See <a href="rdoc/Clevic/ModelBuilder.html">ModelBuilder</a> for how to define views.</p>
+<p><img src="screenshot.png" title="Screenshot" alt="Screenshot" /></p>
+<p>Code for minimal UI definition. Clevic will create a fairly sensible<br />
 UI from the DB metadata.</p>
-
-
 <pre><code>
 require 'clevic.rb'
 
@@ -55,23 +49,22 @@ Clevic::DbOptions.connect do
 end
 
 # minimal definition to get combo boxes to show up
-class Entry &lt; Clevic::Record
+class Entry &lt; ActiveRecord::Base
+  include Clevic::Record
   belongs_to :debit, :class_name =&gt; 'Account', :foreign_key =&gt; 'debit_id'
   belongs_to :credit, :class_name =&gt; 'Account', :foreign_key =&gt; 'credit_id'
 end
 
 # minimal definition to get sensible values in combo boxes
-class Account &lt; Clevic::Record
+class Account &lt; ActiveRecord::Base
+  include Clevic::Record
   def to_s; name; end
 end
 
 </code></pre>
-
-	<p>Code for a full definition. The Entry model has some code to
-update the credit and debit fields when the new item description
+<p>Code for a full definition. The Entry model has some code to<br />
+update the credit and debit fields when the new item description<br />
 is found in the table.</p>
-
-
 <pre><code>
 require 'clevic.rb'
 
@@ -87,10 +80,12 @@ Clevic::DbOptions.connect( $options ) do
   username 'accounts'
 end
 
-class Entry &lt; Clevic::Record
+class Entry &lt; ActiveRecord::Base
   belongs_to :debit, :class_name =&gt; 'Account', :foreign_key =&gt; 'debit_id'
   belongs_to :credit, :class_name =&gt; 'Account', :foreign_key =&gt; 'credit_id'
-
+  
+  include Clevic::Record
+  
   define_ui do
     plain       :date, :sample =&gt; '88-WWW-99'
     distinct    :description, :conditions =&gt; "now() - date &lt;= '1 year'", :sample =&gt; 'm' * 26
@@ -101,21 +96,21 @@ class Entry &lt; Clevic::Record
     plain       :cheque_number
     plain       :active, :sample =&gt; 'WW'
     plain       :vat, :label =&gt; 'VAT', :sample =&gt; 'WW', :tooltip =&gt; 'Does this include VAT?'
-
+    
     records     :order =&gt; 'date, id'
   end
-
+  
   # called when data is changed in the UI
   def self.data_changed( top_left, bottom_right, view )
     if top_left == bottom_right
       update_credit_debit( top_left, view )
     else
-      puts "top_left: #{top_left.inspect}" 
-      puts "bottom_right: #{bottom_right.inspect}" 
-      puts "can't do data_changed for a range" 
+      puts "top_left: #{top_left.inspect}"
+      puts "bottom_right: #{bottom_right.inspect}"
+      puts "can't do data_changed for a range"
     end
   end
-
+  
   # check that the current field is :descriptions, then
   # copy the values for the credit and debit fields
   # from the previous similar entry
@@ -134,12 +129,12 @@ class Entry &lt; Clevic::Record
         current_index.entity.debit = similar.debit
         current_index.entity.credit = similar.credit
         current_index.entity.category = similar.category
-
+        
         # emit signal to update view from top_left to bottom_right
         top_left_index = current_index.choppy( :column =&gt; 0 )
         bottom_right_index = current_index.choppy( :column =&gt; view.model.column_count - 1 )
         view.dataChanged( top_left_index, bottom_right_index )
-
+        
         # move edit cursor to amount field
         view.selection_model.clear
         view.override_next_index( current_index.choppy( :column =&gt; view.field_column( :amount ) ) )
@@ -148,19 +143,21 @@ class Entry &lt; Clevic::Record
   end
 end
 
-class Account &lt; Clevic::Record  
+class Account &lt; ActiveRecord::Base
   has_many :debits, :class_name =&gt; 'Entry', :foreign_key =&gt; 'debit_id'
   has_many :credits, :class_name =&gt; 'Entry', :foreign_key =&gt; 'credit_id'
-
+  
+  include Clevic::Record
+  
   # define how fields are displayed
   define_ui do
     plain       :name
     restricted  :vat, :label =&gt; 'VAT', :set =&gt; %w{ yes no all }
-    plain       :account_type
+    restricted  :account_type, :set =&gt; %w{Account Asset Assets Expenses Income Liability Opening Balance Personal Tax VAT}
     plain       :pastel_number, :alignment =&gt; Qt::AlignRight, :label =&gt; 'Pastel'
-    plain       :fringe, :format =&gt; "%.1f" 
+    plain       :fringe, :format =&gt; "%.1f"
     plain       :active
-
+    
     records  :order =&gt; 'name,account_type'
   end
 end

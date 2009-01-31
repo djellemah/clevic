@@ -3,19 +3,21 @@
 require 'qtext/flags.rb'
 require 'qtext/hash_collector.rb'
 
+class Object
+  # recursively calls each entry in path_ary
+  # will return nil if any entry in path_ary
+  # results in a nil value.
+  def evaluate_path( path_ary )
+    path_ary.inject( self ) do |value, att|
+      value.nil? ? nil : value.send( att )
+    end
+  end
+end
+
 module ActiveRecord
   class Base
-    # recursively calls each entry in path_ary
-    def evaluate_path( path_ary )
-      path_ary.inject( self ) do |value, att|
-        if value.nil?
-          nil
-        else
-          value.send( att )
-        end
-      end
-    end
-    
+    # checks to see if attribute_sym is either in the column
+    # name list, or in the set of reflections.
     def self.has_attribute?( attribute_sym )
       if column_names.include?(  attribute_sym.to_s )
         true
