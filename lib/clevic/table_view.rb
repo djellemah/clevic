@@ -717,19 +717,30 @@ class TableView < Qt::TableView
       self.filtered = false
     end
     
+    found_entity = select_entity( save_entity, save_index.column )
+    if self.filtered? && !found_entity.nil?
+      emit status_text( "Filtered on #{current_index.field.label} = #{current_index.gui_value}" )
+    else
+      emit status_text( nil )
+    end
+  end
+  
+  # move to the given entity and column.
+  def select_entity( entity, column = nil )
+    # sanity check that the entity can actually be found
+    raise "entity is nil" if entity.nil?
+    unless entity.class == model.entity_class
+      raise "entity #{entity.class.name} does not match class #{model.entity_class.name}"
+    end
+    
     # find the row for the saved entity
     found_row = override_cursor( Qt::BusyCursor ) do
-      model.collection.index_for_entity( save_entity )
+      model.collection.index_for_entity( entity )
     end
     
     # create a new index and move to it
     unless found_row.nil?
-      self.current_index = model.create_index( found_row, save_index.column )
-      if self.filtered?
-        emit status_text( "Filtered on #{current_index.field.label} = #{current_index.gui_value}" )
-      else
-        emit status_text( nil )
-      end
+      self.current_index = model.create_index( found_row, column || 0 )
     end
   end
   
