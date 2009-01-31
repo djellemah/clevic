@@ -725,7 +725,9 @@ class TableView < Qt::TableView
     end
   end
   
-  # move to the given entity and column.
+  # Move to the row for the given entity and the given column.
+  # If column is a symbol,
+  # field_column will be called to find the integer index.
   def select_entity( entity, column = nil )
     # sanity check that the entity can actually be found
     raise "entity is nil" if entity.nil?
@@ -740,6 +742,8 @@ class TableView < Qt::TableView
     
     # create a new index and move to it
     unless found_row.nil?
+      column = field_column( column ) if column.is_a? Symbol
+      selection_model.clear
       self.current_index = model.create_index( found_row, column || 0 )
     end
   end
@@ -766,7 +770,31 @@ class TableView < Qt::TableView
     puts "itemDelegateForColumn #{column}"
     super
   end
+
+  # find the TableView instance for the given entity_view
+  # or entity_model. Return nil if no match found.
+  def find_table_view( entity_model_or_view )
+    parent.children.find do |x|
+      if x.is_a? TableView
+        x.model.entity_view.class == entity_model_or_view || x.model.entity_class == entity_model_or_view
+      end
+    end
+  end
   
+  # execute the block with the TableView instance
+  # currently handling the entity_model_or_view.
+  # Don't execute the block if nothing is found.
+  def with_table_view( entity_model_or_view, &block )
+    tv = find_table_view( entity_model_or_view )
+    yield ( tv ) unless tv.nil?
+  end
+  
+  # make this window visible if it's in a TabWidget
+  def raise
+    # the tab's parent is a StackedWiget, and its parent is TabWidget
+    tab_widget = parent.parent
+    tab_widget.current_widget = self if tab_widget.class == Qt::TabWidget
+  end
 end
 
 end
