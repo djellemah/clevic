@@ -278,6 +278,7 @@ class ModelBuilder
   end
   
   attr_accessor :entity_view
+  attr_accessor :find_options
   
   # execute a block containing method calls understood by Clevic::ModelBuilder
   # arg can be something that responds to define_ui_block,
@@ -475,12 +476,14 @@ class ModelBuilder
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
     @model = Clevic::TableModel.new( table_view )
-    table_view.object_name = @object_name
+    @model.builder = self
     @model.entity_view = entity_view
     @model.fields = @fields
     @model.read_only = @read_only
     @model.auto_new = auto_new?
     
+    # setup model
+    table_view.object_name = @object_name
     # set parent for all delegates
     fields.each {|x| x.delegate.parent = table_view unless x.delegate.nil? }
     
@@ -539,7 +542,7 @@ protected
   def set_records( arg )
     if arg.class == Hash
       # need to defer this until all fields are collected
-      @options = arg
+      @find_options = arg
     else
       @records = arg
     end
@@ -550,7 +553,7 @@ protected
   def get_records
     if @records.nil?
       #~ add_include_options
-      @records = CacheTable.new( entity_class, @options.merge( :auto_new => auto_new? ) )
+      @records = CacheTable.new( entity_class, @find_options )
     end
     @records
   end

@@ -19,6 +19,7 @@ class TableModel < Qt::AbstractTableModel
   
   # the CacheTable of Clevic::Record or ActiveRecord::Base objects
   attr_reader :collection
+  alias_method :cache_table, :collection
   
   # the collection of Clevic::Field objects
   attr_reader :fields
@@ -31,6 +32,7 @@ class TableModel < Qt::AbstractTableModel
   def auto_new?; auto_new; end
   
   attr_accessor :entity_view
+  attr_accessor :builder
   
   def entity_class
     entity_view.entity_class
@@ -136,6 +138,9 @@ class TableModel < Qt::AbstractTableModel
       # destroy the db object, and its associated table row
       removed.destroy
     end
+    
+    # create a new row if auto_new is on
+    add_new_item if collection.empty? && auto_new?
   end
   
   # save the AR model at the given index, if it's dirty
@@ -190,8 +195,8 @@ class TableModel < Qt::AbstractTableModel
     retval
   end
   
-  def reload_data( options = {} )
-    # renew cache
+  def reload_data( options = nil )
+    # renew cache. All records will be dropped and reloaded.
     self.collection = self.collection.renew( options )
     # tell the UI we had a major data change
     reset

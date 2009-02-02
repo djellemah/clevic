@@ -1,8 +1,10 @@
 require 'rubygems'
 require 'Qt4'
 require 'fastercsv'
-require 'clevic/model_builder.rb'
 require 'qtext/action_builder.rb'
+
+require 'clevic/model_builder.rb'
+require 'clevic/filter_command.rb'
 
 module Clevic
 
@@ -10,10 +12,10 @@ module Clevic
 class TableView < Qt::TableView
   include ActionBuilder
   
-  # whether the model is currently filtered
+  # the current filter command
   # TODO better in QAbstractSortFilter?
   attr_accessor :filtered
-  def filtered?; self.filtered; end
+  def filtered?; !@filtered.nil?; end
   
   # status_text is emitted when this object was to display something in the status bar
   # error_test is emitted when an error of some kind must be displayed to the user.
@@ -59,7 +61,6 @@ class TableView < Qt::TableView
     # but need to change the shortcut ideas of next and previous rows
     self.vertical_header.movable = false
     self.sorting_enabled = false
-    @filtered = false
     
     self.context_menu_policy = Qt::ActionsContextMenu
   end
@@ -104,8 +105,8 @@ class TableView < Qt::TableView
     # add model actions, if they're defined
     list( :model ) do |ab|
       entity_view.define_actions( self, ab )
+      separator
     end
-    separator
     
     # list of actions in the edit menu
     list( :edit ) do
@@ -164,8 +165,8 @@ class TableView < Qt::TableView
     
     return true if selection_model.selection.size != 1
     
-    selection_range = selection_model.selection[0]
-    selected_index = selection_model.selected_indexes[0]
+    selection_range = selection_model.selection.first
+    selected_index = selection_model.selected_indexes.first
     
     if selection_range.single_cell?
       # only one cell selected, so paste like a spreadsheet
@@ -177,7 +178,7 @@ class TableView < Qt::TableView
       end
     else
       return true if selection_range.height != arr.size
-      return true if selection_range.width != arr[0].size
+      return true if selection_range.width != arr.first.size
       
       # size is the same, so do the paste
       paste_to_index( selected_index, arr )
@@ -329,15 +330,29 @@ class TableView < Qt::TableView
   # force a complete reload of the current tab's data
   def refresh
     override_cursor( Qt::BusyCursor ) do
-      model.reload_data
+      restore_entity do
+        model.reload_data
+      end
     end
   end
   
-  # toggle the filter, based on current selection.
-  def filter_by_current( bool_filter )
-    # TODO if there's no selection, use the current index instead
-    filter_by_indexes( selection_model.selected_indexes )
-    emit filter_status( bool_filter )
+  # return an array of the current selection, or the
+  # current index in an array if the selection is empty
+  def selection_or_current
+    sis = selection_model.selected_indexes
+    retval =
+    if sis.empty?
+      [ current_index ]
+    else
+      sis
+    end
+    
+    # strip out bad indexes, so other things don't have to check
+    # can't use select because copying indexes causes an abort
+    #~ retval.select{|x| x != nil && x.valid?}
+    retval.reject!{|x| x.nil? || !x.valid?}
+    # retval needed here because reject! returns nil if nothing was rejected
+    retval
   end
   
   # alternative access for auto_size_column
@@ -468,7 +483,7 @@ class TableView < Qt::TableView
     end
     
     # make the gui refresh
-    bottom_right_index = top_left_index.choppy {|i| i.row += csv_arr.size - 1; i.column += csv_arr[0].size - 1 }
+    bottom_right_index = top_left_index.choppy {|i| i.row += csv_arr.size - 1; i.column += csv_arr.first.size - 1 }
     emit model.dataChanged( top_left_index, bottom_right_index )
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
@@ -677,52 +692,72 @@ class TableView < Qt::TableView
         super
     end
   end
-
-  # If self.filter is false, use the data in the indexes to filter the data set;
-  # otherwise turn filtering off.
-  # Sets self.filter to true if filtering worked, false otherwise.
-  # indexes is a collection of Qt::ModelIndex
-  # TODO combine with filter_by_current
-  def filter_by_indexes( indexes )
-    unless indexes[0].field.filterable?
-      emit status_text( "Can't filter on #{indexes[0].field.label}" )
-      return
-    end
-    
+  
+  # toggle the filter, based on current selection.
+  def filter_by_current( bool_filter )
+    filter_by_indexes( selection_or_current )
+  end
+  
+  def filter_by_options( args )
+    filtered.undo if filtered?
+    self.filtered = FilterCommand.new( self, [], args )
+    emit filter_status( filtered.doit )
+  end
+  
+  # Save the current entity, do something, then restore
+  # the cursor position to the entity if possible.
+  # Return the result of the block.
+  def restore_entity( &block )
     save_entity = current_index.entity
-    save_entity.save if save_entity.changed?
-    save_index = current_index
+    unless save_entity.nil?
+      save_entity.save if save_entity.changed?
+      save_index = current_index
+    end
     
-    unless self.filtered
-      # filter by current selection
-      # TODO handle a multiple-selection
-      if indexes.empty?
-        self.filtered = false
-      elsif indexes.size > 1
-        emit status_text( "Can't do multiple selection filters yet" )
-        self.filtered = false
-      end
+    retval = yield
+    
+    # find the entity if possible
+    select_entity( save_entity, save_index.column ) unless save_entity.nil?
+    
+    retval
+  end
+
+  # Filter by the value in the current index.
+  # indexes is a collection of Qt::ModelIndex
+  def filter_by_indexes( indexes )
+    case
+      when filtered?
+        # unfilter
+        restore_entity do
+          filtered.undo
+          self.filtered = nil
+          # update status bar
+          emit status_text( nil )
+          emit filter_status( false )
+        end
+        
+      when indexes.empty?
+        emit status_text( "No field selected for filter" )
+        
+      when !indexes.first.field.filterable?
+        emit status_text( "Can't filter on #{indexes.first.field.label}" )
       
-      if indexes[0].entity.new_record?
+      when indexes.size > 1
+        emit status_text( "Can't do multiple selection filters yet" )
+      
+      when indexes.first.entity.new_record?
         emit status_text( "Can't filter on a new row" )
-        self.filtered = false
-        return
+        
       else
-        model.reload_data( :conditions => { indexes[0].field_name => indexes[0].field_value } )
-        self.filtered = true
+        self.filtered = FilterCommand.new( self, indexes, :conditions => { indexes.first.field_name => indexes.first.field_value } )
+        # try to end up on the same entity, even after the filter
+        restore_entity do
+          emit filter_status( filtered.doit )
+        end
+        # update status bar
+        emit status_text( filtered.status_message )
       end
-    else
-      # unfilter
-      model.reload_data( :conditions => {} )
-      self.filtered = false
-    end
-    
-    found_entity = select_entity( save_entity, save_index.column )
-    if self.filtered? && !found_entity.nil?
-      emit status_text( "Filtered on #{current_index.field.label} = #{current_index.gui_value}" )
-    else
-      emit status_text( nil )
-    end
+      filtered?
   end
   
   # Move to the row for the given entity and the given column.
@@ -758,9 +793,9 @@ class TableView < Qt::TableView
   def search( search_criteria )
     indexes = model.search( current_index, search_criteria )
     if indexes.size > 0
-      emit status_text( "Found #{search_criteria.search_text} at row #{indexes[0].row}" )
+      emit status_text( "Found #{search_criteria.search_text} at row #{indexes.first.row}" )
       selection_model.clear
-      self.current_index = indexes[0]
+      self.current_index = indexes.first
     else
       emit status_text( "No match found for #{search_criteria.search_text}" )
     end
@@ -773,6 +808,8 @@ class TableView < Qt::TableView
 
   # find the TableView instance for the given entity_view
   # or entity_model. Return nil if no match found.
+  # TODO doesn't really belong here because TableView will not always
+  # be in a TabWidget context.
   def find_table_view( entity_model_or_view )
     parent.children.find do |x|
       if x.is_a? TableView
@@ -784,12 +821,16 @@ class TableView < Qt::TableView
   # execute the block with the TableView instance
   # currently handling the entity_model_or_view.
   # Don't execute the block if nothing is found.
+  # TODO doesn't really belong here because TableView will not always
+  # be in a TabWidget context.
   def with_table_view( entity_model_or_view, &block )
     tv = find_table_view( entity_model_or_view )
-    yield ( tv ) unless tv.nil?
+    yield( tv ) unless tv.nil?
   end
   
   # make this window visible if it's in a TabWidget
+  # TODO doesn't really belong here because TableView will not always
+  # be in a TabWidget context.
   def raise
     # the tab's parent is a StackedWiget, and its parent is TabWidget
     tab_widget = parent.parent

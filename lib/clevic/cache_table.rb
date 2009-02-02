@@ -49,7 +49,7 @@ class CacheTable < Array
   # The count of the records according to the db, which may be different to
   # the records in the cache
   def sql_count
-    @entity_class.count( @options.reject{|k,v| k == :order} )
+    entity_class.count( options.reject{|k,v| k == :order} )
   end
   
   # Return the set of OrderAttribute objects for this collection.
@@ -63,26 +63,22 @@ class CacheTable < Array
       # add the primary key if nothing is specified
       # because we need an ordering of some kind otherwise
       # index_for_entity will not work
-      if !@order_attributes.any? {|x| x.attribute == @entity_class.primary_key }
-        @order_attributes << OrderAttribute.new( @entity_class, @entity_class.primary_key )
+      if !@order_attributes.any? {|x| x.attribute == entity_class.primary_key }
+        @order_attributes << OrderAttribute.new( entity_class, entity_class.primary_key )
       end
     end
     @order_attributes
   end
   
   # add an id to options[:order] if it's not in there
-  # also create @order_attributes, and @auto_new
+  # also create @order_attributes
   def sanitise_options!
-    # save this for later
-    @auto_new = @options[:auto_new]
-    @options.delete :auto_new
-    
-    # make sure we have a string here
-    @options[:order] ||= ''
+    # make sure we have a string here, even if it's blank
+    options[:order] ||= ''
     
     # recreate the options[:order] entry to include default
-    # TODO why though?
-    @options[:order] = order_attributes.map{|x| x.to_sql}.join(',')
+    # TODO why though? Can't remember
+    options[:order] = order_attributes.map{|x| x.to_sql}.join(',')
   end
 
   # Execute the block with the specified preload_count,
@@ -104,7 +100,7 @@ class CacheTable < Array
     offset = index < 0 ? index + @row_count : index
     
     # fetch self.preload_count records
-    records = @entity_class.find( :all, @options.merge( :offset => offset, :limit => preload_count ) )
+    records = entity_class.find( :all, options.merge( :offset => offset, :limit => preload_count ) )
     records.each_with_index {|x,i| self[i+index] = x if !cached_at?( i+index )}
     
     # return the first one
@@ -118,10 +114,11 @@ class CacheTable < Array
   end
   
   # make a new instance that has the attributes of this one, but an empty
-  # data set. pass in ActiveRecord options to filter
-  def renew( options = {} )
+  # data set. pass in ActiveRecord options to filter.
+  # TODO using named scopes might make filtering easier.
+  def renew( args = nil )
     clear
-    self.class.new( @entity_class, @options.merge( options ) )
+    self.class.new( entity_class, args || options )
   end
   
   # find the index for the given entity, using a binary search algorithm (bsearch).
@@ -129,8 +126,7 @@ class CacheTable < Array
   # 0 is returned if the entity is nil
   # nil is returned if the array is empty
   def index_for_entity( entity )
-    return nil if size == 0
-    return nil if entity.nil?
+    return nil if size == 0 || entity.nil?
     
     # only load one record at a time, because mostly we only
     # need one for the binary seach. No point in pulling several out.
@@ -165,24 +161,9 @@ class CacheTable < Array
     end
   end
   
-  def auto_new?
-    @auto_new
-  end
-  
   def search( field, search_criteria, start_entity )
     Clevic::TableSearcher.new( entity_class, order_attributes, search_criteria, field ).search( start_entity )
   end
-
-  # delete the given index. If the size ends up as 0,
-  # make sure there's always at least one empty record
-  def delete_at( index )
-    retval = super
-    if self.size == 0 && auto_new?
-      self << @entity_class.new
-    end
-    retval
-  end
-  
 end
 
 # This is part of Array in case the programmer wants to use
@@ -193,7 +174,7 @@ class Array
     !at(index).nil?
   end
   
-  def searcher
+  def search
     raise "not implemented"
   end
 end
