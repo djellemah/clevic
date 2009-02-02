@@ -119,6 +119,10 @@ class Field
   # Not implemented. Default value for this field for new records. Not sure how to populate it though.
   property :default
   
+  # the property used for finding the field, ie by TableView#field_column
+  # defaults to the attribute.
+  property :id
+  
   # properties for ActiveRecord options
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected
   # each element becomes a property.
@@ -175,6 +179,7 @@ EOF
     
     # instance variables
     @attribute = attribute
+    @id = attribute
     @entity_class = entity_class
     @visible = true
     

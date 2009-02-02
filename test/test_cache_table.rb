@@ -87,29 +87,6 @@ class TestCacheTable < Test::Unit::TestCase
     assert_equal OrderAttribute.new( Passenger, 'row asc' ), ct.order_attributes[2]
   end
   
-  should 'not have new record on empty' do
-    # without auto_new
-    (0...Passenger.count).each do |i|
-      @cache_table.delete_at 0
-      @cache_table.delete_at 0
-      @cache_table.delete_at 0
-    end
-    assert_equal 0, @cache_table.size
-  end
-  
-  should 'have new record on empty' do
-    #with auto_new
-    @cache_table = @cache_table.renew( :auto_new => true )
-    assert !@cache_table.options.has_key?( :auto_new ), "CacheTable should not have :auto_new in options"
-    (0...Passenger.count).each do |i|
-      @cache_table.delete_at 0
-      @cache_table.delete_at 0
-      @cache_table.delete_at 0
-    end
-    
-    assert_equal 1, @cache_table.size
-  end
-  
   should 'return nil for a nil parameter' do
     assert_nil @cache_table.index_for_entity( nil )
   end

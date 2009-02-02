@@ -75,9 +75,9 @@ class TableView < Qt::TableView
     end
   end
   
-  # find the row index for the given field
+  # find the row index for the given field id (symbol)
   def field_column( field )
-    model.fields.each_with_index {|x,i| return i if x.attribute == field }
+    model.fields.each_with_index {|x,i| return i if x.id == field }
   end
     
   # return menu actions for the model, or an empty array if there aren't any

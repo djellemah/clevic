@@ -139,7 +139,7 @@ class TestTableSearcher < Test::Unit::TestCase
       @simple_search_criteria.from_start = true
       @simple_search_criteria.search_text = Flight.find(:first).number
       flight_field = Clevic::Field.new( :flight, Passenger, {} )
-      assert_nil flight_field.path
+      assert_nil flight_field.display
       assert_raise RuntimeError do
         table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, flight_field )
         table_searcher.search
