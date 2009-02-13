@@ -108,9 +108,10 @@ class Field
   # - A symbol is treated as a method to be call on an entity
   property :tooltip
   
-  # The set of allowed values for restricted fields. If it's a hash, the
-  # keys will be stored in the db, and the values displayed in the UI.
-  # Anything else must respond to each
+  # An Enumerable of allowed values for restricted fields. If each yields
+  # two values (like it does for a Hash), the
+  # first will be stored in the db, and the second displayed in the UI.
+  # If it's a proc, it must return an Enumerable as above.
   property :set
   
   # Only for the distinct field type. The values will be sorted either with the
