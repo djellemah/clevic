@@ -344,37 +344,24 @@ class ModelBuilder
     @fields << field
   end
   
+  # a combo box with a set of supplied values
   def combo( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
     
-    # TODO this really belongs in a separate 'map' field
-    case field.set
-      when Hash
-        field.format ||= lambda{|x| field.set[x]}
+    # TODO this really belongs in a separate 'map' field?
+    # or maybe put it in SetDelegate?
+    if field.set.is_a? Hash
+      field.format ||= lambda{|x| field.set[x]}
     end
     
-    field.delegate = RestrictedDelegate.new( nil, field )
+    field.delegate = SetDelegate.new( nil, field )
     @fields << field
   end
 
-  # Returns a Clevic::Field with a RestrictedDelegate, 
-  # a combo box, but restricted to a specified set, from the :set option.
-  # set must be Enumerable
+  # Returns a Clevic::Field with a restricted SetDelegate, 
   def restricted( attribute, options = {}, &block )
-    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    raise "field #{attribute} restricted must have a set" if field.set.nil?
-    
-    # TODO this really belongs in a separate 'map' field?
-    case field.set
-      when Hash
-        field.format ||= lambda{|x| field.set[x]}
-      
-      #~ when Proc
-        #~ field.
-    end
-    
-    field.delegate = RestrictedDelegate.new( nil, field )
-    @fields << field
+    options[:restricted] = true
+    combo( attribute, options, &block )
   end
 
   # for foreign keys. Edited with a combo box using values from the specified

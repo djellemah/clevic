@@ -96,6 +96,12 @@ class ComboDelegate < Clevic::ItemDelegate
       editor.add_item( model_index.gui_value, model_index.gui_value.to_variant )
     end
   end
+
+  def add_nil_item( editor )
+    if ( editor.find_data( nil.to_variant ) == -1 )
+      editor.add_item( '', nil.to_variant )
+    end
+  end
   
   # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
   def createEditor( parent_widget, style_option_view_item, model_index )
@@ -109,11 +115,7 @@ class ComboDelegate < Clevic::ItemDelegate
       populate_current( @editor, model_index )
       
       # create a nil entry
-      if allow_null?
-        if ( @editor.find_data( nil.to_variant ) == -1 )
-          @editor.add_item( '', nil.to_variant )
-        end
-      end
+      add_nil_item( @editor ) if allow_null?
       
       # allow prefix matching from the keyboard
       @editor.editable = true
@@ -255,8 +257,9 @@ class DistinctDelegate < ComboDelegate
   end
 end
 
-# A Combo box which only allows a restricted set of value to be entered.
-class RestrictedDelegate < ComboDelegate
+# A Combo box which allows a set of values. May or may not
+# be restricted to the set.
+class SetDelegate < ComboDelegate
   # options must contain a :set => [ ... ] to specify the set of values.
   def initialize( parent, field )
     raise "RestrictedDelegate must have a :set in options" if field.set.nil?
@@ -268,13 +271,13 @@ class RestrictedDelegate < ComboDelegate
   end
   
   def restricted?
-    true
+    field.restricted || false
   end
   
   def populate( editor, model_index )
-    field.set.each do |item|
+    field.set_for( model_index.entity ).each do |item|
       if item.is_a?( Array )
-        # this is a hash, so use key as db value
+        # this is a hash-like set, so use key as db value
         # and value as display value
         editor.add_item( item.last, item.first.to_variant )
       else
@@ -283,11 +286,6 @@ class RestrictedDelegate < ComboDelegate
     end
   end
 
-  #~ def translate_from_editor_text( editor, text )
-    #~ item_index = editor.find_text( text )
-    #~ item_data = editor.item_data( item_index )
-    #~ item_data.to_int
-  #~ end
 end
 
 # Edit a relation from an id and display a list of relevant entries.

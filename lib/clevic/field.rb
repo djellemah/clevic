@@ -114,6 +114,12 @@ class Field
   # If it's a proc, it must return an Enumerable as above.
   property :set
   
+  # When this is true, only the values in the combo may be entered.
+  # Otherwise the text-entry part of the combo can be used to enter
+  # non-listed values. Default is true if a set is explicitly specified.
+  # Otherwise depends on the field type.
+  property :restricted
+  
   # Only for the distinct field type. The values will be sorted either with the
   # most used values first (:frequency => true) or in alphabetical order (:description => true).
   property :frequency, :description
@@ -425,6 +431,21 @@ EOF
     rescue Exception => e
       puts e.message
       puts e.backtrace
+    end
+  end
+  
+  def set_for( entity )
+    case set
+      when Proc
+        # the Proc should return an enumerable
+        set.call( entity )
+        
+      when Symbol
+        entity.send( set )
+        
+      else
+        # assume its an Enumerable
+        set
     end
   end
   
