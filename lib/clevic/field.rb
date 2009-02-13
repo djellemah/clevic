@@ -110,13 +110,16 @@ class Field
   
   # The set of allowed values for restricted fields. If it's a hash, the
   # keys will be stored in the db, and the values displayed in the UI.
+  # Anything else must respond to each
   property :set
   
   # Only for the distinct field type. The values will be sorted either with the
   # most used values first (:frequency => true) or in alphabetical order (:description => true).
   property :frequency, :description
   
-  # Not implemented. Default value for this field for new records. Not sure how to populate it though.
+  # Default value for this field for new records.
+  # Can be a Proc or a value. A value will just be
+  # set, a proc will be executed with the entity as a parameter.
   property :default
   
   # the property used for finding the field, ie by TableView#field_column
@@ -406,6 +409,22 @@ EOF
   # Called by Clevic::TableModel to get the background color value
   def background_for( entity )
     cache_value_for( :background, entity ) {|x| string_or_color(x)}
+  end
+  
+  def set_default_for( entity )
+    puts "set default for entity.#{attribute}: #{entity.class.name} to #{default.inspect}"
+    begin
+      entity[attribute] = 
+      case default
+        when String
+          default
+        when Proc
+          default.call( entity )
+      end
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
+    end
   end
   
 protected

@@ -1,7 +1,7 @@
 allow directories for a setup.
-implement the :default field option
 ModelBuilder#modify_field to override default_ui definitions
 use rubigen for creating model definition files?
+undoable_command signal for delegates
 
 need a text field (multiple lines, edit in a separate window)
 need a map field (For ie -1 = short, 1 = long). Already in restricted, but it's kinda clunky.

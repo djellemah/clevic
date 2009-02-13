@@ -22,8 +22,7 @@ class TableView < Qt::TableView
   # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
   signals 'status_text(QString)', 'filter_status(bool)'
   
-  # model_builder_record is:
-  # - an ActiveRecord::Base subclass that includes Clevic::Record
+  # arg is:
   # - an instance of Clevic::View
   # - an instance of TableModel
   def initialize( arg, parent = nil, &block )

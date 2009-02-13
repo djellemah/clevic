@@ -118,10 +118,19 @@ class TableModel < Qt::AbstractTableModel
     @metadatas[column]
   end
   
+  # add a new item, and set defaults from the Clevic::View
   def add_new_item
-    # 1 new row
     begin_insert_rows( Qt::ModelIndex.invalid, row_count, row_count )
-    collection << entity_class.new
+    # set default values without triggering changed
+    entity = entity_class.new
+    fields.each do |f|
+      unless f.default.nil?
+        f.set_default_for( entity )
+      end
+    end
+    
+    collection << entity
+    
     end_insert_rows
   end
   
