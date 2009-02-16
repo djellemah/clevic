@@ -338,20 +338,11 @@ class TableView < Qt::TableView
   # return an array of the current selection, or the
   # current index in an array if the selection is empty
   def selection_or_current
-    sis = selection_model.selected_indexes
-    retval =
-    if sis.empty?
-      [ current_index ]
-    else
-      sis
-    end
-    
-    # strip out bad indexes, so other things don't have to check
-    # can't use select because copying indexes causes an abort
-    #~ retval.select{|x| x != nil && x.valid?}
-    retval.reject!{|x| x.nil? || !x.valid?}
-    # retval needed here because reject! returns nil if nothing was rejected
-    retval
+    indexes_or_current( selection_model.selected_indexes )
+  end
+  
+  def selected_rows_or_current
+    indexes_or_current( selection_model.selected_rows )
   end
   
   # alternative access for auto_size_column
@@ -764,9 +755,9 @@ class TableView < Qt::TableView
   # field_column will be called to find the integer index.
   def select_entity( entity, column = nil )
     # sanity check that the entity can actually be found
-    raise "entity is nil" if entity.nil?
+    Kernel.raise "entity is nil" if entity.nil?
     unless entity.class == model.entity_class
-      raise "entity #{entity.class.name} does not match class #{model.entity_class.name}"
+      Kernel.raise "entity #{entity.class.name} does not match class #{model.entity_class.name}"
     end
     
     # find the row for the saved entity
@@ -835,6 +826,27 @@ class TableView < Qt::TableView
     tab_widget = parent.parent
     tab_widget.current_widget = self if tab_widget.class == Qt::TabWidget
   end
+  
+protected
+
+  # return either the set of indexes with all invalid indexes
+  # remove, or the current selection.
+  def indexes_or_current( indexes )
+    retval =
+    if indexes.empty?
+      [ current_index ]
+    else
+      indexes
+    end
+    
+    # strip out bad indexes, so other things don't have to check
+    # can't use select because copying indexes causes an abort
+    #~ retval.select{|x| x != nil && x.valid?}
+    retval.reject!{|x| x.nil? || !x.valid?}
+    # retval needed here because reject! returns nil if nothing was rejected
+    retval
+  end
+  
 end
 
 end
