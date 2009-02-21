@@ -158,6 +158,7 @@ class ComboDelegate < Clevic::ItemDelegate
   # stored in an underlying model. Intended to be overridden by subclasses.
   def translate_from_editor_text( editor, text )
     index = editor.find_text( text )
+    
     if index == -1
       text unless restricted?
     else
@@ -244,7 +245,6 @@ class DistinctDelegate < ComboDelegate
       else
         query_order_frequency( conn, model_index )
     end
-    puts "query: #{query}"
     rs = conn.execute( query )
     rs.each do |row|
       value = row[attribute.to_s]
@@ -285,7 +285,15 @@ class SetDelegate < ComboDelegate
       end
     end
   end
-
+  
+  def createEditor( parent_widget, style_option_view_item, model_index )
+    editor = super
+    
+    # the set is provided, so never insert things
+    editor.insert_policy = Qt::ComboBox::NoInsert
+    editor
+  end
+    
 end
 
 # Edit a relation from an id and display a list of relevant entries.
