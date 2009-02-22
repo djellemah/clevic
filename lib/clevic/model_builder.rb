@@ -2,6 +2,7 @@ require 'activerecord'
 
 require 'clevic/table_model.rb'
 require 'clevic/delegates.rb'
+require 'clevic/text_delegate.rb'
 require 'clevic/cache_table.rb'
 require 'clevic/field.rb'
 
@@ -334,6 +335,14 @@ class ModelBuilder
   def plain( attribute, options = {}, &block )
     read_only_default!( attribute, options )
     @fields << Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+  end
+  
+  # an ordinary field like plain, except that a larger edit area can be used
+  def text( attribute, options = {}, &block )
+    read_only_default!( attribute, options )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    field.delegate = TextDelegate.new( nil, field )
+    @fields << field
   end
   
   # Returns a Clevic::Field with a DistinctDelegate, in other words
