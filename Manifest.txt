@@ -24,6 +24,7 @@ lib/clevic/sql_dialects.rb
 lib/clevic/table_model.rb
 lib/clevic/table_searcher.rb
 lib/clevic/table_view.rb
+lib/clevic/text_delegate.rb
 lib/clevic/view.rb
 lib/clevic/ui/.gitignore
 lib/clevic/ui/browser.ui

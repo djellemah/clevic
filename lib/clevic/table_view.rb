@@ -176,11 +176,27 @@ class TableView < Qt::TableView
         paste_to_index( selected_index, arr )
       end
     else
-      return true if selection_range.height != arr.size
-      return true if selection_range.width != arr.first.size
-      
-      # size is the same, so do the paste
-      paste_to_index( selected_index, arr )
+      if arr.size == 1 && arr.first.size == 1
+        # only one value to paste, and multiple selection, so
+        # set all selected indexes to the value
+        value = arr.first.first
+        selection_model.selected_indexes.each do |index|
+          model.setData( index, value.to_variant, Qt::PasteRole )
+          # save records to db
+          model.save( index )
+        end
+        
+        # notify of changed data
+        top_left_index = selection_model.selected_indexes.sort.first
+        bottom_right_index = selection_model.selected_indexes.sort.last
+        emit model.dataChanged( top_left_index, bottom_right_index )
+      else
+        return true if selection_range.height != arr.size
+        return true if selection_range.width != arr.first.size
+        
+        # size is the same, so do the paste
+        paste_to_index( selected_index, arr )
+      end
     end
   end
   
