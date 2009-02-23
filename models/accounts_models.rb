@@ -33,7 +33,7 @@ class Entry < ActiveRecord::Base
   end
   
   # called when data is changed in the UI
-  def self.data_changed( top_left, bottom_right, view )
+  def self.notify_data_changed( view, top_left, bottom_right )
     if top_left == bottom_right
       update_credit_debit( top_left, view )
     else
