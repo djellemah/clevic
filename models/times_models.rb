@@ -23,7 +23,7 @@ class Entry < ActiveRecord::Base
     relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
     plain       :start, :foreground => :time_color, :tooltip => :time_tooltip
     plain       :end, :foreground => lambda{|x| x.time_color}, :tooltip => :time_tooltip
-    plain       :description, :sample => 'This is a long string designed to hold lots of data and description'
+    text        :description, :sample => 'This is a long string designed to hold lots of data and description'
     
     relational :activity do
       display    'activity'
@@ -86,7 +86,7 @@ class Entry < ActiveRecord::Base
   end
 
   # called when data is changed in this model's table view
-  def self.data_changed( top_left, bottom_right, view )
+  def self.notify_data_changed( view, top_left, bottom_right )
     invoice_from_project( top_left, view ) if ( top_left == bottom_right )
   end
   
