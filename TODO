@@ -1,5 +1,6 @@
+cut'n'paste is text/plain, text/csv, text/yml and application/clevic
 HasFinder gem for complex reusable sql
-need an :id specified for Field that defaults to the attribute name
+:id for Field. This would be the first arg to the ModelBuilder calls, and the attribute name would default to its value
 allow directories for a setup.
 ModelBuilder#modify_field to override default_ui definitions. Or a better way to reuse field definitions.
 use rubigen for creating model definition files?

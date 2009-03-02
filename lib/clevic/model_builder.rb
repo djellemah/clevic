@@ -1,4 +1,5 @@
 require 'activerecord'
+require 'facets/dictionary'
 
 require 'clevic/table_model.rb'
 require 'clevic/delegates.rb'
@@ -274,7 +275,7 @@ class ModelBuilder
     @entity_view = entity_view
     @auto_new = true
     @read_only = false
-    @fields = []
+    @fields = Dictionary.new
     exec_ui_block( &block )
   end
   
@@ -303,13 +304,13 @@ class ModelBuilder
   # The collection of Clevic::Field instances where visible == true.
   # the visible may go away.
   def fields
-    @fields.reject{|x| !x.visible}
+    @fields.reject{|id,field| !field.visible}
   end
   
   # return the index of the named field in the collection of fields.
   def index( field_name_sym )
     retval = nil
-    fields.each_with_index{|x,i| retval = i if x.attribute == field_name_sym.to_sym }
+    fields.each_with_index{|id,field,i| retval = i if field.attribute == field_name_sym.to_sym }
     retval
   end
   
@@ -334,7 +335,7 @@ class ModelBuilder
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {}, &block )
     read_only_default!( attribute, options )
-    @fields << Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    @fields[attribute] = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
   end
   
   # an ordinary field like plain, except that a larger edit area can be used
@@ -342,7 +343,7 @@ class ModelBuilder
     read_only_default!( attribute, options )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
     field.delegate = TextDelegate.new( nil, field )
-    @fields << field
+    @fields[attribute] = field
   end
   
   # Returns a Clevic::Field with a DistinctDelegate, in other words
@@ -350,7 +351,7 @@ class ModelBuilder
   def distinct( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
     field.delegate = DistinctDelegate.new( nil, field )
-    @fields << field
+    @fields[attribute] = field
   end
   
   # a combo box with a set of supplied values
@@ -364,7 +365,7 @@ class ModelBuilder
     end
     
     field.delegate = SetDelegate.new( nil, field )
-    @fields << field
+    @fields[attribute] = field
   end
 
   # Returns a Clevic::Field with a restricted SetDelegate, 
@@ -386,7 +387,7 @@ class ModelBuilder
     # check after all possible options have been collected
     raise ":display must be specified" if field.display.nil?
     field.delegate = RelationalDelegate.new( nil, field )
-    @fields << field
+    @fields[attribute] = field
   end
 
   # mostly used in the new block to define the set of records
@@ -478,7 +479,7 @@ class ModelBuilder
   
   # return the named Clevic::Field object
   def field( attribute )
-    @fields.find {|x| x.attribute == attribute }
+    @fields.find {|id,field| field.attribute == attribute }
   end
   
   # This takes all the information collected
@@ -491,14 +492,14 @@ class ModelBuilder
     @model = Clevic::TableModel.new( table_view )
     @model.builder = self
     @model.entity_view = entity_view
-    @model.fields = @fields
+    @model.fields = @fields.values
     @model.read_only = @read_only
     @model.auto_new = auto_new?
     
     # setup model
     table_view.object_name = @object_name
     # set parent for all delegates
-    fields.each {|x| x.delegate.parent = table_view unless x.delegate.nil? }
+    fields.each {|id,field| field.delegate.parent = table_view unless field.delegate.nil? }
     
     # the data
     @model.collection = records
@@ -513,7 +514,7 @@ protected
   #--
   # TODO ActiveRecord-2.1 has smarter includes
   def add_include_options
-    fields.each do |field|
+    fields.each do |id,field|
       if field.delegate.class == RelationalDelegate
         @options[:include] ||= []
         @options[:include] << field.attribute
