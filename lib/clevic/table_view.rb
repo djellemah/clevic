@@ -147,7 +147,13 @@ class TableView < Qt::TableView
       (selection_range.top..selection_range.bottom).each do |row|
         row_ary = Array.new
         selection_model.selected_indexes.each do |index|
-          row_ary << index.gui_value if index.row == row
+          if index.row == row
+            value = index.gui_value
+            row_ary << 
+            unless value.nil?
+              index.field.do_format( value )
+            end
+          end
         end
         text << row_ary.to_csv
       end
@@ -162,12 +168,14 @@ class TableView < Qt::TableView
     text = Qt::Application::clipboard.text.chomp
     arr = FasterCSV.parse( text )
     
+    puts "selection_model.selection: #{selection_model.selection.inspect}"
+    selection_model.selected_indexes.
     return true if selection_model.selection.size != 1
     
     selection_range = selection_model.selection.first
     selected_index = selection_model.selected_indexes.first
     
-    if selection_range.single_cell?
+    if selection_model.selection.size == 1 && selection_range.single_cell?
       # only one cell selected, so paste like a spreadsheet
       if text.empty?
         # just clear the current selection
@@ -181,6 +189,7 @@ class TableView < Qt::TableView
         # set all selected indexes to the value
         value = arr.first.first
         selection_model.selected_indexes.each do |index|
+          puts "pasting to #{index.inspect}"
           model.setData( index, value.to_variant, Qt::PasteRole )
           # save records to db
           model.save( index )

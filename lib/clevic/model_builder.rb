@@ -80,12 +80,12 @@ could be defined like this:
       # this is a read-only field
       plain       :origin, :read_only => true
       
-      # :format is an attribute on the related
+      # :display is an attribute on the related
       # ActiveRecord entity, in this case an instance of Account
       # :order is an ActiveRecord option to find, defining the order in which related entries will be displayed.
       # :conditions is an ActiveRecord option to find, defining the subset of related entries to be displayed.
-      relational  :debit, :format => 'name', :conditions => 'active = true', :order => 'lower(name)'
-      relational  :credit, :format => 'name', :conditions => 'active = true', :order => 'lower(name)'
+      relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)'
+      relational  :credit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)'
       
       # or like this to have an on-the-fly transform. item will be an instance of Account.
       # This also takes a block parameter
@@ -165,7 +165,7 @@ This section describes the syntax of the DSL.
 === Field Types and specifiers
 
 There are only a few field types, with lots of options. All field definitions
-start with a field type, have an attribute, and take either a hash of options,
+start with a field type, have an id, and take either a hash of options,
 or a block for options. If the block specifies a parameter, an instance of
 Clevic::Field will be passed. If the block has no parameter, it will be
 evaluated in the context of a Clevic::Field instance. All the options specified
@@ -193,9 +193,14 @@ will display the hash values, and the hash keys will be stored in the db.
 you won't see this field. Actually, it's only useful after a default_ui, or pulling the
 definition from somewhere else. It may go away and be replaced by remove.
 
-=== Attribute
+=== Id
 
-The attribute symbol is required, and is the first parameter after the field type. It must refer
+The id symbol is required, and is the first parameter after the field type.
+It must be unique within any one view.
+
+=== Attribute
+This defaults to the value of Id.
+
 to a method already defined in the entity. In other words any of:
 - a db column
 - a relationship (belongs_to, has_many, etc)

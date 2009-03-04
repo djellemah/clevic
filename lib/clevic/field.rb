@@ -129,10 +129,6 @@ class Field
   # set, a proc will be executed with the entity as a parameter.
   property :default
   
-  # the property used for finding the field, ie by TableView#field_column
-  # defaults to the attribute.
-  property :id
-  
   # properties for ActiveRecord options
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected
   # each element becomes a property.
@@ -154,42 +150,39 @@ class Field
   # The UI delegate class for the field. In Qt, this is a subclass of AbstractItemDelegate.
   attr_accessor :delegate
   
+  # the id of the field
+  attr_accessor :id
+  
   # The attribute on the AR entity that forms the basis for this field.
   # Accessing the returned attribute (using send, or the [] method on an entity)
   # will give a simple value, or another AR entity in the case of relational fields.
   # In other words, this is *not* the same as the name of the field in the DB, which
   # would normally have an _id suffix for relationships.
-  attr_accessor :attribute
+  property :attribute
+  def attribute
+    @attribute ||= id
+  end
   
   # The ActiveRecord::Base subclass this field uses to get data from.
   attr_reader :entity_class
   
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.
-  # - attribute is the symbol for the attribute on the entity_class.
+  # - id is a symbol uniquely defining the field in its view. Attribute defaults to the same value.
   # - entity_class is the ActiveRecord::Base subclass which this Field talks to.
   # - options is a hash of writable attributes in Field, which can be any of the properties defined in this class.
-  def initialize( attribute, entity_class, options, &block )
+  def initialize( id, entity_class, options, &block )
     # sanity checking
-    unless attribute.is_a?( Symbol )
-      raise "attribute #{attribute.inspect} must be a symbol"
+    unless id.is_a?( Symbol )
+      raise "id #{id.inspect} must be a symbol"
     end
     
     unless entity_class.ancestors.include?( ActiveRecord::Base )
       raise "entity_class must be a descendant of ActiveRecord::Base"
     end
     
-    unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
-      msg = <<EOF
-#{attribute} not found in #{entity_class.name}. Possibilities are:
-#{entity_class.attribute_names.join("\n")}
-EOF
-      raise msg
-    end
-    
     # instance variables
-    @attribute = attribute
-    @id = attribute
+    @id = id
     @entity_class = entity_class
     @visible = true
     
@@ -198,6 +191,18 @@ EOF
     
     # handle options
     gather( options, &block )
+    
+    # after gather for the attribute value
+    # if attribute is a symbol, check it exists
+    if attribute.is_a? Symbol
+      unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
+        msg = <<EOF
+#{attribute} not found in #{entity_class.name}. Possibilities are:
+#{entity_class.attribute_names.join("\n")}
+EOF
+        raise msg
+      end
+    end
     
     # set various sensible defaults. They're not lazy accessors because
     # they might stay nil, and we don't want to keep evaluating them.
@@ -212,9 +217,18 @@ EOF
   def value_for( entity )
     begin
       return nil if entity.nil?
-      transform_attribute( entity.send( attribute ) )
+      value =
+      case attribute
+        when Symbol
+          entity.send( attribute )
+        when String
+          entity.evaluate_path( attribute )
+        when Proc
+          attribute.call( entity )
+      end
+      transform_attribute( value )
     rescue Exception => e
-      puts "error for #{entity}.#{entity.send( attribute ).inspect} in value_for: #{e.message}"
+      puts "error for #{entity} with #{attribute.inspect} in value_for: #{e.message}"
       puts e.backtrace
     end
   end
@@ -266,7 +280,15 @@ EOF
   # in other words an ActiveRecord::ConnectionAdapters::Column object,
   # or an ActiveRecord::Reflection::AssociationReflection object
   def meta
-    @meta ||= @entity_class.columns_hash[attribute.to_s] || @entity_class.reflections[attribute]
+    @meta ||=
+    case attribute
+      when Symbol
+        @entity_class.columns_hash[attribute.to_s] || @entity_class.reflections[attribute]
+      when String
+        @entity_class.columns_hash[attribute.to_s] || @entity_class.reflections[attribute]
+      when Proc
+        raise "This needs that pretend reflection object"
+    end
   end
   
   # return the type of this attribute. Usually one of :string, :integer, :float
