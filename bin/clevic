@@ -26,6 +26,11 @@ oparser.on( '-t', '--table TABLE', 'Table to display', String ) { |o| $options[:
 oparser.on( '-d', '--database DATABASE', 'Database name', String ) { |o| $options[:database] = o }
 oparser.on( '-D', '--debug' ) { |o| $options[:debug] = true }
 oparser.on( '-v', '--verbose' ) { |o| $options[:verbose] = true }
+oparser.on( '-V', '--version' ) do
+  require 'clevic/version.rb'
+  puts "clevic-#{Clevic::VERSION::STRING}"
+  exit 0
+end
 oparser.on( '-h', '-?', '--help' ) do |o|
   puts oparser.to_s
   exit( 1 )
