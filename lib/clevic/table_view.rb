@@ -405,6 +405,7 @@ class TableView < Qt::TableView
     style.sizeFromContents( Qt::Style::CT_HeaderSection, opt, size );
   end
   
+  # TODO is this even used?
   def relational_delegate( attribute, options )
     col = model.attributes.index( attribute )
     delegate = RelationalDelegate.new( self, model.columns[col], options )

@@ -1,3 +1,4 @@
+relational_delegate not used?
 cut'n'paste is text/plain, text/csv, text/yml and application/clevic
 HasFinder gem for complex reusable sql
 :id for Field. This would be the first arg to the ModelBuilder calls, and the attribute name would default to its value
