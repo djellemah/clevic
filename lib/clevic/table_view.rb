@@ -367,7 +367,7 @@ class TableView < Qt::TableView
   end
   
   def selected_rows_or_current
-    indexes_or_current( selection_model.selected_rows )
+    indexes_or_current( selection_model.row_indexes )
   end
   
   # alternative access for auto_size_column
@@ -439,7 +439,6 @@ class TableView < Qt::TableView
     super
     
     # set delegates
-    #~ self.item_delegate = Clevic::ItemDelegate.new( self, field )
     model.fields.each_with_index do |field, index|
       set_item_delegate_for_column( index, field.delegate )
     end
@@ -815,11 +814,6 @@ class TableView < Qt::TableView
     else
       emit status_text( "No match found for #{search_criteria.search_text}" )
     end
-  end
-
-  def itemDelegateForColumn( column )
-    puts "itemDelegateForColumn #{column}"
-    super
   end
 
   # find the TableView instance for the given entity_view
