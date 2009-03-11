@@ -168,7 +168,6 @@ class TableView < Qt::TableView
     text = Qt::Application::clipboard.text.chomp
     arr = FasterCSV.parse( text )
     
-    puts "selection_model.selection: #{selection_model.selection.inspect}"
     selection_model.selected_indexes.
     return true if selection_model.selection.size != 1
     
@@ -189,7 +188,6 @@ class TableView < Qt::TableView
         # set all selected indexes to the value
         value = arr.first.first
         selection_model.selected_indexes.each do |index|
-          puts "pasting to #{index.inspect}"
           model.setData( index, value.to_variant, Qt::PasteRole )
           # save records to db
           model.save( index )
