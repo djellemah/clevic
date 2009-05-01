@@ -389,7 +389,7 @@ EOF
   
   # Called by Clevic::TableModel to get the tooltip value
   def tooltip_for( entity )
-    cache_value_for( :background, entity )
+    cache_value_for( :tooltip, entity )
   end
 
   # TODO Doesn't do anything useful yet.
