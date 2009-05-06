@@ -661,7 +661,8 @@ class TableView < Qt::TableView
   # when the surrouding tab is changed, but the right events
   # don't arrive.
   def hideEvent( event )
-    super
+    # can't call super here, for some reason. Qt binding says method not found.
+    # super
     @hiding = true
   end
   
