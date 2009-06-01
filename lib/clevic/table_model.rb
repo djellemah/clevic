@@ -30,6 +30,7 @@ class TableModel < Qt::AbstractTableModel
   # should this model create a new empty record by default?
   attr_accessor :auto_new
   def auto_new?; auto_new; end
+  def auto_new?; auto_new; end
   
   attr_accessor :entity_view
   attr_accessor :builder
@@ -411,11 +412,23 @@ class TableModel < Qt::AbstractTableModel
             # 01:17, 0117, 117, 1 17, are all accepted
             when type == :time && value =~ %r{^(\d{1,2}).?(\d{2})$}
               Time.parse( "#$1:#$2" )
-              
+            
+            # remove thousand separators, allow for space and comma
+            # instead of . as a decimal separator
             when type == :decimal
-              # accept a space instead of a . for floats
-              value = "#$1#$2.#$3" if value =~ /(\d*?)(\d) (\d{2})/
+              # do various transforms
+              value = 
+              case
+                # accept a space or a comma instead of a . for floats
+                when value =~ /(.*?)(\d)[ ,](\d{2})$/
+                  "#$1#$2.#$3"
+                else
+                  value
+              end
               
+              # strip remaining commas
+              value.gsub( ',', '' )
+            
             else
               value
           end
