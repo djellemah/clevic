@@ -41,6 +41,7 @@ module Clevic
     # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
     def createEditor( parent_widget, style_option_view_item, model_index )
       @editor = TextEditor.new( parent_widget )
+      @editor.install_event_filter( self )
     end
     
     # Override the Qt::ItemDelegate method.

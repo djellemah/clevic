@@ -374,6 +374,7 @@ class TableModel < Qt::AbstractTableModel
         
         type = index.metadata.type
         value = variant.value
+        #~ puts "#{type.inspect} is #{value}"
         
         # translate the value from the ui to something that
         # the AR model will understand
@@ -410,6 +411,10 @@ class TableModel < Qt::AbstractTableModel
             # 01:17, 0117, 117, 1 17, are all accepted
             when type == :time && value =~ %r{^(\d{1,2}).?(\d{2})$}
               Time.parse( "#$1:#$2" )
+              
+            when type == :decimal
+              # accept a space instead of a . for floats
+              value = "#$1#$2.#$3" if value =~ /(\d*?)(\d) (\d{2})/
               
             else
               value

@@ -419,7 +419,6 @@ EOF
   end
   
   def set_default_for( entity )
-    puts "set default for entity.#{attribute}: #{entity.class.name} to #{default.inspect}"
     begin
       entity[attribute] = 
       case default

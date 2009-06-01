@@ -1,3 +1,4 @@
+accept 109 01 as 109.01 in numeric fields. Also 109,00 and 1,345.00 etc
 relational_delegate not used?
 cut'n'paste is text/plain, text/csv, text/yml and application/clevic
 HasFinder gem for complex reusable sql
