@@ -546,7 +546,9 @@ class TableView < Qt::TableView
       # deletes were done, so call data_changed
       if cells_deleted
         # save affected rows
-        selection_model.selected_rows.each { |index| index.entity.save }
+        selection_model.row_indexes.each do |index|
+          index.entity.save
+        end
         
         # emit data changed for all ranges
         selection_model.selection.each do |selection_range|

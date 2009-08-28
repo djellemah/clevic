@@ -64,6 +64,10 @@ class TableModel < Qt::AbstractTableModel
     fields.each_with_index {|x,i| return i if x.id == field.to_sym }
   end
   
+  def field_for_index( model_index )
+    fields[model_index.column]
+  end
+  
   def labels
     @labels ||= fields.map {|x| x.label }
   end
@@ -499,31 +503,56 @@ class TableModel < Qt::AbstractTableModel
     end
   end
   
-  def field_for_index( model_index )
-    fields[model_index.column]
-  end
-  
   class DataChange
-    attr_accessor :top_left
-    attr_accessor :bottom_right
+    class ModelIndexProxy
+      attr_accessor :row
+      attr_accessor :column
+      
+      def initialize( other = nil )
+        unless other.nil?
+          @row = other.row
+          @column = other.column
+        end
+      end
+    end
+    
+    def top_left
+      @top_left ||= ModelIndexProxy.new
+    end
+    
+    def bottom_right
+      @bottom_right ||= ModelIndexProxy.new
+    end
+    
+    attr_writer :bottom_right
+    attr_writer :top_left
     
     attr_reader :index
     def index=( other )
-      self.top_left = other
-      self.bottom_right = other
+      self.top_left = ModelIndexProxy.new( other )
+      self.bottom_right = ModelIndexProxy.new( other )
     end
   end
 
-  # a more rubyish way of constructing these
+  # A rubyish way of doing dataChanged
+  # - if args has one element, it's either a single ModelIndex
+  #   or something that understands top_left and bottom_right. These
+  #   will be turned into a ModelIndex by calling create_index
+  # - if args has two element, assume it's a two ModelIndex instances
+  # - otherwise create a new DataChange and pass it to the block.
   def data_changed( *args, &block )
     case args.size
       when 1
-        if args.first.respond_to?( :top_left ) && args.first.respond_to?( :bottom_right )
+        arg = args.first
+        if ( arg.respond_to?( :top_left ) && arg.respond_to?( :bottom_right ) ) || arg.is_a?( Qt::ItemSelectionRange )
           # object is a DataChange, or a SelectionRange
-          emit dataChanged( args.first.top_left, args.first.bottom_right )
+          top_left_index = create_index( arg.top_left.row, arg.top_left.column )
+          bottom_right_index = create_index( arg.bottom_right.row, arg.bottom_right.column )
+          emit dataChanged( top_left_index, bottom_right_index )
         else
           # assume it's a ModelIndex
-          emit dataChanged( args.first, args.last )
+          puts "args: #{args.inspect}"
+          emit dataChanged( arg, arg )
         end
       
       when 2
