@@ -189,6 +189,7 @@ EOF
     
     # instance variables
     @attribute = attribute
+    # default to attribute
     @id = attribute
     @entity_class = entity_class
     @visible = true

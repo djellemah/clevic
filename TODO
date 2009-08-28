@@ -1,8 +1,6 @@
-accept 109 01 as 109.01 in numeric fields. Also 109,00 and 1,345.00 etc
 relational_delegate not used?
 cut'n'paste in text/plain, text/csv, text/yml and application/clevic
 HasFinder gem for complex reusable sql
-:id for Field. This would be the first arg to the ModelBuilder calls, and the attribute name would default to its value
 allow directories for a setup.
 ModelBuilder#modify_field to override default_ui definitions. Or a better way to reuse field definitions.
 use rubigen for creating model definition files?
@@ -12,7 +10,7 @@ need a map field (For ie -1 = short, 1 = long). Already in restricted, but it's 
 :records missing in define_ui causes a crash
 :records must take a NamedScope
 
-Add addtional :filter record sets that can be selected from menus?
+Add additional :filter record sets that can be selected from menus?
 
 filter and search by virtual fields
 

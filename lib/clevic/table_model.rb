@@ -551,7 +551,6 @@ class TableModel < Qt::AbstractTableModel
           emit dataChanged( top_left_index, bottom_right_index )
         else
           # assume it's a ModelIndex
-          puts "args: #{args.inspect}"
           emit dataChanged( arg, arg )
         end
       

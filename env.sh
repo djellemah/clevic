@@ -1,1 +1,1 @@
-export RUBYLIB=`pwd`/lib:`pwd`/models
+export RUBYLIB=`pwd`/lib:`pwd`/models:`pwd`/../qtext/lib

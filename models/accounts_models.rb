@@ -9,7 +9,7 @@ Clevic::DbOptions.connect( $options ) do
     database options[:database]
   end
   adapter :postgresql
-  username options[:username] || 'accounts'
+  username 'accounts' if $options[:username].blank?
 end
 
 class Entry < ActiveRecord::Base
@@ -63,14 +63,16 @@ class Entry < ActiveRecord::Base
         current_index.entity.category = similar.category
         
         # emit signal to update view from top_left to bottom_right
-        view.model.data_changed |change|
+        view.model.data_changed do |change|
           change.top_left = current_index.choppy( :column => 0 )
           change.bottom_right = current_index.choppy( :column => view.model.column_count - 1 )
         end
         
         # move edit cursor to amount field
         view.selection_model.clear
-        view.current_index = current_index.choppy( :column => :amount )
+        # override here because the move out of the field triggers the change.
+        # so no override will skip past the field we want.
+        view.override_next_index( current_index.choppy( :column => :amount ) )
       end
     end
   end
