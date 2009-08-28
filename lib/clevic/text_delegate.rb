@@ -6,7 +6,7 @@ module Clevic
     
     # Doesn't do anything useful yet, but I'm leaving
     # it here so I don't have to change other code.
-    class TextEditor < Qt::TextEdit
+    class TextEditor < Qt::PlainTextEdit
     end
     
     # this is overridden in Qt::ItemDelegate, but that
@@ -28,7 +28,6 @@ module Clevic
           when event.enter? || event.return?
             object.event( event )
             true
-            
         end
       end
       retval || super
@@ -36,22 +35,35 @@ module Clevic
     
     # maybe open in a separate window?
     def full_edit
+      puts "#{self.class.name} full_edit"
     end
     
-    # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
+    # Override the Qt method
     def createEditor( parent_widget, style_option_view_item, model_index )
-      @editor = TextEditor.new( parent_widget )
-      @editor.install_event_filter( self )
+      if false && model_index.gui_value.count("\n") == 0
+        # futzing about here, really
+        @editor = Qt::LineEdit.new( parent_widget )
+      else
+        @editor = TextEditor.new( parent_widget )
+        @editor.install_event_filter( self )
+      end
+      @editor
     end
     
     # Override the Qt::ItemDelegate method.
     def updateEditorGeometry( editor, style_option_view_item, model_index )
-      rect = style_option_view_item.rect
+      rect = Qt::Rect.new( style_option_view_item.rect.top_left, style_option_view_item.rect.size ) 
       
       # ask the editor for how much space it wants, and set the editor
       # to that size when it displays in the table
       rect.set_width( [editor.size_hint.width,rect.width].max )
       rect.set_height( editor.size_hint.height )
+      
+      unless editor.parent.rect.contains( rect )
+        # 46 because TableView returns an incorrect bottom.
+        # And I can't find out how to get the correct value.
+        rect.move_bottom( parent.contents_rect.bottom - 46 )
+      end
       editor.set_geometry( rect )
     end
 

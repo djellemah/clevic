@@ -333,6 +333,7 @@ class TableModel < Qt::AbstractTableModel
               index.errors.join("\n")
               
             # provide a tooltip when an empty relational field is encountered
+            # TODO should be part of field definition
             when index.metadata.type == :association
               index.field.delegate.if_empty_message
             
