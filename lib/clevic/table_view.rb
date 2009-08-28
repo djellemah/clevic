@@ -76,7 +76,7 @@ class TableView < Qt::TableView
   
   # find the row index for the given field id (symbol)
   def field_column( field )
-    model.fields.each_with_index {|x,i| return i if x.id == field }
+    raise "use model.field_column( field )"
   end
     
   # return menu actions for the model, or an empty array if there aren't any
@@ -643,18 +643,13 @@ class TableView < Qt::TableView
   # default is based on the editing hint.
   # see closeEditor
   def override_next_index( model_index )
-    set_current_index( model_index )
-    @index_override = true
+    @next_index = model_index
   end
   
   # call set_current_index with model_index unless override is true.
   def set_current_unless_override( model_index )
-    if !@index_override
-      # move to next cell
-      # Qt seems to take care of tab wraparound
-      set_current_index( model_index )
-    end
-    @index_override = false
+    set_current_index( @next_index || model_index )
+    @next_index = nil
   end
   
   # work around situation where an ItemDelegate is open
@@ -791,7 +786,7 @@ class TableView < Qt::TableView
     
     # create a new index and move to it
     unless found_row.nil?
-      column = field_column( column ) if column.is_a? Symbol
+      column = model.field_column( column ) if column.is_a? Symbol
       selection_model.clear
       self.current_index = model.create_index( found_row, column || 0 )
     end

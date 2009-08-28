@@ -39,7 +39,7 @@ module Qt
 
   PasteRole = UserRole + 1
   
-  class ItemDelegate
+  class AbstractItemDelegate
     # overridden in EntryDelegate subclasses
     def full_edit
     end

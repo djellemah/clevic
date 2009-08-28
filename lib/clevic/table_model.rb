@@ -58,6 +58,12 @@ class TableModel < Qt::AbstractTableModel
     @attributes = nil
   end
   
+  # field is a symbol or string referring to a column.
+  # returns the index of that field.
+  def field_column( field )
+    fields.each_with_index {|x,i| return i if x.id == field.to_sym }
+  end
+  
   def labels
     @labels ||= fields.map {|x| x.label }
   end

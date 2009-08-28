@@ -69,7 +69,7 @@ class Entry < ActiveRecord::Base
         
         # move edit cursor to amount field
         view.selection_model.clear
-        view.override_next_index( current_index.choppy( :column => view.field_column( :amount ) ) )
+        view.override_next_index( current_index.choppy( :column => :amount ) )
       end
     end
   end

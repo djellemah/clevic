@@ -129,7 +129,7 @@ class Field
   # set, a proc will be executed with the entity as a parameter.
   property :default
   
-  # the property used for finding the field, ie by TableView#field_column
+  # the property used for finding the field, ie by TableModel#field_column
   # defaults to the attribute.
   property :id
   

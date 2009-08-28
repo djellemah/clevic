@@ -80,8 +80,7 @@ class Entry < ActiveRecord::Base
       else
         :end
       end
-      next_index = current_index.choppy( :column => view.field_column( next_field ) )
-      view.override_next_index( next_index )
+      view.current_index = current_index.choppy( :column => next_field )
     end
   end
 
@@ -102,12 +101,12 @@ class Entry < ActiveRecord::Base
         current_index.entity.invoice = invoice
         
         # update view from top_left to bottom_right
-        changed_index = current_index.choppy( :column => view.field_column( :invoice ) )
+        changed_index = current_index.choppy( :column => :invoice )
         view.dataChanged( changed_index, changed_index )
         
         # move edit cursor to start time field
         view.selection_model.clear
-        view.override_next_index( current_index.choppy( :column => view.field_column( :start ) ) )
+        view.override_next_index( current_index.choppy( :column => :start ) )
       end
     end
   end
