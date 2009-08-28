@@ -165,7 +165,7 @@ class ComboDelegate < Clevic::ItemDelegate
       editor.item_data( index ).value
     end
   end
-
+  
   # Send the data from the editor to the model. The data will
   # be translated by translate_from_editor_text,
   def setModelData( editor, abstract_item_model, model_index )
@@ -190,7 +190,7 @@ class ComboDelegate < Clevic::ItemDelegate
     else
       model_index.attribute_value = editor.text
     end
-    emit abstract_item_model.dataChanged( model_index, model_index )
+    abstract_item_model.data_changed( model_index )
   end
 
 end

@@ -194,9 +194,11 @@ class TableView < Qt::TableView
         end
         
         # notify of changed data
-        top_left_index = selection_model.selected_indexes.sort.first
-        bottom_right_index = selection_model.selected_indexes.sort.last
-        emit model.dataChanged( top_left_index, bottom_right_index )
+        model.data_changed do |change|
+          sorted = selection_model.selected_indexes.sort
+          change.top_left = sorted.first
+          change.bottom_right = sorted.last
+        end
       else
         return true if selection_range.height != arr.size
         return true if selection_range.width != arr.first.size
@@ -240,7 +242,7 @@ class TableView < Qt::TableView
     previous_value = one_up_index.attribute_value
     if current_index.attribute_value != previous_value
       current_index.attribute_value = previous_value
-      emit model.dataChanged( current_index, current_index )
+      model.data_changed( current_index )
     end
   end
   
@@ -262,7 +264,7 @@ class TableView < Qt::TableView
       one_up_right = current_index.choppy {|i| i.row -= 1; i.column += 1 }
       sanity_check_types( one_up_right, current_index )
       current_index.attribute_value = one_up_right.attribute_value
-      emit model.dataChanged( current_index, current_index )
+      model.data_changed( current_index )
     end
   end
   
@@ -275,14 +277,14 @@ class TableView < Qt::TableView
       one_up_left = current_index.choppy { |i| i.row -= 1; i.column -= 1 }
       sanity_check_types( one_up_left, current_index )
       current_index.attribute_value = one_up_left.attribute_value
-      emit model.dataChanged( current_index, current_index )
+      model.data_changed( current_index )
     end
   end
   
   def insert_current_date
     sanity_check_read_only
     current_index.attribute_value = Time.now
-    emit model.dataChanged( current_index, current_index )
+    model.data_changed( current_index )
   end
   
   def open_editor
@@ -496,8 +498,13 @@ class TableView < Qt::TableView
     end
     
     # make the gui refresh
-    bottom_right_index = top_left_index.choppy {|i| i.row += csv_arr.size - 1; i.column += csv_arr.first.size - 1 }
-    emit model.dataChanged( top_left_index, bottom_right_index )
+    model.data_changed do |change|
+      change.top_left = top_left_index
+      change.bottom_right = top_left_index.choppy do |i|
+        i.row += csv_arr.size - 1
+        i.column += csv_arr.first.size - 1
+      end
+    end
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
   
@@ -536,14 +543,14 @@ class TableView < Qt::TableView
         cells_deleted = true
       end
       
-      # deletes were done, so emit dataChanged
+      # deletes were done, so call data_changed
       if cells_deleted
         # save affected rows
         selection_model.selected_rows.each { |index| index.entity.save }
         
         # emit data changed for all ranges
         selection_model.selection.each do |selection_range|
-          emit dataChanged( selection_range.top_left, selection_range.bottom_right )
+          model.data_changed( selection_range )
         end
       end
     end

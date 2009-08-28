@@ -54,8 +54,8 @@ class Entry < ActiveRecord::Base
     view.sanity_check_read_only
     view.sanity_check_ditto
     
-    # need a reference to current_index here, because selection_model.clear will invalidate
-    # view.current_index. And anyway, its shorter and easier to read.
+    # need a reference to current_index here, because selection_model.clear will
+    # invalidate view.current_index. And anyway, its shorter and easier to read.
     current_index = view.current_index
     if current_index.row > 1
       # fetch previous item
@@ -68,9 +68,10 @@ class Entry < ActiveRecord::Base
       end
       
       # tell view to update
-      top_left_index = current_index.choppy( :column => 0 )
-      bottom_right_index = current_index.choppy( :column => view.model.fields.size - 1 )
-      view.dataChanged( top_left_index, bottom_right_index )
+      view.model.data_changed do |change|
+        change.top_left = current_index.choppy( :column => 0 )
+        change.bottom_right = current_index.choppy( :column => view.model.fields.size - 1 )
+      end
       
       # move to end time field
       view.selection_model.clear
@@ -100,9 +101,8 @@ class Entry < ActiveRecord::Base
         # make a reference to the invoice
         current_index.entity.invoice = invoice
         
-        # update view from top_left to bottom_right
-        changed_index = current_index.choppy( :column => :invoice )
-        view.dataChanged( changed_index, changed_index )
+        # tell view to updated invoice field
+        view.model.data_changed( current_index.choppy( :column => :invoice ) )
         
         # move edit cursor to start time field
         view.selection_model.clear

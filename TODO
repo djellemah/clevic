@@ -1,6 +1,6 @@
 accept 109 01 as 109.01 in numeric fields. Also 109,00 and 1,345.00 etc
 relational_delegate not used?
-cut'n'paste is text/plain, text/csv, text/yml and application/clevic
+cut'n'paste in text/plain, text/csv, text/yml and application/clevic
 HasFinder gem for complex reusable sql
 :id for Field. This would be the first arg to the ModelBuilder calls, and the attribute name would default to its value
 allow directories for a setup.

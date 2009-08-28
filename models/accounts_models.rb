@@ -63,13 +63,14 @@ class Entry < ActiveRecord::Base
         current_index.entity.category = similar.category
         
         # emit signal to update view from top_left to bottom_right
-        top_left_index = current_index.choppy( :column => 0 )
-        bottom_right_index = current_index.choppy( :column => view.model.column_count - 1 )
-        view.dataChanged( top_left_index, bottom_right_index )
+        view.model.data_changed |change|
+          change.top_left = current_index.choppy( :column => 0 )
+          change.bottom_right = current_index.choppy( :column => view.model.column_count - 1 )
+        end
         
         # move edit cursor to amount field
         view.selection_model.clear
-        view.override_next_index( current_index.choppy( :column => :amount ) )
+        view.current_index = current_index.choppy( :column => :amount )
       end
     end
   end

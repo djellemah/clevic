@@ -440,7 +440,7 @@ class TableModel < Qt::AbstractTableModel
               value
           end
           
-          emit dataChanged( index, index )
+          data_changed( index )
           # value conversion was successful
           true
         rescue Exception => e
@@ -501,6 +501,42 @@ class TableModel < Qt::AbstractTableModel
   
   def field_for_index( model_index )
     fields[model_index.column]
+  end
+  
+  class DataChange
+    attr_accessor :top_left
+    attr_accessor :bottom_right
+    
+    attr_reader :index
+    def index=( other )
+      self.top_left = other
+      self.bottom_right = other
+    end
+  end
+
+  # a more rubyish way of constructing these
+  def data_changed( *args, &block )
+    case args.size
+      when 1
+        if args.first.respond_to?( :top_left ) && args.first.respond_to?( :bottom_right )
+          # object is a DataChange, or a SelectionRange
+          emit dataChanged( args.first.top_left, args.first.bottom_right )
+        else
+          # assume it's a ModelIndex
+          emit dataChanged( args.first, args.last )
+        end
+      
+      when 2
+        emit dataChanged( args.first, args.last )
+      
+      else
+        unless block.nil?
+          change = DataChange.new
+          block.call( change )
+          # recursive call
+          data_changed( change )
+        end
+    end
   end
   
 end
