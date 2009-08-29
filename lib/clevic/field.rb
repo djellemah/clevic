@@ -133,6 +133,10 @@ class Field
   # defaults to the attribute.
   property :id
   
+  # called when the data in this field changes. Either a proc( clevic_view, table_view, model_index ) or a symbol
+  # for a method( view, model_index ) on the Clevic::View object. Both will take 
+  property :notify_data_changed
+  
   # properties for ActiveRecord options
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected
   # each element becomes a property.

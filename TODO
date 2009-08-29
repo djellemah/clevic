@@ -1,3 +1,4 @@
+override_next_index still not working properly. Is OK if the editor closes, but fails if a ditto or paste is used.
 relational_delegate not used?
 cut'n'paste in text/plain, text/csv, text/yml and application/clevic
 HasFinder gem for complex reusable sql
@@ -148,6 +149,4 @@ paste of "common" records with different dates
 Times
 -----
 
-Ctrl-Shift-" should not copy date if it already exists, and should not copy time if it's a different date.
-Ctrl-Shift-" after it's done, tab doesn't change fields
 look up invoice for project leaves the wrong fields highlighted, and focus in the wrong field.

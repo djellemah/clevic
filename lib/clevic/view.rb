@@ -77,8 +77,34 @@ module Clevic
     def define_actions( table_view, action_builder )
     end
     
-    # define data changed events
-    def notify_data_changed( table_view, top_left_model_index, bottom_right_model_index )
+    # notify 
+    def notify_field( table_view, model_index )
+      ndc = model_index.field.notify_data_changed
+      case ndc
+        when Proc
+          ndc.call( self, table_view, model_index )
+          
+        when Symbol
+          send( ndc, table_view, model_index )
+      end
+    end
+    
+    # Define data changed events. Default is to call notify_data_changed
+    # for each field in the rectangular area defined by top_left and bottom_right
+    # (which are Qt::ModelIndex instances)
+    def notify_data_changed( table_view, top_left, bottom_right )
+      if top_left == bottom_right
+        # shortcut to just the one, seeing as it's probably the most common
+        notify_field( table_view, top_left )
+      else
+        # do the entire rectagular area
+        (top_left.row..bottom_right.row).each do |row_index|
+          (top_left.column..bottom_right.column).each do |column_index|
+            model_index = table_view.model.create_index( row_index, column_index )
+            notify_field( table_view, model_index )
+          end
+        end
+      end
     end
     
     # be notified of key presses

@@ -647,15 +647,15 @@ class TableView < Qt::TableView
     super
   end
   
-  # this is to allow entity model UI handlers to tell the view
-  # where to move the current editing index to. If it's left blank
-  # default is based on the editing hint.
-  # see closeEditor
+  # This is to allow entity model UI handlers to tell the view
+  # whence to move the cursor when the current editor closes
+  # (see closeEditor).
   def override_next_index( model_index )
     @next_index = model_index
   end
   
-  # call set_current_index with model_index unless override is true.
+  # Call set_current_index with next_index ( from override_next_index )
+  # or model_index, in that order. Set next_index to nil afterwards.
   def set_current_unless_override( model_index )
     set_current_index( @next_index || model_index )
     @next_index = nil

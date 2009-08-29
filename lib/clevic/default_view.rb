@@ -41,6 +41,8 @@ module Clevic
         entity_class.actions( table_view, action_builder )
       elsif entity_class.respond_to?( :define_actions )
         entity_class.define_actions( table_view, action_builder )
+      else
+        super
       end
     end
     
@@ -50,6 +52,8 @@ module Clevic
         entity_class.data_changed( top_left_model_index, bottom_right_model_index, table_view )
       elsif entity_class.respond_to?( :notify_data_changed )
         entity_class.notify_data_changed( table_view, top_left_model_index, bottom_right_model_index )
+      else
+        super
       end
     end
     
@@ -59,6 +63,8 @@ module Clevic
         entity_class.key_press_event( key_press_event, current_model_index, table_view )
       elsif entity_class.respond_to?( :notify_key_press )
         entity_class.notify_key_press( table_view, key_press_event, current_model_index )
+      else
+        super
       end
     end
   end
