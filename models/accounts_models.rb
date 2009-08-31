@@ -9,7 +9,7 @@ Clevic::DbOptions.connect( $options ) do
     database options[:database]
   end
   adapter :postgresql
-  username 'accounts' if $options[:username].blank?
+  username options[:username].blank? ? 'accounts' : options[:username]
 end
 
 class Entry < ActiveRecord::Base
@@ -20,7 +20,19 @@ class Entry < ActiveRecord::Base
   
   define_ui do
     plain       :date, :sample => '88-WWW-99'
-    distinct    :description, :conditions => "now() - date <= '1 year'", :sample => 'm' * 26
+    distinct    :description do |f|
+      f.conditions "now() - date <= '1 year'"
+      f.sample( 'm' * 26 )
+      f.notify_data_changed = lambda do |entity_view, table_view, model_index|
+        if model_index.entity.credit.nil? && model_index.entity.debit.nil?
+          entity_view.update_from_description( model_index )
+          
+          # move edit cursor to amount field
+          table_view.selection_model.clear
+          table_view.override_next_index( model_index.choppy( :column => :amount ) )
+        end
+      end
+    end
     relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
     relational  :credit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
     plain       :amount, :sample => 999999.99
@@ -32,47 +44,26 @@ class Entry < ActiveRecord::Base
     records     :order => 'date, id'
   end
   
-  # called when data is changed in the UI
-  def self.notify_data_changed( view, top_left, bottom_right )
-    if top_left == bottom_right
-      update_credit_debit( top_left, view )
-    else
-      puts "top_left: #{top_left.inspect}"
-      puts "bottom_right: #{bottom_right.inspect}"
-      puts "can't do data_changed for a range"
-    end
-  end
-  
-  # check that the current field is :descriptions, then
-  # copy the values for the credit and debit fields
-  # from the previous similar entry
-  def self.update_credit_debit( current_index, view )
-    return unless current_index.valid?
-    current_field = current_index.attribute
-    if current_field == :description
-      # most recent entry, ordered in reverse
-      similar = self.find(
-        :first,
-        :conditions => ["#{current_field} = ?", current_index.attribute_value],
-        :order => 'date desc'
-      )
-      if similar != nil
-        # set the values
-        current_index.entity.debit = similar.debit
-        current_index.entity.credit = similar.credit
-        current_index.entity.category = similar.category
-        
-        # emit signal to update view from top_left to bottom_right
-        view.model.data_changed do |change|
-          change.top_left = current_index.choppy( :column => 0 )
-          change.bottom_right = current_index.choppy( :column => view.model.column_count - 1 )
-        end
-        
-        # move edit cursor to amount field
-        view.selection_model.clear
-        # override here because the move out of the field triggers the change.
-        # so no override will skip past the field we want.
-        view.override_next_index( current_index.choppy( :column => :amount ) )
+  # Copy the values for the credit and debit fields
+  # from the previous similar entry with a similar description
+  def self.update_from_description( current_index )
+    return if current_index.attribute_value.nil?
+    # most recent entry, ordered in reverse
+    similar = self.find(
+      :first,
+      :conditions => ["#{current_index.attribute} = ?", current_index.attribute_value],
+      :order => 'date desc'
+    )
+    if similar != nil
+      # set the values
+      current_index.entity.debit = similar.debit
+      current_index.entity.credit = similar.credit
+      current_index.entity.category = similar.category
+      
+      # emit signal to that whole row has changed
+      current_index.model.data_changed do |change|
+        change.top_left = current_index.choppy( :column => 0 )
+        change.bottom_right = current_index.choppy( :column => current_index.model.column_count - 1 )
       end
     end
   end

@@ -122,7 +122,7 @@ class Invoice < ActiveRecord::Base
     plain :invoice_number
     restricted :status, :set => ['not sent', 'sent', 'paid', 'debt', 'writeoff', 'internal']
     restricted :billing, :set => %w{Hours Quote Internal}
-    plain :quote_date
+    plain :quote_date, :format => '%d-%b-%y', :edit_format => '%d-%b-%Y', :tooltip => 'the date and time when the quote was supplied', :default => lambda{|x| DateTime.now}
     plain :quote_amount
     plain :description
     
