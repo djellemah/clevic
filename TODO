@@ -1,8 +1,7 @@
-override_next_index still not working properly. Is OK if the editor closes, but fails if a ditto or paste is used.
 relational_delegate not used?
 cut'n'paste in text/plain, text/csv, text/yml and application/clevic
 HasFinder gem for complex reusable sql
-allow directories for a setup.
+provide for easier directories for a setup.
 ModelBuilder#modify_field to override default_ui definitions. Or a better way to reuse field definitions.
 use rubigen for creating model definition files?
 undoable_command signal for delegates

@@ -13,7 +13,7 @@ $hoe = Hoe.new('clevic', Clevic::VERSION::STRING) do |p|
     ['qtext', '>=0.6.5'],
     ['activerecord', '>=2.0.2'],
     ['fastercsv', '>=1.2.3'],
-    ['gather', '>=0.0.3'],
+    ['gather', '>=0.0.4'],
     ['facets', '>=2.4.1']
     # This isn't always installed from gems
     #~ ['qtruby4', '>=1.4.9']

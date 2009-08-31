@@ -19,21 +19,34 @@ class Entry < ActiveRecord::Base
   
   define_ui do
     plain       :date, :sample => '28-Dec-08'
+    
+    # The project field
     relational  :project do |field|
       field.display = 'project'
       field.conditions = 'active = true'
       field.order = 'lower(project)'
-      field.notify_data_changed = lambda do |entity_view, table_view, model_index|
+      
+      # handle data changed events. In this case,
+      # auto-fill-in the invoice field.
+      field.notify_data_changed do |entity_view, table_view, model_index|
         if model_index.entity.invoice.nil?
           entity_view.invoice_from_project( table_view, model_index ) do
+            # move here next if the invoice was changed
             table_view.override_next_index model_index.choppy( :column => :start )
           end
         end
       end
     end
+    
     relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
+    
+    # call time_color method for foreground color value
     plain       :start, :foreground => :time_color, :tooltip => :time_tooltip
+    
+    # another way to call time_color method for foreground color value
     plain       :end, :foreground => lambda{|x| x.time_color}, :tooltip => :time_tooltip
+    
+    # multiline text
     text        :description, :sample => 'This is a long string designed to hold lots of data and description'
     
     relational :activity do
@@ -57,6 +70,8 @@ class Entry < ActiveRecord::Base
     
     action_builder.action :invoice_from_project, 'Invoice from Project', :shortcut => 'Ctrl+Shift+I' do
       invoice_from_project( view, view.current_index ) do
+        # execute the block if the invoice is changed
+        
         # save this before selection model is cleared
         current_index = view.current_index
         view.selection_model.clear
@@ -107,8 +122,9 @@ class Entry < ActiveRecord::Base
     end
   end
 
-  # auto-complete invoice number field from project
-  # block will be executed if an invoice was assigned
+  # Auto-complete invoice number field from project.
+  # &block will be executed if an invoice was assigned
+  # If block takes one parameter, pass the new invoice.
   def self.invoice_from_project( table_view, current_index, &block )
     if current_index.entity.project != nil
       # most recent entry, ordered in reverse
@@ -130,6 +146,7 @@ class Entry < ActiveRecord::Base
       end
     end
   end
+  
 end
 
 class Invoice < ActiveRecord::Base
