@@ -56,11 +56,12 @@ class Entry < ActiveRecord::Base
     end
     
     action_builder.action :invoice_from_project, 'Invoice from Project', :shortcut => 'Ctrl+Shift+I' do
-      invoice_from_project( view, view.current_index )
-      # save this before selection model is cleared
-      current_index = view.current_index
-      view.selection_model.clear
-      view.current_index = current_index.choppy( :column => :start )
+      invoice_from_project( view, view.current_index ) do
+        # save this before selection model is cleared
+        current_index = view.current_index
+        view.selection_model.clear
+        view.current_index = current_index.choppy( :column => :start )
+      end
     end
   end
   
@@ -109,7 +110,7 @@ class Entry < ActiveRecord::Base
   # auto-complete invoice number field from project
   # block will be executed if an invoice was assigned
   def self.invoice_from_project( table_view, current_index, &block )
-    if current_index.entity.project != nil && current_index.entity.invoice.nil?
+    if current_index.entity.project != nil
       # most recent entry, ordered in reverse
       invoice = current_index.entity.project.latest_invoice
       unless invoice.nil?
