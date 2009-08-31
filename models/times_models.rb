@@ -26,8 +26,9 @@ class Entry < ActiveRecord::Base
       field.notify_data_changed = lambda do |entity_view, table_view, model_index|
         puts ":project data changed"
         if model_index.entity.invoice.nil?
-          entity_view.invoice_from_project( table_view, model_index )
-          table_view.override_next_index model_index.choppy( :column => :start )
+          entity_view.invoice_from_project( table_view, model_index ) do
+            table_view.override_next_index model_index.choppy( :column => :start )
+          end
         end
       end
     end
@@ -97,7 +98,8 @@ class Entry < ActiveRecord::Base
   end
 
   # auto-complete invoice number field from project
-  def self.invoice_from_project( table_view, current_index )
+  # block will be executed if an invoice was assigned
+  def self.invoice_from_project( table_view, current_index, &block )
     if current_index.entity.project != nil && current_index.entity.invoice.nil?
       # most recent entry, ordered in reverse
       invoice = current_index.entity.project.latest_invoice
@@ -107,6 +109,14 @@ class Entry < ActiveRecord::Base
         
         # update view from top_left to bottom_right
         table_view.model.data_changed( current_index.choppy( :column => :invoice ) )
+        
+        unless block.nil?
+          if block.arity == 1
+            block.call( invoice )
+          else
+            block.call
+          end
+        end
       end
     end
   end
