@@ -52,7 +52,7 @@ class TableView < Qt::TableView
     end
       
     # see closeEditor
-    @index_override = false
+    @next_index = nil
     
     # set some Qt things
     self.horizontal_header.movable = false
@@ -110,6 +110,7 @@ class TableView < Qt::TableView
     # list of actions in the edit menu
     list( :edit ) do
       #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
+      action :action_copy, '&Save', :shortcut => Qt::KeySequence::Save, :method => :save_current_row
       action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
       action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
       separator
@@ -619,6 +620,7 @@ class TableView < Qt::TableView
   def save_current_row
     if !current_index.nil? && current_index.valid?
       save_row( current_index )
+      emit headerDataChanged( Qt::Vertical, current_index.row, current_index.row )
     end
   end
   
@@ -640,7 +642,7 @@ class TableView < Qt::TableView
   
   # save record whenever its row is exited
   def currentChanged( current_index, previous_index )
-    @index_override = false
+    @next_index = nil
     if current_index.row != previous_index.row
       save_row( previous_index )
     end
