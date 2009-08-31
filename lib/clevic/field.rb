@@ -259,7 +259,7 @@ EOF
     else
       @is_date_time ||=
       if display.nil?
-        [:time, :date, :datetime].include?( meta.type )
+        [:time, :date, :datetime, :timestamp].include?( meta.type )
       else
         # it's a virtual field, so we need to use the value
         value.is_a?( Date ) || value.is_a?( Time )
