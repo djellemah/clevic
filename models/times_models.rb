@@ -19,7 +19,18 @@ class Entry < ActiveRecord::Base
   
   define_ui do
     plain       :date, :sample => '28-Dec-08'
-    relational  :project, :display => 'project', :conditions => 'active = true', :order => 'lower(project)'
+    relational  :project do |field|
+      field.display = 'project'
+			field.conditions = 'active = true'
+			field.order = 'lower(project)'
+      field.notify_data_changed = lambda do |entity_view, table_view, model_index|
+        puts ":project data changed"
+        if model_index.entity.invoice.nil?
+          entity_view.invoice_from_project( table_view, model_index )
+          table_view.override_next_index model_index.choppy( :column => :start )
+        end
+      end
+    end
     relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
     plain       :start, :foreground => :time_color, :tooltip => :time_tooltip
     plain       :end, :foreground => lambda{|x| x.time_color}, :tooltip => :time_tooltip
@@ -34,7 +45,7 @@ class Entry < ActiveRecord::Base
     
     distinct    :module, :tooltip => 'Module or sub-project'
     plain       :charge, :tooltip => 'Is this time billable?'
-    distinct    :person, :tooltip => 'The person who did the work'
+    distinct    :person, :default => 'John', :tooltip => 'The person who did the work'
     
     records     :order => 'date, start, id'
   end
@@ -57,7 +68,7 @@ class Entry < ActiveRecord::Base
     # need a reference to current_index here, because selection_model.clear will
     # invalidate view.current_index. And anyway, its shorter and easier to read.
     current_index = view.current_index
-    if current_index.row > 1
+    if current_index.row >= 1
       # fetch previous item
       previous_item = view.model.collection[current_index.row - 1]
       
@@ -85,28 +96,17 @@ class Entry < ActiveRecord::Base
     end
   end
 
-  # called when data is changed in this model's table view
-  def self.notify_data_changed( view, top_left, bottom_right )
-    invoice_from_project( top_left, view ) if ( top_left == bottom_right )
-  end
-  
   # auto-complete invoice number field from project
-  def self.invoice_from_project( current_index, view )
-    current_field = current_index.attribute
-    if [:project,:invoice].include?( current_field ) && current_index.entity.project != nil
+  def self.invoice_from_project( table_view, current_index )
+    if current_index.entity.project != nil
       # most recent entry, ordered in reverse
       invoice = current_index.entity.project.latest_invoice
-      
       unless invoice.nil?
         # make a reference to the invoice
         current_index.entity.invoice = invoice
         
-        # tell view to updated invoice field
-        view.model.data_changed( current_index.choppy( :column => :invoice ) )
-        
-        # move edit cursor to start time field
-        view.selection_model.clear
-        view.override_next_index( current_index.choppy( :column => :start ) )
+        # update view from top_left to bottom_right
+        table_view.model.data_changed( current_index.choppy( :column => :invoice ) )
       end
     end
   end
