@@ -21,10 +21,9 @@ class Entry < ActiveRecord::Base
     plain       :date, :sample => '28-Dec-08'
     relational  :project do |field|
       field.display = 'project'
-			field.conditions = 'active = true'
-			field.order = 'lower(project)'
+      field.conditions = 'active = true'
+      field.order = 'lower(project)'
       field.notify_data_changed = lambda do |entity_view, table_view, model_index|
-        puts ":project data changed"
         if model_index.entity.invoice.nil?
           entity_view.invoice_from_project( table_view, model_index ) do
             table_view.override_next_index model_index.choppy( :column => :start )
@@ -51,13 +50,17 @@ class Entry < ActiveRecord::Base
     records     :order => 'date, start, id'
   end
 
-  def self.actions( view, action_builder )
+  def self.define_actions( view, action_builder )
     action_builder.action :smart_copy, 'Smart Copy', :shortcut => 'Ctrl+"' do
       smart_copy( view )
     end
     
     action_builder.action :invoice_from_project, 'Invoice from Project', :shortcut => 'Ctrl+Shift+I' do
       invoice_from_project( view, view.current_index )
+      # save this before selection model is cleared
+      current_index = view.current_index
+      view.selection_model.clear
+      view.current_index = current_index.choppy( :column => :start )
     end
   end
   
@@ -74,8 +77,12 @@ class Entry < ActiveRecord::Base
       previous_item = view.model.collection[current_index.row - 1]
       
       # copy the relevant fields
-      current_index.entity.start = previous_item.end
-      [:date, :project, :invoice, :activity, :module, :charge, :person].each do |attr|
+      current_index.entity.date = previous_item.date if current_index.entity.date.blank?
+      # depends on previous line
+      current_index.entity.start = previous_item.end if current_index.entity.date == previous_item.date
+      
+      # copy rest of fields
+      [:project, :invoice, :activity, :module, :charge, :person].each do |attr|
         current_index.entity.send( "#{attr.to_s}=", previous_item.send( attr ) )
       end
       
@@ -85,14 +92,16 @@ class Entry < ActiveRecord::Base
         change.bottom_right = current_index.choppy( :column => view.model.fields.size - 1 )
       end
       
-      # move to end time field
-      view.selection_model.clear
+      # move to the first empty time field
       next_field =
       if current_index.entity.start.blank?
         :start
       else
         :end
       end
+      
+      # next cursor location
+      view.selection_model.clear
       view.current_index = current_index.choppy( :column => next_field )
     end
   end
