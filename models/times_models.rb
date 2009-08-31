@@ -56,7 +56,7 @@ class Entry < ActiveRecord::Base
     end
     
     action_builder.action :invoice_from_project, 'Invoice from Project', :shortcut => 'Ctrl+Shift+I' do
-      invoice_from_project( view.current_index, view )
+      invoice_from_project( view, view.current_index )
     end
   end
   
@@ -98,7 +98,7 @@ class Entry < ActiveRecord::Base
 
   # auto-complete invoice number field from project
   def self.invoice_from_project( table_view, current_index )
-    if current_index.entity.project != nil
+    if current_index.entity.project != nil && current_index.entity.invoice.nil?
       # most recent entry, ordered in reverse
       invoice = current_index.entity.project.latest_invoice
       unless invoice.nil?
