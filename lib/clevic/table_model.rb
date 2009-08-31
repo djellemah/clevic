@@ -169,7 +169,9 @@ class TableModel < Qt::AbstractTableModel
     return false if item.nil?
     if item.changed?
       if item.valid?
-        item.save
+        retval = item.save
+        emit headerDataChanged( Qt::Vertical, index.row, index.row )
+        retval
       else
         false
       end

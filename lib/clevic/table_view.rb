@@ -620,7 +620,6 @@ class TableView < Qt::TableView
   def save_current_row
     if !current_index.nil? && current_index.valid?
       save_row( current_index )
-      emit headerDataChanged( Qt::Vertical, current_index.row, current_index.row )
     end
   end
   
