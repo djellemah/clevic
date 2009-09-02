@@ -144,8 +144,3 @@ QueryBuilder
 Accounts
 --------
 paste of "common" records with different dates
-
-Times
------
-
-look up invoice for project leaves the wrong fields highlighted, and focus in the wrong field.
