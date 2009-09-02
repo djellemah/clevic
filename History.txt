@@ -1,3 +1,24 @@
+== 0.12.0
+* fix some breakage from Qt-4.5.x
+* paste single value to multiple cells
+* text field for multiline text editing
+* fields now receive notify_data_changed. Clevic::View still receives it
+  but by default passes the notification to the fields.
+* add Clevic::TableModel#data_changed because the Qt dataChanged forced severe
+  clunkiness defining new ModelIndex instances.
+* Ctrl-S now saves current row. Display doesn't always update immediately though.
+* add timestamp to types recognised as dates/times
+* move field_column from Clevic::TableView to Clevic::TableModel
+* Decimal fields now accept more variations - ',' as thousands separators
+  is stripped out and a space can be used instead of a decimal point. No
+  explicit internationalised decimal formats though.
+* fix some weirdness with filtering
+* fields now take an id property. So one field in the db can be displayed
+  in several UI fields.
+* fields can take default values in the UI definition
+* save records after cell contents deleted
+* various other bug fixes
+
 == 0.11.1
 * Define views in separate classes (subclass of Clevic::View) while
 	maintaining view definition inside the ActiveRecord::Base subclass.
