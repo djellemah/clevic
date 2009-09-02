@@ -8,9 +8,5 @@ Rake::RDocTask.new do |rdoc|
   rdoc.main = 'README.txt'
   rdoc.rdoc_dir = 'doc'
   rdoc.rdoc_files.include %w{History.txt lib/**/*.rb README.txt TODO}
-  rdoc.options += [
-      '-SHN',
-      '-A', 'property=Property',
-      "--opname=index.html",
-    ]
+  rdoc.options += [ '-SHN' ]
 end

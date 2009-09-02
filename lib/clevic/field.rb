@@ -5,8 +5,11 @@ module Clevic
 =begin rdoc
 This defines a field in the UI, and how it hooks up to a field in the DB.
 
-Attributes marked PROPERTY are DSL-style accessors, where the value can be
-set with either an assignment or by passing a parameter. For example
+Many attributes are DSL-style accessors, where the value can be
+set with either an assignment or by passing a parameter. Unfortunately
+rdoc seems to have lost the ability to display these nicely. Anyway, here's
+an example
+
   property :ixnay
 
 will allow
@@ -14,11 +17,16 @@ will allow
   # reader
   instance.ixnay
   
-  #writer
+  # writer
   instance.ixnay = 'nix, baby'
   
-  #writer
+  # writer
   instance.ixnay 'nix baby'
+
+  # store the block for later
+  instance.ixnay do |*args|
+    # block stuff here
+  end
 
 Generally properties are for options that can be passed to the field creation
 method in ModelBuilder, whereas ruby attributes are for the internal workings.
@@ -35,6 +43,7 @@ class Field
   # For defining properties
   include Gather
   
+  ##
   # The value to be displayed after being optionally format-ed
   #
   # Takes a String, a Symbol, or a Proc.
@@ -50,21 +59,26 @@ class Field
   # Defaults to nil, in other words the value of the attribute for this field.
   property :display
   
+  ##
   # The label to be displayed in the column headings. Defaults to the humanised field name.
   property :label
   
+  ##
   # For relational fields, this is the class_name for the related AR entity.
   # TODO not used anymore?
   property :class_name
   
+  ##
   # One of the alignment specifiers - :left, :centre, :right or :justified.
   # Defaults to right for numeric fields, centre for boolean, and left for
   # other values.
   property :alignment
   
+  ##
   # something to do with the icon that Qt displays. Not implemented yet.
   property :decoration
   
+  ##
   # This defines how to format the value returned by :display. It takes a string or a Proc.
   # Generally the string is something 
   # that can be understood by strftime (for time and date fields) or understood 
@@ -72,15 +86,18 @@ class Field
   # the current entity. There are sensible defaults for common field types.
   property :format
   
+  ##
   # This is just like format, except that it's used to format the value just
   # before it's edited. A good use of this is to display dates with a 2-digit year
   # but edit them with a 4 digit year.
   # Defaults to a sensible value for some fields, for others it will default to the value of :format.
   property :edit_format
   
+  ##
   # Whether the field is currently visible or not.
   property :visible
   
+  ##
   # Sample is used if the programmer wishes to provide a value (that will be converted
   # using to_s) that can be used
   # as the basis for calculating the width of the field. By default this will be
@@ -89,9 +106,11 @@ class Field
   # have the option to override that if we wish.
   property :sample
   
+  ##
   # Takes a boolean. Set the field to read-only.
   property :read_only
   
+  ##
   # The foreground and background colors.
   # Can take a Proc, a string, or a symbol.
   # - A Proc is called with an entity
@@ -102,44 +121,53 @@ class Field
   # http://www.w3.org/TR/SVG/types.html#ColorKeywords.
   property :foreground, :background
   
+  ##
   # Can take a Proc, a string, or a symbol.
   # - A Proc is called with an entity
   # - A String is treated as a constant
   # - A symbol is treated as a method to be call on an entity
   property :tooltip
   
+  ##
   # An Enumerable of allowed values for restricted fields. If each yields
   # two values (like it does for a Hash), the
   # first will be stored in the db, and the second displayed in the UI.
   # If it's a proc, it must return an Enumerable as above.
   property :set
   
+  ##
   # When this is true, only the values in the combo may be entered.
   # Otherwise the text-entry part of the combo can be used to enter
   # non-listed values. Default is true if a set is explicitly specified.
   # Otherwise depends on the field type.
   property :restricted
   
+  ##
   # Only for the distinct field type. The values will be sorted either with the
-  # most used values first (:frequency => true) or in alphabetical order (:description => true).
+  # most used values first (:frequency => true) or in
+  # alphabetical order (:description => true).
   property :frequency, :description
   
+  ##
   # Default value for this field for new records.
   # Can be a Proc or a value. A value will just be
   # set, a proc will be executed with the entity as a parameter.
   property :default
   
-  # the property used for finding the field, ie by TableModel#field_column
-  # defaults to the attribute.
+  ##
+  # The property used for finding the field, ie by TableModel#field_column.
+  # Defaults to the attribute.
   property :id
   
-  # called when the data in this field changes. Either a proc( clevic_view, table_view, model_index ) or a symbol
-  # for a method( view, model_index ) on the Clevic::View object. Both will take 
+  ##
+  # Called when the data in this field changes.
+  # Either a proc( clevic_view, table_view, model_index ) or a symbol
+  # for a method( view, model_index ) on the Clevic::View object.
   property :notify_data_changed
   
-  # properties for ActiveRecord options
-  # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected
-  # each element becomes a property.
+  # The list of properties for ActiveRecord options.
+  # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected.
+  # Each element becomes a property.
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
   
@@ -224,7 +252,7 @@ EOF
     end
   end
   
-  # Apply display, to the given
+  # Apply the value of the display property to the given
   # attribute value. Otherwise just return the
   # attribute_value itself.
   def transform_attribute( attribute_value )
@@ -249,7 +277,7 @@ EOF
     meta.type == ActiveRecord::Reflection::AssociationReflection
   end
   
-  # Return true if the field is a date, a time or a datetime.
+  # Return true if the field is a date, datetime, time or timestamp.
   # If display is nil, the value is calculated, so we need
   # to check the value. Otherwise use the field metadata.
   # Cache the result for the first non-nil value.
@@ -346,15 +374,17 @@ EOF
     end
   end
   
+  # Called by Clevic::Model to format the display value.
   def do_format( value )
     do_generic_format( format, value )
   end
   
+  # Called by Clevic::Model to format the edit value.
   def do_edit_format( value )
     do_generic_format( edit_format, value )
   end
   
-  # return a sample for the field which can be used to size the UI field widget
+  # Return a sample for the field which can be used to size the UI field widget.
   def sample( *args )
     if !args.empty?
       self.sample = *args
@@ -402,7 +432,7 @@ EOF
     nil
   end
 
-  # Convert something that responds to to_s to a Qt::Color,
+  # Convert something that responds to to_s into a Qt::Color,
   # or just return the argument if it's already a Qt::Color
   def string_or_color( s_or_c )
     case s_or_c
@@ -423,6 +453,8 @@ EOF
     cache_value_for( :background, entity ) {|x| string_or_color(x)}
   end
   
+  # called when a new entity object is created to set default values
+  # specified by the default property.
   def set_default_for( entity )
     begin
       entity[attribute] = 
@@ -438,6 +470,7 @@ EOF
     end
   end
   
+  # fetch the permitted set of values for a restricted field.
   def set_for( entity )
     case set
       when Proc
@@ -481,10 +514,12 @@ protected
     end
   end
   
+  # the label if it's not defined. Based on the attribute.
   def default_label!
     @label ||= attribute.to_s.humanize
   end
 
+  # sensible display format defaults if they're not defined.
   def default_format!
     if @format.nil?
       @format =
@@ -498,6 +533,7 @@ protected
     @format
   end
   
+  # sensible edit format defaults if they're not defined.
   def default_edit_format!
     if @edit_format.nil?
       @edit_format =
@@ -509,6 +545,7 @@ protected
     @edit_format
   end
 
+  # sensible alignment defaults if they're not defined.
   def default_alignment!
     if @alignment.nil?
       @alignment =

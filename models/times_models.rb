@@ -7,11 +7,15 @@ class Entry < ActiveRecord::Base
   belongs_to :project
   
   include Clevic::Record
+  
+  # spans of time more than 8 ours are coloured violet
+  # because they're often the result of typos.
   def time_color
     return if self.end.nil? || start.nil?
     'darkviolet' if self.end - start > 8.hours
   end
   
+  # tooltip for spans of time > 8 hours
   def time_tooltip
     return if self.end.nil? || start.nil?
     'Time interval greater than 8 hours' if self.end - start > 8.hours

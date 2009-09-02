@@ -41,79 +41,168 @@ Minimal embedded definition is
 which will build a fairly sensible default UI from the
 entity's metadata. Obviously you can use open classes to do
 
+  class Position < ActiveRecord::Base
+    has_many :transactions
+    belong_to :account
+  end
+
   class Position
     include Clevic::Record
   end
-
-where Position is previously defined to inherit from ActiveRecord::Base.
 
 A full-featured UI for an entity called Entry (part of an accounting database)
 could be defined like this:
 
   class Entry < ActiveRecord::Base
+    belongs_to :invoice
+    belongs_to :activity
+    belongs_to :project
+    
     include Clevic::Record
     
-    # ActiveRecord foreign key definition
-    belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
-    # ActiveRecord foreign key definition
-    belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
-
-    define_ui do
-      # :format and :edit_format are optional, in fact these are the defaults
-      plain       :date, :format => '%d-%h-%y', :edit_format => '%d-%h-%Y'
-      plain       :start, :format => '%H:%M'
-      plain       :amount, :format => '%.2f'
-      # :set is mandatory for a restricted field
-      restricted  :vat, :label => 'VAT', :set => %w{ yes no all }, :tooltip => 'Is VAT included?'
-      
-      # alternately with a block for readability
-      restricted :vat do
-        label   'VAT'
-        set     %w{ yes no all }
-        tooltip 'Is VAT included?'
-      end
-      
-      # distinct will retrieve from the table all other values for this field
-      # and display them in the combo.
-      distinct    :description, :conditions => 'now() - date <= interval( 1 year )'
-
-      # this is a read-only field
-      plain       :origin, :read_only => true
-      
-      # :format is an attribute on the related
-      # ActiveRecord entity, in this case an instance of Account
-      # :order is an ActiveRecord option to find, defining the order in which related entries will be displayed.
-      # :conditions is an ActiveRecord option to find, defining the subset of related entries to be displayed.
-      relational  :debit, :format => 'name', :conditions => 'active = true', :order => 'lower(name)'
-      relational  :credit, :format => 'name', :conditions => 'active = true', :order => 'lower(name)'
-      
-      # or like this to have an on-the-fly transform. item will be an instance of Account.
-      # This also takes a block parameter
-      relational :credit do |field|
-        field.format = lambda {|item| item.name.downcase}
-        field.conditions = 'active = true'
-        field.order = 'lower(name)'
-      end
-      
-      # this is a read-only display field from a related table
-      # the Entry class should then define a method called currency
-      # which returns an object that responds to 'short'.
-      # You can also use a Proc for :display
-      plain :currency, :display => 'short', :label => 'Currency'
-      
-      # this is a read-only display field from a related table
-      # the Entry class should then define a method called currency
-      # which returns an object that responds to 'currency', which
-      # returns an object that responds to 'rate'.
-      # You can also use a Proc for :display
-      plain :some_field, :display => 'currency.rate', :label => 'Exchange Rate'
-      
-      # this is optional. By default all records in id order will be displayed.
-      records :order => 'date,start'
-      
-      # could also be like this, where a..e are instances of Entry
-      records [ a,b,c,d,e ]
+    # spans of time more than 8 ours are coloured violet
+    # because they're often the result of typos.
+    def time_color
+      return if self.end.nil? || start.nil?
+      'darkviolet' if self.end - start > 8.hours
     end
+    
+    # tooltip for spans of time > 8 hours
+    def time_tooltip
+      return if self.end.nil? || start.nil?
+      'Time interval greater than 8 hours' if self.end - start > 8.hours
+    end
+    
+    define_ui do
+      plain       :date, :sample => '28-Dec-08'
+      
+      # The project field
+      relational  :project do |field|
+        field.display = 'project'
+        field.conditions = 'active = true'
+        field.order = 'lower(project)'
+        
+        # handle data changed events. In this case,
+        # auto-fill-in the invoice field.
+        field.notify_data_changed do |entity_view, table_view, model_index|
+          if model_index.entity.invoice.nil?
+            entity_view.invoice_from_project( table_view, model_index ) do
+              # move here next if the invoice was changed
+              table_view.override_next_index model_index.choppy( :column => :start )
+            end
+          end
+        end
+      end
+      
+      relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
+      
+      # call time_color method for foreground color value
+      plain       :start, :foreground => :time_color, :tooltip => :time_tooltip
+      
+      # another way to call time_color method for foreground color value
+      plain       :end, :foreground => lambda{|x| x.time_color}, :tooltip => :time_tooltip
+      
+      # multiline text
+      text        :description, :sample => 'This is a long string designed to hold lots of data and description'
+      
+      relational :activity do
+        display    'activity'
+        order      'lower(activity)'
+        sample     'Troubleshooting'
+        conditions 'active = true'
+      end
+      
+      distinct    :module, :tooltip => 'Module or sub-project'
+      plain       :charge, :tooltip => 'Is this time billable?'
+      distinct    :person, :default => 'John', :tooltip => 'The person who did the work'
+      
+      records     :order => 'date, start, id'
+    end
+
+    def self.define_actions( view, action_builder )
+      action_builder.action :smart_copy, 'Smart Copy', :shortcut => 'Ctrl+"' do
+        smart_copy( view )
+      end
+      
+      action_builder.action :invoice_from_project, 'Invoice from Project', :shortcut => 'Ctrl+Shift+I' do
+        invoice_from_project( view, view.current_index ) do
+          # execute the block if the invoice is changed
+          
+          # save this before selection model is cleared
+          current_index = view.current_index
+          view.selection_model.clear
+          view.current_index = current_index.choppy( :column => :start )
+        end
+      end
+    end
+    
+    # do a smart copy from the previous line
+    def self.smart_copy( view )
+      view.sanity_check_read_only
+      view.sanity_check_ditto
+      
+      # need a reference to current_index here, because selection_model.clear will
+      # invalidate view.current_index. And anyway, its shorter and easier to read.
+      current_index = view.current_index
+      if current_index.row >= 1
+        # fetch previous item
+        previous_item = view.model.collection[current_index.row - 1]
+        
+        # copy the relevant fields
+        current_index.entity.date = previous_item.date if current_index.entity.date.blank?
+        # depends on previous line
+        current_index.entity.start = previous_item.end if current_index.entity.date == previous_item.date
+        
+        # copy rest of fields
+        [:project, :invoice, :activity, :module, :charge, :person].each do |attr|
+          current_index.entity.send( "#{attr.to_s}=", previous_item.send( attr ) )
+        end
+        
+        # tell view to update
+        view.model.data_changed do |change|
+          change.top_left = current_index.choppy( :column => 0 )
+          change.bottom_right = current_index.choppy( :column => view.model.fields.size - 1 )
+        end
+        
+        # move to the first empty time field
+        next_field =
+        if current_index.entity.start.blank?
+          :start
+        else
+          :end
+        end
+        
+        # next cursor location
+        view.selection_model.clear
+        view.current_index = current_index.choppy( :column => next_field )
+      end
+    end
+
+    # Auto-complete invoice number field from project.
+    # &block will be executed if an invoice was assigned
+    # If block takes one parameter, pass the new invoice.
+    def self.invoice_from_project( table_view, current_index, &block )
+      if current_index.entity.project != nil
+        # most recent entry, ordered in reverse
+        invoice = current_index.entity.project.latest_invoice
+        unless invoice.nil?
+          # make a reference to the invoice
+          current_index.entity.invoice = invoice
+          
+          # update view from top_left to bottom_right
+          table_view.model.data_changed( current_index.choppy( :column => :invoice ) )
+          
+          unless block.nil?
+            if block.arity == 1
+              block.call( invoice )
+            else
+              block.call
+            end
+          end
+        end
+      end
+    end
+    
   end
 
 == Separate View
@@ -135,6 +224,8 @@ To define a separate ui class, do something like this:
       model_builder do |mb|
         # use the define_ui block from Position
         mb.exec_ui_block( Position )
+        
+        # any other ModelBuilder code can go here too
         
         # use a different recordset
         mb.records :conditions => "status in ('prospect','open')", :order => 'date desc,code'
@@ -173,6 +264,9 @@ can use DSL-style acessors (no assignment =) or assignment statement.
 
   plain
 is an ordinary editable field. Boolean values are displayed as checkboxes.
+
+  text
+is a multiline editable field.
 
   relational
 displays a set of values pulled from a belongs_to (many-to-one) relationship.
@@ -242,17 +336,20 @@ display, and can have optional keyboard shortcuts:
   
 === Notifications
 
-The following method will be called whenever data is changed, ie a field edit is completed:
-
-  def notify_data_changed( table_view, top_left_model_index, bottom_right_model_index )
-  end
-  
 Key presses will be sent here:
 
+  # may also be defined as class methods on an entity class.
   def notify_key_press( table_view, key_press_event, current_model_index )
   end
 
-The above may also be defined as class methods on an entity class.
+Fields have a property called notify_data_changed, which is called whenever
+the field value changes. There is also an view method:
+
+  def notify_data_changed( table_view, top_left_model_index, bottom_right_model_index )
+  end
+
+But note that this will override the delegation to the field notify_data_changed
+unless super is called.
 
 === Tab Order
 
