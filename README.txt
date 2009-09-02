@@ -73,13 +73,14 @@ See TODO file.
 == REQUIREMENTS:
 
 === Gems
-* fastercsv
-* ruby-qt4
-* qtext
 * ActiveRecord
+* fastercsv
+* qtext
+* facets
+* gather
 
-=== Other
-
+=== Libraries
+* qtruby4 >=1.4.9
 * bsearch (http://0xcc.net/ruby-bsearch)
 * active_record/dirty (included, for active_record < 2.1.x)
 * db driver (ie postgres-pr)
