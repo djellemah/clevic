@@ -785,7 +785,7 @@ class TableView < Qt::TableView
   def select_entity( entity, column = nil )
     # sanity check that the entity can actually be found
     Kernel.raise "entity is nil" if entity.nil?
-    unless entity.class == model.entity_class
+    unless entity.is_a?( model.entity_class )
       Kernel.raise "entity #{entity.class.name} does not match class #{model.entity_class.name}"
     end
     
