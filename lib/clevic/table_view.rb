@@ -294,6 +294,12 @@ class TableView < Qt::TableView
     delegate.full_edit
   end
   
+  def itemDelegate( model_index )
+    puts "itemDelegate model_index: #{model_index.inspect}"
+    @pre_delegate_index = model_index
+    super
+  end
+  
   # Add a new row and move to it, provided we're not in a read-only view.
   def new_row
     sanity_check_read_only_table
@@ -641,8 +647,8 @@ class TableView < Qt::TableView
   
   # save record whenever its row is exited
   def currentChanged( current_index, previous_index )
-    @next_index = nil
-    if current_index.row != previous_index.row
+    if previous_index.valid? && current_index.row != previous_index.row
+      self.next_index = nil
       save_row( previous_index )
     end
     super
@@ -651,15 +657,16 @@ class TableView < Qt::TableView
   # This is to allow entity model UI handlers to tell the view
   # whence to move the cursor when the current editor closes
   # (see closeEditor).
+  # TODO not used?
   def override_next_index( model_index )
-    @next_index = model_index
+    self.next_index = model_index
   end
   
   # Call set_current_index with next_index ( from override_next_index )
   # or model_index, in that order. Set next_index to nil afterwards.
   def set_current_unless_override( model_index )
     set_current_index( @next_index || model_index )
-    @next_index = nil
+    self.next_index = nil
   end
   
   # work around situation where an ItemDelegate is open
@@ -694,21 +701,63 @@ class TableView < Qt::TableView
     save_current_row if @hiding
   end
   
+  # bool QAbstractItemView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
+  def edit( model_index, trigger, event )
+    self.before_edit_index = model_index
+    #~ puts "edit model_index: #{model_index.inspect}"
+    #~ puts "trigger: #{trigger.inspect}"
+    #~ puts "event: #{event.inspect}"
+    super
+  end
+  
+  attr_accessor :before_edit_index
+  attr_reader :next_index
+  def next_index=( other_index )
+    if $options[:debug]
+      puts caller
+      puts "next index to #{other_index}"
+      puts
+    end
+    @next_index = other_index
+  end
+  
+  # set and move to index. Leave index value in next_index
+  # so that it's not overridden later.
+  # TODO All this next_index stuff is becoming a horrible hack.
+  def next_index!( model_index )
+    puts "next_index! model_index: #{model_index.inspect}"
+    self.next_index = model_index
+    self.current_index = model_index
+  end
+  
   # override to prevent tab pressed from editing next field
   # also takes into account that override_next_index may have been called
   def closeEditor( editor, end_edit_hint )
-    puts "end_edit_hint: #{end_edit_hint.inspect}" if $options[:debug]
+    if $options[:debug]
+      puts "end_edit_hint: #{Qt::AbstractItemDelegate.constants.find {|x| Qt::AbstractItemDelegate.const_get(x) == end_edit_hint } }"
+      puts "next_index: #{next_index.inspect}"
+    end
+    
+    subsequent_index =
     case end_edit_hint
       when Qt::AbstractItemDelegate.EditNextItem
         super( editor, Qt::AbstractItemDelegate.NoHint )
-        set_current_unless_override( current_index.choppy { |i| i.column += 1 } )
+        before_edit_index.choppy { |i| i.column += 1 }
         
       when Qt::AbstractItemDelegate.EditPreviousItem
         super( editor, Qt::AbstractItemDelegate.NoHint )
-        set_current_unless_override( current_index.choppy { |i| i.column -= 1 } )
-        
+        before_edit_index.choppy { |i| i.column -= 1 }
+      
       else
         super
+        nil
+    end
+    
+    unless subsequent_index.nil?
+      puts "subsequent_index: #{subsequent_index.inspect}" if $options[:debug]
+      # TODO all this really does is reset next_index
+      set_current_unless_override( next_index || subsequent_index || before_edit_index )
+      self.before_edit_index = nil
     end
   end
   

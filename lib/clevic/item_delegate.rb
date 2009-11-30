@@ -40,8 +40,10 @@ class ItemDelegate < Qt::ItemDelegate
   end
 
   # This catches the event that begins the edit process.
-  #~ def editorEvent ( event, model, style_option_view_item, model_index )
-  #~ end
+  def editorEvent ( event, model, style_option_view_item, model_index )
+    parent.before_edit_index = model_index
+    super
+  end
 
   # This is called when one of the EditTriggers is pressed. So
   # it's only good for opening a generic keystroke editor, not
