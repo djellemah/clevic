@@ -702,12 +702,16 @@ class TableView < Qt::TableView
   end
   
   # bool QAbstractItemView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
-  def edit( model_index, trigger, event )
+  def edit( model_index, trigger = nil, event = nil )
     self.before_edit_index = model_index
     #~ puts "edit model_index: #{model_index.inspect}"
     #~ puts "trigger: #{trigger.inspect}"
     #~ puts "event: #{event.inspect}"
-    super
+    if trigger.nil? && event.nil?
+      super( model_index )
+    else
+      super( model_index, trigger, event )
+    end
   end
   
   attr_accessor :before_edit_index
@@ -725,9 +729,7 @@ class TableView < Qt::TableView
   # so that it's not overridden later.
   # TODO All this next_index stuff is becoming a horrible hack.
   def next_index!( model_index )
-    puts "next_index! model_index: #{model_index.inspect}"
-    self.next_index = model_index
-    self.current_index = model_index
+    self.current_index = self.next_index = model_index
   end
   
   # override to prevent tab pressed from editing next field
