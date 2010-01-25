@@ -1,3 +1,6 @@
+== 0.12.3
+* fix closeEditor not moving to the cursor to the correct place
+
 == 0.12.0
 * fix some breakage from Qt-4.5.x
 * paste single value to multiple cells
