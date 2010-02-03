@@ -211,6 +211,7 @@ class Field
       raise "entity_class must be a descendant of ActiveRecord::Base"
     end
     
+    # TODO AR dependent
     unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
 #{attribute} not found in #{entity_class.name}. Possibilities are:
@@ -436,6 +437,8 @@ EOF
   # or just return the argument if it's already a Qt::Color
   def string_or_color( s_or_c )
     case s_or_c
+    when NilClass
+      nil
     when Qt::Color
       s_or_c
     else
@@ -605,7 +608,7 @@ private
   end
   
   def numeric_sample
-    # TODO Use precision from metadata, not for integers
+    # TODO Use precision from metadata, not for integers,
     # returns nil for floats. So it's probably not useful
     #~ puts "meta.precision: #{meta.precision.inspect}"
     result_set = @entity_class.find_by_sql <<-EOF
