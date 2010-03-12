@@ -1,4 +1,5 @@
-require 'active_record'
+#~ require 'active_record'
+require 'sequel'
 
 module Clevic
 =begin rdoc
@@ -43,6 +44,8 @@ class DbOptions
         yield self
       end
     end
+    
+    @options[:adapter] = 'sqlite' if @options[:adapter] == 'sqlite3'
   end
   
   def connect
@@ -51,9 +54,11 @@ class DbOptions
     end
     
     # connect to db
-    ActiveRecord::Base.establish_connection( options )
-    ActiveRecord::Base.logger = Logger.new(STDOUT) if options[:verbose]
+    #~ ActiveRecord::Base.establish_connection( options )
+    #~ ActiveRecord::Base.logger = Logger.new(STDOUT) if options[:verbose]
     #~ ActiveRecord.colorize_logging = @options[:verbose]
+    Sequel.datetime_class = DateTime
+    @db = Sequel.connect @options
     self
   end
   

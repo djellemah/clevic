@@ -1,7 +1,7 @@
 require 'clevic.rb'
 
 # model definitions
-class Entry < ActiveRecord::Base
+class Entry < Sequel::Model
   belongs_to :invoice
   belongs_to :activity
   belongs_to :project
@@ -153,7 +153,7 @@ class Entry < ActiveRecord::Base
   
 end
 
-class Invoice < ActiveRecord::Base
+class Invoice < Sequel::Model
   include Clevic::Record
   has_many :entries
 
@@ -171,7 +171,7 @@ class Invoice < ActiveRecord::Base
   end
 end
 
-class Project < ActiveRecord::Base
+class Project < Sequel::Model
   include Clevic::Record
   has_many :entries
 
@@ -197,7 +197,7 @@ class Project < ActiveRecord::Base
 
 end
 
-class Activity < ActiveRecord::Base
+class Activity < Sequel::Model
   include Clevic::Record
   has_many :entries
 

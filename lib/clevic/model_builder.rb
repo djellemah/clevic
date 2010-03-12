@@ -411,7 +411,7 @@ class ModelBuilder
     retval
   end
   
-  # The ActiveRecord::Base subclass
+  # The ORM class
   def entity_class
     @entity_view.entity_class
   end
@@ -508,7 +508,7 @@ class ModelBuilder
   # as editable in the table. Any belongs_to relations are used to build
   # combo boxes. Default ordering is the primary key.
   # Subscriber is already defined elsewhere as a subclass
-  # of ActiveRecord::Base:
+  # of an ORM class, ie ActiveRecord::Base, Sequel::Model:
   #   class Subscriber
   #     include Clevic::Record
   #     define_ui do
