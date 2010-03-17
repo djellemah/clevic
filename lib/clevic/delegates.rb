@@ -307,8 +307,8 @@ class RelationalDelegate < ComboDelegate
   def initialize( parent, field )
     super
     unless find_options[:conditions].nil?
-      find_options[:conditions].gsub!( /true/, entity_class.connection.quoted_true )
-      find_options[:conditions].gsub!( /false/, entity_class.connection.quoted_false )
+      find_options[:conditions].gsub!( /true/, entity_class.adaptor.quoted_true )
+      find_options[:conditions].gsub!( /false/, entity_class.adaptor.quoted_false )
     end
   end
   
