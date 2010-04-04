@@ -111,7 +111,7 @@ class TableModel < Qt::AbstractTableModel
   # cache metadata (ActiveRecord#column_for_attribute) because it's not going
   # to change over the lifetime of the table
   # if the column is an attribute, create a ModelColumn
-  # TODO use ActiveRecord::Base.reflections instead
+  # TODO make this work with Sequel::Model
   def metadata( column )
     if @metadatas[column].nil?
       meta = entity_class.columns_hash[attributes[column].to_s]
@@ -163,7 +163,8 @@ class TableModel < Qt::AbstractTableModel
     add_new_item if collection.empty? && auto_new?
   end
   
-  # save the AR model at the given index, if it's dirty
+  # save the model at the given index, if it's dirty
+  # TODO Sequel uses modified?
   def save( index )
     item = collection[index.row]
     return false if item.nil?
@@ -176,7 +177,7 @@ class TableModel < Qt::AbstractTableModel
         false
       end
     else
-      # AR model not changed
+      # model not changed
       true
     end
   end
