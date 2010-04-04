@@ -203,51 +203,19 @@ class DistinctDelegate < ComboDelegate
   
   def needs_combo?
     # works except when there is a '' in the column
-    entity_class.count( attribute.to_s, find_options ) > 0
+    entity_class.adaptor.count( attribute.to_s, find_options ) > 0
   end
   
   def populate_current( editor, model_index )
     # already done in the SQL query in populate, so don't even check
   end
   
-  def query_order_description( conn, model_index )
-    <<-EOF
-      select distinct #{attribute.to_s}, lower(#{attribute.to_s})
-      from #{entity_class.table_name}
-      where (#{find_options[:conditions] || '1=1'})
-      or #{conn.quote_column_name( attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
-      order by lower(#{attribute.to_s})
-    EOF
-  end
-  
-  def query_order_frequency( conn, model_index )
-    <<-EOF
-      select distinct #{attribute.to_s}, count(#{attribute.to_s})
-      from #{entity_class.table_name}
-      where (#{find_options[:conditions] || '1=1'})
-      or #{conn.quote_column_name( attribute.to_s )} = #{conn.quote( model_index.attribute_value )}
-      group by #{attribute.to_s}
-      order by count(#{attribute.to_s}) desc
-    EOF
-  end
-  
   def populate( editor, model_index )
     # we only use the first column, so use the second
     # column to sort by, since SQL requires the order by clause
     # to be in the select list where distinct is involved
-    conn = entity_class.connection
-    query =
-    case
-      when field.description
-        query_order_description( conn, model_index )
-      when field.frequency
-        query_order_frequency( conn, model_index )
-      else
-        query_order_frequency( conn, model_index )
-    end
-    rs = conn.execute( query )
-    rs.each do |row|
-      value = row[attribute.to_s]
+    entity_class.adaptor.attribute_list( attribute, model_index.attribute_value, field.description, field.frequency, find_options ) do |row|
+      value = row[attribute]
       editor.add_item( value, value.to_variant )
     end
   end
