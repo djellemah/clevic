@@ -32,7 +32,7 @@ module Clevic
     end
     
     def find( *args )
-      @entity_class.find_ar( :all, *args )
+      @entity_class.find_ar( *args )
     end
     
     def attribute_list( attribute, attribute_value, by_description, by_frequency, find_options, &block )

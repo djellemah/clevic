@@ -102,7 +102,7 @@ class CacheTable < Array
     offset = index < 0 ? index + @row_count : index
     
     # fetch self.preload_count records
-    records = entity_class.adaptor.find( find_options.merge( :offset => offset, :limit => preload_count ) )
+    records = entity_class.adaptor.find( :all, find_options.merge( :offset => offset, :limit => preload_count ) )
     records.each_with_index {|x,i| self[i+index] = x if !cached_at?( i+index )}
     
     # return the first one
