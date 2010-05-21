@@ -24,19 +24,33 @@ module Sequel
           #~ end
         end
         
+        def lit_if_string( arg )
+          if arg.is_a?( String )
+            arg.lit
+          else
+            arg
+          end
+        end
+        
         # Basically, we're translating from AR's hash options
         # to Sequel's method algebra
         def translate( options )
-          filtered = dataset
-          if options[:limit] || options[:offset]
-            filtered = filtered.limit( options[:limit], options[:offset] )
+          options.inject( dataset ) do |dataset, (key, value)|
+            case key
+              when :limit; dataset.limit( value, nil )
+              when :offset
+                # bit of a hack to get around Sequels refusal
+                # to do offset without limit
+                dataset.limit( options[:limit] || :all, value )
+                
+              when :order; dataset.order( lit_if_string( value ) )
+              when :conditions
+                dataset.filter( lit_if_string( value ) )
+                
+              else
+                raise "#{key} not implemented"
+            end
           end
-          
-          if options[:order]
-            filtered = filtered.order( options[:order].lit )
-          end
-          
-          filtered
         end
         
         def find_ar( *args )
@@ -62,6 +76,19 @@ module Sequel
               end
           end
         end
+        
+        def count_ar( *args )
+          options = args.extract_options!
+          attribute = args.first
+          
+          dataset = translate( options )
+          
+          unless attribute.nil?
+            dataset = dataset.select( attribute )
+          end
+          dataset.count
+        end
+        
       end
       
       module InstanceMethods

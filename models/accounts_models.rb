@@ -8,11 +8,14 @@ Clevic::DbOptions.connect( $options ) do
   else
     database options[:database]
   end
-  adapter :postgresql
+  # for AR
+  #~ adapter :postgresql
+  # for Sequel
+  adapter :postgres
   username options[:username].blank? ? 'accounts' : options[:username]
 end
 
-class Entry < ActiveRecord::Base
+class Entry < Sequel::Model
   belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
   
@@ -49,7 +52,7 @@ class Entry < ActiveRecord::Base
   def self.update_from_description( current_index )
     return if current_index.attribute_value.nil?
     # most recent entry, ordered in reverse
-    similar = self.find(
+    similar = self.adaptor.find(
       :first,
       :conditions => ["#{current_index.attribute} = ?", current_index.attribute_value],
       :order => 'date desc'
@@ -69,7 +72,7 @@ class Entry < ActiveRecord::Base
   end
 end
 
-class Account < ActiveRecord::Base
+class Account < Sequel::Model
   has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   

@@ -1,10 +1,12 @@
 require 'sequel/model.rb'
 require 'clevic/ar_finder.rb'
+require 'clevic/attribute_list.rb'
 
 module Clevic
   class SequelAdaptor
     def initialize( entity_class )
       @entity_class = entity_class
+      # TODO rename to ar_methods
       @entity_class.plugin :ar_finder
     end
     
@@ -16,19 +18,8 @@ module Clevic
       @entity_class.dataset.boolean_constant_sql( true )
     end
     
-    # options is a hash
-    def count( attribute = nil, options = {} )
-      dataset = @entity_class.dataset
-      
-      unless options.empty?
-        dataset = dataset.filter( options )
-      end
-      
-      unless attribute.nil?
-        dataset = dataset.select( attribute )
-      end
-      
-      dataset.count
+    def count( *args )
+      @entity_class.count_ar( *args )
     end
     
     def find( *args )
@@ -36,37 +27,9 @@ module Clevic
     end
     
     def attribute_list( attribute, attribute_value, by_description, by_frequency, find_options, &block )
-      attribute_dataset( attribute, attribute_value, by_description, by_frequency, find_options ).each( &block )
-    end
-    
-    def attribute_dataset( attribute, attribute_value, by_description, by_frequency, find_options, &block )
-      puts "find_options: #{find_options.inspect}"
-      case
-        when by_description
-          # must have attribute equality test first, otherwise if find_options
-          # doesn't have :conditions, then we end up with ( nil | { attribute => attribute_value } )
-          # which confuses Sequel
-          @entity_class.naked.filter( { attribute => attribute_value } | find_options[:conditions] ) \
-          .order( attribute ) \
-          .select( attribute ) \
-          .distinct
-          
-        when by_frequency
-          raise "by_frequency not implemented"
-          @entity_class.naked.filter
-        #~ select distinct #{attribute.to_s}, count(#{attribute.to_s})
-        #~ from #{entity_class.table_name}
-        #~ where (#{find_options[:conditions] || '1=1'})
-        #~ or #{@entity_class.connection.quote_column_name( attribute.to_s )} = #{@entity_class.connection.quote( attribute_value )}
-        #~ group by #{attribute.to_s}
-        #~ order by count(#{attribute.to_s}) desc
-          
-        else
-          # TODO default to by_frequency
-          puts "by_frequency: #{by_frequency.inspect}"
-          puts "by_description: #{by_description.inspect}"
-          raise "not implemented"
-      end
+      lister = AttributeList.new( @entity_class, attribute, attribute_value, find_options )
+      ds = lister.dataset( by_description, by_frequency )
+      ds.each( &block )
     end
   end
   
@@ -141,12 +104,21 @@ end
 module Sequel
   class Model
     class << self
-      def belongs_to( *args, &block )
-        many_to_one( *args, &block )
+      def translate_options( options )
+        options[:key] = options[:foreign_key].andand.to_sym
+        options.delete( :foreign_key )
+        
+        options[:class] = options[:class_name].andand.to_sym
+        options.delete( :class_name )
+        options
       end
       
-      def has_many( *args, &block )
-        one_to_many( *args, &block )
+      def belongs_to( name, options, &block )
+        many_to_one( name, translate_options( options ), &block )
+      end
+      
+      def has_many( name, options, &block )
+        one_to_many( name, translate_options( options ), &block )
       end
       
       def table_exists?
@@ -188,6 +160,8 @@ module Sequel
     def changed?
       modified?
     end
+    
+    def new_record?; new?; end
     
     module Associations
       class ManyToOneAssociationReflection

@@ -18,7 +18,7 @@ module Clevic
     def doit
       begin
         # store current AR conditions
-        @stored_conditions = @table_view.model.cache_table.options
+        @stored_conditions = @table_view.model.cache_table.find_options
         
         # store auto_new
         @auto_new = @table_view.model.auto_new
