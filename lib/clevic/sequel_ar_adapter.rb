@@ -51,8 +51,9 @@ module Clevic
           .select( attribute ) \
           .distinct
           
-        #~ when by_frequency
-          #~ @entity_class.naked.filter
+        when by_frequency
+          raise "by_frequency not implemented"
+          @entity_class.naked.filter
         #~ select distinct #{attribute.to_s}, count(#{attribute.to_s})
         #~ from #{entity_class.table_name}
         #~ where (#{find_options[:conditions] || '1=1'})
@@ -61,7 +62,10 @@ module Clevic
         #~ order by count(#{attribute.to_s}) desc
           
         else
-          raise "not by_description not implemented"
+          # TODO default to by_frequency
+          puts "by_frequency: #{by_frequency.inspect}"
+          puts "by_description: #{by_description.inspect}"
+          raise "not implemented"
       end
     end
   end

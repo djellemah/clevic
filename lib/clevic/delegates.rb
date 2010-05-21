@@ -285,7 +285,7 @@ class RelationalDelegate < ComboDelegate
   end
   
   def needs_combo?
-    entity_class.count( :conditions => find_options[:conditions] ) > 0
+    entity_class.adaptor.count( :conditions => find_options[:conditions] ) > 0
   end
   
   def empty_set_message
@@ -311,7 +311,7 @@ class RelationalDelegate < ComboDelegate
 
   def populate( editor, model_index )
     # add set of all possible related entities
-    entity_class.find( :all, find_options ).each do |x|
+    entity_class.adaptor.find( find_options ).each do |x|
       add_to_list( editor, model_index, x )
     end
   end

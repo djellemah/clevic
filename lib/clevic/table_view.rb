@@ -718,8 +718,9 @@ class TableView < Qt::TableView
   attr_reader :next_index
   def next_index=( other_index )
     if $options[:debug]
+      puts "debug trace only - not a rescue"
       puts caller
-      puts "next index to #{other_index}"
+      puts "next index to #{other_index.inspect}"
       puts
     end
     @next_index = other_index
