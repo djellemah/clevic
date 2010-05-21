@@ -32,14 +32,14 @@ TODO use Sequel instead of order_attributes
 class CacheTable < Array
   # the number of records loaded in one call to the db
   attr_accessor :preload_count
-  attr_reader :options, :entity_class
+  attr_reader :find_options, :entity_class
   
   def initialize( entity_class, find_options = {} )
     @preload_count = 20
     # must be before sanitise_options
     @entity_class = entity_class
     # must be before anything that uses options
-    @options = find_options.clone
+    @find_options = find_options.clone
     sanitise_options!
     
     # size the array and fill it with nils. They'll be filled
@@ -51,7 +51,7 @@ class CacheTable < Array
   # The count of the records according to the db, which may be different to
   # the records in the cache
   def sql_count
-    entity_class.adaptor.count( options.reject{|k,v| k == :order} )
+    entity_class.adaptor.count( find_options.reject{|k,v| k == :order} )
   end
   
   # Return the set of OrderAttribute objects for this collection.
@@ -60,7 +60,7 @@ class CacheTable < Array
   def order_attributes
     # This is sorted in @options[:order], so use that for the search
     if @order_attributes.nil?
-      @order_attributes = @options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
+      @order_attributes = find_options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
       
       # add the primary key if nothing is specified
       # because we need an ordering of some kind otherwise
@@ -76,11 +76,11 @@ class CacheTable < Array
   # also create @order_attributes
   def sanitise_options!
     # make sure we have a string here, even if it's blank
-    options[:order] ||= ''
+    find_options[:order] ||= ''
     
     # recreate the options[:order] entry to include default
     # TODO why though? Can't remember
-    options[:order] = order_attributes.map{|x| x.to_sql}.join(',')
+    find_options[:order] = order_attributes.map{|x| x.to_sql}.join(',')
   end
 
   # Execute the block with the specified preload_count,
@@ -102,7 +102,7 @@ class CacheTable < Array
     offset = index < 0 ? index + @row_count : index
     
     # fetch self.preload_count records
-    records = entity_class.adaptor.find( options.merge( :offset => offset, :limit => preload_count ) )
+    records = entity_class.adaptor.find( find_options.merge( :offset => offset, :limit => preload_count ) )
     records.each_with_index {|x,i| self[i+index] = x if !cached_at?( i+index )}
     
     # return the first one
@@ -120,7 +120,7 @@ class CacheTable < Array
   # TODO using named scopes might make filtering easier.
   def renew( args = nil )
     clear
-    self.class.new( entity_class, args || options )
+    self.class.new( entity_class, args || find_options )
   end
   
   # find the index for the given entity, using a binary search algorithm (bsearch).

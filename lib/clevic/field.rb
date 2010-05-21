@@ -232,11 +232,6 @@ class Field
       raise "attribute #{attribute.inspect} must be a symbol"
     end
     
-    # TODO AR dependent, and not duck-typing
-    #~ unless entity_class.ancestors.include?( ActiveRecord::Base )
-      #~ raise "entity_class must be a descendant of ActiveRecord::Base"
-    #~ end
-    
     # TODO AR dependent
     unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
