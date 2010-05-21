@@ -2,7 +2,7 @@ require 'clevic/sql_dialects.rb'
 
 module Clevic
 
-# TODO possibly use AR scopes for this?
+# TODO Needs major rework for Sequel
 class TableSearcher
   attr_reader :entity_class, :order_attributes, :search_criteria, :field
   
@@ -58,7 +58,7 @@ class TableSearcher
     end
     
     # find the first match
-    entity_class.find(
+    entity_class.adaptor.find(
       :first,
       :conditions => conditions_value,
       :order => order,
@@ -69,12 +69,12 @@ class TableSearcher
 protected
   include SqlDialects
   
-  def quote_column( field_name )
+  def quote_identifier( field_name )
     entity_class.connection.quote_column_name( field_name )
   end
   
-  def quote( value )
-    entity_class.connection.quote( value )
+  def quote_literal( value )
+    entity_class.connection.quote_literal( value )
   end
   
   # recursively create a case statement to do the comparison
@@ -88,11 +88,11 @@ protected
     # fetch the current attribute
     attribute = order_attributes[index]
     
-    # build case statement, including recusion
+    # build case statement, including recursion
     st = <<-EOF
 case
-  when #{entity_class.table_name}.#{quote_column attribute} #{operator} :#{attribute} then #{sql_boolean true}
-  when #{entity_class.table_name}.#{quote_column attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
+  when #{entity_class.table_name}.#{quote_identifier attribute} #{operator} :#{attribute} then #{sql_boolean true}
+  when #{entity_class.table_name}.#{quote_identifier attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
   else #{sql_boolean false}
 end
 EOF
