@@ -1,4 +1,26 @@
 require 'gather.rb'
+require 'clevic/sampler.rb'
+require 'clevic/generic_format.rb'
+
+module Sequel
+  class Model
+    def self.meta
+      if @meta.nil?
+        @meta = {}
+        columns_hash.merge( reflections ).each do |key,value|
+          @meta[key] = ModelColumn.new( key, value )
+        end
+      end
+      @meta
+    end
+    
+    class Errors
+      def invalid?( field_name )
+        self.has_key?( field_name )
+      end
+    end
+  end
+end
 
 module Clevic
 
@@ -37,11 +59,14 @@ take a value.
 
 TODO this class is a bit confused about whether it handles metadata or record data, or both.
 
-TODO meta needs to handle virtual fields better. Also is_date_time?
+TODO meta needs to handle virtual fields better.
 =end
 class Field
   # For defining properties
   include Gather
+  
+  # for formatting values
+  include GenericFormat
   
   ##
   # The value to be displayed after being optionally format-ed
@@ -279,29 +304,9 @@ EOF
     meta.type == ActiveRecord::Reflection::AssociationReflection
   end
   
-  # Return true if the field is a date, datetime, time or timestamp.
-  # If display is nil, the value is calculated, so we need
-  # to check the value. Otherwise use the field metadata.
-  # Cache the result for the first non-nil value.
-  def is_date_time?( value )
-    if value.nil?
-      false
-    else
-      @is_date_time ||=
-      if display.nil?
-        [:time, :date, :datetime, :timestamp].include?( meta.type )
-      else
-        # it's a virtual field, so we need to use the value
-        value.is_a?( Date ) || value.is_a?( Time )
-      end
-    end
-  end
-  
-  # return ActiveRecord::Base.columns_hash[attribute]
-  # in other words an ActiveRecord::ConnectionAdapters::Column object,
-  # or an ActiveRecord::Reflection::AssociationReflection object
+  # ModelColumn object
   def meta
-    @meta ||= @entity_class.columns_hash[attribute.to_s] || @entity_class.reflections[attribute]
+    entity_class.meta[attribute]
   end
   
   # return the type of this attribute. Usually one of :string, :integer, :float
@@ -322,16 +327,6 @@ EOF
     !meta.nil?
   end
   
-  # Return the name of the database field for this Field, quoted for the dbms.
-  def quoted_field
-    quote_field( meta.name )
-  end
-  
-  # Quote the given string as a field name for SQL.
-  def quote_field( field_name )
-    @entity_class.connection.quote_column_name( field_name )
-  end
-
   # return the result of the attribute + the path
   def column
     [attribute.to_s, path].compact.join('.')
@@ -349,33 +344,6 @@ EOF
     @read_only || false
   end
   
-  # apply format to value. Use strftime for date_time types, or % for everything else.
-  # If format is a proc, pass value to it.
-  def do_generic_format( format, value )
-    begin
-      unless format.nil?
-        if format.is_a? Proc
-          format.call( value )
-        else
-          if is_date_time?( value )
-            value.strftime( format )
-          else
-            format % value
-          end
-        end
-      else
-        value
-      end
-    rescue Exception => e
-      puts "format: #{format.inspect}"
-      puts "value.class: #{value.class.inspect}"
-      puts "value: #{value.inspect}"
-      puts e.message
-      puts e.backtrace
-      nil
-    end
-  end
-  
   # Called by Clevic::Model to format the display value.
   def do_format( value )
     do_generic_format( format, value )
@@ -390,36 +358,13 @@ EOF
   def sample( *args )
     if !args.empty?
       self.sample = *args
-      return
+      return self
     end
     
-    if @sample.nil?
-      self.sample =
-      case meta.type
-        # max width of 40 chars
-        when :string, :text
-          string_sample( 'n'*40 )
-        
-        when :date, :time, :datetime, :timestamp
-          date_time_sample
-        
-        when :numeric, :decimal, :integer, :float
-          numeric_sample
-        
-        # TODO return a width, or something like that
-        when :boolean; 'W'
-        
-        when ActiveRecord::Reflection::AssociationReflection.class
-          related_sample
-        
-        else
-          puts "#{@entity_class.name}.#{attribute} is a #{meta.type.inspect}"
-      end
-        
-      #~ if $options && $options[:debug]
-        #~ puts "@sample for #{@entity_class.name}.#{attribute} #{meta.type}: #{@sample.inspect}"
-      #~ end
-    end
+    @sample ||= Sampler.new( entity_class, attribute, display ) do |value|
+      do_format( value )
+    end.compute
+    
     # if we don't know how to figure it out from the data, just return the label size
     @sample || self.label
   end
@@ -560,73 +505,6 @@ protected
     end
   end
 
-private
-
-  def format_result( result_set )
-    unless result_set.size == 0
-      obj = result_set[0][attribute]
-      do_format( obj ) unless obj.nil?
-    end
-  end
-  
-  def string_sample( max_sample = nil, entity_class = @entity_class, field_name = meta.name )
-    statement = <<-EOF
-      select distinct #{quote_field field_name}
-      from #{entity_class.table_name}
-      where
-        length( #{quote_field field_name} ) = (
-          select max( length( #{quote_field field_name} ) )
-          from #{entity_class.table_name}
-        )
-    EOF
-    result_set = @entity_class.connection.execute statement
-    unless result_set.entries.size == 0
-      row = result_set[0]
-      result = 
-      case row
-        when Array
-          row[0]
-        when Hash
-          row.values[0]
-      end
-        
-      if max_sample.nil?
-        result
-      else
-        result.length < max_sample.length ? result : max_sample
-      end
-    end
-  end
-  
-  def date_time_sample
-    result_set = @entity_class.find_by_sql <<-EOF
-      select #{quoted_field}
-      from #{@entity_class.table_name}
-      where #{quoted_field} is not null
-      limit 1
-    EOF
-    format_result( result_set )
-  end
-  
-  def numeric_sample
-    # TODO Use precision from metadata, not for integers,
-    # returns nil for floats. So it's probably not useful
-    #~ puts "meta.precision: #{meta.precision.inspect}"
-    result_set = @entity_class.find_by_sql <<-EOF
-      select max( #{quoted_field} )
-      from #{@entity_class.table_name}
-    EOF
-    format_result( result_set )
-  end
-  
-  def related_sample
-    # TODO this isn't really the right way to do this
-    return nil if meta.nil?
-    if meta.klass.attribute_names.include?( attribute_path[1].to_s )
-      string_sample( nil, meta.klass, attribute_path[1] )
-    end
-  end
-  
 end
 
 end

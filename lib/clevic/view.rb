@@ -55,6 +55,10 @@ module Clevic
       self.class.name
     end
     
+    def fields
+      @fields ||= define_ui
+    end
+    
     # used for the Qt object_name when ModelBuilder is constructing a widget
     # here so it can be overridden by descendants
     def widget_name

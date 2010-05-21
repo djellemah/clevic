@@ -26,6 +26,8 @@ TODO drop rows when they haven't been accessed for a while
 
 TODO how to handle a quickly-changing underlying table? invalidate cache
 for each call?
+
+TODO use Sequel instead of order_attributes
 =end
 class CacheTable < Array
   # the number of records loaded in one call to the db
@@ -63,7 +65,7 @@ class CacheTable < Array
       # add the primary key if nothing is specified
       # because we need an ordering of some kind otherwise
       # index_for_entity will not work
-      if !@order_attributes.any? {|x| x.attribute == entity_class.primary_key }
+      unless @order_attributes.any? {|x| x.attribute.to_s == entity_class.primary_key.to_s }
         @order_attributes << OrderAttribute.new( entity_class, entity_class.primary_key )
       end
     end

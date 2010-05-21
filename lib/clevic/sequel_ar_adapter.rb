@@ -1,9 +1,11 @@
 require 'sequel/model.rb'
+require 'clevic/ar_finder.rb'
 
 module Clevic
   class SequelAdaptor
     def initialize( entity_class )
       @entity_class = entity_class
+      @entity_class.plugin :ar_finder
     end
     
     def quoted_false
@@ -29,22 +31,8 @@ module Clevic
       dataset.count
     end
     
-    # TODO it gets hard here. Strategy for now is to just
-    # make it work, and worry about making it nice later.
-    # Basically, we're translating from AR's hash options
-    # to Sequel's method algebra
-    def find( options )
-      dataset = @entity_class.dataset
-      
-      if options[:limit] || options[:offset]
-        dataset = dataset.limit( options[:limit], options[:offset] )
-      end
-      
-      if options[:order]
-        dataset = dataset.order( options[:order] )
-      end
-      
-      dataset.all
+    def find( *args )
+      @entity_class.find_ar( :all, *args )
     end
     
     def attribute_list( attribute, attribute_value, by_description, by_frequency, find_options, &block )
@@ -63,14 +51,14 @@ module Clevic
           .select( attribute ) \
           .distinct
           
-        when by_frequency
-          @entity_class.naked.filter
-        select distinct #{attribute.to_s}, count(#{attribute.to_s})
-        from #{entity_class.table_name}
-        where (#{find_options[:conditions] || '1=1'})
-        or #{@entity_class.connection.quote_column_name( attribute.to_s )} = #{@entity_class.connection.quote( attribute_value )}
-        group by #{attribute.to_s}
-        order by count(#{attribute.to_s}) desc
+        #~ when by_frequency
+          #~ @entity_class.naked.filter
+        #~ select distinct #{attribute.to_s}, count(#{attribute.to_s})
+        #~ from #{entity_class.table_name}
+        #~ where (#{find_options[:conditions] || '1=1'})
+        #~ or #{@entity_class.connection.quote_column_name( attribute.to_s )} = #{@entity_class.connection.quote( attribute_value )}
+        #~ group by #{attribute.to_s}
+        #~ order by count(#{attribute.to_s}) desc
           
         else
           raise "not by_description not implemented"

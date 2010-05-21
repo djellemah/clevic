@@ -154,9 +154,10 @@ class Entry < Sequel::Model
 end
 
 class Invoice < Sequel::Model
-  include Clevic::Record
   has_many :entries
 
+  include Clevic::Record
+  
   define_ui do
     plain :date
     distinct :client
@@ -172,9 +173,10 @@ class Invoice < Sequel::Model
 end
 
 class Project < Sequel::Model
-  include Clevic::Record
   has_many :entries
 
+  include Clevic::Record
+  
   define_ui do
     plain     :project
     plain     :description
@@ -198,9 +200,10 @@ class Project < Sequel::Model
 end
 
 class Activity < Sequel::Model
-  include Clevic::Record
   has_many :entries
 
+  include Clevic::Record
+  
   # define how fields are displayed
   define_ui do
     plain :activity

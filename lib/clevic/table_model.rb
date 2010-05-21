@@ -1,6 +1,8 @@
 require 'Qt4'
 require 'date'
 
+require 'andand'
+
 require 'qtext/flags.rb'
 require 'qtext/extensions.rb'
 
@@ -46,14 +48,12 @@ class TableModel < Qt::AbstractTableModel
   
   def initialize( parent = nil )
     super
-    @metadatas = []
   end
   
   def fields=( arr )
     @fields = arr
     
     # reset these
-    @metadatas = []
     @labels = nil
     @attributes = nil
   end
@@ -106,27 +106,6 @@ class TableModel < Qt::AbstractTableModel
     #~ Qt::MatchWrap	32	Perform a search that wraps around, so that when the search reaches the last item in the model, it begins again at the first item and continues until all items have been examined.
     #~ super
     []
-  end
-  
-  # cache metadata (ActiveRecord#column_for_attribute) because it's not going
-  # to change over the lifetime of the table
-  # if the column is an attribute, create a ModelColumn
-  # TODO use ActiveRecord::Base.reflections instead
-  def metadata( column )
-    if @metadatas[column].nil?
-      meta = entity_class.columns_hash[attributes[column].to_s]
-      if meta.nil?
-        meta = entity_class.columns_hash[ "#{attributes[column]}_id" ]
-        if meta.nil?
-          return nil
-        else
-          @metadatas[column] = ModelColumn.new( attributes[column], :association, meta )
-        end
-      else
-        @metadatas[column] = meta
-      end
-    end
-    @metadatas[column]
   end
   
   # add a new item, and set defaults from the Clevic::View
@@ -207,11 +186,11 @@ class TableModel < Qt::AbstractTableModel
     return retval if model_index.column >= columnCount
     
     # TODO don't return IsEditable if the model is read-only
-    if model_index.metadata.type == :boolean
+    if model_index.meta.type == :boolean
       retval = item_boolean_flags
     end
     
-    unless model_index.field.read_only? || model_index.entity.readonly? || read_only?
+    unless model_index.field.read_only? || model_index.entity.andand.readonly? || read_only?
       retval |= qt_item_is_editable.to_i 
     end
     retval
@@ -295,20 +274,20 @@ class TableModel < Qt::AbstractTableModel
           # check this explicitly to avoid fetching the entity from
           # the model's collection (and maybe db) when we
           # definitely don't need to
-          unless index.metadata.type == :boolean
+          unless index.meta.type == :boolean
             value = index.gui_value
             index.field.do_format( value ) unless value.nil?
           end
           
         when qt_edit_role
           # see comment for qt_display_role
-          unless index.metadata.type == :boolean
+          unless index.meta.type == :boolean
             value = index.gui_value
             index.field.do_edit_format( value ) unless value.nil?
           end
           
         when qt_checkstate_role
-          if index.metadata.type == :boolean
+          if index.meta.type == :boolean
             index.gui_value ? qt_checked : qt_unchecked
           end
           
@@ -331,7 +310,7 @@ class TableModel < Qt::AbstractTableModel
         
         when qt_foreground_role
           index.field.foreground_for( index.entity ) ||
-          if index.field.read_only? || index.entity.readonly? || read_only?
+          if index.field.read_only? || index.entity.andand.readonly? || read_only?
             Qt::Color.new( 'dimgray' )
           end
         
@@ -346,7 +325,7 @@ class TableModel < Qt::AbstractTableModel
               
             # provide a tooltip when an empty relational field is encountered
             # TODO should be part of field definition
-            when index.metadata.type == :association
+            when index.meta.type == :association
               index.field.delegate.if_empty_message
             
             # read-only field
@@ -386,7 +365,7 @@ class TableModel < Qt::AbstractTableModel
           raise "invalid column #{index.column}" 
         end
         
-        type = index.metadata.type
+        type = index.meta.type
         value = variant.value
         #~ puts "#{type.inspect} is #{value}"
         
@@ -458,7 +437,7 @@ class TableModel < Qt::AbstractTableModel
         end
         
       when qt_checkstate_role
-        if index.metadata.type == :boolean
+        if index.meta.type == :boolean
           index.entity.toggle( index.attribute )
           true
         else
@@ -468,7 +447,7 @@ class TableModel < Qt::AbstractTableModel
       # user-defined role
       # TODO this only works with single-dotted paths
       when qt_paste_role
-        if index.metadata.type == :association
+        if index.meta.type == :association
           field = index.field
           association_class = field.class_name.constantize
           candidates = association_class.find( :all, :conditions => [ "#{field.attribute_path[1]} = ?", variant.value ] )

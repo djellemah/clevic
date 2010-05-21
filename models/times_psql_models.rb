@@ -1,5 +1,4 @@
 require 'clevic.rb'
-require 'active_support'
 
 # db connection options
 $options ||= {}
@@ -11,7 +10,10 @@ Clevic::DbOptions.connect( $options ) do
   else
     database $options[:database]
   end
-  adapter :postgresql
+  # for AR
+  #~ adapter :postgresql
+  # for Sequel
+  adapter :postgres
   username 'times' if $options[:username].blank?
 end
 

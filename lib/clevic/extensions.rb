@@ -64,7 +64,7 @@ module Qt
       <<-EOF
       field: #{field_name} => #{field_value}
       attribute: #{attribute.inspect} => #{attribute_value.inspect}
-      metadata: #{metadata.inspect}
+      meta: #{meta.inspect}
       EOF
       else
         'invalid'
@@ -93,15 +93,15 @@ module Qt
     end
     
     # returns the ActiveRecord column_for_attribute
-    def metadata
+    def meta
       # use the optimised version
-      model.metadata( column )
+      field.meta
     end
     
     # return the table's field name. For associations, this would
     # be suffixed with _id
     def field_name
-      metadata.name
+      meta.name
     end
     
     # return the value of the field, it may be the _id value
@@ -120,7 +120,7 @@ module Qt
     # return true if validation failed for this indexes field
     def has_errors?
       # virtual fields don't have metadata
-      if metadata.nil?
+      if meta.nil?
         false
       else
         entity.errors.invalid?( field_name.to_sym )
