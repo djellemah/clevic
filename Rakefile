@@ -11,10 +11,12 @@ $hoe = Hoe.new('clevic', Clevic::VERSION::STRING) do |p|
   p.extra_deps         = [
     ['activesupport','>= 2.0.2'],
     ['qtext', '>=0.6.5'],
-    ['activerecord', '>=2.0.2'],
+    #~ ['activerecord', '>=2.0.2'],
     ['fastercsv', '>=1.2.3'],
     ['gather', '>=0.0.4'],
-    ['facets', '>=2.4.1']
+    ['facets', '>=2.4.1'],
+    ['andand', '>= 1.3.0'],
+    ['sequel', '>= 3.8.0']
     # This isn't always installed from gems
     #~ ['qtruby4', '>=1.4.9']
     # bsearch can't be installed from gems
