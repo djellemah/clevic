@@ -352,7 +352,7 @@ EOF
   # Return a sample for the field which can be used to size the UI field widget.
   def sample( *args )
     if !args.empty?
-      self.sample = *args
+      @sample = *args
       return self
     end
     

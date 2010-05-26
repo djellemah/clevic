@@ -128,13 +128,13 @@ class Browser < Qt::Widget
     
     # Add all existing model objects as tabs, one each
     views.each do |view_class|
-      view = view_class.new
-      unless view.entity_class.table_exists?
-        puts "No table for #{view.entity_class.inspect}"
-        next
-      end
-        
       begin
+        view = view_class.new
+        unless view.entity_class.table_exists?
+          puts "No table for #{view.entity_class.inspect}"
+          next
+        end
+          
         # create the the table_view and the table_model for the entity_class
         tab = Clevic::TableView.new( view )
         

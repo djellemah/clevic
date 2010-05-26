@@ -23,7 +23,7 @@ class ModelColumn
   attr_accessor :primary_keys
   
   # TODO not sure where these are from
-  attr_accessor :order, :class
+  attr_accessor :order, :class, :conditions
   
   def initialize( name, hash )
     @hash = hash

@@ -47,7 +47,7 @@ class Sampler
   
   # default to max length of 20
   def string_sample
-    'N' * ( entity_class.max( :length.sql_function( field_name ) ) || 20 )
+    'N' * ( entity_class.max( :length.sql_function( field_name ) ).notnil.to_i || 20 )
   end
   
   def date_time_sample
