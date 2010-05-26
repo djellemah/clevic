@@ -2,9 +2,12 @@ require 'active_support/core_ext/array/extract_options.rb'
 
 module Sequel
   module Plugins
-    module ArFinder
-      # model is the model class. The rest is whatever I want
-      def self.configure(model)
+    module ArMethods
+      # plugin :ar_methods calls this.
+      # model is the model class. The rest is whatever options are
+      # in the plugin call, possibility for
+      #  plugin :ar_methods :override_sequel => true
+      def self.configure(model, options = {})
         model.instance_eval do
           # store model-related stuff here
         end
@@ -33,20 +36,24 @@ module Sequel
         end
         
         # Basically, we're translating from AR's hash options
-        # to Sequel's method algebra
+        # to Sequel's method algebra, and returning the resulting
+        # dataset.
         def translate( options )
           options.inject( dataset ) do |dataset, (key, value)|
             case key
               when :limit; dataset.limit( value, nil )
               when :offset
-                # bit of a hack to get around Sequels refusal
-                # to do offset without limit
+                # workaround for Sequel's refusal to do offset without limit
                 dataset.limit( options[:limit] || :all, value )
-                
-              when :order; dataset.order( lit_if_string( value ) )
+              
+              when :order
+                dataset.order( lit_if_string( value ) )
+              
               when :conditions
+                # this is most likely not adequate for all use cases
+                # of the AR api
                 dataset.filter( lit_if_string( value ) )
-                
+              
               else
                 raise "#{key} not implemented"
             end
@@ -54,10 +61,11 @@ module Sequel
         end
         
         def find_ar( *args )
-          # copied direct from ActiveRecord::Base.find
+          # copied from ActiveRecord::Base.find
           options = args.extract_options!
           #~ validate_find_options(options)
           #~ set_readonly_option!(options)
+          
           case args.first
             when :first
               translate(options).first

@@ -1,5 +1,5 @@
 require 'sequel/model.rb'
-require 'clevic/ar_finder.rb'
+require 'clevic/ar_methods.rb'
 require 'clevic/attribute_list.rb'
 
 module Clevic
@@ -7,7 +7,7 @@ module Clevic
     def initialize( entity_class )
       @entity_class = entity_class
       # TODO rename to ar_methods
-      @entity_class.plugin :ar_finder
+      @entity_class.plugin :ar_methods
     end
     
     def quoted_false
