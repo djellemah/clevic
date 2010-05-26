@@ -56,7 +56,7 @@ class CacheTable < Array
   
   # Return the set of OrderAttribute objects for this collection.
   # If no order attributes are specified, the primary key will be used.
-  # TODO what about compund primary keys?
+  # TODO what about compound primary keys?
   def order_attributes
     # This is sorted in @options[:order], so use that for the search
     if @order_attributes.nil?

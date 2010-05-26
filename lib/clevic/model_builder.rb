@@ -528,7 +528,7 @@ class ModelBuilder
     # combine reflections and attributes into one set
     reflections = entity_class.reflections.keys.map{|x| x.to_s}
     ui_columns = entity_class.columns.reject{|x| x.name == entity_class.primary_key }.map do |column|
-      # TODO there must be a better way to do this
+      # TODO use entity_class.meta and ModelColumn
       att = column.name.gsub( /_id$/, '' )
       if reflections.include?( att )
         att
@@ -606,19 +606,6 @@ class ModelBuilder
   
 protected
 
-  # Add ActiveRecord :include options for foreign keys, but it takes up too much memory,
-  # and actually takes longer to load a data set.
-  #--
-  # TODO ActiveRecord-2.1 has smarter includes
-  def add_include_options
-    fields.each do |id,field|
-      if field.delegate.class == RelationalDelegate
-        @options[:include] ||= []
-        @options[:include] << field.attribute
-      end
-    end
-  end
-
   # set a sensible read-only value if it isn't already specified in options
   def read_only_default!( attribute, options )
     # sensible defaults for read-only-ness
@@ -663,7 +650,6 @@ protected
   # Called by records( *args )
   def get_records
     if @records.nil?
-      #~ add_include_options
       @records = CacheTable.new( entity_class, @find_options )
     end
     @records
