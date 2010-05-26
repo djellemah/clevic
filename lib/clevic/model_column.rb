@@ -22,6 +22,9 @@ class ModelColumn
   # for many_to_one targets
   attr_accessor :primary_keys
   
+  # TODO not sure where these are from
+  attr_accessor :order, :class
+  
   def initialize( name, hash )
     @hash = hash
     @hash.each do |key,value|
