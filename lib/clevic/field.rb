@@ -4,16 +4,6 @@ require 'clevic/generic_format.rb'
 
 module Sequel
   class Model
-    def self.meta
-      if @meta.nil?
-        @meta = {}
-        columns_hash.merge( reflections ).each do |key,value|
-          @meta[key] = ModelColumn.new( key, value )
-        end
-      end
-      @meta
-    end
-    
     class Errors
       def invalid?( field_name )
         self.has_key?( field_name )

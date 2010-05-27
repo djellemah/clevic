@@ -14,22 +14,24 @@ class Object
   end
 end
 
-module ActiveRecord
-  class Base
-    # checks to see if attribute_sym is either in the column
-    # name list, or in the set of reflections.
-    def self.has_attribute?( attribute_sym )
-      if column_names.include?(  attribute_sym.to_s )
-        true
-      elsif reflections.has_key?(  attribute_sym )
-        true
-      else
-        false
+if defined? ActiveRecord
+  module ActiveRecord
+    class Base
+      # checks to see if attribute_sym is either in the column
+      # name list, or in the set of reflections.
+      def self.has_attribute?( attribute_sym )
+        if column_names.include?(  attribute_sym.to_s )
+          true
+        elsif reflections.has_key?(  attribute_sym )
+          true
+        else
+          false
+        end
       end
-    end
-    
-    def self.attribute_names
-      ( column_names + reflections.keys.map {|sym| sym.to_s} ).sort
+      
+      def self.attribute_names
+        ( column_names + reflections.keys.map {|sym| sym.to_s} ).sort
+      end
     end
   end
 end
@@ -92,7 +94,7 @@ module Qt
       entity.send( "#{attribute.to_s}=", obj )
     end
     
-    # returns the ActiveRecord column_for_attribute
+    # returns the list of ModelColumn metadata
     def meta
       # use the optimised version
       field.meta
