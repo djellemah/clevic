@@ -11,12 +11,12 @@ module Clevic
     end
     
     # Handle situations where the array passed to 
-    # Clevic::View.order = has ActiveRecord::Base
+    # Clevic::View.order has entity_class
     # objects in it. In other words, if there is one, pass back it's
-    # default view class rather than the ActiveRecord::Base subclass.
+    # default view class rather than the entity_class
     def self.order=( array )
       @order = array.map do |x|
-        if x.ancestors.include?( ActiveRecord::Base )
+        if x.ancestors.include?( Clevic.base_entity_class )
           x.default_view_class
         else
           x
@@ -28,12 +28,15 @@ module Clevic
       if args.size == 0
         @entity_class || raise( "entity_class not specified for #{name}" )
       else
-        @entity_class = args.first
+        self.entity_class = args.first
       end
     end
     
     def self.entity_class=( some_class )
       @entity_class = some_class
+      unless @entity_class.respond_to? :meta
+        Clevic.define_meta( @entity_class )
+      end
     end
     
     def self.widget_name( *args )
