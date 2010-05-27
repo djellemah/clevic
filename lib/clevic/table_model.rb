@@ -14,12 +14,12 @@ module Clevic
 =begin rdoc
 An instance of Clevic::TableModel is constructed by Clevic::ModelBuilder from the
 UI definition in a Clevic::View, or from the default Clevic::View created by
-including the Clevic::Record module in a ActiveRecord::Base subclass.
+including the Clevic::Record module in a ActiveRecord::Base or Sequel::Model subclass.
 =end
 class TableModel < Qt::AbstractTableModel
   include QtFlags
   
-  # the CacheTable of Clevic::Record or ActiveRecord::Base objects
+  # the CacheTable of Clevic::Record or ActiveRecord::Base or Sequel::Model objects
   attr_reader :collection
   alias_method :cache_table, :collection
   
@@ -267,7 +267,6 @@ class TableModel < Qt::AbstractTableModel
   def data( index, role = qt_display_role )
     #~ puts "data for index: #{index.inspect}, field #{index.field.attribute.inspect} and role: #{const_as_string role}"
     begin
-      retval =
       case role
         when qt_display_role
           # boolean values generally don't have text next to them in this context
@@ -319,7 +318,7 @@ class TableModel < Qt::AbstractTableModel
         
         when qt_tooltip_role
           case
-            # show ActiveRecord validation errors
+            # show validation errors
             when index.has_errors?
               index.errors.join("\n")
               
@@ -330,7 +329,7 @@ class TableModel < Qt::AbstractTableModel
             
             # read-only field
             when index.field.read_only?
-              'Read-only'
+              index.field.tooltip_for( index.entity ) || 'Read-only'
               
             else
               index.field.tooltip_for( index.entity )
@@ -338,13 +337,11 @@ class TableModel < Qt::AbstractTableModel
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
           nil
-      end
-      
-      # return a variant
-      #~ puts "retval: #{retval.inspect}"
-      retval.to_variant
+      # return the variant
+      end.to_variant
+        
     rescue Exception => e
-      puts "#{index.inspect} #{value.inspect} #{index.entity.inspect} for and role: #{const_as_string role}"
+      puts "#{entity_view.class.name}.#{index.field.id}: #{index.inspect} for role: #{const_as_string role} #{value.inspect} #{index.entity.inspect}"
       puts e.message
       puts e.backtrace
       nil.to_variant
