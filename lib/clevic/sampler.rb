@@ -36,7 +36,7 @@ class Sampler
       related_sample
     
     else
-      puts "Can't figure out sample for #{entity_class.name}.#{field_name} because it's a #{meta.type.inspect}"
+      puts "Sampler#compute can't figure out sample for #{entity_class.name}.#{field_name} because it's a #{meta.type.inspect}"
     
     end
   end
@@ -69,7 +69,9 @@ class Sampler
   end
   
   def related_sample
-    Sampler.new( eval( meta.class_name ), display.to_sym, nil, &@format_block ).compute
+    if display.respond_to?( :to_sym )
+      Sampler.new( eval( meta.class_name ), display.to_sym, nil, &@format_block ).compute
+    end
   end
 end
 
