@@ -90,14 +90,14 @@ class TableView < Qt::TableView
   # block for :insane. Will also catch exceptions thrown in actions to make
   # core application more robust to model & view errors.
   def action_triggered( &block )
-    begin
-      catch :insane do
-        yield
-      end
-    rescue Exception => e
-      puts e.message
-      puts e.backtrace
+    catch :insane do
+      yield
     end
+    
+    rescue Exception => e
+      puts
+      puts "#{model.entity_view.class.name}: #{e.message}"
+      puts e.backtrace
   end
   
   def init_actions( entity_view )
@@ -712,6 +712,9 @@ class TableView < Qt::TableView
     else
       super( model_index, trigger, event )
     end
+    
+    rescue Exception => e
+      Kernel.raise RuntimeError, "#{model.entity_view.class.name}.#{model_index.field.id}: #{e.message}", caller(0)
   end
   
   attr_accessor :before_edit_index

@@ -52,7 +52,7 @@ module Sequel
               when :conditions
                 # this is most likely not adequate for all use cases
                 # of the AR api
-                dataset.filter( lit_if_string( value ) )
+                dataset.filter( lit_if_string( value ) ) unless value.nil?
               
               when :include
                 # this is the class to joing
@@ -65,8 +65,12 @@ module Sequel
                 
               else
                 raise "#{key} not implemented"
-            end
+            # make sure at least it's unchanged
+            end || dataset
           end
+          
+          rescue Exception => e
+            raise RuntimeError, "#{self.name} #{options.inspect} #{e.message}", caller(0)
         end
         
         def find_ar( *args )
