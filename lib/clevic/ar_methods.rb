@@ -54,6 +54,15 @@ module Sequel
                 # of the AR api
                 dataset.filter( lit_if_string( value ) )
               
+              when :include
+                # this is the class to joing
+                joined_class = eval( reflections[value][:class_name] )
+                dataset.join_table(
+                  :inner,
+                  joined_class,
+                  joined_class.primary_key => reflections[value][:key]
+                ).select( table_name.* )
+                
               else
                 raise "#{key} not implemented"
             end
@@ -78,9 +87,9 @@ module Sequel
               
             else
               if args.size == 1
-                translate(options).filter( :id => args.first ).first
+                translate(options).filter( :id.qualify( table_name ) => args.first ).first
               else
-                translate(options).filter( :id => args ).all
+                translate(options).filter( :id.qualify( table_name ) => args ).all
               end
           end
         end
