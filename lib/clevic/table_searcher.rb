@@ -6,7 +6,6 @@ module Clevic
 class TableSearcher
   attr_reader :entity_class, :order_attributes, :search_criteria, :field
   
-  # entity_class is a descendant of ActiveRecord::Base
   # order_attributes is a collection of OrderAttribute objects
   # - field is an instance of Clevic::Field
   # - search_criteria responds to from_start?, direction, whole_words? and search_text
@@ -48,6 +47,7 @@ class TableSearcher
       find_from!( start_entity )
     end
     
+    # TODO move to ActiveRecord specific code
     # otherwise ActiveRecord thinks that the % in the string
     # is for interpolations instead of treating it a the like wildcard
     conditions_value =

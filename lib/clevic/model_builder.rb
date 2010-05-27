@@ -21,27 +21,27 @@ you need it.
 
 To that end, there are 2 ways to define UIs:
 
-- an Embedded View as part of the ActiveRecord object (which is useful if you 
+- an Embedded View as part of the model (ActiveRecord::Base or Sequel::Model) object (which is useful if you 
   want minimal framework overhead). Just show me the data, dammit.
 
 - a Separate View in a separate class (which is useful when you want several 
   diffent views of the same underlying table). I want a neato-nifty UI that does
   (relatively) complex things.
 
-I've tried to consistently refer to an instance of an ActiveRecord::Base subclass
-as an 'entity'.
+I've tried to consistently refer to an instance of an ActiveRecord::Base or
+Sequel::Model subclass as an 'entity'.
 
 ==Embedded View
 Minimal embedded definition is
 
-  class Position < ActiveRecord::Base
+  class Position < Sequel::Model
     include Clevic::Record
   end
 
 which will build a fairly sensible default UI from the
 entity's metadata. Obviously you can use open classes to do
 
-  class Position < ActiveRecord::Base
+  class Position < Sequel::Model
     has_many :transactions
     belong_to :account
   end
@@ -53,7 +53,7 @@ entity's metadata. Obviously you can use open classes to do
 A full-featured UI for an entity called Entry (part of an accounting database)
 could be defined like this:
 
-  class Entry < ActiveRecord::Base
+  class Entry < Sequel::Model
     belongs_to :invoice
     belongs_to :activity
     belongs_to :project
@@ -210,7 +210,7 @@ could be defined like this:
 To define a separate ui class, do something like this:
   class Prospect < Clevic::View
     
-    # This is the ActiveRecord::Base descendant
+    # This is the ActiveRecord::Base or Sequel::Model descendant
     entity_class Position
     
     # This must return a ModelBuilder instance, which is made easier
@@ -542,6 +542,7 @@ class ModelBuilder
     auto_new false
     
     # build columns
+    # TODO use ModelColumn for this
     ui_columns.each do |column|
       if entity_class.reflections.has_key?( column.to_sym )
         begin
@@ -621,8 +622,7 @@ protected
         
       when entity_class.reflections.include?( attribute )
         # one-to-one relationships can be edited. many-to-one certainly can't
-        reflection = entity_class.reflections[attribute]
-        reflection.macro != :has_one
+        entity_class.meta( attribute ).type != :many_to_one
         
       when entity_class.instance_methods.include?( attribute.to_s )
         # read-only if there's no setter for the attribute

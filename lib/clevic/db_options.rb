@@ -3,7 +3,7 @@ require 'sequel'
 
 module Clevic
 =begin rdoc
-This class is intended to set up db options for a ActiveRecord
+This class is intended to set up db options for a
 connection to a particular database. Like this:
 
   Clevic::DbOptions.connect( $options ) do
@@ -14,7 +14,7 @@ connection to a particular database. Like this:
 
 When the block ends, a check is done to see that the :database key
 exists. If not, an exception is thrown. Finally the relevant calls to
-establish the ActiveRecord connection are performed.
+establish the connection are performed.
 
 Method calls are translated to insertions into a hash with the same
 key as the method being called. The hash is initialised

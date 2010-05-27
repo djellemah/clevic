@@ -3,7 +3,7 @@ require 'clevic/default_view.rb'
 
 module Clevic
 
-  # include this in ActiveRecord::Base instances to
+  # include this in ActiveRecord::Base or Sequel::Model instances to
   # get embedded view definitions. See ModelBuilder.
   #
   # A Clevic::Default#{model}View class will be created. If

@@ -5,7 +5,7 @@ module Clevic
   # subclass.
   # 
   # The Clevic::DefaultView subclass knows how to:
-  # - build a fairly sensible UI from the the ActiveRecord::Base metadata.
+  # - build a fairly sensible UI from the the ORM model metadata.
   # - create a UI definition using a class method called define_ui.
   #
   # See Clevic::ModelBuilder for an example.

@@ -268,7 +268,7 @@ end
 #
 # attribute is the method to call on the row entity to retrieve the related object.
 # 
-# The ids of the ActiveRecord models are stored in the item data
+# The ids of the model objects are stored in the item data
 # and the item text is fetched from them using attribute_path.
 class RelationalDelegate < ComboDelegate
   
