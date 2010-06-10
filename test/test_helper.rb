@@ -4,10 +4,10 @@ require 'shoulda'
 require File.dirname(__FILE__) + '/../lib/clevic'
 
 require 'sequel'
-require 'sqlite3'
 require 'faker'
 require 'generator'
 
+# Doesn't seem to be a good place to put this
 $db = Sequel.sqlite
 Sequel.extension :migration
 
