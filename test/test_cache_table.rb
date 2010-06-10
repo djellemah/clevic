@@ -1,25 +1,28 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-class PopulateCachePassengers < ActiveRecord::Migration
-  def self.up
-    Passenger.create :name => 'John Anderson', :flight => Flight.find_by_number('EK211'), :row => 36, :seat => 'A', :nationality => 'UAE'
-    Passenger.create :name => 'Genie', :flight => Flight.find_by_number('CA001'), :row => 1, :seat => 'A', :nationality => 'Canada'
-    Passenger.create :name => 'Aladdin', :flight => Flight.find_by_number('CA001'), :row => 2, :seat => 'A', :nationality => 'Canada'
+class PopulateCachePassengers < Sequel::Migration
+  def up
+    flight_ids = @db[:flights].select(:id )
+    @db[:passengers].tap do |ps|
+      ps.insert :name => 'John Anderson', :flight_id => flight_ids.filter( :number => 'EK211' ).single_value, :row => 36, :seat => 'A', :nationality => 'UAE'
+      ps.insert :name => 'Genie', :flight_id => flight_ids.filter( :number => 'CA001').single_value, :row => 1, :seat => 'A', :nationality => 'Canada'
+      ps.insert :name => 'Aladdin', :flight_id => flight_ids.filter( :number => 'CA001').single_value, :row => 2, :seat => 'A', :nationality => 'Canada'
+    end
   end
   
-  def self.down
-    Passenger.delete :all
+  def down
+    @db[:passengers].delete
   end
 end
 
 # need to set up a test DB, and test data for this
 class TestCacheTable < Test::Unit::TestCase
   def self.startup
-    PopulateCachePassengers.up
+    PopulateCachePassengers.new( suite.db ).up
   end
   
   def self.shutdown
-    PopulateCachePassengers.down
+    PopulateCachePassengers.new( suite.db ).down
   end
   
   

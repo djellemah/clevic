@@ -3,102 +3,80 @@ require 'shoulda'
 
 require File.dirname(__FILE__) + '/../lib/clevic'
 
-require 'activerecord'
+require 'sequel'
 require 'sqlite3'
 require 'faker'
 require 'generator'
 
+$db = Sequel.sqlite
+Sequel.extension :migration
 
-class Flight < ActiveRecord::Base
-  has_many :passengers
+class Flight < Sequel::Model
+  one_to_many :passengers
 end
 
-class Passenger < ActiveRecord::Base
-  belongs_to :flight
+class Passenger < Sequel::Model
+  many_to_one :flight
 end
 
-class CreateFlights < ActiveRecord::Migration
-  def self.up
-    create_table :flights do |t|
-      t.string :number
-      t.string :airline
-      t.string :destination
-    end
-    Flight.reset_column_information
-    Flight.create :number => 'EK211'
-    Flight.create :number => 'EK088'
-    Flight.create :number => 'EK761'
-    Flight.create :number => 'BA264'
-  end
-  
-  def self.down
-    Flight.delete_all
-  end
-end
-
-class CreatePassengers < ActiveRecord::Migration
-  def self.up
-    create_table :passengers do |t|
-      t.string :name
-      t.string :nationality
-      t.integer :flight_id
-      t.integer :row
-      t.string :seat
-    end
-    Passenger.reset_column_information
-  end
-  
-  def self.down
-    Passenger.delete_all
-  end
-end
-
-# Convenience class to create a test DB
-class OneBase
-  attr_reader :db_name, :adapter
-  
-  def initialize
-    @db_name = 'test_cache_table.sqlite3'
-
-    if File.exists? @db_name
-      p 'remove old db'
-      File.unlink @db_name
+class CreateFlights < Sequel::Migration
+  def up
+    # this executes in the context of a Sequel::Database
+    create_table :flights do
+      primary_key :id
+      String :number
+      String :airline
+      String :destination
     end
     
-    @adapter = :sqlite3
-    @db = SQLite3::Database.new( @db_name )
-    @db_options = Clevic::DbOptions.connect do |dbo|
-      dbo.database @db_name
-      dbo.adapter @adapter
+    self[:flights].tap do |fs|
+      fs.insert :number => 'EK211'
+      fs.insert :number => 'EK761'
+      fs.insert :number => 'BA264'
     end
   end
+  
+  def down
+    drop_table :flights
+  end
+end
 
-  def feenesh
-    File.unlink @db_name
+class CreatePassengers < Sequel::Migration
+  def up
+    create_table :passengers do
+      primary_key :id
+      String :name
+      String :nationality
+      Integer :flight_id
+      Integer :row
+      String :seat
+    end
+  end
+  
+  def down
+    drop_table :passengers
   end
 end
 
 # Allow running of startup and shutdown things before
 # an entire suite, instead of just one per test
 class SuiteWrapper < Test::Unit::TestSuite
-  attr_accessor :tests
+  attr_accessor :tests, :db
   
   def initialize( name, test_case )
     super( name )
     @test_case = test_case
+    @db = $db
   end
   
   def startup
-    @onebase = OneBase.new
-    ActiveRecord::Migration.verbose = false
-    CreateFlights.up
-    CreatePassengers.up
+    CreateFlights.new( db ).up
+    CreatePassengers.new( db ).up
   end
   
   def shutdown
-    CreatePassengers.down
-    CreateFlights.down
-    @onebase.feenesh
+    CreatePassengers.new( db ).down
+    CreateFlights.new( db ).down
   end
   
   def run( *args )
