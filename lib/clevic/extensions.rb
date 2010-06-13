@@ -97,6 +97,7 @@ module Qt
     # returns the list of ModelColumn metadata
     def meta
       # use the optimised version
+      # TODO just use the model version instead?
       field.meta
     end
     

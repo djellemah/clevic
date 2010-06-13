@@ -1,31 +1,7 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-class PopulateCachePassengers < Sequel::Migration
-  def up
-    flight_ids = @db[:flights].select(:id )
-    @db[:passengers].tap do |ps|
-      ps.insert :name => 'John Anderson', :flight_id => flight_ids.filter( :number => 'EK211' ).single_value, :row => 36, :seat => 'A', :nationality => 'UAE'
-      ps.insert :name => 'Genie', :flight_id => flight_ids.filter( :number => 'CA001').single_value, :row => 1, :seat => 'A', :nationality => 'Canada'
-      ps.insert :name => 'Aladdin', :flight_id => flight_ids.filter( :number => 'CA001').single_value, :row => 2, :seat => 'A', :nationality => 'Canada'
-    end
-  end
-  
-  def down
-    @db[:passengers].delete
-  end
-end
-
 # need to set up a test DB, and test data for this
 class TestCacheTable < Test::Unit::TestCase
-  def self.startup
-    PopulateCachePassengers.new( suite.db ).up
-  end
-  
-  def self.shutdown
-    PopulateCachePassengers.new( suite.db ).down
-  end
-  
-  
   def setup
     @cache_table = CacheTable.new( Passenger )
   end

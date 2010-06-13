@@ -18,7 +18,7 @@ class ModelColumn
   attr_accessor :primary_keys
   
   # TODO not sure where these are from
-  attr_accessor :order, :class, :conditions
+  attr_accessor :order, :class, :conditions, :before_set, :after_set
   
   def initialize( name, hash )
     @hash = hash

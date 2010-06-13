@@ -1,23 +1,9 @@
+require 'generator'
+
 require File.dirname(__FILE__) + '/test_helper.rb'
 require 'clevic/table_searcher.rb'
 
-class CreateFakePassengers < ActiveRecord::Migration
-  MAX_PASSENGERS = 100
-  NATIONALITIES = %w{Canada USA Britain UAE}
-  
-  def self.up
-    1.upto( MAX_PASSENGERS ) do |i|
-      Passenger.create :name => Faker::Name.name, :flight => Flight.find(:all)[i%4], :nationality => NATIONALITIES[i%4], :row => i, :seat => %w{A B C D}[i % 4]
-    end
-  end
-  
-  def self.down
-    Passenger.delete_all
-  end
-end
-
 class MockSearchCriteria
-
   def initialize( &block )
     @direction = :forwards
     @from_start = false
@@ -33,50 +19,37 @@ end
 
 class TestTableSearcher < Test::Unit::TestCase
   def self.startup
-    CreateFakePassengers.up
+    suite.db[:passengers].delete
+    CreateFakePassengers.new( suite.db ).up
   end
   
   def self.shutdown
-    CreateFakePassengers.down
+    CreateFakePassengers.new( suite.db ).down
   end
   
   def setup
     @simple_search_criteria = MockSearchCriteria.new
-    @id_order_attribute = OrderAttribute.new( Passenger, 'id' )
-
     @name_field = Clevic::Field.new( :name, Passenger, {} )
     @nationality_field = Clevic::Field.new( :nationality, Passenger, {} )
-    @all_passengers = Passenger.find( :all, :conditions => [ 'flight_id = ?', Flight.find(:first).id ], :order => :id )
+    @all_passengers = Passenger.filter( :flight_id => Flight.first.id ).order( :id ).all
   end
 
   context 'on initialisation' do
     should "have a matching field attribute on construction" do
-      ts = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, @name_field )
+      ts = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @name_field )
       assert_equal @name_field.attribute, ts.field.attribute
     end
 
-    should "throw an exception when called with no order attributes" do
-      assert_raise( RuntimeError ) do
-        Clevic::TableSearcher.new( Passenger, nil, @simple_search_criteria, @name_field )
-      end
-    end
-
-    should "throw an exception when called with an empty collection of order attributes" do
-      assert_raise( RuntimeError ) do
-        Clevic::TableSearcher.new( Passenger, [], @simple_search_criteria, @name_field )
-      end
-    end
-      
     should "throw an exception when called with no field" do
       assert_raise( RuntimeError ) do
-        Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, nil )
+        Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, nil )
       end
     end
   
     should 'throw an exception for an unknown direction' do
       @simple_search_criteria.direction = :other
       assert_raise( RuntimeError ) do
-        table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, @nationality_field )
+        table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @nationality_field )
       end
     end
   end
@@ -95,14 +68,15 @@ class TestTableSearcher < Test::Unit::TestCase
     
     should "find the first record" do
       @simple_search_criteria.from_start = true
-      table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, @nationality_field )
+      table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @nationality_field )
       assert_equal @all_passengers.first, table_searcher.search
     end
     
     should "backwards-find the last record" do
       @simple_search_criteria.from_start = true
       @simple_search_criteria.direction = :backwards
-      table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, @nationality_field )
+      table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @nationality_field )
+      assert_equal "<", table_searcher.send( :comparator )
       assert_equal @all_passengers.last, table_searcher.search
     end
     
@@ -110,7 +84,7 @@ class TestTableSearcher < Test::Unit::TestCase
       # find the last record
       @simple_search_criteria.from_start = true
       @simple_search_criteria.direction = :backwards
-      table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, @nationality_field )
+      table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @nationality_field )
       last = table_searcher.search
       
       # now find the previous record
@@ -120,7 +94,7 @@ class TestTableSearcher < Test::Unit::TestCase
 
     should "find next records" do
       @simple_search_criteria.from_start = false
-      table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, @nationality_field )
+      table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @nationality_field )
       
       # fetch records one by one, starting from the one after the first one, and compare them
       while next_entity = table_searcher.search( @passenger_generator.next )
@@ -135,22 +109,23 @@ class TestTableSearcher < Test::Unit::TestCase
   end
   
   context 'search for related field value' do
-    should 'raise an exception for no display value' do
+    should_eventually 'raise an exception for no display value' do
       @simple_search_criteria.from_start = true
-      @simple_search_criteria.search_text = Flight.find(:first).number
+      @simple_search_criteria.search_text = Flight.first.number
       flight_field = Clevic::Field.new( :flight, Passenger, {} )
       assert_nil flight_field.display
       assert_raise RuntimeError do
-        table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, flight_field )
+        table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, flight_field )
         table_searcher.search
       end
     end
 
-    should 'find a record' do
+    should_eventually 'find a record' do
       @simple_search_criteria.from_start = true
-      @simple_search_criteria.search_text = Flight.find(:first).number
+      puts "Flight.first: #{Flight.first.inspect}"
+      @simple_search_criteria.search_text = Flight.first.number
       flight_field = Clevic::Field.new( :flight, Passenger, { :display => 'number' } )
-      table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, flight_field )
+      table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, flight_field )
       assert_equal @all_passengers.first, table_searcher.search
     end
   end
@@ -159,17 +134,17 @@ class TestTableSearcher < Test::Unit::TestCase
     setup do
       @simple_search_criteria.from_start = true
       @simple_search_criteria.search_text = CreateFakePassengers::NATIONALITIES[0][0..-3]
-      @should_find = Passenger.find :all, :conditions => "nationality like '%#{@simple_search_criteria.search_text}%'", :order => :id
+      @should_find = Passenger.filter( "nationality like '%#{@simple_search_criteria.search_text}%'" ).order( :id )
     end
     
     should 'find a full value with a partial search string' do
       @simple_search_criteria.whole_words = false
       @simple_search_criteria.from_start = true
-      table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, @nationality_field )
-      g = Generator.new @should_find
+      table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @nationality_field )
+      expecteds = Generator.new @should_find
       last_entity = nil
       while next_entity = table_searcher.search( last_entity )
-        assert_equal next_entity, g.next
+        assert_equal next_entity, expecteds.next
         last_entity = next_entity
         @simple_search_criteria.from_start = false
       end
@@ -178,11 +153,9 @@ class TestTableSearcher < Test::Unit::TestCase
     should 'not find any values with a partial search string and whole_words enabled' do
       @simple_search_criteria.whole_words = true
       @simple_search_criteria.from_start = true
-      table_searcher = Clevic::TableSearcher.new( Passenger, [@id_order_attribute], @simple_search_criteria, @nationality_field )
+      table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @nationality_field )
       assert_nil table_searcher.search
     end
   end
   
-  should_eventually 'work for Array'
-
 end

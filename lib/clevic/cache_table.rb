@@ -162,10 +162,6 @@ class CacheTable < Array
       end
     end
   end
-  
-  def search( field, search_criteria, start_entity )
-    Clevic::TableSearcher.new( entity_class, order_attributes, search_criteria, field ).search( start_entity )
-  end
 end
 
 # This is part of Array in case the programmer wants to use

@@ -470,7 +470,8 @@ class TableModel < Qt::AbstractTableModel
   
   # return a set of indexes that match the search criteria
   def search( start_index, search_criteria )
-    entity = collection.search( start_index.field, search_criteria, start_index.entity )
+    searcher = Clevic::TableSearcher.new( entity_class, collection.order_attributes, search_criteria, start_index.field )
+    entity = searcher.search( start_index.entity )
     
     # return matched indexes
     if entity != nil
