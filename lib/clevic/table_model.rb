@@ -472,7 +472,13 @@ class TableModel < Qt::AbstractTableModel
   # TODO make sure the right dataset, with the right ordering
   # is passed in here
   def search( start_index, search_criteria )
-    searcher = Clevic::TableSearcher.new( entity_class.dataset, search_criteria, start_index.field )
+    ordered_dataset = entity_class.dataset.order( *cache_table.order_attributes.map{|oa| oa.attribute.to_sym.send( oa.direction ) } )
+    puts "ordered_dataset: #{ordered_dataset.inspect}"
+    searcher = Clevic::TableSearcher.new(
+      ordered_dataset,
+      search_criteria,
+      start_index.field
+    )
     entity = searcher.search( start_index.entity )
     
     # return matched indexes

@@ -8,7 +8,7 @@ the matching record next after this.
 class TableSearcher
   attr_reader :dataset, :search_criteria, :field
   
-  # order_attributes is a collection of OrderAttribute objects
+  # order_attributes is a collection or symbols, one for each order clause
   # - field is an instance of Clevic::Field
   # - search_criteria responds to from_start?, direction, whole_words? and search_text
   def initialize( dataset, search_criteria, field )
@@ -105,6 +105,8 @@ protected
   # because and ... and ... and filters on *each* one rather than
   # consecutively.
   # operator is either '<' or '>'
+  # FIXME this will break with order by attribute DESC because
+  # operator is not reversed in those cases
   def build_recursive_comparison( start_entity, operator, index = 0 )
     # end recursion
     return false if index == order_attributes.size
@@ -137,7 +139,14 @@ protected
   end
   
   def order_attributes
-    @dataset.opts[:order]
+    @dataset.opts[:order].map do |order_expr|
+      case order_expr
+        when Symbol; order_expr
+        when Sequel::SQL::OrderedExpression; order_expr.expression
+        else
+          raise "unknown order_expr: #{order_expr.inspect}"
+      end
+    end
   end
 end
 

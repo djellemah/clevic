@@ -77,6 +77,7 @@ class TestTableSearcher < Test::Unit::TestCase
     end
 
     should_eventually "work with several ordering fields"
+    # Sequel::SQL::OrderedExpression:0xb50a3b14 @expression=:date, @descending=false
     
     should_eventually "do more granular testing"
     

@@ -142,12 +142,9 @@ class CacheTable < Array
             # compare taking ordering direction into account
             retval =
             if attribute.direction == :asc
-              # TODO which would be more efficient here?
-              #~ candidate.send( method ) <=> entity.send( method )
-              candidate[method] <=> entity[method]
+              candidate.send( method ) <=> entity.send( method )
             else
-              #~ entity.send( method ) <=> candidate.send( method )
-              entity[method] <=> candidate[method]
+              entity.send( method ) <=> candidate.send( method )
             end
             # exit now because we have a difference
             next( retval ) if retval != 0
