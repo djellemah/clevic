@@ -31,8 +31,12 @@ module Sequel
         def meta
           if @meta.nil?
             @meta = {}
-            db_schema.merge( association_reflections ).each do |key,value|
-              @meta[key] = ModelColumn.new( key, value )
+            db_schema.each do |key,value|
+              @meta[key] = ModelColumn.new( key, value.merge( :association => false ) )
+            end
+            
+            association_reflections.each do |key,value|
+              @meta[key] = ModelColumn.new( key, value.merge( :association => true ) )
             end
           end
           @meta

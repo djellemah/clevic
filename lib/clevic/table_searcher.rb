@@ -14,6 +14,7 @@ class TableSearcher
   def initialize( dataset, search_criteria, field )
     raise "field must be specified" if field.nil?
     raise "unknown order #{search_criteria.direction}" unless [:forwards, :backwards].include?( search_criteria.direction )
+    raise "dataset has no model" unless dataset.respond_to?( :model )
     
     # set default dataset ordering if it's not there
     @dataset =
@@ -42,19 +43,29 @@ protected
         raise( "search field #{field.inspect} cannot search lambda display" ) 
       end
       
+      raise "display not specified for #{field}" if field.display.nil?
+      
       # TODO this will only work with a path value with no dots
       # otherwise the SQL gets complicated with joins etc
-      field.display
+      related_class = eval field.meta.class_name
+      related_class \
+        .filter( related_class.primary_key.qualify( related_class.table_name ) => field.meta.key.qualify( field.entity_class.table_name ) ) \
+        .select( field.display.to_sym )
     else
       # for this table
-      field.attribute
+      field.attribute.to_sym
     end
   end
   
-  # return a dataset representing search_criteria.search_text and whole_words?
+  # return an array containing expressions for representing search_criteria.search_text and whole_words?
   def search_text_expression
     if search_criteria.whole_words?
-      [ "% #{search_criteria.search_text} %", "#{search_criteria.search_text} %", "% #{search_criteria.search_text}" ]
+      [
+        "% #{search_criteria.search_text} %",
+        "#{search_criteria.search_text} %",
+        "% #{search_criteria.search_text}",
+        search_criteria.search_text
+      ]
     else
       "%#{search_criteria.search_text}%"
     end
@@ -65,12 +76,15 @@ protected
   # start_entity is a model instance
   def find_from( dataset, start_entity )
     expression = build_recursive_comparison( start_entity, comparator )
+    # need expression => true because most databases can't evaluate a
+    # pure boolean expression - they need something to compare it to.
     dataset.filter( expression => true )
   end
   
   # return a dataset based on @dataset which filters on search_criteria
   def search_dataset( start_entity )
-    rv = @dataset.grep( search_field_expression, search_text_expression )
+    likes = Array[*search_text_expression].map{|ste| Sequel::SQL::StringExpression.like(search_field_expression, ste)}
+    rv = @dataset.filter( Sequel::SQL::BooleanExpression.new(:OR, *likes ) )
     
     # if we're not searching from the start, we need
     # to find the next match. Which is complicated from an SQL point of view.

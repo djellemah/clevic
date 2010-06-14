@@ -163,6 +163,12 @@ module Sequel
     
     def new_record?; new?; end
     
+    class Errors
+      def invalid?( field_name )
+        self.has_key?( field_name )
+      end
+    end
+    
     module Associations
       class ManyToOneAssociationReflection
         # return class for this side of the association

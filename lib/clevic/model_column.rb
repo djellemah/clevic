@@ -20,6 +20,10 @@ class ModelColumn
   # TODO not sure where these are from
   attr_accessor :order, :class, :conditions, :before_set, :after_set
   
+  # added by us
+  attr_accessor :association
+  def association?; association; end
+  
   def initialize( name, hash )
     @hash = hash
     @hash.each do |key,value|

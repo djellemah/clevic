@@ -7,14 +7,6 @@ require 'generator'
 $db = Sequel.sqlite
 Sequel.extension :migration
 
-class Flight < Sequel::Model
-  one_to_many :passengers
-end
-
-class Passenger < Sequel::Model
-  many_to_one :flight
-end
-
 class CreateFlights < Sequel::Migration
   def up
     # this executes in the context of a Sequel::Database
@@ -94,3 +86,12 @@ def all
     mgr.new( $db ).up
   end
 end
+
+class Flight < Sequel::Model
+  one_to_many :passengers
+end
+
+class Passenger < Sequel::Model
+  many_to_one :flight
+end
+

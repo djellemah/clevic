@@ -2,16 +2,6 @@ require 'gather.rb'
 require 'clevic/sampler.rb'
 require 'clevic/generic_format.rb'
 
-module Sequel
-  class Model
-    class Errors
-      def invalid?( field_name )
-        self.has_key?( field_name )
-      end
-    end
-  end
-end
-
 module Clevic
 
 =begin rdoc
@@ -183,6 +173,7 @@ class Field
   # The list of properties for ActiveRecord options.
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected.
   # Each element becomes a property.
+  # TODO remove these? That will destroy the migration path.
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
   
@@ -208,13 +199,13 @@ class Field
   # would normally have an _id suffix for relationships.
   attr_accessor :attribute
   
-  # The ActiveRecord::Base subclass this field uses to get data from.
+  # The Object Relational Model this field uses to get data from.
   attr_reader :entity_class
   
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.
   # - attribute is the symbol for the attribute on the entity_class.
-  # - entity_class is the ActiveRecord::Base subclass which this Field talks to.
+  # - entity_class is the Object Relational Model which this Field talks to.
   # - options is a hash of writable attributes in Field, which can be any of the properties defined in this class.
   def initialize( attribute, entity_class, options, &block )
     # sanity checking
@@ -252,7 +243,7 @@ EOF
     default_alignment!
   end
   
-  # Return the attribute value for the given ActiveRecord entity, or nil
+  # Return the attribute value for the given Object Relational Model instance, or nil
   # if entity is nil. Will call transform_attribute.
   def value_for( entity )
     begin
@@ -285,8 +276,9 @@ EOF
   end
   
   # return true if this is a field for a related table, false otherwise.
+  # TODO rename to remove is_
   def is_association?
-    meta.type == ActiveRecord::Reflection::AssociationReflection
+    meta.association?
   end
   
   # ModelColumn object
@@ -295,14 +287,10 @@ EOF
   end
   
   # return the type of this attribute. Usually one of :string, :integer, :float
-  # or some entity class (ActiveRecord::Base subclass)
+  # or some entity class
+  # TODO remove
   def attribute_type
-    @attribute_type ||=
-    if meta.kind_of?( ActiveRecord::Reflection::MacroReflection )
-      meta.klass
-    else
-      meta.type
-    end
+    meta.type
   end
 
   # return true if this field can be used in a filter
