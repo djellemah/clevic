@@ -190,7 +190,7 @@ class Project < Sequel::Model
   # Return the latest invoice for this project
   # Not part of the UI.
   def latest_invoice
-    Invoice.find(
+    Invoice.adaptor.find(
       :first,
       :conditions => ["client = ? and status = 'not sent'", self.client],
       :order => 'invoice_number desc'
