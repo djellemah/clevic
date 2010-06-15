@@ -79,6 +79,8 @@ class DbOptions
   def self.connect( args = {}, &block )
     inst = self.new( args, &block )
     inst.connect
+    @instances ||= []
+    @instances << inst
     inst
   end
   
