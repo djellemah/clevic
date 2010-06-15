@@ -468,12 +468,11 @@ class TableModel < Qt::AbstractTableModel
     end
   end
   
-  # return a set of indexes that match the search criteria
-  # TODO make sure the right dataset, with the right ordering
-  # is passed in here
+  # return a collection of indexes that match the search criteria
+  # at the moment this only returns the first index found
+  # TODO could handle dataset creation better
   def search( start_index, search_criteria )
     ordered_dataset = entity_class.dataset.order( *cache_table.order_attributes.map{|oa| oa.attribute.to_sym.send( oa.direction ) } )
-    puts "ordered_dataset: #{ordered_dataset.inspect}"
     searcher = Clevic::TableSearcher.new(
       ordered_dataset,
       search_criteria,

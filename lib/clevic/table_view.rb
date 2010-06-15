@@ -295,7 +295,6 @@ class TableView < Qt::TableView
   end
   
   def itemDelegate( model_index )
-    puts "itemDelegate model_index: #{model_index.inspect}"
     @pre_delegate_index = model_index
     super
   end

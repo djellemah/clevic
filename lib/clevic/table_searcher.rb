@@ -8,9 +8,9 @@ the matching record next after this.
 class TableSearcher
   attr_reader :dataset, :search_criteria, :field
   
-  # order_attributes is a collection or symbols, one for each order clause
-  # - field is an instance of Clevic::Field
-  # - search_criteria responds to from_start?, direction, whole_words? and search_text
+  # dataset is a Sequel::Dataset, which has an associated Sequel::Model
+  # field is an instance of Clevic::Field
+  # search_criteria responds to from_start?, direction, whole_words? and search_text
   def initialize( dataset, search_criteria, field )
     raise "field must be specified" if field.nil?
     raise "unknown order #{search_criteria.direction}" unless [:forwards, :backwards].include?( search_criteria.direction )
@@ -57,7 +57,7 @@ protected
     end
   end
   
-  # return an array containing expressions for representing search_criteria.search_text and whole_words?
+  # return an expression, or an array or expressions for representing search_criteria.search_text and whole_words?
   def search_text_expression
     if search_criteria.whole_words?
       [
@@ -75,7 +75,7 @@ protected
   # entity where the search starts, ie the first one after it is found
   # start_entity is a model instance
   def find_from( dataset, start_entity )
-    expression = build_recursive_comparison( start_entity, comparator )
+    expression = build_recursive_comparison( start_entity )
     # need expression => true because most databases can't evaluate a
     # pure boolean expression - they need something to compare it to.
     dataset.filter( expression => true )
@@ -104,15 +104,12 @@ protected
   # recursively create a case statement to do the comparison
   # because and ... and ... and filters on *each* one rather than
   # consecutively.
-  # operator is either '<' or '>'
-  # FIXME this will break with order by attribute DESC because
-  # operator is not reversed in those cases
-  def build_recursive_comparison( start_entity, operator, index = 0 )
+  def build_recursive_comparison( start_entity, index = 0 )
     # end recursion
     return false if index == order_attributes.size
     
-    # fetch the current attribute
-    attribute = order_attributes[index]
+    # fetch the current order attribute and direction
+    attribute, direction = order_attributes[index]
     value = start_entity.send( attribute )
     
     # build case statement using Sequel expressions, including recursion
@@ -125,28 +122,40 @@ protected
     
     {
       # if values are unequal, comparison levels end here
-      attribute.identifier.send( operator, value ) => true,
+      attribute.identifier.send( comparator(direction), value ) => true,
       # if the values are equal, move on to the next level of comparison
-      { attribute => value } => build_recursive_comparison( start_entity, operator, index+1 )
+      { attribute => value } => build_recursive_comparison( start_entity, index+1 )
     }.case( false ) # the else (default) clause, ie we don't want to see these records
   end
   
-  def comparator
+  # return either > or < depending on both search_criteria.direction
+  # and local_direction
+  def comparator( local_direction = 1 )
+    comparator_direction =
     case search_criteria.direction
-      when :forwards; '>'
-      when :backwards; '<'
-    end
+      when :forwards; 1
+      when :backwards; -1
+    end * local_direction
+    
+    # 1 indexes >, -1 indexes <
+    ['','>','<'][comparator_direction]
   end
   
+  # returns a collection of [ attribute, (1|-1) ]
+  # where 1 is forward/asc (>) and -1 is backward/desc (<)
   def order_attributes
-    @dataset.opts[:order].map do |order_expr|
-      case order_expr
-        when Symbol; order_expr
-        when Sequel::SQL::OrderedExpression; order_expr.expression
-        else
-          raise "unknown order_expr: #{order_expr.inspect}"
+    if @order_attributes.nil?
+      @order_attributes =
+      @dataset.opts[:order].map do |order_expr|
+        case order_expr
+          when Symbol; [ order_expr, 1 ]
+          when Sequel::SQL::OrderedExpression; [ order_expr.expression, order_expr.descending ? -1 : 1 ]
+          else
+            raise "unknown order_expr: #{order_expr.inspect}"
+        end
       end
     end
+    @order_attributes
   end
 end
 
