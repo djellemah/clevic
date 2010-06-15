@@ -83,7 +83,7 @@ protected
   
   # return a dataset based on @dataset which filters on search_criteria
   def search_dataset( start_entity )
-    likes = Array[*search_text_expression].map{|ste| Sequel::SQL::StringExpression.like(search_field_expression, ste)}
+    likes = Array[*search_text_expression].map{|ste| Sequel::SQL::StringExpression.like(search_field_expression, ste, {:case_insensitive=>true})}
     rv = @dataset.filter( Sequel::SQL::BooleanExpression.new(:OR, *likes ) )
     
     # if we're not searching from the start, we need
