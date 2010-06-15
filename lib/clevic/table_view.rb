@@ -70,7 +70,13 @@ class TableView < Qt::TableView
   
   def connect_view_signals( entity_view )
     model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
-      entity_view.notify_data_changed( self, top_left, bottom_right )
+      begin
+        entity_view.notify_data_changed( self, top_left, bottom_right )
+      rescue Exception => e
+        puts
+        puts "#{model.entity_view.class.name}: #{e.message}"
+        puts e.backtrace
+      end
     end
   end
   
