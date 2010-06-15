@@ -73,14 +73,28 @@ class CacheTable < Array
   end
   
   # add an id to options[:order] if it's not in there
-  # also create @order_attributes
+  # make sure options[:conditions] uses db values rather than objects
+  # ie convert { :debit => DebitObject<...> } to { :debit_id => 5 }
   def sanitise_options!
     # make sure we have a string here, even if it's blank
+    # value would be a ,-separated list of order by fields (expressions?)
     find_options[:order] ||= ''
     
     # recreate the options[:order] entry to include default
-    # TODO why though? Can't remember
     find_options[:order] = order_attributes.map{|x| x.to_sql}.join(',')
+    
+    # make sure objects are converted to ids
+    if find_options.has_key?( :conditions ) && find_options[:conditions].is_a?( Hash )
+      conditions = find_options[:conditions].map do |key,value|
+        metadata = entity_class.meta[key]
+        if metadata.association?
+          [metadata.key, value.send( value.primary_key )]
+        else
+          [key,value]
+        end
+      end
+      find_options[:conditions] = Hash[ conditions ]
+    end
   end
 
   # Execute the block with the specified preload_count,

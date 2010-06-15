@@ -78,6 +78,10 @@ class TestCacheTable < Test::Unit::TestCase
     assert_nil cache_table.index_for_entity( Passenger.first )
   end
   
+  should "filter with related objects" do
+    @cache_table = @cache_table.renew( :conditions => { :flight => Flight.first} )
+  end
+  
   def test_index_for_entity
     # test in ascending order
     first_passenger = Passenger.first

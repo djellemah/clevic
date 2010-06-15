@@ -198,7 +198,7 @@ class TableModel < Qt::AbstractTableModel
   
   def reload_data( options = nil )
     # renew cache. All records will be dropped and reloaded.
-    self.collection = self.collection.renew( options )
+    self.collection = self.cache_table.renew( options )
     # tell the UI we had a major data change
     reset
   end

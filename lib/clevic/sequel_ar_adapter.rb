@@ -113,11 +113,11 @@ module Sequel
         options
       end
       
-      def belongs_to( name, options, &block )
+      def belongs_to( name, options = {}, &block )
         many_to_one( name, translate_options( options ), &block )
       end
       
-      def has_many( name, options, &block )
+      def has_many( name, options = {}, &block )
         one_to_many( name, translate_options( options ), &block )
       end
       
