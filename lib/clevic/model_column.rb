@@ -12,13 +12,13 @@ class ModelColumn
   attr_accessor :ruby_default, :primary_key, :allow_null, :db_type
   
   # sequel::Model.reflections
-  attr_accessor :key, :eager_block, :type, :eager_grapher, :before_add, :model, :graph_join_type, :class_name, :before_remove, :eager_loader, :uses_composite_keys, :order_eager_graph, :dataset, :cartesian_product_number, :after_add, :cache, :keys, :after_remove, :extend, :graph_conditions, :name, :orig_opts, :after_load
+  attr_accessor :key, :eager_block, :type, :eager_grapher, :before_add, :model, :graph_join_type, :class_name, :before_remove, :eager_loader, :uses_composite_keys, :order_eager_graph, :dataset, :cartesian_product_number, :after_add, :cache, :keys, :after_remove, :extend, :graph_conditions, :name, :orig_opts, :after_load, :before_set, :after_set, :reciprocal
   
   # for many_to_one targets
   attr_accessor :primary_keys
   
   # TODO not sure where these are from
-  attr_accessor :order, :class, :conditions, :before_set, :after_set
+  attr_accessor :order, :class, :conditions
   
   # added by us
   attr_accessor :association

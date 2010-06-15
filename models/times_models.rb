@@ -25,8 +25,8 @@ class Entry < Sequel::Model
     plain       :date, :sample => '28-Dec-08'
     
     # The project field
-    relational  :project do |field|
-      field.display = 'project'
+    relational :project do |field|
+      field.display = :project
       field.conditions = 'active = true'
       field.order = 'lower(project)'
       

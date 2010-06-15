@@ -113,12 +113,22 @@ module Sequel
         options
       end
       
-      def belongs_to( name, options = {}, &block )
-        many_to_one( name, translate_options( options ), &block )
+      def belongs_to( name, options = nil, &block )
+        # work around possible Sequel bug
+        if options.nil?
+          many_to_one( name, &block )
+        else
+          many_to_one( name, translate_options( options ), &block )
+        end
       end
       
-      def has_many( name, options = {}, &block )
-        one_to_many( name, translate_options( options ), &block )
+      def has_many( name, options = nil, &block )
+        # work around possible Sequel bug
+        if options.nil?
+          one_to_many( name, &block )
+        else
+          one_to_many( name, translate_options( options ), &block )
+        end
       end
       
       def table_exists?
