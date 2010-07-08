@@ -93,10 +93,28 @@ module Clevic
   end
 end
 
-module ActiveRecord
-  class Base
-    def adaptor
-      @adaptor ||= Clevic::ActiveRecordAdaptor.new( self )
+if defined? ActiveRecord
+  module ActiveRecord
+    class Base
+      # checks to see if attribute_sym is either in the column
+      # name list, or in the set of reflections.
+      def self.has_attribute?( attribute_sym )
+        if column_names.include?(  attribute_sym.to_s )
+          true
+        elsif reflections.has_key?(  attribute_sym )
+          true
+        else
+          false
+        end
+      end
+      
+      def self.attribute_names
+        ( column_names + reflections.keys.map {|sym| sym.to_s} ).sort
+      end
+      
+      def adaptor
+        @adaptor ||= Clevic::ActiveRecordAdaptor.new( self )
+      end
     end
   end
 end

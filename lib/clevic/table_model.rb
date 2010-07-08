@@ -7,6 +7,7 @@ require 'qtext/flags.rb'
 require 'qtext/extensions.rb'
 
 require 'clevic/extensions.rb'
+require 'clevic/qt/extensions.rb'
 require 'clevic/model_column'
 
 module Clevic
@@ -139,6 +140,7 @@ class TableModel < Qt::AbstractTableModel
     end
     
     # create a new row if auto_new is on
+    # should really be in a signal handler
     add_new_item if collection.empty? && auto_new?
   end
   

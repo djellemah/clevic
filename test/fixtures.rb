@@ -70,7 +70,7 @@ class CreateFakePassengers < Sequel::Migration
   def up
     @db[:passengers].tap do |ps|
       1.upto( MAX_PASSENGERS ) do |i|
-        flight_id = @db[:flights].filter.limit( 1, i%4 ).select( :id ).single_value
+        flight_id = @db[:flights].limit( 1, i%4 ).select( :id ).single_value
         ps.insert :name => Faker::Name.name, :flight_id => flight_id, :nationality => NATIONALITIES[i%4], :row => i, :seat => %w{A B C D}[i % 4]
       end
     end

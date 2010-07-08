@@ -1,6 +1,7 @@
 =begin rdoc
 Store the SQL order_by attributes with ascending and descending values
 =end
+# TODO don't use this anymore
 class OrderAttribute
   attr_reader :direction, :attribute
   

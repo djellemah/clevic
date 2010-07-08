@@ -29,7 +29,7 @@ class TestCacheTable < Test::Unit::TestCase
     
     # test cache retrieval
     (0...Passenger.count).each do |offset|
-      assert @cache_table[offset] == Passenger.filter.limit(1,offset).first, "#{offset}th cached record is not #{offset}th db record"
+      assert @cache_table[offset] == Passenger.limit(1,offset).first, "#{offset}th cached record is not #{offset}th db record"
     end
   end
   
