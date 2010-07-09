@@ -1,5 +1,6 @@
 module Clevic
   # to be included in something that responds to model, row, column
+  # TODO implement choppy
   module TableIndex
     # the value to be displayed in the gui for this index
     def gui_value

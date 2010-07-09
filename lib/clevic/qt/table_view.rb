@@ -1,3 +1,5 @@
+require 'rubygems'
+require 'Qt4'
 require 'fastercsv'
 require 'qtext/action_builder.rb'
 
@@ -6,81 +8,47 @@ require 'clevic/filter_command.rb'
 
 module Clevic
 
-# Various methods common to view classes
-module TableView
+# The view class
+class TableView < Qt::TableView
+  include Clevic::TableView
   include ActionBuilder
   
-  # the current filter command
-  attr_accessor :filtered
-  def filtered?; !@filtered.nil?; end
-  
-  # status_text is called when this object was to display something in the status bar
-  # error_test is emitted when an error of some kind must be displayed to the user.
+  # status_text is emitted when this object was to display something in the status bar
   # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
-  def emit_status_text( astring ); raise "subclass responsibility"; end
-  def emit_filter_status( abool ); raise "subclass responsibility"; end
+  signals 'status_text(QString)', 'filter_status(bool)'
   
   # arg is:
   # - an instance of Clevic::View
   # - an instance of TableModel
-  def framework_init( arg )
-    # the model/entity_class/builder
-    case 
-      when arg.kind_of?( TableModel )
-        self.model = arg
-        init_actions( arg.entity_view )
-      
-      when arg.kind_of?( Clevic::View )
-        model_builder = arg.define_ui
-        model_builder.exec_ui_block( &block )
-        
-        # make sure the TableView has a fully-populated TableModel
-        # self.model is necessary to invoke the Qt layer
-        self.model = model_builder.build( self )
-        self.object_name = arg.widget_name
-        
-        # connect data_changed signals for the entity_class to respond
-        connect_view_signals( arg )
-        
-        init_actions( arg )
-      
-      else
-        raise "Don't know what to do with #{arg.inspect}"
-    end
-  end
-  
-  def title
-    @title ||= model.entity_view.title
+  def initialize( arg, parent = nil, &block )
+    # need the empty block here, otherwise Qt bindings grab &block
+    super( parent ) {}
+    
+    framework_init( arg )
+    
+    # see closeEditor
+    @next_index = nil
+    
+    # set some Qt things
+    self.horizontal_header.movable = false
+    # TODO might be useful to allow movable vertical rows,
+    # but need to change the shortcut ideas of next and previous rows
+    self.vertical_header.movable = false
+    self.sorting_enabled = false
+    
+    self.context_menu_policy = Qt::ActionsContextMenu
   end
   
   def connect_view_signals( entity_view )
-    raise "connect to framework model data change notifications"
-  end
-  
-  # find the row index for the given field id (symbol)
-  def field_column( field )
-    raise "use model.field_column( field )"
-  end
-    
-  # return menu actions for the model, or an empty array if there aren't any
-  def model_actions
-    @model_actions ||= []
-  end
-  
-  # hook for the sanity_check_xxx methods
-  # called for the actions set up by ActionBuilder
-  # it just wraps the action block/method in a catch
-  # block for :insane. Will also catch exceptions thrown in actions to make
-  # core application more robust to model & view errors.
-  def action_triggered( &block )
-    catch :insane do
-      yield
+    model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
+      begin
+        entity_view.notify_data_changed( self, top_left, bottom_right )
+      rescue Exception => e
+        puts
+        puts "#{model.entity_view.class.name}: #{e.message}"
+        puts e.backtrace
+      end
     end
-    
-    rescue Exception => e
-      puts
-      puts "#{model.entity_view.class.name}: #{e.message}"
-      puts e.backtrace
   end
   
   def init_actions( entity_view )
@@ -125,33 +93,17 @@ module TableView
     end
   end
   
-  # return the current selection as csv
-  # TODO need refactor between Clevic and framework
-  def current_selection_csv
-    text = String.new
-    selection_model.selection.each do |selection_range|
-      (selection_range.top..selection_range.bottom).each do |row|
-        row_ary = Array.new
-        selection_model.selected_indexes.each do |index|
-          if index.row == row
-            value = index.gui_value
-            row_ary << 
-            unless value.nil?
-              index.field.do_format( value )
-            end
-          end
-        end
-        text << row_ary.to_csv
-      end
-    end
-    text
+  def copy_current_selection
+    Qt::Application::clipboard.text = current_selection_csv
   end
   
-  # TODO need refactor between Clevic and framework
-  def paste_csv( paste_text )
+  # TODO refactor with Clevic::TableView
+  def paste
     sanity_check_read_only
     
-    arr = FasterCSV.parse( paste_text )
+    # remove trailing "\n" if there is one
+    text = Qt::Application::clipboard.text.chomp
+    arr = FasterCSV.parse( text )
     
     selection_model.selected_indexes.
     return true if selection_model.selection.size != 1
@@ -194,18 +146,15 @@ module TableView
     end
   end
   
-  def sanity_check_ditto
-    if current_index.row == 0
-      emit_status_text( 'No previous record to copy.' )
-      throw :insane
-    end
+  def status_text( msg )
+    emit status_text( msg )
   end
   
   def sanity_check_read_only
     if current_index.field.read_only?
-      emit_status_text( 'Can\'t copy into read-only field.' )
+      emit status_text( 'Can\'t copy into read-only field.' )
     elsif current_index.entity.readonly?
-      emit_status_text( 'Can\'t copy into read-only record.' )
+      emit status_text( 'Can\'t copy into read-only record.' )
     else
       sanity_check_read_only_table
       return
@@ -215,7 +164,7 @@ module TableView
   
   def sanity_check_read_only_table
     if model.read_only?
-      emit emit_status_text( 'Can\'t modify a read-only table.' )
+      emit status_text( 'Can\'t modify a read-only table.' )
       throw :insane
     end
   end
@@ -235,7 +184,7 @@ module TableView
   # their fields don't have the same attribute_type.
   def sanity_check_types( from, to )
     unless from.field.attribute_type == to.field.attribute_type
-      emit_status_text( 'Incompatible data' )
+      emit status_text( 'Incompatible data' )
       throw :insane
     end
   end
@@ -244,7 +193,7 @@ module TableView
     sanity_check_ditto
     sanity_check_read_only
     if current_index.column >= model.column_count - 1
-      emit_status_text( 'No column to the right' )
+      emit status_text( 'No column to the right' )
     else
       one_up_right = current_index.choppy {|i| i.row -= 1; i.column += 1 }
       sanity_check_types( one_up_right, current_index )
@@ -257,7 +206,7 @@ module TableView
     sanity_check_ditto
     sanity_check_read_only
     unless current_index.column > 0
-      emit_status_text( 'No column to the left' )
+      emit status_text( 'No column to the left' )
     else
       one_up_left = current_index.choppy { |i| i.row -= 1; i.column -= 1 }
       sanity_check_types( one_up_left, current_index )
@@ -315,7 +264,7 @@ module TableView
     @search_dialog ||= SearchDialog.new
     result = @search_dialog.exec( current_index.gui_value )
     
-    busy_cursor do
+    override_cursor( Qt::BusyCursor ) do
       case result
         when Qt::Dialog::Accepted
           search_for = @search_dialog.search_text
@@ -330,7 +279,7 @@ module TableView
   
   def find_next
     if @search_dialog.nil?
-      emit_status_text( 'No previous find' )
+      emit status_text( 'No previous find' )
     else
       override_cursor( Qt::BusyCursor ) do
         save_from_start = @search_dialog.from_start?
@@ -480,7 +429,7 @@ module TableView
           cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
           model.setData( cell_index, field.to_variant, Qt::PasteRole )
         else
-          emit_status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
+          emit status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
         end
       end
       # save records to db
@@ -890,12 +839,7 @@ module TableView
   end
   
 protected
-  
-  # show a busy cursor, do the block, back to normal cursor
-  def busy_cursor( &block )
-    raise "Subclass responsibility"
-  end
-  
+
   # return either the set of indexes with all invalid indexes
   # remove, or the current selection.
   def indexes_or_current( indexes )
@@ -908,7 +852,7 @@ protected
     
     # strip out bad indexes, so other things don't have to check
     # can't use select because copying indexes causes an abort
-    # ie retval.select{|x| x != nil && x.valid?}
+    #~ retval.select{|x| x != nil && x.valid?}
     retval.reject!{|x| x.nil? || !x.valid?}
     # retval needed here because reject! returns nil if nothing was rejected
     retval

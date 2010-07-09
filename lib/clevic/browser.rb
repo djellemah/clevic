@@ -1,5 +1,5 @@
 require 'clevic/search_dialog.rb'
-require 'clevic/ui/browser_ui.rb'
+require 'clevic/qt/ui/browser_ui.rb'
 require 'clevic/table_view.rb'
 require 'clevic.rb'
 
