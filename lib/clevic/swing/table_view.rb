@@ -1,7 +1,6 @@
-require 'rubygems'
-require 'Qt4'
 require 'fastercsv'
-require 'qtext/action_builder.rb'
+
+require 'swing/action_builder.rb'
 
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
@@ -9,7 +8,8 @@ require 'clevic/filter_command.rb'
 module Clevic
 
 # The view class
-class TableView < Qt::TableView
+# TODO hook into key presses, call handle_key_press
+class TableView < javax.swing.JScrollPane
   include Clevic::TableView
   include ActionBuilder
   
@@ -20,81 +20,55 @@ class TableView < Qt::TableView
   # arg is:
   # - an instance of Clevic::View
   # - an instance of TableModel
-  def initialize( arg, parent = nil, &block )
-    # need the empty block here, otherwise Qt bindings grab &block
-    super( parent ) {}
-    
+  def initialize( arg )
     framework_init( arg )
+    @jtable = javax.swing.JTable.new( model )
+    super( @jtable )
     
     # see closeEditor
     @next_index = nil
     
-    # set some Qt things
-    self.horizontal_header.movable = false
+    # TODO set view attributes
+    #~ self.horizontal_header.movable = false
     # TODO might be useful to allow movable vertical rows,
     # but need to change the shortcut ideas of next and previous rows
-    self.vertical_header.movable = false
-    self.sorting_enabled = false
+    #~ self.vertical_header.movable = false
+    #~ self.sorting_enabled = false
     
-    self.context_menu_policy = Qt::ActionsContextMenu
+    #~ self.context_menu_policy = Qt::ActionsContextMenu
   end
   
-  def connect_view_signals( entity_view )
-    model.connect SIGNAL( 'dataChanged ( const QModelIndex &, const QModelIndex & )' ) do |top_left, bottom_right|
-      begin
-        entity_view.notify_data_changed( self, top_left, bottom_right )
-      rescue Exception => e
-        puts
-        puts "#{model.entity_view.class.name}: #{e.message}"
-        puts e.backtrace
-      end
-    end
+  # override JTable method
+  def prepareRenderer( table_cell_renderer, row_index, column_index )
+    rv = super
+    rv.value = SwingTableIndex.new( row_index, column_index ).gui_value
+    rv
   end
   
+  # pass changed events to view definitions
+  def tableChanged( table_model_event )
+    return unless table_model_event.updated?
+    
+    top_left = SwingTableIndex.new( model, table_model_event.first_row, table_model_event.column )
+    bottom_right = SwingTableIndex.new( model, table_model_event.last_row, table_model_event.column )
+    entity_view.notify_data_changed( self, top_left, bottom_right )
+  rescue Exception => e
+    puts
+    puts "#{model.entity_view.class.name}: #{e.message}"
+    puts e.backtrace
+  end
+  
+  # called from framework_init
+  # TODO copy from qt adapter
   def init_actions( entity_view )
-    # add model actions, if they're defined
-    list( :model ) do |ab|
-      entity_view.define_actions( self, ab )
-      separator
-    end
-    
-    # list of actions in the edit menu
-    list( :edit ) do
-      #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
-      action :action_copy, '&Save', :shortcut => Qt::KeySequence::Save, :method => :save_current_row
-      action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
-      action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
-      separator
-      action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
-      action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
-      action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left, :tool_tip => 'Copy field one to left from previous record'
-      action :action_insert_date, 'Insert Date', :shortcut => 'Ctrl+;', :method => :insert_current_date
-      action :action_open_editor, '&Open Editor', :shortcut => 'F4', :method => :open_editor
-      separator
-      action :action_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :new_row
-      action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
-      action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
-      
-      if $options[:debug]
-        action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
-          puts model.collection[current_index.row].inspect
-        end
-      end
-    end
-    
-    separator
-    
-    # list of actions called search
-    list( :search ) do
-      action :action_find, '&Find', :shortcut => Qt::KeySequence::Find, :method => :find
-      action :action_find_next, 'Find &Next', :shortcut => Qt::KeySequence::FindNext, :method => :find_next
-      action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
-      action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
-    end
+    raise "not implemented"
   end
   
+  
+  # TODO copy from qt adapter
   def copy_current_selection
-    Qt::Application::clipboard.text = current_selection_csv
+    raise "not implemented"
+    #~ Qt::Application::clipboard.text = current_selection_csv
   end
   
   # TODO refactor with Clevic::TableView
@@ -102,7 +76,7 @@ class TableView < Qt::TableView
     sanity_check_read_only
     
     # remove trailing "\n" if there is one
-    text = Qt::Application::clipboard.text.chomp
+    text = clipboard.text.chomp
     arr = FasterCSV.parse( text )
     
     selection_model.selected_indexes.
@@ -125,7 +99,7 @@ class TableView < Qt::TableView
         # set all selected indexes to the value
         value = arr.first.first
         selection_model.selected_indexes.each do |index|
-          model.setData( index, value.to_variant, Qt::PasteRole )
+          set_model_data( index, value )
           # save records to db
           model.save( index )
         end
@@ -146,8 +120,8 @@ class TableView < Qt::TableView
     end
   end
   
-  def status_text( msg )
-    emit status_text( msg )
+  # TODO display message in status bar, ie pass up to parent window
+  def emit_status_text( msg )
   end
   
   def sanity_check_read_only
@@ -184,7 +158,7 @@ class TableView < Qt::TableView
   # their fields don't have the same attribute_type.
   def sanity_check_types( from, to )
     unless from.field.attribute_type == to.field.attribute_type
-      emit status_text( 'Incompatible data' )
+      emit_status_text( 'Incompatible data' )
       throw :insane
     end
   end
@@ -227,11 +201,6 @@ class TableView < Qt::TableView
     delegate.full_edit
   end
   
-  def itemDelegate( model_index )
-    @pre_delegate_index = model_index
-    super
-  end
-  
   # Add a new row and move to it, provided we're not in a read-only view.
   def new_row
     sanity_check_read_only_table
@@ -264,15 +233,15 @@ class TableView < Qt::TableView
     @search_dialog ||= SearchDialog.new
     result = @search_dialog.exec( current_index.gui_value )
     
-    override_cursor( Qt::BusyCursor ) do
-      case result
-        when Qt::Dialog::Accepted
+    busy_cursor do
+      case
+        when result.accepted?
           search_for = @search_dialog.search_text
           search( @search_dialog )
-        when Qt::Dialog::Rejected
+        when result.rejected?
           puts "Don't search"
         else
-          puts "unknown dialog code #{result}"
+          puts "unknown dialog result #{result.inspect}"
       end
     end
   end
@@ -281,7 +250,7 @@ class TableView < Qt::TableView
     if @search_dialog.nil?
       emit status_text( 'No previous find' )
     else
-      override_cursor( Qt::BusyCursor ) do
+      busy_cursor do
         save_from_start = @search_dialog.from_start?
         @search_dialog.from_start = false
         search( @search_dialog )
@@ -292,7 +261,7 @@ class TableView < Qt::TableView
   
   # force a complete reload of the current tab's data
   def refresh
-    override_cursor( Qt::BusyCursor ) do
+    busy_cursor do
       restore_entity do
         model.reload_data
       end
@@ -503,214 +472,26 @@ class TableView < Qt::TableView
     end
   end
   
-  def keyPressEvent( event )
-    handle_key_press( event )
-  end
   
-  def set_model_data( table_index, value )
-    model.setData( table_index, value.to_variant, Qt::PasteRole )
-  end
-
-  # save the entity in the row of the given index
-  # actually, model.save will check if the record
-  # is really changed before writing to DB.
   def show_error( msg )
-    error_message = Qt::ErrorMessage.new( self )
-    error_message.show_message( msg )
-    error_message.show
+    puts "TODO: implement show_error_box"
+    puts msg
   end
   
-  # save record whenever its row is exited
-  def currentChanged( current_index, previous_index )
-    if previous_index.valid? && current_index.row != previous_index.row
-      self.next_index = nil
-      save_row( previous_index )
-    end
-    super
+  # move the cursor & selection to the specified table_index
+  def current_index=( table_index )
+    raise "not implemented"
   end
   
-  # This is to allow entity model UI handlers to tell the view
-  # whence to move the cursor when the current editor closes
-  # (see closeEditor).
-  # TODO not used?
-  def override_next_index( model_index )
-    self.next_index = model_index
-  end
-  
-  # Call set_current_index with next_index ( from override_next_index )
-  # or model_index, in that order. Set next_index to nil afterwards.
-  def set_current_unless_override( model_index )
-    set_current_index( @next_index || model_index )
-    self.next_index = nil
-  end
-  
-  # work around situation where an ItemDelegate is open
-  # when the surrouding tab is changed, but the right events
-  # don't arrive.
-  def hideEvent( event )
-    # can't call super here, for some reason. Qt binding says method not found.
-    # super
-    @hiding = true
-  end
-  
-  # work around situation where an ItemDelegate is open
-  # when the surrouding tab is changed, but the right events
-  # don't arrive.
-  def showEvent( event )
-    super
-    @hiding = false
-  end
-    
-  def focusOutEvent( event )
-    super
-    #~ save_current_row
-  end
-  
-  # this is the only method that is called when an itemDelegate is open
-  # and the tabs are changed.
-  # Work around situation where an ItemDelegate is open
-  # when the surrouding tab is changed, but the right events
-  # don't arrive.
-  def commitData( editor )
-    super
-    save_current_row if @hiding
-  end
-  
-  # bool QAbstractItemView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
-  def edit( model_index, trigger = nil, event = nil )
-    self.before_edit_index = model_index
-    #~ puts "edit model_index: #{model_index.inspect}"
-    #~ puts "trigger: #{trigger.inspect}"
-    #~ puts "event: #{event.inspect}"
-    if trigger.nil? && event.nil?
-      super( model_index )
-    else
-      super( model_index, trigger, event )
-    end
-    
-    rescue Exception => e
-      Kernel.raise RuntimeError, "#{model.entity_view.class.name}.#{model_index.field.id}: #{e.message}", caller(0)
-  end
-  
-  attr_accessor :before_edit_index
-  attr_reader :next_index
-  def next_index=( other_index )
-    if $options[:debug]
-      puts "debug trace only - not a rescue"
-      puts caller
-      puts "next index to #{other_index.inspect}"
-      puts
-    end
-    @next_index = other_index
-  end
-  
-  # set and move to index. Leave index value in next_index
-  # so that it's not overridden later.
-  # TODO All this next_index stuff is becoming a horrible hack.
-  def next_index!( model_index )
-    self.current_index = self.next_index = model_index
-  end
-  
-  # override to prevent tab pressed from editing next field
-  # also takes into account that override_next_index may have been called
-  def closeEditor( editor, end_edit_hint )
-    if $options[:debug]
-      puts "end_edit_hint: #{Qt::AbstractItemDelegate.constants.find {|x| Qt::AbstractItemDelegate.const_get(x) == end_edit_hint } }"
-      puts "next_index: #{next_index.inspect}"
-    end
-    
-    subsequent_index =
-    case end_edit_hint
-      when Qt::AbstractItemDelegate.EditNextItem
-        super( editor, Qt::AbstractItemDelegate.NoHint )
-        before_edit_index.choppy { |i| i.column += 1 }
-        
-      when Qt::AbstractItemDelegate.EditPreviousItem
-        super( editor, Qt::AbstractItemDelegate.NoHint )
-        before_edit_index.choppy { |i| i.column -= 1 }
-      
-      else
-        super
-        nil
-    end
-    
-    unless subsequent_index.nil?
-      puts "subsequent_index: #{subsequent_index.inspect}" if $options[:debug]
-      # TODO all this really does is reset next_index
-      set_current_unless_override( next_index || subsequent_index || before_edit_index )
-      self.before_edit_index = nil
-    end
-  end
-  
-  # search_criteria must respond to:
-  # * search_text
-  # * whole_words?
-  # * direction ( :forward, :backward )
-  # * from_start?
-  #
-  # TODO formalise this?
-  def search( search_criteria )
-    indexes = model.search( current_index, search_criteria )
-    if indexes.size > 0
-      emit status_text( "Found #{search_criteria.search_text} at row #{indexes.first.row}" )
-      selection_model.clear
-      self.current_index = indexes.first
-    else
-      emit status_text( "No match found for #{search_criteria.search_text}" )
-    end
+  # return a SwingTableIndex for the current cursor position
+  def current_index
+    raise "not implemented"
   end
 
-  # find the TableView instance for the given entity_view
-  # or entity_model. Return nil if no match found.
-  # TODO doesn't really belong here because TableView will not always
-  # be in a TabWidget context.
-  def find_table_view( entity_model_or_view )
-    parent.children.find do |x|
-      if x.is_a? TableView
-        x.model.entity_view.class == entity_model_or_view || x.model.entity_class == entity_model_or_view
-      end
-    end
+  # show a busy cursor, do the block, back to normal cursor
+  def busy_cursor( &block )
+    raise "not implemented"
   end
-  
-  # execute the block with the TableView instance
-  # currently handling the entity_model_or_view.
-  # Don't execute the block if nothing is found.
-  # TODO doesn't really belong here because TableView will not always
-  # be in a TabWidget context.
-  def with_table_view( entity_model_or_view, &block )
-    tv = find_table_view( entity_model_or_view )
-    yield( tv ) unless tv.nil?
-  end
-  
-  # make this window visible if it's in a TabWidget
-  # TODO doesn't really belong here because TableView will not always
-  # be in a TabWidget context.
-  def raise
-    # the tab's parent is a StackedWiget, and its parent is TabWidget
-    tab_widget = parent.parent
-    tab_widget.current_widget = self if tab_widget.class == Qt::TabWidget
-  end
-  
-protected
-
-  # return either the set of indexes with all invalid indexes
-  # remove, or the current selection.
-  def indexes_or_current( indexes )
-    retval =
-    if indexes.empty?
-      [ current_index ]
-    else
-      indexes
-    end
-    
-    # strip out bad indexes, so other things don't have to check
-    # can't use select because copying indexes causes an abort
-    #~ retval.select{|x| x != nil && x.valid?}
-    retval.reject!{|x| x.nil? || !x.valid?}
-    # retval needed here because reject! returns nil if nothing was rejected
-    retval
-  end
-  
 end
 
 end

@@ -147,7 +147,7 @@ module TableView
     text
   end
   
-  # TODO need refactor between Clevic and framework
+  # TODO need refactor between Clevic and ui framework
   def paste_csv( paste_text )
     sanity_check_read_only
     
@@ -417,37 +417,7 @@ module TableView
   def last_cell?
     current_index.row == model.row_count - 1 && current_index.column == model.column_count - 1
   end
-  
-  # make sure row size is correct
-  # show error messages for data
-  def setModel( model )
-    # must do this otherwise model gets garbage collected
-    @model = model
-    
-    # make sure we get nice spacing
-    vertical_header.default_section_size = vertical_header.minimum_section_size
-    super
-    
-    # set delegates
-    model.fields.each_with_index do |field, index|
-      set_item_delegate_for_column( index, field.delegate )
-    end
-    
-    # data errors
-    model.connect( SIGNAL( 'data_error(QModelIndex, QVariant, QString)' ) ) do |index,variant,msg|
-      error_message = Qt::ErrorMessage.new( self )
-      error_message.show_message( "Incorrect value '#{variant.value}' entered for field [#{index.attribute.to_s}].\nMessage was: #{msg}" )
-      error_message.show
-    end
-  end
-  
-  # and override this because the Qt bindings don't call
-  # setModel otherwise
-  def model=( model )
-    setModel( model )
-    resize_columns
-  end
-  
+
   # resize all fields based on heuristics rather
   # than iterating through the entire data model
   def resize_columns
@@ -456,11 +426,6 @@ module TableView
     end
   end
   
-  def moveCursor( cursor_action, modifiers )
-    # TODO use this as a preload indicator
-    super
-  end
-
   # copied from actionpack
   def pluralize(count, singular, plural = nil)
     "#{count || 0} " + ((count == 1 || count == '1') ? singular : (plural || singular.pluralize))
@@ -555,7 +520,7 @@ module TableView
   end
   
   # handle certain key combinations that aren't shortcuts
-  def keyPressEvent( event )
+  def handle_key_press( event )
     begin
       # call to entity class for shortcuts
       begin
@@ -563,9 +528,7 @@ module TableView
         return view_result unless view_result.nil?
       rescue Exception => e
         puts e.backtrace
-        error_message = Qt::ErrorMessage.new( self )
-        error_message.show_message( "Error in shortcut handler for #{model.entity_view.name}: #{e.message}" )
-        error_message.show
+        show_error( "Error in shortcut handler for #{model.entity_view.name}: #{e.message}" )
       end
       
       # thrown by the sanity_check_xxx methods
@@ -600,9 +563,7 @@ module TableView
     rescue Exception => e
       puts e.backtrace
       puts e.message
-      error_message = Qt::ErrorMessage.new( self )
-      error_message.show_message( "Error in #{current_index.attribute.to_s}: \"#{e.message}\"" )
-      error_message.show
+      show_error( "Error in #{current_index.attribute.to_s}: \"#{e.message}\"" )
     end
   end
   
@@ -619,135 +580,20 @@ module TableView
     if !index.nil? && index.valid?
       saved = model.save( index )
       if !saved
-        error_message = Qt::ErrorMessage.new( self )
-        msg = model.collection[index.row].errors.to_a.join("\n")
-        error_message.show_message( msg )
-        error_message.show
+        show_error( model.collection[index.row].errors.to_a.join("\n") )
       end
       saved
     end
   end
   
   # save record whenever its row is exited
+  # make this work with framework
   def currentChanged( current_index, previous_index )
     if previous_index.valid? && current_index.row != previous_index.row
       self.next_index = nil
       save_row( previous_index )
     end
     super
-  end
-  
-  # This is to allow entity model UI handlers to tell the view
-  # whence to move the cursor when the current editor closes
-  # (see closeEditor).
-  # TODO not used?
-  def override_next_index( model_index )
-    self.next_index = model_index
-  end
-  
-  # Call set_current_index with next_index ( from override_next_index )
-  # or model_index, in that order. Set next_index to nil afterwards.
-  def set_current_unless_override( model_index )
-    set_current_index( @next_index || model_index )
-    self.next_index = nil
-  end
-  
-  # work around situation where an ItemDelegate is open
-  # when the surrouding tab is changed, but the right events
-  # don't arrive.
-  def hideEvent( event )
-    # can't call super here, for some reason. Qt binding says method not found.
-    # super
-    @hiding = true
-  end
-  
-  # work around situation where an ItemDelegate is open
-  # when the surrouding tab is changed, but the right events
-  # don't arrive.
-  def showEvent( event )
-    super
-    @hiding = false
-  end
-    
-  def focusOutEvent( event )
-    super
-    #~ save_current_row
-  end
-  
-  # this is the only method that is called when an itemDelegate is open
-  # and the tabs are changed.
-  # Work around situation where an ItemDelegate is open
-  # when the surrouding tab is changed, but the right events
-  # don't arrive.
-  def commitData( editor )
-    super
-    save_current_row if @hiding
-  end
-  
-  # bool QAbstractItemView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )
-  def edit( model_index, trigger = nil, event = nil )
-    self.before_edit_index = model_index
-    #~ puts "edit model_index: #{model_index.inspect}"
-    #~ puts "trigger: #{trigger.inspect}"
-    #~ puts "event: #{event.inspect}"
-    if trigger.nil? && event.nil?
-      super( model_index )
-    else
-      super( model_index, trigger, event )
-    end
-    
-    rescue Exception => e
-      Kernel.raise RuntimeError, "#{model.entity_view.class.name}.#{model_index.field.id}: #{e.message}", caller(0)
-  end
-  
-  attr_accessor :before_edit_index
-  attr_reader :next_index
-  def next_index=( other_index )
-    if $options[:debug]
-      puts "debug trace only - not a rescue"
-      puts caller
-      puts "next index to #{other_index.inspect}"
-      puts
-    end
-    @next_index = other_index
-  end
-  
-  # set and move to index. Leave index value in next_index
-  # so that it's not overridden later.
-  # TODO All this next_index stuff is becoming a horrible hack.
-  def next_index!( model_index )
-    self.current_index = self.next_index = model_index
-  end
-  
-  # override to prevent tab pressed from editing next field
-  # also takes into account that override_next_index may have been called
-  def closeEditor( editor, end_edit_hint )
-    if $options[:debug]
-      puts "end_edit_hint: #{Qt::AbstractItemDelegate.constants.find {|x| Qt::AbstractItemDelegate.const_get(x) == end_edit_hint } }"
-      puts "next_index: #{next_index.inspect}"
-    end
-    
-    subsequent_index =
-    case end_edit_hint
-      when Qt::AbstractItemDelegate.EditNextItem
-        super( editor, Qt::AbstractItemDelegate.NoHint )
-        before_edit_index.choppy { |i| i.column += 1 }
-        
-      when Qt::AbstractItemDelegate.EditPreviousItem
-        super( editor, Qt::AbstractItemDelegate.NoHint )
-        before_edit_index.choppy { |i| i.column -= 1 }
-      
-      else
-        super
-        nil
-    end
-    
-    unless subsequent_index.nil?
-      puts "subsequent_index: #{subsequent_index.inspect}" if $options[:debug]
-      # TODO all this really does is reset next_index
-      set_current_unless_override( next_index || subsequent_index || before_edit_index )
-      self.before_edit_index = nil
-    end
   end
   
   # toggle the filter, based on current selection.
@@ -789,30 +635,30 @@ module TableView
           filtered.undo
           self.filtered = nil
           # update status bar
-          emit status_text( nil )
-          emit filter_status( false )
+          emit_status_text( nil )
+          emit_filter_status( false )
         end
         
       when indexes.empty?
-        emit status_text( "No field selected for filter" )
+        emit_status_text( "No field selected for filter" )
         
       when !indexes.first.field.filterable?
-        emit status_text( "Can't filter on #{indexes.first.field.label}" )
+        emit_status_text( "Can't filter on #{indexes.first.field.label}" )
       
       when indexes.size > 1
-        emit status_text( "Can't do multiple selection filters yet" )
+        emit_status_text( "Can't do multiple selection filters yet" )
       
       when indexes.first.entity.new_record?
-        emit status_text( "Can't filter on a new row" )
+        emit_status_text( "Can't filter on a new row" )
         
       else
         self.filtered = FilterCommand.new( self, indexes, :conditions => { indexes.first.field_name => indexes.first.field_value } )
         # try to end up on the same entity, even after the filter
         restore_entity do
-          emit filter_status( filtered.doit )
+          emit_filter_status( filtered.doit )
         end
         # update status bar
-        emit status_text( filtered.status_message )
+        emit_status_text( filtered.status_message )
       end
       filtered?
   end
