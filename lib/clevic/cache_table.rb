@@ -1,15 +1,6 @@
-require 'rubygems'
-require 'active_record'
 require 'clevic/table_searcher.rb'
 require 'clevic/order_attribute.rb'
 require 'bsearch'
-
-begin
-  require 'active_record/dirty.rb'
-rescue MissingSourceFile
-  require 'clevic/dirty.rb'
-end
-
 
 =begin rdoc
 Fetch rows from the db on demand, rather than all up front.

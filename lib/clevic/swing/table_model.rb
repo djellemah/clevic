@@ -4,8 +4,11 @@ require 'andand'
 
 require 'clevic/extensions.rb'
 require 'clevic/model_column'
+require 'clevic/table_model'
 
 module Clevic
+
+module Swing
 
 =begin rdoc
 An instance of Clevic::TableModel is constructed by Clevic::ModelBuilder from the
@@ -201,3 +204,5 @@ class TableModel < javax.swing.table.AbstractTableModel
 end
 
 end #module
+
+end

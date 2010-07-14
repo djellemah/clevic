@@ -1,4 +1,4 @@
-require 'gather.rb'
+require 'gather'
 require 'clevic/sampler.rb'
 require 'clevic/generic_format.rb'
 

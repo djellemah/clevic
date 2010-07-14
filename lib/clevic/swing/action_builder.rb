@@ -1,6 +1,3 @@
-require 'Qt4'
-require 'qtext/extensions.rb'
-
 =begin rdoc
 This module can be used in an object that has
 an add_action method (usually a subclass of Qt::Widget) to make the construction of
@@ -60,7 +57,7 @@ module ActionBuilder
     # add_action is actually an method_missing lookup for addAction, so
     # search for both.
     unless shortlist.any? {|x| %w{add_action addAction}.include?( x )}
-      raise NotImplementedError( "#{including_module.class.name} must have an add_action method" )
+      raise NotImplementedError, "#{including_module.class.name} must have an add_action method"
     end
   end
   

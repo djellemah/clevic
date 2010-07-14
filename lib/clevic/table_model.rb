@@ -1,13 +1,6 @@
-require 'Qt4'
 require 'date'
 
-require 'andand'
-
-require 'qtext/flags.rb'
-require 'qtext/extensions.rb'
-
 require 'clevic/extensions.rb'
-require 'clevic/qt/extensions.rb'
 require 'clevic/model_column'
 
 module Clevic
@@ -127,24 +120,6 @@ module TableModel
       # AR model not changed
       true
     end
-  end
-  
-  def rowCount( parent = nil )
-    collection.size
-  end
-
-  # Not looked up or aliased properly by Qt bindings
-  def row_count
-    collection.size
-  end
-  
-  def columnCount( parent = nil )
-    fields.size
-  end
-  
-  # Not looked up or aliased properly by Qt bindings
-  def column_count
-    fields.size
   end
   
   def reload_data( options = nil )

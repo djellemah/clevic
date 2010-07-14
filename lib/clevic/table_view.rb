@@ -1,5 +1,4 @@
 require 'fastercsv'
-require 'qtext/action_builder.rb'
 
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
@@ -8,7 +7,8 @@ module Clevic
 
 # Various methods common to view classes
 module TableView
-  include ActionBuilder
+  # TODO reactivate
+  #~ include ActionBuilder
   
   # the current filter command
   attr_accessor :filtered
@@ -25,12 +25,14 @@ module TableView
   # - an instance of TableModel
   def framework_init( arg )
     # the model/entity_class/builder
+    puts "arg: #{arg.inspect}"
+    puts "arg.ancestors: #{arg.ancestors.inspect}"
     case 
-      when arg.kind_of?( TableModel )
+      when arg.is_a?( TableModel )
         self.model = arg
         init_actions( arg.entity_view )
       
-      when arg.kind_of?( Clevic::View )
+      when arg.is_a?( Clevic::View )
         model_builder = arg.define_ui
         model_builder.exec_ui_block( &block )
         
@@ -84,6 +86,9 @@ module TableView
   end
   
   def init_actions( entity_view )
+  end
+  
+  def old_init_actions( entity_view )
     # add model actions, if they're defined
     list( :model ) do |ab|
       entity_view.define_actions( self, ab )
@@ -173,7 +178,7 @@ module TableView
         # set all selected indexes to the value
         value = arr.first.first
         selection_model.selected_indexes.each do |index|
-          model.setData( index, value.to_variant, Qt::PasteRole )
+          set_model_data( index, value.to_variant, Qt::PasteRole )
           # save records to db
           model.save( index )
         end
@@ -316,11 +321,11 @@ module TableView
     result = @search_dialog.exec( current_index.gui_value )
     
     busy_cursor do
-      case result
-        when Qt::Dialog::Accepted
+      case
+        when result.accepted?
           search_for = @search_dialog.search_text
           search( @search_dialog )
-        when Qt::Dialog::Rejected
+        when result.rejected?
           puts "Don't search"
         else
           puts "unknown dialog code #{result}"
@@ -332,7 +337,7 @@ module TableView
     if @search_dialog.nil?
       emit_status_text( 'No previous find' )
     else
-      override_cursor( Qt::BusyCursor ) do
+      busy_cursor do
         save_from_start = @search_dialog.from_start?
         @search_dialog.from_start = false
         search( @search_dialog )
@@ -343,7 +348,7 @@ module TableView
   
   # force a complete reload of the current tab's data
   def refresh
-    override_cursor( Qt::BusyCursor ) do
+    busy_cursor do
       restore_entity do
         model.reload_data
       end
@@ -371,43 +376,6 @@ module TableView
     self.set_column_width( col, column_size( col, sample ).width )
   end
 
-  # set the size of the column from the string value of the data
-  # mostly copied from qheaderview.cpp:2301
-  def column_size( col, data )
-    opt = Qt::StyleOptionHeader.new
-    
-    # fetch font size
-    fnt = font
-    fnt.bold = true
-    opt.fontMetrics = Qt::FontMetrics.new( fnt )
-    
-    # set data
-    opt.text = data.to_s
-    
-    # icon size. Not needed 
-    #~ variant = d->model->headerData(logicalIndex, d->orientation, Qt::DecorationRole);
-    #~ opt.icon = qvariant_cast<QIcon>(variant);
-    #~ if (opt.icon.isNull())
-        #~ opt.icon = qvariant_cast<QPixmap>(variant);
-    
-    size = Qt::Size.new( 100, 30 )
-    # final parameter could be header section
-    style.sizeFromContents( Qt::Style::CT_HeaderSection, opt, size );
-  end
-  
-  # TODO is this even used?
-  def relational_delegate( attribute, options )
-    col = model.attributes.index( attribute )
-    delegate = RelationalDelegate.new( self, model.columns[col], options )
-    set_item_delegate_for_column( col, delegate )
-  end
-  
-  def delegate( attribute, delegate_class, options = nil )
-    col = model.attributes.index( attribute )
-    delegate = delegate_class.new( self, attribute, options )
-    set_item_delegate_for_column( col, delegate )
-  end
-  
   # is current_index on the last row?
   def last_row?
     current_index.row == model.row_count - 1
@@ -461,29 +429,6 @@ module TableView
       end
     end
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
-  end
-  
-  # ask the question in a dialog. If the user says yes, execute the block
-  def delete_multiple_cells?( question = 'Are you sure you want to delete multiple cells?', &block )
-    sanity_check_read_only
-    
-    # go ahead with delete if there's only 1 cell, or the user says OK
-    delete_ok =
-    if selection_model.selected_indexes.size > 1
-      # confirmation message, until there are undos
-      msg = Qt::MessageBox.new(
-        Qt::MessageBox::Question,
-        'Multiple Delete',
-        question,
-        Qt::MessageBox::Yes | Qt::MessageBox::No,
-        self
-      )
-      msg.exec == Qt::MessageBox::Yes
-    else
-      true
-    end
-    
-    yield if delete_ok
   end
   
   # Ask if multiple cell delete is OK, then replace contents
@@ -626,7 +571,7 @@ module TableView
   end
 
   # Filter by the value in the current index.
-  # indexes is a collection of Qt::ModelIndex
+  # indexes is a collection of TableIndex instances
   def filter_by_indexes( indexes )
     case
       when filtered?
@@ -668,13 +613,13 @@ module TableView
   # field_column will be called to find the integer index.
   def select_entity( entity, column = nil )
     # sanity check that the entity can actually be found
-    Kernel.raise "entity is nil" if entity.nil?
+    raise "entity is nil" if entity.nil?
     unless entity.is_a?( model.entity_class )
-      Kernel.raise "entity #{entity.class.name} does not match class #{model.entity_class.name}"
+      raise "entity #{entity.class.name} does not match class #{model.entity_class.name}"
     end
     
     # find the row for the saved entity
-    found_row = override_cursor( Qt::BusyCursor ) do
+    found_row = busy_cursor do
       model.collection.index_for_entity( entity )
     end
     
@@ -709,11 +654,7 @@ module TableView
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
   def find_table_view( entity_model_or_view )
-    parent.children.find do |x|
-      if x.is_a? TableView
-        x.model.entity_view.class == entity_model_or_view || x.model.entity_class == entity_model_or_view
-      end
-    end
+    raise "framework responsibility"
   end
   
   # execute the block with the TableView instance
@@ -722,24 +663,22 @@ module TableView
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
   def with_table_view( entity_model_or_view, &block )
-    tv = find_table_view( entity_model_or_view )
-    yield( tv ) unless tv.nil?
+    raise "framework responsibility"
   end
   
   # make this window visible if it's in a TabWidget
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
-  def raise
-    # the tab's parent is a StackedWiget, and its parent is TabWidget
-    tab_widget = parent.parent
-    tab_widget.current_widget = self if tab_widget.class == Qt::TabWidget
+  def raise_widget
+    raise "framework responsibility"
   end
   
 protected
   
   # show a busy cursor, do the block, back to normal cursor
+  # return value of block
   def busy_cursor( &block )
-    raise "Subclass responsibility"
+    raise "framework responsibility"
   end
   
   # return either the set of indexes with all invalid indexes

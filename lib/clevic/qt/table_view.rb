@@ -589,7 +589,7 @@ class TableView < Qt::TableView
     end
     
     rescue Exception => e
-      Kernel.raise RuntimeError, "#{model.entity_view.class.name}.#{model_index.field.id}: #{e.message}", caller(0)
+      raise RuntimeError, "#{model.entity_view.class.name}.#{model_index.field.id}: #{e.message}", caller(0)
   end
   
   attr_accessor :before_edit_index
@@ -685,7 +685,7 @@ class TableView < Qt::TableView
   # make this window visible if it's in a TabWidget
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
-  def raise
+  def raise_widget
     # the tab's parent is a StackedWiget, and its parent is TabWidget
     tab_widget = parent.parent
     tab_widget.current_widget = self if tab_widget.class == Qt::TabWidget

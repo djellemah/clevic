@@ -1,21 +1,19 @@
 require 'fastercsv'
 
-require 'swing/action_builder.rb'
+require 'clevic/swing/action_builder.rb'
 
 require 'clevic/model_builder.rb'
+require 'clevic/table_view.rb'
 require 'clevic/filter_command.rb'
 
 module Clevic
+
+module Swing
 
 # The view class
 # TODO hook into key presses, call handle_key_press
 class TableView < javax.swing.JScrollPane
   include Clevic::TableView
-  include ActionBuilder
-  
-  # status_text is emitted when this object was to display something in the status bar
-  # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
-  signals 'status_text(QString)', 'filter_status(bool)'
   
   # arg is:
   # - an instance of Clevic::View
@@ -122,6 +120,10 @@ class TableView < javax.swing.JScrollPane
   
   # TODO display message in status bar, ie pass up to parent window
   def emit_status_text( msg )
+  end
+  
+  # emit whether the view is filtered or not
+  def emit_filter_status( bool )
   end
   
   def sanity_check_read_only
@@ -489,9 +491,12 @@ class TableView < javax.swing.JScrollPane
   end
 
   # show a busy cursor, do the block, back to normal cursor
+  # return value of block
   def busy_cursor( &block )
     raise "not implemented"
   end
+end
+
 end
 
 end

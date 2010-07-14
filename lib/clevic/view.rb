@@ -62,8 +62,7 @@ module Clevic
       @fields ||= define_ui
     end
     
-    # used for the Qt object_name when ModelBuilder is constructing a widget
-    # here so it can be overridden by descendants
+    # used by the framework-specific code to name widgets
     def widget_name
       self.class.widget_name
     end
@@ -98,7 +97,7 @@ module Clevic
     
     # Define data changed events. Default is to call notify_data_changed
     # for each field in the rectangular area defined by top_left and bottom_right
-    # (which are Qt::ModelIndex instances)
+    # (which are include Clevic::TableIndex)
     def notify_data_changed( table_view, top_left, bottom_right )
       if top_left == bottom_right
         # shortcut to just the one, seeing as it's probably the most common

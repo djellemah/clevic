@@ -84,6 +84,10 @@ class DbOptions
     inst
   end
   
+  def self.instance
+    @instances.first
+  end
+  
   # translate method calls in the context of an instance
   # of this object to setting values in the @options
   # variable

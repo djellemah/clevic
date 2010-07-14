@@ -1,4 +1,6 @@
 require 'sequel/model.rb'
+
+# remove dependency on this and active_support unless they're really needed
 require 'clevic/ar_methods.rb'
 require 'clevic/attribute_list.rb'
 
@@ -6,7 +8,6 @@ module Clevic
   class SequelAdaptor
     def initialize( entity_class )
       @entity_class = entity_class
-      # TODO rename to ar_methods
       @entity_class.plugin :ar_methods
     end
     

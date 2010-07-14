@@ -62,9 +62,7 @@ module Clevic
       base.create_view_class
 
       # DbOptions instance
-      db_options = nil
-      found = ObjectSpace.each_object( Clevic::DbOptions ){|x| db_options = x}
-      @db_options = db_options
+      #~ @db_options = DbOptions.instance || raise( "DbOptions.instance is nil" )
     end
   end
   

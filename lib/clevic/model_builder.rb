@@ -1,9 +1,6 @@
-require 'activerecord'
 require 'facets/dictionary'
 
 require 'clevic/table_model.rb'
-require 'clevic/delegates.rb'
-require 'clevic/text_delegate.rb'
 require 'clevic/cache_table.rb'
 require 'clevic/field.rb'
 
@@ -317,7 +314,7 @@ See Clevic::Field properties for available options.
 
 === Menu Items
 
-You can define view/model specific actions ( an Action is Qt talk for menu items and shortcuts).
+You can define view/model specific menu items.
 These will be added to the Edit menu, show up on context-click in the table
 display, and can have optional keyboard shortcuts:
 
