@@ -10,15 +10,6 @@ module Clevic
   # a define_ui block is not specified in the entity class, 
   # a default UI will be created.
   module Record
-    # TODO not sure if these are necessary here anymore?
-    def self.db_options=( db_options )
-      @db_options = db_options
-    end
-    
-    def self.db_options
-      @db_options
-    end
-    
     module ClassMethods
       def default_view_class_name
         "::Clevic::Default#{name.gsub('::','')}View"
@@ -60,9 +51,6 @@ module Clevic
       
       # create the default view class
       base.create_view_class
-
-      # DbOptions instance
-      #~ @db_options = DbOptions.instance || raise( "DbOptions.instance is nil" )
     end
   end
   
