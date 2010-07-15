@@ -4,8 +4,18 @@ require 'clevic/swing/action_builder.rb'
 
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
+require 'clevic/swing/table_component.rb'
 
 module Clevic
+
+class CellRenderer < javax.swing.table.DefaultTableCellRenderer
+  def getTableCellRendererComponent( table, value, isSelected, hasFocus, row_index, column_index )
+    index = SwingTableIndex.new( table.model, row_index, column_index )
+    value = index.gui_value
+    display_string = index.field.do_format( value ) unless value.nil?
+    super( table, display_string, isSelected, hasFocus, row_index, column_index )
+  end
+end
 
 # The view class
 # TODO hook into key presses, call handle_key_press
@@ -15,6 +25,8 @@ class TableView < javax.swing.JScrollPane
   # - an instance of TableModel
   def initialize( arg, &block )
     @jtable = javax.swing.JTable.new
+    @jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new )
+    
     super( @jtable )
     
     framework_init( arg, &block )
@@ -30,26 +42,6 @@ class TableView < javax.swing.JScrollPane
     #~ self.sorting_enabled = false
     
     #~ self.context_menu_policy = Qt::ActionsContextMenu
-  end
-  
-  # override JTable method
-  def prepareRenderer( table_cell_renderer, row_index, column_index )
-    rv = super
-    rv.value = SwingTableIndex.new( row_index, column_index ).gui_value
-    rv
-  end
-  
-  # pass changed events to view definitions
-  def tableChanged( table_model_event )
-    return unless table_model_event.updated?
-    
-    top_left = SwingTableIndex.new( model, table_model_event.first_row, table_model_event.column )
-    bottom_right = SwingTableIndex.new( model, table_model_event.last_row, table_model_event.column )
-    entity_view.notify_data_changed( self, top_left, bottom_right )
-  rescue Exception => e
-    puts
-    puts "#{model.entity_view.class.name}: #{e.message}"
-    puts e.backtrace
   end
   
   # called from framework_init

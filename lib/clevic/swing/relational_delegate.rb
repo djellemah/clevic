@@ -1,3 +1,5 @@
+require 'clevic/swing/delegate'
+
 module Clevic
 
 # Edit a relation from an id and display a list of relevant entries.
@@ -6,9 +8,9 @@ module Clevic
 # 
 # The ids of the model objects are stored in the item data
 # and the item text is fetched from them using attribute_path.
-class RelationalEditor < ComboDelegate
+class RelationalDelegate < Delegate
   
-  def initialize( parent, field )
+  def initialize( field )
     super
     unless find_options[:conditions].nil?
       find_options[:conditions].gsub!( /true/, entity_class.adaptor.quoted_true )
