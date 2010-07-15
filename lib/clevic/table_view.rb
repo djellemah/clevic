@@ -366,11 +366,6 @@ class TableView
     auto_size_column( model.attributes.index( attribute ), sample )
   end
   
-  # set the size of the column from the sample
-  def auto_size_column( col, sample )
-    @jtable.column_model.column( col ).preferred_width = column_size( col, sample ).width
-  end
-
   # is current_index on the last row?
   def last_row?
     current_index.row == model.row_count - 1

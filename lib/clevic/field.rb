@@ -352,19 +352,6 @@ EOF
     nil
   end
 
-  # Convert something that responds to to_s into a Qt::Color,
-  # or just return the argument if it's already a Qt::Color
-  def string_or_color( s_or_c )
-    case s_or_c
-    when NilClass
-      nil
-    when Qt::Color
-      s_or_c
-    else
-      Qt::Color.new( s_or_c.to_s )
-    end
-  end
-  
   # Called by Clevic::TableModel to get the foreground color value
   def foreground_for( entity )
     cache_value_for( :foreground, entity ) {|x| string_or_color(x)}

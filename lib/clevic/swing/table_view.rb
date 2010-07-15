@@ -16,9 +16,30 @@ def self.tahoma
 end
 
 class CellRenderer < javax.swing.table.DefaultTableCellRenderer
+  def initialize( table_view )
+    super()
+    @table_view = table_view
+  end
+  
   def getTableCellRendererComponent( table, value, isSelected, hasFocus, row_index, column_index )
     index = SwingTableIndex.new( table.model, row_index, column_index )
     component = super( table, index.display_value, isSelected, hasFocus, row_index, column_index )
+    
+    # set alignment
+    component.horizontal_alignment =
+    case index.field.alignment
+      when :left; javax.swing.SwingConstants::LEFT
+      when :right; javax.swing.SwingConstants::RIGHT
+      when :centre, :center; javax.swing.SwingConstants::CENTER
+      else javax.swing.SwingConstants::LEADING
+    end
+    
+    # set text colour
+    component.foreground = index.field.foreground_for( index.entity ) ||
+    if index.field.read_only? || index.entity.andand.readonly? || @table_view.model.read_only?
+      java.awt.Color.lightGray
+    end
+      
     component
   rescue
     puts $!.backtrace
@@ -36,7 +57,7 @@ class TableView < javax.swing.JScrollPane
   # - an instance of TableModel
   def initialize( arg, &block )
     @jtable = javax.swing.JTable.new
-    @jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new )
+    @jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new( self ) )
     @jtable.auto_resize_mode = javax.swing.JTable::AUTO_RESIZE_OFF
     @jtable.selection_mode = javax.swing.ListSelectionModel::MULTIPLE_INTERVAL_SELECTION
     @jtable.column_selection_allowed = true
@@ -46,18 +67,6 @@ class TableView < javax.swing.JScrollPane
     super( @jtable )
     
     framework_init( arg, &block )
-    
-    # see closeEditor
-    @next_index = nil
-    
-    # TODO set view attributes
-    #~ self.horizontal_header.movable = false
-    # TODO might be useful to allow movable vertical rows,
-    # but need to change the shortcut ideas of next and previous rows
-    #~ self.vertical_header.movable = false
-    #~ self.sorting_enabled = false
-    
-    #~ self.context_menu_policy = Qt::ActionsContextMenu
   end
   
   # called from framework_init
@@ -301,24 +310,14 @@ class TableView < javax.swing.JScrollPane
     indexes_or_current( selection_model.row_indexes )
   end
   
-  # alternative access for auto_size_column
-  def auto_size_attribute( attribute, sample )
-    col = model.attributes.index( attribute )
-    self.set_column_width( col, column_size( col, sample ).width )
-  end
-  
   # set the size of the column from the sample
   def auto_size_column( col, sample )
-    self.set_column_width( col, column_size( col, sample ).width )
+    @jtable.column_model.column( col ).preferred_width = column_width( col, sample )
   end
 
-  # set the size of the column from the string value of the data
-  # mostly copied from qheaderview.cpp:2301
-  def column_size( col, data )
-    # TODO implement this properly
-    # probably better not to use Dimension - construction would be
-    # more expensive than necessary
-    java.awt.Dimension.new( @jtable.getFontMetrics( @jtable.font).stringWidth( data ), 20 )
+  # calculate the size of the column from the string value of the data
+  def column_width( col, data )
+    @jtable.getFontMetrics( @jtable.font).stringWidth( data ) + 5
   end
   
   # TODO is this even used?

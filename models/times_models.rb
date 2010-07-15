@@ -20,7 +20,7 @@ class Entry < Sequel::Model
   end
   
   define_ui do
-    plain       :date, :sample => '28-Dec-08'
+    plain       :date, :sample => '28-WWW-08'
     
     # The project field
     relational :project do |field|
