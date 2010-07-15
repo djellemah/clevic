@@ -461,12 +461,11 @@ protected
 
   # sensible alignment defaults if they're not defined.
   def default_alignment!
-    if @alignment.nil?
-      @alignment =
-      case meta.type
-        when :decimal, :integer, :float; :right
-        when :boolean; :centre
-      end
+    @alignment ||=
+    case meta.type
+      when :decimal, :integer, :float; :right
+      when :boolean; :centre
+      else :left
     end
   end
 
