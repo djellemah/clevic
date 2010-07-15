@@ -7,10 +7,19 @@ require 'clevic/filter_command.rb'
 
 module Clevic
 
+def self.tahoma
+  if @font.nil?
+    found = java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "Tahoma"}.first
+    @font = found.deriveFont( 13.0 )
+  end
+  @font
+end
+
 class CellRenderer < javax.swing.table.DefaultTableCellRenderer
   def getTableCellRendererComponent( table, value, isSelected, hasFocus, row_index, column_index )
     index = SwingTableIndex.new( table.model, row_index, column_index )
-    super( table, index.display_value, isSelected, hasFocus, row_index, column_index )
+    component = super( table, index.display_value, isSelected, hasFocus, row_index, column_index )
+    component
   rescue
     puts $!.backtrace
     puts $!.message
@@ -28,6 +37,11 @@ class TableView < javax.swing.JScrollPane
   def initialize( arg, &block )
     @jtable = javax.swing.JTable.new
     @jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new )
+    @jtable.auto_resize_mode = javax.swing.JTable::AUTO_RESIZE_OFF
+    @jtable.selection_mode = javax.swing.ListSelectionModel::MULTIPLE_INTERVAL_SELECTION
+    @jtable.column_selection_allowed = true
+    @jtable.cell_selection_enabled = true
+    @jtable.font = Clevic.tahoma
     
     super( @jtable )
     
@@ -304,7 +318,7 @@ class TableView < javax.swing.JScrollPane
     # TODO implement this properly
     # probably better not to use Dimension - construction would be
     # more expensive than necessary
-    java.awt.Dimension.new( 60, 20 )
+    java.awt.Dimension.new( @jtable.getFontMetrics( @jtable.font).stringWidth( data ), 20 )
   end
   
   # TODO is this even used?
