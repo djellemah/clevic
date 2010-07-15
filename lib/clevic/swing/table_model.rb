@@ -69,15 +69,16 @@ class TableModel < javax.swing.table.AbstractTableModel
   end
   
   # override TableModel method
-  # TODO this should get values from Field
   def getColumnClass( column_index )
     case fields[column_index].meta.type
+      # easiest way to display a checkbox
       when :boolean; java.lang.Boolean
+      # This will be a treated as a String value
       else java.lang.Object
     end
   end
   
-  # values for horizontal and vertical headers
+  # TODO use coloring code once I've done vertical header
   def headerData( section, orientation, role )
     value = 
     case role
@@ -189,6 +190,7 @@ class TableModel < javax.swing.table.AbstractTableModel
   #   will be turned into a ModelIndex by calling create_index
   # - if args has two element, assume it's a two ModelIndex instances
   # - otherwise create a new DataChange and pass it to the block.
+  # TODO refactor with qt and generic
   def data_changed( *args, &block )
     case args.size
       when 1

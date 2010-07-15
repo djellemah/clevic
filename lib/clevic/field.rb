@@ -334,12 +334,17 @@ EOF
       return self
     end
     
-    @sample ||= Sampler.new( entity_class, attribute, display ) do |value|
-      do_format( value )
-    end.compute
-    
-    # if we don't know how to figure it out from the data, just return the label size
-    @sample || self.label
+    if meta.type == :boolean
+      @sample = self.label
+    else
+      @sample ||= Sampler.new( entity_class, attribute, display ) do |value|
+        do_format( value )
+      end.compute
+      
+      # if we don't know how to figure it out from the data, just return the label size
+      @sample ||= self.label
+    end
+    @sample
   end
   
   # Called by Clevic::TableModel to get the tooltip value
