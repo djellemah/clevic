@@ -16,6 +16,26 @@ module Clevic
       field.do_edit_format( raw_value ) unless raw_value.nil?
     end
     
+    def tooltip
+      case
+        # show validation errors
+        when has_errors?
+          errors.join("\n")
+          
+        # provide a tooltip when an empty relational field is encountered
+        # TODO should be part of field definition
+        when meta.type == :association
+          field.delegate.if_empty_message
+        
+        # read-only field
+        when field.read_only?
+          field.tooltip_for( entity ) || 'Read-only'
+          
+        else
+          field.tooltip_for( entity )
+      end
+    end
+    
     # return the Clevic::Field for this index
     def field
       @field ||= model.field_for_index( self )

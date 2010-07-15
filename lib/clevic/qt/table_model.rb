@@ -202,23 +202,8 @@ class TableModel < Qt::AbstractTableModel
           index.field.decoration_for( index.entity )
         
         when qt_tooltip_role
-          case
-            # show validation errors
-            when index.has_errors?
-              index.errors.join("\n")
-              
-            # provide a tooltip when an empty relational field is encountered
-            # TODO should be part of field definition
-            when index.meta.type == :association
-              index.field.delegate.if_empty_message
-            
-            # read-only field
-            when index.field.read_only?
-              index.field.tooltip_for( index.entity ) || 'Read-only'
-              
-            else
-              index.field.tooltip_for( index.entity )
-          end    
+          index.tooltip
+        
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
           nil

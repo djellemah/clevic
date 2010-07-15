@@ -39,7 +39,10 @@ class CellRenderer < javax.swing.table.DefaultTableCellRenderer
     if index.field.read_only? || index.entity.andand.readonly? || @table_view.model.read_only?
       java.awt.Color.lightGray
     end
-      
+    
+    # set tooltip
+    component.tool_tip_text = index.tooltip
+    
     component
   rescue
     puts $!.backtrace
