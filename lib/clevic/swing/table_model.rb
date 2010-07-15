@@ -4,11 +4,17 @@ require 'andand'
 
 require 'clevic/extensions.rb'
 require 'clevic/model_column'
-require 'clevic/table_model'
+require 'clevic/table_index'
 
 module Clevic
 
-module Swing
+class SwingTableIndex
+  include TableIndex
+  def initialize( model, row, column )
+    @model, @row, @column = model, row, column
+  end
+  attr_accessor :model, :row, :column
+end
 
 =begin rdoc
 An instance of Clevic::TableModel is constructed by Clevic::ModelBuilder from the
@@ -16,7 +22,10 @@ UI definition in a Clevic::View, or from the default Clevic::View created by
 including the Clevic::Record module in a ActiveRecord::Base or Sequel::Model subclass.
 =end
 class TableModel < javax.swing.table.AbstractTableModel
-  include Clevic::TableModel
+  # TODO this arg is for the Qt bindings. Do we really need it?
+  def initialize( qt_parent = nil )
+    super()
+  end
   
   # TODO not really sure what this do yet. Related to data_error signal from Qt
   def fireDataError( index, value, message )
@@ -56,13 +65,13 @@ class TableModel < javax.swing.table.AbstractTableModel
   
   # override TableModel method
   def getColumnName( column_index )
-    fields[column_index].name
+    fields[column_index].label
   end
   
   # override TableModel method
   # TODO this should get values from Field
   def getColumnClass( column_index )
-    Object
+    java.lang.Object
   end
   
   # values for horizontal and vertical headers
@@ -126,17 +135,17 @@ class TableModel < javax.swing.table.AbstractTableModel
   end
   
   def isCellEditable( row_index, column_index )
-    index = SwingTableIndex.new( model, row_index, column_index )
+    index = SwingTableIndex.new( self, row_index, column_index )
     !( index.field.read_only? || index.entity.andand.readonly? || read_only? )
   end
   
   # Provide data to UI
   def getValueAt( row_index, column_index )
-    SwingTableIndex.new( model, row_index, column_index ).attribute_value
+    SwingTableIndex.new( self, row_index, column_index ).attribute_value
   end
   
   def setValueAt( value, row_index, column_index )
-    index = SwingTableIndex.new( model, row_index, column_index )
+    index = SwingTableIndex.new( self, row_index, column_index )
     
     # Don't allow the primary key to be changed
     return false if index.attribute == entity_class.primary_key.to_sym
@@ -204,5 +213,3 @@ class TableModel < javax.swing.table.AbstractTableModel
 end
 
 end #module
-
-end

@@ -436,7 +436,7 @@ class ModelBuilder
   def text( attribute, options = {}, &block )
     read_only_default!( attribute, options )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    field.delegate = TextDelegate.new( nil, field )
+    field.delegate = TextDelegate.new( field )
     @fields[attribute] = field
   end
   
@@ -444,7 +444,7 @@ class ModelBuilder
   # a combo box containing all values for this field from the table.
   def distinct( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    field.delegate = DistinctDelegate.new( nil, field )
+    field.delegate = DistinctDelegate.new( field )
     @fields[attribute] = field
   end
   
@@ -458,7 +458,7 @@ class ModelBuilder
       field.format ||= lambda{|x| field.set[x]}
     end
     
-    field.delegate = SetDelegate.new( nil, field )
+    field.delegate = SetDelegate.new( field )
     @fields[attribute] = field
   end
 
@@ -480,7 +480,7 @@ class ModelBuilder
     
     # check after all possible options have been collected
     raise ":display must be specified" if field.display.nil?
-    field.delegate = RelationalDelegate.new( nil, field )
+    field.delegate = RelationalDelegate.new( field )
     @fields[attribute] = field
   end
 

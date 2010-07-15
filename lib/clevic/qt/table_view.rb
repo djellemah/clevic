@@ -24,7 +24,7 @@ class TableView < Qt::TableView
     # need the empty block here, otherwise Qt bindings grab &block
     super( parent ) {}
     
-    framework_init( arg )
+    framework_init( arg, &block )
     
     # see closeEditor
     @next_index = nil

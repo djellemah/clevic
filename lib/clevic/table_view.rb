@@ -6,7 +6,7 @@ require 'clevic/filter_command.rb'
 module Clevic
 
 # Various methods common to view classes
-module TableView
+class TableView
   # TODO reactivate
   #~ include ActionBuilder
   
@@ -23,7 +23,7 @@ module TableView
   # arg is:
   # - an instance of Clevic::View
   # - an instance of TableModel
-  def framework_init( arg )
+  def framework_init( arg, &block )
     # the model/entity_class/builder
     puts "arg: #{arg.inspect}"
     puts "arg.ancestors: #{arg.ancestors.inspect}"
@@ -51,12 +51,16 @@ module TableView
     end
   end
   
+  attr_accessor :object_name
+  
   def title
     @title ||= model.entity_view.title
   end
   
   def connect_view_signals( entity_view )
-    raise "connect to framework model data change notifications"
+    model.addTableModelListener do |event|
+      puts "implement event: #{event.inspect}"
+    end
   end
   
   # find the row index for the given field id (symbol)
@@ -367,13 +371,12 @@ module TableView
   
   # alternative access for auto_size_column
   def auto_size_attribute( attribute, sample )
-    col = model.attributes.index( attribute )
-    self.set_column_width( col, column_size( col, sample ).width )
+    auto_size_column( model.attributes.index( attribute ), sample )
   end
   
   # set the size of the column from the sample
   def auto_size_column( col, sample )
-    self.set_column_width( col, column_size( col, sample ).width )
+    @jtable.column_model.column( col ).preferred_width = column_size( col, sample ).width
   end
 
   # is current_index on the last row?

@@ -3,25 +3,21 @@ require 'fastercsv'
 require 'clevic/swing/action_builder.rb'
 
 require 'clevic/model_builder.rb'
-require 'clevic/table_view.rb'
 require 'clevic/filter_command.rb'
 
 module Clevic
 
-module Swing
-
 # The view class
 # TODO hook into key presses, call handle_key_press
 class TableView < javax.swing.JScrollPane
-  include Clevic::TableView
-  
   # arg is:
   # - an instance of Clevic::View
   # - an instance of TableModel
-  def initialize( arg )
-    framework_init( arg )
-    @jtable = javax.swing.JTable.new( model )
+  def initialize( arg, &block )
+    @jtable = javax.swing.JTable.new
     super( @jtable )
+    
+    framework_init( arg, &block )
     
     # see closeEditor
     @next_index = nil
@@ -294,25 +290,10 @@ class TableView < javax.swing.JScrollPane
   # set the size of the column from the string value of the data
   # mostly copied from qheaderview.cpp:2301
   def column_size( col, data )
-    opt = Qt::StyleOptionHeader.new
-    
-    # fetch font size
-    fnt = font
-    fnt.bold = true
-    opt.fontMetrics = Qt::FontMetrics.new( fnt )
-    
-    # set data
-    opt.text = data.to_s
-    
-    # icon size. Not needed 
-    #~ variant = d->model->headerData(logicalIndex, d->orientation, Qt::DecorationRole);
-    #~ opt.icon = qvariant_cast<QIcon>(variant);
-    #~ if (opt.icon.isNull())
-        #~ opt.icon = qvariant_cast<QPixmap>(variant);
-    
-    size = Qt::Size.new( 100, 30 )
-    # final parameter could be header section
-    style.sizeFromContents( Qt::Style::CT_HeaderSection, opt, size );
+    # TODO implement this properly
+    # probably better not to use Dimension - construction would be
+    # more expensive than necessary
+    java.awt.Dimension.new( 60, 20 )
   end
   
   # TODO is this even used?
@@ -338,34 +319,15 @@ class TableView < javax.swing.JScrollPane
     current_index.row == model.row_count - 1 && current_index.column == model.column_count - 1
   end
   
-  # make sure row size is correct
-  # show error messages for data
-  def setModel( model )
-    # must do this otherwise model gets garbage collected
-    @model = model
-    
-    # make sure we get nice spacing
-    vertical_header.default_section_size = vertical_header.minimum_section_size
-    super
-    
-    # set delegates
-    model.fields.each_with_index do |field, index|
-      set_item_delegate_for_column( index, field.delegate )
-    end
-    
-    # data errors
-    model.connect( SIGNAL( 'data_error(QModelIndex, QVariant, QString)' ) ) do |index,variant,msg|
-      error_message = Qt::ErrorMessage.new( self )
-      error_message.show_message( "Incorrect value '#{variant.value}' entered for field [#{index.attribute.to_s}].\nMessage was: #{msg}" )
-      error_message.show
-    end
-  end
-  
   # and override this because the Qt bindings don't call
   # setModel otherwise
   def model=( model )
-    setModel( model )
+    @jtable.model = model
     resize_columns
+  end
+  
+  def model
+    @jtable.model
   end
   
   # resize all fields based on heuristics rather
@@ -495,8 +457,6 @@ class TableView < javax.swing.JScrollPane
   def busy_cursor( &block )
     raise "not implemented"
   end
-end
-
 end
 
 end
