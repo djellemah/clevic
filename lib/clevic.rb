@@ -1,7 +1,5 @@
 # This provides enough to define UIs.
 
-puts "clevic.rb"
-
 module Clevic
   def self.base_entity_class
     Sequel::Model

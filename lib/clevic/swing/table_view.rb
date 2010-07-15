@@ -4,16 +4,18 @@ require 'clevic/swing/action_builder.rb'
 
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
-require 'clevic/swing/table_component.rb'
 
 module Clevic
 
 class CellRenderer < javax.swing.table.DefaultTableCellRenderer
   def getTableCellRendererComponent( table, value, isSelected, hasFocus, row_index, column_index )
     index = SwingTableIndex.new( table.model, row_index, column_index )
-    value = index.gui_value
-    display_string = index.field.do_format( value ) unless value.nil?
-    super( table, display_string, isSelected, hasFocus, row_index, column_index )
+    super( table, index.display_value, isSelected, hasFocus, row_index, column_index )
+  rescue
+    puts $!.backtrace
+    puts $!.message
+    puts index.entity.inspect
+    nil
   end
 end
 
@@ -50,6 +52,23 @@ class TableView < javax.swing.JScrollPane
     raise "not implemented"
   end
   
+  def connect_view_signals( entity_view )
+    model.addTableModelListener do |event|
+      begin
+        puts "table changed event: #{event.inspect}"
+        # pass changed events to view definitions
+        return unless table_model_event.updated?
+          
+        top_left = SwingTableIndex.new( model, table_model_event.first_row, table_model_event.column )
+        bottom_right = SwingTableIndex.new( model, table_model_event.last_row, table_model_event.column )
+        entity_view.notify_data_changed( @table_view, top_left, bottom_right )
+      rescue Exception => e
+        puts
+        puts "#{model.entity_view.class.name}: #{e.message}"
+        puts e.backtrace
+      end
+    end
+  end
   
   # TODO copy from qt adapter
   def copy_current_selection

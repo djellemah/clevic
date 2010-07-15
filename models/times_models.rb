@@ -1,5 +1,3 @@
-require 'clevic.rb'
-
 # model definitions
 class Entry < Sequel::Model
   belongs_to :invoice

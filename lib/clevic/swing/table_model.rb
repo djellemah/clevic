@@ -142,6 +142,9 @@ class TableModel < javax.swing.table.AbstractTableModel
   # Provide data to UI
   def getValueAt( row_index, column_index )
     SwingTableIndex.new( self, row_index, column_index ).attribute_value
+  rescue
+    puts $!.inspect
+    nil
   end
   
   def setValueAt( value, row_index, column_index )

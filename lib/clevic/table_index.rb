@@ -2,9 +2,18 @@ module Clevic
   # to be included in something that responds to model, row, column
   # TODO implement choppy
   module TableIndex
-    # the value to be displayed in the gui for this index
-    def gui_value
-      field.value_for( entity )
+    # the value for this index
+    # used to be gui_value, but that wasn't right
+    def raw_value
+      @raw_value ||= field.value_for( entity )
+    end
+    
+    def display_value
+      field.do_format( raw_value ) unless raw_value.nil?
+    end
+    
+    def edit_value
+      field.do_edit_format( raw_value ) unless raw_value.nil?
     end
     
     # return the Clevic::Field for this index

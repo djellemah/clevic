@@ -25,8 +25,6 @@ class TableView
   # - an instance of TableModel
   def framework_init( arg, &block )
     # the model/entity_class/builder
-    puts "arg: #{arg.inspect}"
-    puts "arg.ancestors: #{arg.ancestors.inspect}"
     case 
       when arg.is_a?( TableModel )
         self.model = arg
@@ -55,12 +53,6 @@ class TableView
   
   def title
     @title ||= model.entity_view.title
-  end
-  
-  def connect_view_signals( entity_view )
-    model.addTableModelListener do |event|
-      puts "implement event: #{event.inspect}"
-    end
   end
   
   # find the row index for the given field id (symbol)

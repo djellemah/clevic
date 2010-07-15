@@ -7,8 +7,6 @@ require 'clevic/swing'
 
 require File.dirname( __FILE__ ) + '/../models/times_psql_models.rb'
 
-puts "Clevic::View.order: #{Clevic::View.order.inspect}"
-
 javax.swing.JFrame.new.tap do |frame|
   view = Clevic::View.order.first.new
   tv = Clevic::TableView.new( view )
