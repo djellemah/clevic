@@ -71,7 +71,10 @@ class TableModel < javax.swing.table.AbstractTableModel
   # override TableModel method
   # TODO this should get values from Field
   def getColumnClass( column_index )
-    java.lang.Object
+    case fields[column_index].meta.type
+      when :boolean; java.lang.Boolean
+      else java.lang.Object
+    end
   end
   
   # values for horizontal and vertical headers
