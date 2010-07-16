@@ -224,7 +224,7 @@ EOF
     
     # instance variables
     @attribute = attribute
-    # default to attribute
+    # default to attribute, can be overwritten later
     @id = attribute
     @entity_class = entity_class
     @visible = true
@@ -435,28 +435,22 @@ protected
 
   # sensible display format defaults if they're not defined.
   def default_format!
-    if @format.nil?
-      @format =
-      case meta.type
-        when :time; '%H:%M'
-        when :date; '%d-%h-%y'
-        when :datetime; '%d-%h-%y %H:%M:%S'
-        when :decimal, :float; "%.2f"
-      end
+    @format ||=
+    case meta.type
+      when :time; '%H:%M'
+      when :date; '%d-%h-%y'
+      when :datetime; '%d-%h-%y %H:%M:%S'
+      when :decimal, :float; "%.2f"
     end
-    @format
   end
   
   # sensible edit format defaults if they're not defined.
   def default_edit_format!
-    if @edit_format.nil?
-      @edit_format =
-      case meta.type
-        when :date; '%d-%h-%Y'
-        when :datetime; '%d-%h-%Y %H:%M:%S'
-      end || default_format!
-    end
-    @edit_format
+    @edit_format ||=
+    case meta.type
+      when :date; '%d-%h-%Y'
+      when :datetime; '%d-%h-%Y %H:%M:%S'
+    end || default_format!
   end
 
   # sensible alignment defaults if they're not defined.
