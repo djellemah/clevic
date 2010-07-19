@@ -1,4 +1,4 @@
-require 'sequel/model.rb'
+require 'sequel'
 
 # remove dependency on this and active_support unless they're really needed
 require 'clevic/ar_methods.rb'

@@ -2,10 +2,7 @@
 
 require 'pathname'
 
-require 'clevic.rb'
-require 'clevic/browser.rb'
 require 'optparse'
-require 'active_support'
 
 $options = {}
 oparser = OptionParser.new
@@ -24,6 +21,11 @@ oparser.on( '-p', '--pass PASSWORD', String ) { |o| $options[:password] = o }
 oparser.on( '-P', '--profile PROFILE', String ) { |o| $options[:profile] = o }
 oparser.on( '-t', '--table TABLE', 'Table to display', String ) { |o| $options[:table] = o }
 oparser.on( '-d', '--database DATABASE', 'Database name', String ) { |o| $options[:database] = o }
+
+oparser.on( '-s', '--swing', 'Use JRuby Swing' ) { |o| require 'clevic/swing.rb' }
+require 'clevic/swing.rb'
+oparser.on( '-q', '--qt', 'Use Qt-Ruby' ) { |o| require 'clevic/qt.rb' }
+
 oparser.on( '-D', '--debug' ) { |o| $options[:debug] = true }
 oparser.on( '-v', '--verbose' ) { |o| $options[:verbose] = true }
 oparser.on( '-V', '--version' ) do
@@ -64,7 +66,7 @@ def subclasses( base )
   ObjectSpace.each_object( Class ) do |x|
     if x.ancestors.include?( base )
       case
-        when x == ActiveRecord::Base; # don't include this
+        when x == Clevic.base_entity_class; # don't include this
         else; classes << x
       end
     end
@@ -72,49 +74,12 @@ def subclasses( base )
   classes.sort{|a,b| a.name <=> b.name}
 end
 
-def load_rails_models( root, config, models )
-  # initialize Rails
-  load config / 'environment.rb'
-  require 'initializer.rb'
-  Rails::Initializer.run do |config|
-    config.frameworks -= [ :action_mailer, :action_pack, :active_resource ]
-  end
-  
-  # load lib/ files for the rails project
-  $: << ( root / 'lib' ).realpath.to_s
-  ( root / 'lib' ).children.each do |filename|
-    load filename if filename.file?
-  end
-
-  # include Dirty if it isn't already
-  begin
-    ActiveRecord::Dirty
-  rescue NameError
-    ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
-  end
-  
-  # load models
-  models.find do |dir_entry|
-    # don't load directory entries
-    next unless dir_entry.file?
-    # only load .rb files
-    next unless dir_entry.basename.to_s =~ /\.rb$/
-    begin
-      load dir_entry
-    rescue Exception => e
-      puts "Error loading #{dir_entry.basename.to_s}: #{e.message}"
-      puts e.backtrace
-    end
-  end
-  
-  # include the Clevic::Record module in each descendant of
-  # ActiveRecord::Base so that the default views will be created.
-  subclasses( ActiveRecord::Base ).each do |model|
-    if model.table_exists?
-      model.send :include, Clevic::Record unless model.abstract_class?
-    end
-  end
+# do nothing ...
+def maybe_load_rails_models
 end
+
+# ... unless this is included
+# require 'clevic/rails_models_loader.rb'
 
 def load_single_model_file( pathname )
   ( pathname + '.rb' ).require_if_exists
@@ -125,14 +90,7 @@ end
 
 def load_models( pathname )
   if pathname.directory?
-    config = pathname / 'config'
-    app = pathname / 'app'
-    models = app / 'models'
-    # check if this is a Rails directory
-    if config.exist? && app.exist? && models.exist?
-      # this is probably a Rails project"
-      load_rails_models( pathname, config, models )
-    end
+    maybe_load_rails_models
   else
     # assume we have a single file, and try some variations
     load_single_model_file( pathname )
@@ -140,25 +98,7 @@ def load_models( pathname )
 end
 
 begin
-  # load model files
-  raise "no model definition file specified" if args.empty?
-  args.each { |arg| load_models( Pathname.new( arg ) ) }
-
-  app = Qt::Application.new( args )
-
-  # show UI
-  main_window = Qt::MainWindow.new
-  browser = Clevic::Browser.new( main_window )
-  # this must come after Clevic::Browser.new
-  main_window.show
-  # make sure any partially edited records are saved when the window is closed
-  app.connect( SIGNAL('lastWindowClosed()') ) { browser.save_all }
-  begin
-    app.exec
-  rescue
-    puts $!.message
-    puts $!.backtrace
-  end
+  Clevic::Browser.run( args )
 rescue Exception => e
   puts e.message
   puts e.backtrace
