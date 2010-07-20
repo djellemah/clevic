@@ -1,6 +1,35 @@
 #~ require 'clevic/search_dialog.rb'
-#~ require 'clevic/table_view.rb'
 require 'clevic/view'
+require 'clevic/swing/action_builder'
+
+JTabbedPane = javax.swing.JTabbedPane
+class JTabbedPane
+  def each
+    (0...tab_count).each do |index|
+      yield component_at( index )
+    end
+  end
+  include Enumerable
+end
+
+Component = java.awt.Component
+class Component
+  def <<( obj )
+    case obj
+    when Clevic::Separator
+      add_separator
+    
+    when String
+      add obj.to_java_string
+    
+    when Clevic::Action
+      add obj.text.to_java_string
+    
+    else
+      add obj
+    end
+  end
+end
 
 module Clevic
 
@@ -13,21 +42,45 @@ class Browser < javax.swing.JFrame
   #~ slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab()}
   
   attr_reader :tables_tab
+  attr_reader :menu_edit, :menu_search
   
   def initialize
     super
     
     # do menus and widgets
     # menu
-    self.jmenu_bar = javax.swing.JMenuBar.new
-    jmenu_bar.add javax.swing.JMenu.new( 'File' )
-    jmenu_bar.add javax.swing.JMenu.new( 'Edit' )
-    jmenu_bar.add javax.swing.JMenu.new( 'Search' )
-    jmenu_bar.add javax.swing.JMenu.new( 'Table' )
+    self.jmenu_bar = javax.swing.JMenuBar.new.tap do |menu_bar|
+      menu_bar << javax.swing.JMenu.new( 'File' ).tap do |menu|
+        menu.mnemonic = java.awt.event.KeyEvent::VK_F
+        menu << "Open"
+        menu << "Close"
+      end
+      
+      @menu_edit = javax.swing.JMenu.new( 'Edit' ).tap {|m| m.mnemonic = java.awt.event.KeyEvent::VK_E}
+      menu_bar << menu_edit
+      
+      @menu_search = javax.swing.JMenu.new( 'Search' ).tap {|m| m.mnemonic = java.awt.event.KeyEvent::VK_S}
+      menu_bar << menu_search
+      
+      menu_bar << javax.swing.JMenu.new( 'Table' ).tap do |menu|
+        menu.mnemonic = java.awt.event.KeyEvent::VK_T
+        menu << "&Next"
+        menu << "&Previous"
+        if $options[:debug]
+          menu << Action.new.tap do |action|
+            action.name = :dump
+            action.text = "&Dump"
+            action.shortcut = "Ctrl+Shift+D"
+            action.triggered do |event|
+              dump
+            end
+          end
+        end
+      end
+    end
     
     # set icon. MUST come after call to setup_ui
     icon_path = Pathname.new( __FILE__ ).parent.parent + "icons/icon.png"
-    puts "icon_path: #{icon_path.inspect}"
     raise "icon.png not found" unless icon_path.file?
     self.icon_image = javax.swing.ImageIcon.new( icon_path.realpath.to_s ).image
     
@@ -43,10 +96,6 @@ class Browser < javax.swing.JFrame
       # TODO tell exiting tab to save currently editing row/cell
     end
 
-    # dump model for current tab
-    #~ @layout.action_dump.visible = $options[:debug]
-    #~ @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
-    
     load_views
     update_menus
     self.title = [database_name, 'Clevic'].compact.join ' '
@@ -58,24 +107,23 @@ class Browser < javax.swing.JFrame
   end  
   
   def update_menus
-    return
     # update edit menu
-    @layout.menu_edit.clear
+    menu_edit.remove_all
     
     # do the model-specific menu items first
     table_view.model_actions.each do |action|
-      @layout.menu_edit.add_action( action )
+      menu_edit << action.menu_item
     end
     
     # now do the generic edit items
     table_view.edit_actions.each do |action|
-      @layout.menu_edit.add_action( action )
+      menu_edit << action.menu_item
     end
     
     # update search menu
-    @layout.menu_search.clear
+    menu_search.remove_all
     table_view.search_actions.each do |action|
-      @layout.menu_search.add_action( action )
+      menu_search << action.menu_item
     end
   end
   
@@ -93,20 +141,20 @@ class Browser < javax.swing.JFrame
   # slot to handle Ctrl-Tab and move to next tab, or wrap around
   def next_tab
     tables_tab.selected_index = 
-    if tables_tab.current_index >= tables_tab.count - 1
+    if tables_tab.selected_index >= tables_tab.count - 1
       0
     else
-      tables_tab.current_index + 1
+      tables_tab.selected_index + 1
     end
   end
 
   # slot to handle Ctrl-Backtab and move to previous tab, or wrap around
   def previous_tab
-    tables_tab.current_index = 
-    if tables_tab.current_index <= 0
+    tables_tab.selected_index = 
+    if tables_tab.selected_index <= 0
       tables_tab.count - 1
     else
-      tables_tab.current_index - 1
+      tables_tab.selected_index - 1
     end
   end
   
@@ -168,7 +216,7 @@ class Browser < javax.swing.JFrame
   
   # make sure all outstanding records are saved
   def save_all
-    tables_tab.tabs.each {|x| x.save_row( x.current_index ) }
+    tables_tab.each {|x| x.save_row( x.current_index ) }
   end
   
   def self.run( args )

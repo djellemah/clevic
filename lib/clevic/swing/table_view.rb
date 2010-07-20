@@ -72,12 +72,6 @@ class TableView < javax.swing.JScrollPane
     framework_init( arg, &block )
   end
   
-  # called from framework_init
-  # TODO copy from qt adapter
-  def init_actions( entity_view )
-    raise "not implemented"
-  end
-  
   def connect_view_signals( entity_view )
     model.addTableModelListener do |event|
       begin
@@ -346,8 +340,7 @@ class TableView < javax.swing.JScrollPane
     current_index.row == model.row_count - 1 && current_index.column == model.column_count - 1
   end
   
-  # and override this because the Qt bindings don't call
-  # setModel otherwise
+  # forward to @jtable
   def model=( model )
     @jtable.model = model
     resize_columns
@@ -378,6 +371,7 @@ class TableView < javax.swing.JScrollPane
   # Paste a CSV array to the index, replacing whatever is at that index
   # and whatever is at other indices matching the size of the pasted
   # csv array. Create new rows if there aren't enough.
+  # TODO implement
   def paste_to_index( top_left_index, csv_arr )
     csv_arr.each_with_index do |row,row_index|
       # append row if we need one
@@ -483,6 +477,11 @@ class TableView < javax.swing.JScrollPane
   # return value of block
   def busy_cursor( &block )
     raise "not implemented"
+  end
+  
+  # collect actions for the popup menu
+  def add_action( action )
+    ( @context_actions ||= [] ) << action
   end
 end
 

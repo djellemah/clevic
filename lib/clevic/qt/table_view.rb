@@ -51,7 +51,8 @@ class TableView < Qt::TableView
     end
   end
   
-  def init_actions( entity_view )
+  # pull in Qt-specific keys
+  def old_init_actions( entity_view )
     # add model actions, if they're defined
     list( :model ) do |ab|
       entity_view.define_actions( self, ab )
@@ -61,7 +62,7 @@ class TableView < Qt::TableView
     # list of actions in the edit menu
     list( :edit ) do
       #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
-      action :action_copy, '&Save', :shortcut => Qt::KeySequence::Save, :method => :save_current_row
+      action :action_save, '&Save', :shortcut => Qt::KeySequence::Save, :method => :save_current_row
       action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
       action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
       separator

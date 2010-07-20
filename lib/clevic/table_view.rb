@@ -8,7 +8,7 @@ module Clevic
 # Various methods common to view classes
 class TableView
   # TODO reactivate
-  #~ include ActionBuilder
+  include ActionBuilder
   
   # the current filter command
   attr_accessor :filtered
@@ -81,10 +81,9 @@ class TableView
       puts e.backtrace
   end
   
-  def init_actions( entity_view )
-  end
   
-  def old_init_actions( entity_view )
+  # called from framework_init
+  def init_actions( entity_view )
     # add model actions, if they're defined
     list( :model ) do |ab|
       entity_view.define_actions( self, ab )
@@ -93,10 +92,10 @@ class TableView
     
     # list of actions in the edit menu
     list( :edit ) do
-      #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
-      action :action_copy, '&Save', :shortcut => Qt::KeySequence::Save, :method => :save_current_row
-      action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
-      action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
+      #~ new_action :action_cut, 'Cu&t', :shortcut => 'Ctrl-X'
+      action :action_save, '&Save', :shortcut => 'Ctrl+S', :method => :save_current_row
+      action :action_copy, '&Copy', :shortcut => 'Ctrl+C', :method => :copy_current_selection
+      action :action_paste, '&Paste', :shortcut => 'Ctrl+V', :method => :paste
       separator
       action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
       action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
@@ -119,13 +118,13 @@ class TableView
     
     # list of actions called search
     list( :search ) do
-      action :action_find, '&Find', :shortcut => Qt::KeySequence::Find, :method => :find
-      action :action_find_next, 'Find &Next', :shortcut => Qt::KeySequence::FindNext, :method => :find_next
+      action :action_find, '&Find', :shortcut => 'Ctrl+F', :method => :find
+      action :action_find_next, 'Find &Next', :shortcut => 'Ctrl+G', :method => :find_next
       action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
       action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
     end
   end
-  
+
   # return the current selection as csv
   # TODO need refactor between Clevic and framework
   def current_selection_csv
