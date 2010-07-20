@@ -10,7 +10,7 @@ in Clevic::View.order. DefaultView classes created by Clevic::Record are automat
 added.
 =end
 class Browser < javax.swing.JFrame
-  #~ slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab() current_changed(int)}
+  #~ slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab()}
   
   attr_reader :tables_tab
   
@@ -37,20 +37,19 @@ class Browser < javax.swing.JFrame
     
     # tab navigation
     @tables_tab.add_change_listener do |change_event|
-      puts "change_event: #{change_event.inspect}"
-      #~ method( :next_tab )
-      #~ method( :previous_tab )
+      puts "change_event: #{change_event.source.inspect}"
+      puts "change_event.source.selected_index: #{change_event.source.selected_index.inspect}"
+      current_changed
+      # TODO tell exiting tab to save currently editing row/cell
     end
 
     # dump model for current tab
     #~ @layout.action_dump.visible = $options[:debug]
     #~ @layout.action_dump.connect       SIGNAL( 'triggered()' ),          &method( :dump )
     
-    #~ tables_tab.connect                SIGNAL( 'currentChanged(int)' ),  &method( :current_changed )
-    
     load_views
     update_menus
-    #~ main_window.window_title = [database_name, 'Clevic'].compact.join ' '
+    self.title = [database_name, 'Clevic'].compact.join ' '
   end
   
   # Set the main window title to the name of the database, if we can find it.
@@ -88,12 +87,12 @@ class Browser < javax.swing.JFrame
   
   # return the Clevic::TableView object in the currently displayed tab
   def table_view
-    tables_tab.current_widget
+    tables_tab.selected_component
   end
   
   # slot to handle Ctrl-Tab and move to next tab, or wrap around
   def next_tab
-    tables_tab.current_index = 
+    tables_tab.selected_index = 
     if tables_tab.current_index >= tables_tab.count - 1
       0
     else
@@ -113,8 +112,9 @@ class Browser < javax.swing.JFrame
   
   # slot to handle the currentChanged signal from tables_tab, and
   # set focus on the grid
-  def current_changed( current_tab_index )
+  def current_changed
     update_menus
+    # TODO do we still need this?
     #~ tables_tab.current_widget.set_focus
   end
   
