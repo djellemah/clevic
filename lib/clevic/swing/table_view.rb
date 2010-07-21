@@ -90,14 +90,23 @@ class TableView < javax.swing.JScrollPane
     end
   end
   
-  # TODO copy from qt adapter
+  # could also use a javax.activation.DataHandler
+  # for a more sophisticated API
   def copy_current_selection
-    raise "not implemented"
-    #~ Qt::Application::clipboard.text = current_selection_csv
+    tf = java.awt.datatransfer.StringSelection.new( current_selection_csv )
+    cb = java.awt.Toolkit.default_toolkit.system_clipboard
+    cb.setContents( tf, tf )
   end
   
   # TODO refactor with Clevic::TableView
   def paste
+    # yes, this MUST be camelCase cos it's a field not a method
+    df = java.awt.datatransfer.DataFlavor.stringFlavor
+    # also system_selection
+    cb = java.awt.Toolkit.default_toolkit.system_clipboard
+    clipboard_value = cb.getData( df ).to_s
+    puts "clipboard_value: #{clipboard_value.inspect}"
+    
     sanity_check_read_only
     
     # remove trailing "\n" if there is one

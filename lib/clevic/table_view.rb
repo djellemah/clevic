@@ -134,7 +134,7 @@ class TableView
         row_ary = Array.new
         selection_model.selected_indexes.each do |index|
           if index.row == row
-            value = index.gui_value
+            value = index.raw_value
             row_ary << 
             unless value.nil?
               index.field.do_format( value )
