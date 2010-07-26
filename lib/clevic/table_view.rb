@@ -1,4 +1,5 @@
 require 'fastercsv'
+require 'stringio'
 
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
@@ -124,27 +125,21 @@ class TableView
       action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
     end
   end
-
+  
   # return the current selection as csv
   # TODO need refactor between Clevic and framework
   def current_selection_csv
-    text = String.new
-    selection_model.selection.each do |selection_range|
-      (selection_range.top..selection_range.bottom).each do |row|
-        row_ary = Array.new
-        selection_model.selected_indexes.each do |index|
-          if index.row == row
-            value = index.raw_value
-            row_ary << 
-            unless value.nil?
-              index.field.do_format( value )
-            end
-          end
+    buffer = StringIO.new
+    selected_rows.each do |row|
+      buffer << 
+      row.map do |index|
+        value = index.raw_value
+        unless value.nil?
+          index.field.do_edit_format( value )
         end
-        text << row_ary.to_csv
-      end
+      end.to_csv
     end
-    text
+    buffer.string
   end
   
   # TODO need refactor between Clevic and ui framework

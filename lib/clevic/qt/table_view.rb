@@ -98,6 +98,16 @@ class TableView < Qt::TableView
     Qt::Application::clipboard.text = current_selection_csv
   end
   
+  def selected_rows
+    rows = []
+    selection_model.selection.each do |selection_range|
+      (selection_range.top..selection_range.bottom).each do |row|
+        rows << row
+      end
+    end
+    rows
+  end
+  
   # TODO refactor with Clevic::TableView
   def paste
     sanity_check_read_only

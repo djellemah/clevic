@@ -90,12 +90,25 @@ class TableView < javax.swing.JScrollPane
     end
   end
   
+  # return a collection of collections of SwingTableIndex objects
+  # indicating the indices of the current selection
+  def selected_rows
+    @jtable.selected_rows.map do |row_index|
+      @jtable.selected_columns.map do |column_index|
+        SwingTableIndex.new( model, row_index, column_index )
+      end
+    end
+  end
+  
+  # copy current selection to clipboard as CSV
   # could also use a javax.activation.DataHandler
   # for a more sophisticated API
+  # TODO use 	javaJVMLocalObjectMimeType 
+  # file:///usr/share/doc/java-sdk-docs-1.6.0.10/html/api/java/awt/datatransfer/DataFlavor.html#javaJVMLocalObjectMimeType
   def copy_current_selection
-    tf = java.awt.datatransfer.StringSelection.new( current_selection_csv )
-    cb = java.awt.Toolkit.default_toolkit.system_clipboard
-    cb.setContents( tf, tf )
+    transferable = java.awt.datatransfer.StringSelection.new( current_selection_csv )
+    clipboard = java.awt.Toolkit.default_toolkit.system_clipboard
+    clipboard.setContents( transferable, transferable )
   end
   
   # TODO refactor with Clevic::TableView

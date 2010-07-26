@@ -116,5 +116,9 @@ module Clevic
     def errors
       [ entity.errors[field_name.to_sym] ].flatten
     end
+    
+    def inspect
+      "#<TableIndex (#{row},#{column}) '#{raw_value}'>"
+    end
   end
 end
