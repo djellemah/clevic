@@ -251,7 +251,7 @@ class TableModel < Qt::AbstractTableModel
         rescue Exception => e
           puts e.backtrace.join( "\n" )
           puts e.message
-          emit_data_error( index, variant, e.message )
+          emit data_error( index, variant, e.message )
           # value conversion was not successful
           false
         end

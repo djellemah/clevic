@@ -3,6 +3,7 @@ require 'date'
 require 'andand'
 
 require 'clevic/extensions.rb'
+require 'clevic/swing/extensions.rb'
 require 'clevic/model_column'
 require 'clevic/table_index'
 
@@ -16,6 +17,25 @@ class SwingTableIndex
   attr_accessor :model, :row, :column
 end
 
+TableModelEvent = javax.swing.event.TableModelEvent
+class TableModelEvent
+  def inspect
+    "#<#{first_row..last_row}, #{column}, #{const_lookup( type )} >"
+  end
+  
+  def updated?
+    type == self.class::UPDATE
+  end
+
+  def deleted?
+    type == self.class::DELETE
+  end
+
+  def inserted?
+    type == self.class::INSERT
+  end
+end
+
 =begin rdoc
 An instance of Clevic::TableModel is constructed by Clevic::ModelBuilder from the
 UI definition in a Clevic::View, or from the default Clevic::View created by
@@ -27,30 +47,35 @@ class TableModel < javax.swing.table.AbstractTableModel
     super()
   end
   
+  def create_index( row, column )
+    SwingTableIndex.new( self, row, column )
+  end
+  
   # TODO not really sure what this do yet. Related to data_error signal from Qt
   def fireDataError( index, value, message )
+    puts "fireDataError: #{index.inspect}, #{value.inspect}, #{message}"
   end
   
   # add a new item, and set defaults from the Clevic::View
   def add_new_item_start( index )
-    raise "not implemented"
+    raise NotImplementedError
   end
   
   def add_new_item_end( index )
-    raise "not implemented"
+    raise NotImplementedError
   end
   
   def remove_row_start( index )
-    raise "not implemented"
+    raise NotImplementedError
   end
   
   def remove_row_end( index )
-    raise "not implemented"
+    raise NotImplementedError
   end
   
   # save the AR model at the given index, if it's dirty
   def update_vertical_header( index )
-    raise "not implemented"
+    raise NotImplementedError
   end
   
   # override TableModel method
@@ -153,9 +178,10 @@ class TableModel < javax.swing.table.AbstractTableModel
   
   def setValueAt( value, row_index, column_index )
     index = SwingTableIndex.new( self, row_index, column_index )
+    puts "setting index: #{index.inspect} to #{value.inspect}"
     
     # Don't allow the primary key to be changed
-    return false if index.attribute == entity_class.primary_key.to_sym
+    return if index.attribute == entity_class.primary_key.to_sym
     
     # translate the value from the ui to something that
     # the DB entity will understand
@@ -172,15 +198,12 @@ class TableModel < javax.swing.table.AbstractTableModel
           translate_to_db_object( index, value )
         
       end
+      puts "NOT SAVING YET index: #{index.inspect}"
       data_changed( index )
-      # value conversion was successful
-      true
     rescue Exception => e
-      puts e.backtrace.join( "\n" )
+      puts e.backtrace
       puts e.message
-      emit_data_error( index, variant, e.message )
-      # value conversion was not successful
-      false
+      fireDataError( index, value, e.message )
     end
   end
   
@@ -190,23 +213,20 @@ class TableModel < javax.swing.table.AbstractTableModel
   #   will be turned into a ModelIndex by calling create_index
   # - if args has two element, assume it's a two ModelIndex instances
   # - otherwise create a new DataChange and pass it to the block.
-  # TODO refactor with qt and generic
   def data_changed( *args, &block )
     case args.size
       when 1
         arg = args.first
-        if ( arg.respond_to?( :top_left ) && arg.respond_to?( :bottom_right ) ) || arg.is_a?( Qt::ItemSelectionRange )
-          # object is a DataChange, or a SelectionRange
-          top_left_index = create_index( arg.top_left.row, arg.top_left.column )
-          bottom_right_index = create_index( arg.bottom_right.row, arg.bottom_right.column )
-          emit dataChanged( top_left_index, bottom_right_index )
+        if ( arg.respond_to?( :top_left ) && arg.respond_to?( :bottom_right ) )
+          # object is a DataChange
+          fireTableRowsUpdated( arg.top_left.row, arg.bottom_right.row )
         else
-          # assume it's a ModelIndex
-          emit dataChanged( arg, arg )
+          # assume it's a ModelIndex, so one cell was updated
+          fireTableCellUpdated( arg.row, arg.column )
         end
       
       when 2
-        emit dataChanged( args.first, args.last )
+        fireTableRowsUpdated( args.first.row, args.last.row )
       
       else
         unless block.nil?

@@ -73,15 +73,15 @@ class TableView < javax.swing.JScrollPane
   end
   
   def connect_view_signals( entity_view )
-    model.addTableModelListener do |event|
+    model.addTableModelListener do |table_model_event|
       begin
-        puts "table changed event: #{event.inspect}"
+        puts "table changed event: #{table_model_event.inspect}"
         # pass changed events to view definitions
         return unless table_model_event.updated?
           
         top_left = SwingTableIndex.new( model, table_model_event.first_row, table_model_event.column )
         bottom_right = SwingTableIndex.new( model, table_model_event.last_row, table_model_event.column )
-        entity_view.notify_data_changed( @table_view, top_left, bottom_right )
+        entity_view.notify_data_changed( self, top_left, bottom_right )
       rescue Exception => e
         puts
         puts "#{model.entity_view.class.name}: #{e.message}"
