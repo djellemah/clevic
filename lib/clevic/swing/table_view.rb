@@ -72,6 +72,8 @@ class TableView < javax.swing.JScrollPane
     framework_init( arg, &block )
   end
   
+  attr_reader :jtable
+  
   def connect_view_signals( entity_view )
     model.addTableModelListener do |table_model_event|
       begin
@@ -126,13 +128,13 @@ class TableView < javax.swing.JScrollPane
     text = clipboard.text.chomp
     arr = FasterCSV.parse( text )
     
-    selection_model.selected_indexes.
+    # TODO what did this do?
+    #~ selection_model.selected_indexes.
     return true if selection_model.selection.size != 1
     
-    selection_range = selection_model.selection.first
     selected_index = selection_model.selected_indexes.first
     
-    if selection_model.selection.size == 1 && selection_range.single_cell?
+    if selection_model.single_cell?
       # only one cell selected, so paste like a spreadsheet
       if text.empty?
         # just clear the current selection
@@ -158,8 +160,8 @@ class TableView < javax.swing.JScrollPane
           change.bottom_right = sorted.last
         end
       else
-        return true if selection_range.height != arr.size
-        return true if selection_range.width != arr.first.size
+        return true if selection_model.ranges.first.height != arr.size
+        return true if selection_model.ranges.first.width != arr.first.size
         
         # size is the same, so do the paste
         paste_to_index( selected_index, arr )
@@ -482,6 +484,10 @@ class TableView < javax.swing.JScrollPane
   
   def show_error( msg )
     raise NotImplementedError, msg
+  end
+  
+  def selection_model
+    SelectionModel.new( @jtable )
   end
   
   # move the cursor & selection to the specified table_index
