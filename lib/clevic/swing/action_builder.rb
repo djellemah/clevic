@@ -1,4 +1,5 @@
 require 'clevic/action_builder.rb'
+require 'clevic/swing/extensions.rb'
 require 'changes'
 
 module Clevic
@@ -18,7 +19,7 @@ class Action
     @parent = parent
     gather( options, &block )
   end
-  attr_reader :parent
+  attr_reader :parent, :menu_item
   
   def plain_text
     text.gsub( /&/, '' )
@@ -35,22 +36,23 @@ class Action
   end
   
   def menu_item
-    menu_item =
-    if checkable
-      javax.swing.JCheckBoxMenuItem.new
-    else
-      javax.swing.JMenuItem.new
+    if @menu_item.nil?
+      @menu_item =
+      if checkable
+        javax.swing.JCheckBoxMenuItem.new
+      else
+        javax.swing.JMenuItem.new
+      end
+      
+      menu_item.text = plain_text
+      mnemonic( menu_item )
+      menu_item.accelerator = shortcut
+      menu_item.tool_tip_text = tool_tip
+      menu_item.add_action_listener do |event|
+        handler.call( event )
+      end
     end
-    
-    menu_item.text = plain_text
-    mnemonic( menu_item )
-    menu_item.accelerator = shortcut
-    menu_item.tool_tip_text = tool_tip
-    menu_item.add_action_listener do |event|
-      handler.call( event )
-    end
-    
-    menu_item
+    @menu_item
   end
 end
 
@@ -105,7 +107,7 @@ module ActionBuilder
         puts "action_method_or_block event: #{event.inspect}" if $options[:debug]
         action_triggered do
           # active is from Qt checkbox-menu-items
-          send_args = [ options[:method], options.has_key?( :checkable ) ? action.selected? : nil ].compact
+          send_args = [ options[:method], options.has_key?( :checkable ) ? action.menu_item.selected? : nil ].compact
           send( *send_args )
         end
       end
