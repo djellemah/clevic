@@ -80,12 +80,21 @@ class TableView < javax.swing.JScrollPane
         puts "table changed event: #{table_model_event.inspect}"
         # pass changed events to view definitions
         return unless table_model_event.updated?
+        
+        # unlikely to be useful, and in fact causes a very very long
+        # calculation
+        return if table_model_event.all_rows?
           
         top_left = SwingTableIndex.new( model, table_model_event.first_row, table_model_event.column )
         bottom_right = SwingTableIndex.new( model, table_model_event.last_row, table_model_event.column )
+        
+        print "#{__FILE__}:#{__LINE__}"
+        puts "top_left: #{top_left.inspect}"
+        print "#{__FILE__}:#{__LINE__}"
+        puts "bottom_right: #{bottom_right.inspect}"
+        
         entity_view.notify_data_changed( self, top_left, bottom_right )
       rescue Exception => e
-        puts
         puts "#{model.entity_view.class.name}: #{e.message}"
         puts e.backtrace
       end
@@ -171,10 +180,12 @@ class TableView < javax.swing.JScrollPane
   
   # TODO display message in status bar, ie pass up to parent window
   def emit_status_text( msg )
+    puts "emit_status_text msg: #{msg.inspect}"
   end
   
   # emit whether the view is filtered or not
   def emit_filter_status( bool )
+    puts "emit_filter_status: #{bool}"
   end
   
   def sanity_check_read_only
@@ -308,15 +319,6 @@ class TableView < javax.swing.JScrollPane
         @search_dialog.from_start = false
         search( @search_dialog )
         @search_dialog.from_start = save_from_start
-      end
-    end
-  end
-  
-  # force a complete reload of the current tab's data
-  def refresh
-    busy_cursor do
-      restore_entity do
-        model.reload_data
       end
     end
   end
@@ -505,7 +507,12 @@ class TableView < javax.swing.JScrollPane
   # show a busy cursor, do the block, back to normal cursor
   # return value of block
   def busy_cursor( &block )
-    raise NotImplementedError
+    save_cursor = cursor
+    self.cursor = java.awt.Cursor.new( java.awt.Cursor::WAIT_CURSOR )
+    rv = yield
+  ensure
+    self.cursor = save_cursor
+    rv
   end
   
   # collect actions for the popup menu

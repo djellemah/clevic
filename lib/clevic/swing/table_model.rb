@@ -53,6 +53,12 @@ class TableModel < javax.swing.table.AbstractTableModel
     puts "TODO update_vertical_header not implemented"
   end
   
+  # Tell the UI we had a major data change
+  def reset
+    # could also use fireTableStructureChanged(), but it doesn't seem necessary
+    fireTableDataChanged
+  end
+  
   # override TableModel method
   def getRowCount
     collection.size

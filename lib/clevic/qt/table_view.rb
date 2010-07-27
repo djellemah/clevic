@@ -301,15 +301,6 @@ class TableView < Qt::TableView
     end
   end
   
-  # force a complete reload of the current tab's data
-  def refresh
-    override_cursor( Qt::BusyCursor ) do
-      restore_entity do
-        model.reload_data
-      end
-    end
-  end
-  
   # return an array of the current selection, or the
   # current index in an array if the selection is empty
   def selection_or_current

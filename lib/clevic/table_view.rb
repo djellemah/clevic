@@ -18,13 +18,13 @@ class TableView
   # status_text is called when this object was to display something in the status bar
   # error_test is emitted when an error of some kind must be displayed to the user.
   # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
-  unless methods.include?( 'emit_status_text' )
-    def emit_status_text( astring ); raise "GUI framework glue responsibility"; end
-  end
+  #~ unless methods.include?( 'emit_status_text' )
+    #~ def emit_status_text( astring ); raise "GUI framework glue responsibility"; end
+  #~ end
   
-  unless methods.include?( 'emit_filter_status' )
-    def emit_filter_status( abool ); raise "GUI framework glue responsibility"; end
-  end
+  #~ unless methods.include?( 'emit_filter_status' )
+    #~ def emit_filter_status( abool ); raise "GUI framework glue responsibility"; end
+  #~ end
   
   # arg is:
   # - an instance of Clevic::View
@@ -593,8 +593,8 @@ class TableView
         end
         # update status bar
         emit_status_text( filtered.status_message )
-      end
-      filtered?
+    end
+    filtered?
   end
   
   # Move to the row for the given entity and the given column.
@@ -666,9 +666,8 @@ protected
   
   # show a busy cursor, do the block, back to normal cursor
   # return value of block
-  def busy_cursor( &block )
-    raise "framework responsibility"
-  end
+  # TODO implement generic way of indicating framework responsibility
+  :busy_cursor
   
   # return either the set of indexes with all invalid indexes
   # remove, or the current selection.

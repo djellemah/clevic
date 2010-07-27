@@ -22,4 +22,10 @@ class TableModelEvent
   def inserted?
     type == self.class::INSERT
   end
+  
+  # returns true if this is a notification to update all
+  # rows, ie a fireTableDataChanged() was called
+  def all_rows?
+    first_row == 0 && last_row == java.lang.Integer::MAX_VALUE
+  end
 end
