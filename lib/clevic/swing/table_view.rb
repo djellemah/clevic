@@ -52,6 +52,51 @@ class CellRenderer < javax.swing.table.DefaultTableCellRenderer
   end
 end
 
+KeyEvent = java.awt.event.KeyEvent
+class KeyEvent
+  def alt?
+    modifiers & self.class::ALT_MASK != 0
+  end
+  
+  def ctrl?
+    modifiers & self.class::CTRL_MASK != 0
+  end
+  
+  def meta?
+    modifiers & self.class::META_MASK != 0
+  end
+  
+  def self.function_keys
+    @function_keys ||= (1..24).map{|i| eval( "VK_F#{i}" ) }
+  end
+  
+  def fx?
+    self.class.function_keys.include?( key_code )
+  end
+  
+  def shift?
+    modifiers & self.class::SHIFT_MASK != 0
+  end
+  
+  def plain?
+    modifiers == 0
+  end
+end
+
+
+class ClevicTable < javax.swing.JTable
+  def processKeyBinding( key_stroke, key_event, condition, pressed )
+    if key_event.alt? || key_event.ctrl? || key_event.meta? || key_event.fx?
+      # don't auto-start if it's a Ctrl, or Alt-modified key
+      # or a function key
+      put_client_property( "JTable.autoStartsEdit", false )
+    end
+    super
+  ensure
+    put_client_property( "JTable.autoStartsEdit", true )
+  end
+end
+
 # The view class
 # TODO hook into key presses, call handle_key_press
 class TableView < javax.swing.JScrollPane
@@ -59,7 +104,13 @@ class TableView < javax.swing.JScrollPane
   # - an instance of Clevic::View
   # - an instance of TableModel
   def initialize( arg, &block )
-    @jtable = javax.swing.JTable.new
+    #~ @jtable = javax.swing.JTable.new
+    @jtable = ClevicTable.new
+    
+    # This should theoretically close editors when focus is lost
+    # saving whatever values are in there
+    @jtable.put_client_property( "terminateEditOnFocusLost", true )
+    
     @jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new( self ) )
     @jtable.auto_resize_mode = javax.swing.JTable::AUTO_RESIZE_OFF
     @jtable.selection_mode = javax.swing.ListSelectionModel::MULTIPLE_INTERVAL_SELECTION
@@ -70,6 +121,17 @@ class TableView < javax.swing.JScrollPane
     super( @jtable )
     
     framework_init( arg, &block )
+    
+    # set popup menu
+    #~ @jtable.setComponentPopupMenu(JPopupMenu popup) 
+    
+    # debug key handling
+    #~ @jtable.action_map = javax.swing.ActionMap.new
+    
+    #~ @jtable.add_key_listener do |key_event|
+      #~ puts "key_event: #{key_event.inspect}"
+      #~ puts @jtable.action_map.all_keys.to_a.inspect
+    #~ end
   end
   
   attr_reader :jtable
@@ -88,9 +150,9 @@ class TableView < javax.swing.JScrollPane
         top_left = SwingTableIndex.new( model, table_model_event.first_row, table_model_event.column )
         bottom_right = SwingTableIndex.new( model, table_model_event.last_row, table_model_event.column )
         
-        print "#{__FILE__}:#{__LINE__}"
+        Kernel.print "#{__FILE__}:#{__LINE__}"
         puts "top_left: #{top_left.inspect}"
-        print "#{__FILE__}:#{__LINE__}"
+        Kernel.print "#{__FILE__}:#{__LINE__}"
         puts "bottom_right: #{bottom_right.inspect}"
         
         entity_view.notify_data_changed( self, top_left, bottom_right )

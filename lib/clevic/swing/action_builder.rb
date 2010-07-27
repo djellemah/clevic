@@ -100,7 +100,6 @@ module ActionBuilder
 
   # set up the code to be executed when an action is triggered,
   def action_method_or_block( action, options, &block )
-    puts "action_method_or_block: #{options.inspect}" if $options[:debug]
     # connect the action to some code
     if options.has_key?( :method )
       action.handler do |event|
@@ -121,7 +120,6 @@ module ActionBuilder
         end
       end
     end
-    puts "action.handler: #{action.handler.inspect}" if $options[:debug]
   end
 end
 
