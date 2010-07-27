@@ -481,24 +481,25 @@ class TableView < javax.swing.JScrollPane
   
   
   def show_error( msg )
-    puts "TODO: implement show_error_box"
-    puts msg
+    raise NotImplementedError, msg
   end
   
   # move the cursor & selection to the specified table_index
   def current_index=( table_index )
-    raise "not implemented"
+    @jtable.selection_model.clear_selection
+    @jtable.setColumnSelectionInterval( table_index.column, table_index.column )
+    @jtable.setRowSelectionInterval( table_index.row, table_index.row )
   end
   
   # return a SwingTableIndex for the current cursor position
   def current_index
-    raise "not implemented"
+    model.create_index( @jtable.selected_row, @jtable.selected_column )
   end
 
   # show a busy cursor, do the block, back to normal cursor
   # return value of block
   def busy_cursor( &block )
-    raise "not implemented"
+    raise NotImplementedError
   end
   
   # collect actions for the popup menu

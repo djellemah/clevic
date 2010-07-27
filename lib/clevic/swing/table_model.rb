@@ -7,34 +7,9 @@ require 'clevic/swing/extensions.rb'
 require 'clevic/model_column'
 require 'clevic/table_index'
 
+require 'clevic/swing/swing_table_index.rb'
+
 module Clevic
-
-class SwingTableIndex
-  include TableIndex
-  def initialize( model, row, column )
-    @model, @row, @column = model, row, column
-  end
-  attr_accessor :model, :row, :column
-end
-
-TableModelEvent = javax.swing.event.TableModelEvent
-class TableModelEvent
-  def inspect
-    "#<#{first_row..last_row}, #{column}, #{const_lookup( type )} >"
-  end
-  
-  def updated?
-    type == self.class::UPDATE
-  end
-
-  def deleted?
-    type == self.class::DELETE
-  end
-
-  def inserted?
-    type == self.class::INSERT
-  end
-end
 
 =begin rdoc
 An instance of Clevic::TableModel is constructed by Clevic::ModelBuilder from the
@@ -73,9 +48,9 @@ class TableModel < javax.swing.table.AbstractTableModel
     raise NotImplementedError
   end
   
-  # save the AR model at the given index, if it's dirty
+  # TODO update status of vertical header
   def update_vertical_header( index )
-    raise NotImplementedError
+    puts "TODO update_vertical_header not implemented"
   end
   
   # override TableModel method

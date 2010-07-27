@@ -67,11 +67,11 @@ class Browser < javax.swing.JFrame
         menu << "&Next"
         menu << "&Previous"
         if $options[:debug]
-          menu << Action.new.tap do |action|
+          menu << Action.new( self ).tap do |action|
             action.name = :dump
             action.text = "&Dump"
             action.shortcut = "Ctrl+Shift+D"
-            action.triggered do |event|
+            action.handler do |event|
               dump
             end
           end

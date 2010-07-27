@@ -14,8 +14,9 @@ class Action
   include Gather
   property :shortcut, :method, :handler, :tool_tip, :visible, :name, :text, :checkable
   
-  def initialize( parent )
+  def initialize( parent, options = {}, &block )
     @parent = parent
+    gather( options, &block )
   end
   attr_reader :parent
   
@@ -34,13 +35,22 @@ class Action
   end
   
   def menu_item
-    javax.swing.JMenuItem.new( plain_text ).tap do |item|
-      mnemonic( item )
-      item.add_action_listener do |event|
-        puts "event: #{event.inspect}"
-        handler.call( event )
-      end
+    menu_item =
+    if checkable
+      javax.swing.JCheckBoxMenuItem.new
+    else
+      javax.swing.JMenuItem.new
     end
+    
+    menu_item.text = plain_text
+    mnemonic( menu_item )
+    menu_item.accelerator = shortcut
+    menu_item.tool_tip_text = tool_tip
+    menu_item.add_action_listener do |event|
+      handler.call( event )
+    end
+    
+    menu_item
   end
 end
 
@@ -62,32 +72,54 @@ module ActionBuilder
     if sequence.is_a?( javax.swing.KeyStroke )
       sequence
     else
-      javax.swing.KeyStroke.getKeyStroke( sequence )
+      # munge keystroke to something getKeyStroke recognises
+      # file:///usr/share/doc/java-sdk-docs-1.6.0.10/html/api/javax/swing/KeyStroke.html#getKeyStroke%28java.lang.String%29
+      # Yes, the space MUST be last in the charset, otherwise Ctrl-" fails
+      modifiers = sequence.split( /[-+ ]/ )
+      last = modifiers.pop
+      
+      modifier_mask = modifiers.inject(0) do |mask,value|
+        mask | eval( "java.awt.event.InputEvent::#{value.upcase}_DOWN_MASK" )
+      end
+      
+      keystroke =
+      if last.length == 1
+        javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last[0] ), modifier_mask )
+      else
+        # F keys
+        # insert, delete, tab etc
+        found = java.awt.event.KeyEvent.constants.grep( /#{last}/i )
+        raise "too many options for #{sequence}: #{found.inspect}" if found.size != 1
+        javax.swing.KeyStroke.getKeyStroke( eval( "java.awt.event.KeyEvent::#{found.first}" ), modifier_mask )
+      end
+      keystroke || raise( "unknown keystroke #{sequence} => #{modifiers.inspect} #{last}" )
     end
   end
 
   # set up the code to be executed when an action is triggered,
   def action_method_or_block( action, options, &block )
-    puts "action_method_or_block: #{options.inspect}"
+    puts "action_method_or_block: #{options.inspect}" if $options[:debug]
     # connect the action to some code
     if options.has_key?( :method )
       action.handler do |event|
-        puts "action_method_or_block event: #{event.inspect}"
+        puts "action_method_or_block event: #{event.inspect}" if $options[:debug]
         action_triggered do
-          send_args = [ options[:method], options.has_key?( :checkable ) ? active : nil ].compact
+          # active is from Qt checkbox-menu-items
+          send_args = [ options[:method], options.has_key?( :checkable ) ? action.selected? : nil ].compact
           send( *send_args )
         end
       end
     else
       unless block.nil?
+        # TODO not sure why triggered is outside here, but not in the method section
         action_triggered do
           action.handler do |event|
-            yield( active )
+            yield( event )
           end
         end
       end
     end
-    puts "action.handler: #{action.handler.inspect}"
+    puts "action.handler: #{action.handler.inspect}" if $options[:debug]
   end
 end
 
