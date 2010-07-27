@@ -1,11 +1,3 @@
-class Array
-  def sparse
-    Hash[ *(first..last).map do |index|
-      [index, include?( index ) ]
-    end.flatten ]
-  end
-end
-
 module Clevic
 
 =begin
@@ -17,10 +9,17 @@ can be visualized as a two-dimensional block of cells in a table
 file:///usr/share/doc/qt-4.6.2/html/qitemselectionrange.html#details
 =end
 class SelectionRange
+  def initialize( row_range, column_range )
+    @row_range = row_range
+    @column_range = column_range
+  end
+  
   def height
+    @row_range.distance
   end
   
   def width
+    @column_range.distance
   end
 end
 
@@ -29,21 +28,21 @@ class SelectionModel
     @table_view = table_view 
   end
   
+  attr_reader :table_view
+  
   def jtable
     @table_view.jtable
   end
   
   # return a collection of selection ranges
   def ranges
-    first = jtable.selected_rows.first
-    last = jtable.selected_rows.last
-    rows = jtable.selected_rows
-    
-    jtable.selected_rows.each_with_index do |row_index,index|
-      jtable.selected_columns.each do |column_index|
-        indexes << SwingTableIndex.new( model, row_index, column_index )
+    rv = []
+    jtable.selected_rows.group.each do |row_group|
+      jtable.selected_columns.group.each do |column_group|
+        rv << SelectionRange.new( row_group.range, column_group.range )
       end
     end
+    rv
   end
   
   def single_cell?
@@ -64,7 +63,7 @@ class SelectionModel
     indexes = []
     jtable.selected_rows.each do |row_index|
       jtable.selected_columns.each do |column_index|
-        indexes << SwingTableIndex.new( model, row_index, column_index )
+        indexes << table_view.model.create_index( row_index, column_index )
       end
     end
     indexes

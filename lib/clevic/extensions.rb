@@ -10,3 +10,49 @@ class Object
     end
   end
 end
+
+class Array
+  def sparse_hash
+    Hash[ *(first..last).map do |index|
+      [index, include?( index ) ]
+    end.flatten ]
+  end
+
+  def sparse
+    (first..last).map do |index|
+      index if include?( index )
+    end
+  end
+  
+  def section
+    return [] if empty?
+    rv = [first]
+    self[1..-1].each_with_index do |next_value, index|
+      break if rv.last.succ != next_value
+      rv << next_value
+    end
+    rv
+  end
+  
+  # group by ascending values
+  def group
+    parts = []
+    next_section = section
+    if next_section.empty?
+      parts
+    else
+      parts << section
+      parts + self[section.size..-1].group
+    end
+  end
+  
+  def range
+    first..last
+  end
+end
+
+def Range
+  def distance
+    last - first
+  end
+end

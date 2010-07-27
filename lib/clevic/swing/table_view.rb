@@ -487,7 +487,7 @@ class TableView < javax.swing.JScrollPane
   end
   
   def selection_model
-    SelectionModel.new( @jtable )
+    SelectionModel.new( self )
   end
   
   # move the cursor & selection to the specified table_index

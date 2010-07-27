@@ -18,8 +18,13 @@ class TableView
   # status_text is called when this object was to display something in the status bar
   # error_test is emitted when an error of some kind must be displayed to the user.
   # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
-  def emit_status_text( astring ); raise "subclass responsibility"; end
-  def emit_filter_status( abool ); raise "subclass responsibility"; end
+  unless methods.include?( 'emit_status_text' )
+    def emit_status_text( astring ); raise "GUI framework glue responsibility"; end
+  end
+  
+  unless methods.include?( 'emit_filter_status' )
+    def emit_filter_status( abool ); raise "GUI framework glue responsibility"; end
+  end
   
   # arg is:
   # - an instance of Clevic::View
