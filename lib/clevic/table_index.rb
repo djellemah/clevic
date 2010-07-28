@@ -118,7 +118,7 @@ module Clevic
     end
     
     def inspect
-      "#<TableIndex (#{row},#{column}) '#{raw_value}'>"
+      "#<TableIndex (#{row},#{column}) '#{raw_value rescue "no raw value: #{$!.message}"}'>"
     end
   end
 end

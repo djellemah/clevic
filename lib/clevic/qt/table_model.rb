@@ -31,12 +31,13 @@ class TableModel < Qt::AbstractTableModel
   end
   
   # add a new item, and set defaults from the Clevic::View
-  def add_new_item_start( index )
+  def add_new_item_start
     begin_insert_rows( Qt::ModelIndex.invalid, row_count, row_count )
   end
   
-  def add_new_item_end( index )
+  def add_new_item_end
     end_insert_rows
+    raise "TODO: call TableView.currentChanged, or something like that"
   end
   
   def remove_row_start( index )

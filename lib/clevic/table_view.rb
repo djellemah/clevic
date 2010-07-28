@@ -287,10 +287,8 @@ class TableView
   def new_row
     sanity_check_read_only_table
     model.add_new_item
-    new_row_index = model.index( model.row_count - 1, 0 )
-    currentChanged( new_row_index, current_index )
     selection_model.clear
-    self.current_index = new_row_index
+    self.current_index = model.create_index( model.row_count - 1, 0 )
   end
   
   # Delete the current selection. If it's a set of rows, just delete

@@ -86,11 +86,15 @@ end
 
 class ClevicTable < javax.swing.JTable
   def processKeyBinding( key_stroke, key_event, condition, pressed )
+    # don't auto-start if it's a Ctrl, or Alt-modified key
+    # or a function key. Hopefully this doesn't get checked
+    # for every single keystroke while editing - those should
+    # be captured by the cell editor.
     if key_event.alt? || key_event.ctrl? || key_event.meta? || key_event.fx?
-      # don't auto-start if it's a Ctrl, or Alt-modified key
-      # or a function key
       put_client_property( "JTable.autoStartsEdit", false )
     end
+    
+    # do what JTable normally does with keys
     super
   ensure
     put_client_property( "JTable.autoStartsEdit", true )
@@ -98,13 +102,11 @@ class ClevicTable < javax.swing.JTable
 end
 
 # The view class
-# TODO hook into key presses, call handle_key_press
 class TableView < javax.swing.JScrollPane
   # arg is:
   # - an instance of Clevic::View
   # - an instance of TableModel
   def initialize( arg, &block )
-    #~ @jtable = javax.swing.JTable.new
     @jtable = ClevicTable.new
     
     # This should theoretically close editors when focus is lost
@@ -124,14 +126,6 @@ class TableView < javax.swing.JScrollPane
     
     # set popup menu
     #~ @jtable.setComponentPopupMenu(JPopupMenu popup) 
-    
-    # debug key handling
-    #~ @jtable.action_map = javax.swing.ActionMap.new
-    
-    #~ @jtable.add_key_listener do |key_event|
-      #~ puts "key_event: #{key_event.inspect}"
-      #~ puts @jtable.action_map.all_keys.to_a.inspect
-    #~ end
   end
   
   attr_reader :jtable
@@ -147,8 +141,8 @@ class TableView < javax.swing.JScrollPane
         # calculation
         return if table_model_event.all_rows?
           
-        top_left = SwingTableIndex.new( model, table_model_event.first_row, table_model_event.column )
-        bottom_right = SwingTableIndex.new( model, table_model_event.last_row, table_model_event.column )
+        top_left = model.create_index( table_model_event.first_row, table_model_event.column )
+        bottom_right = model.create_index( table_model_event.last_row, table_model_event.column )
         
         Kernel.print "#{__FILE__}:#{__LINE__}"
         puts "top_left: #{top_left.inspect}"
@@ -156,6 +150,8 @@ class TableView < javax.swing.JScrollPane
         puts "bottom_right: #{bottom_right.inspect}"
         
         entity_view.notify_data_changed( self, top_left, bottom_right )
+        
+        raise "TODO: call currentChanged, or something like that?"
       rescue Exception => e
         puts "#{model.entity_view.class.name}: #{e.message}"
         puts e.backtrace
@@ -559,9 +555,15 @@ class TableView < javax.swing.JScrollPane
     @jtable.selection_model.clear_selection
     @jtable.setColumnSelectionInterval( table_index.column, table_index.column )
     @jtable.setRowSelectionInterval( table_index.row, table_index.row )
+    
+    column_width = @jtable.column_model.getColumn( table_index.column ).width
+    rect = java.awt.Rectangle.new( column_width * table_index.column, @jtable.row_height * table_index.row, column_width, @jtable.row_height )
+    @jtable.scrollRectToVisible( rect )
   end
   
   # return a SwingTableIndex for the current cursor position
+  # TODO optimise so we don't keep creating a new index, only if a selection
+  # changed event has occurred
   def current_index
     model.create_index( @jtable.selected_row, @jtable.selected_column )
   end

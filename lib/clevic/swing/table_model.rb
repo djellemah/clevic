@@ -32,12 +32,12 @@ class TableModel < javax.swing.table.AbstractTableModel
   end
   
   # add a new item, and set defaults from the Clevic::View
-  def add_new_item_start( index )
-    raise NotImplementedError
+  def add_new_item_start
+    # don't need to do anything
   end
   
-  def add_new_item_end( index )
-    raise NotImplementedError
+  def add_new_item_end
+    fireTableRowsInserted( collection.size, collection.size ) 
   end
   
   def remove_row_start( index )
@@ -63,11 +63,17 @@ class TableModel < javax.swing.table.AbstractTableModel
   def getRowCount
     collection.size
   end
+  
+  # make it ruby-nice
+  alias_method :row_count, :getRowCount
 
   # override TableModel method
   def getColumnCount
     fields.size
   end
+  
+  # make it ruby-nice
+  alias_method :column_count, :getColumnCount
   
   # override TableModel method
   def getColumnName( column_index )

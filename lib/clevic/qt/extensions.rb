@@ -1,5 +1,4 @@
 require 'qtext/flags.rb'
-require 'qtext/hash_collector.rb'
 require 'clevic/table_index.rb'
 
 # convenience methods
