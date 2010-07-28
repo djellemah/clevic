@@ -86,7 +86,19 @@ module ActionBuilder
       
       keystroke =
       if last.length == 1
-        javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last[0] ), modifier_mask )
+        case last
+          # these two seem to break the KeyStroke parsing algorithm
+          when "'"
+            javax.swing.KeyStroke.getKeyStroke( java.awt.event.KeyEvent::VK_QUOTE, modifier_mask )
+            
+          when '"'
+            javax.swing.KeyStroke.getKeyStroke( java.awt.event.KeyEvent::VK_QUOTE, modifier_mask | java.awt.event.InputEvent::SHIFT_DOWN_MASK )
+          
+          # just grab the character code of the last character in the string
+          # TODO this won't work in unicode or utf-8
+          else
+            javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last.bytes.first ), modifier_mask )
+        end
       else
         # F keys
         # insert, delete, tab etc

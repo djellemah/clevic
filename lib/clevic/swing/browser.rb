@@ -88,6 +88,9 @@ class Browser < javax.swing.JFrame
     @tables_tab = javax.swing.JTabbedPane.new
     self.content_pane.add @tables_tab
     
+    # tell tab to not take focus
+    tables_tab.focusable = false
+    
     # tab navigation
     @tables_tab.add_change_listener do |change_event|
       puts "change_event: #{change_event.source.inspect}"
@@ -162,8 +165,7 @@ class Browser < javax.swing.JFrame
   # set focus on the grid
   def current_changed
     update_menus
-    # TODO do we still need this?
-    #~ tables_tab.current_widget.set_focus
+    table_view.request_focus
   end
   
   # Create the tabs, each with a collection for a particular entity class.

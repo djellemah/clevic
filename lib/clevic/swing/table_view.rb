@@ -159,6 +159,12 @@ class TableView < javax.swing.JScrollPane
     end
   end
   
+  # kind-of override of requestFocus, but it will probably only
+  # work from Ruby
+  def request_focus
+    @jtable.request_focus
+  end
+  
   # return a collection of collections of SwingTableIndex objects
   # indicating the indices of the current selection
   def selected_rows
