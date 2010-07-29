@@ -64,13 +64,31 @@ class Browser < javax.swing.JFrame
       
       menu_bar << javax.swing.JMenu.new( 'Table' ).tap do |menu|
         menu.mnemonic = java.awt.event.KeyEvent::VK_T
-        menu << "&Next"
-        menu << "&Previous"
+        menu << Action.new( self ) do |action|
+          action.name = :next_tab
+          action.text = "&Next"
+          action.shortcut = "Ctrl+Tab"
+          action.handler do |event|
+            puts "next tab"
+            next_tab
+          end
+        end.menu_item
+        
+        menu << Action.new( self ) do |action|
+          action.name = :previous_tab
+          action.text = "&Previous"
+          action.shortcut = "Shift+Ctrl+Tab"
+          action.handler do |event|
+            puts "previous tab"
+            previous_tab
+          end
+        end.menu_item
+        
         if $options[:debug]
           menu << Action.new( self ).tap do |action|
             action.name = :dump
             action.text = "&Dump"
-            action.shortcut = "Ctrl+Shift+D"
+            action.shortcut = "Ctrl+D"
             action.handler do |event|
               dump
             end
@@ -193,13 +211,13 @@ class Browser < javax.swing.JFrame
         # add a new tab
         tables_tab.add( tab.title, tab )
         
-        # add the table to the Table menu
-        #~ action = Qt::Action.new( @layout.menu_model )
-        #~ action.text = translate( tab.title )
-        #~ action.connect SIGNAL( 'triggered()' ) do
-          #~ tables_tab.current_widget = tab
-        #~ end
-        #~ @layout.menu_model.add_action( action )
+        puts "TODO: add the table to the Table menu"
+        menu_table << Action.new( self ) do |action|
+          action.text = tab.title
+          action.handler do
+            tables_tab.current_widget = tab
+          end
+        end
         
         # handle filter status changed, so we can provide a visual indication
         #~ tab.connect SIGNAL( 'filter_status(bool)' ) do |status|

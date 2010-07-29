@@ -329,16 +329,6 @@ class TableView < javax.swing.JScrollPane
     delegate.full_edit
   end
   
-  # Add a new row and move to it, provided we're not in a read-only view.
-  def new_row
-    sanity_check_read_only_table
-    model.add_new_item
-    new_row_index = model.index( model.row_count - 1, 0 )
-    currentChanged( new_row_index, current_index )
-    selection_model.clear
-    self.current_index = new_row_index
-  end
-  
   # Delete the current selection. If it's a set of rows, just delete
   # them. If it's a rectangular selection, set the cells to nil.
   # TODO make sure all affected rows are saved.

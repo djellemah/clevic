@@ -1,5 +1,7 @@
 require 'clevic/action_builder.rb'
+require 'clevic/swing/action.rb'
 require 'clevic/swing/extensions.rb'
+
 require 'changes'
 
 module Clevic
@@ -8,51 +10,6 @@ module Clevic
 module Separator
   def menu_item
     self
-  end
-end
-
-class Action
-  include Gather
-  property :shortcut, :method, :handler, :tool_tip, :visible, :name, :text, :checkable
-  
-  def initialize( parent, options = {}, &block )
-    @parent = parent
-    gather( options, &block )
-  end
-  attr_reader :parent, :menu_item
-  
-  def plain_text
-    text.gsub( /&/, '' )
-  end
-  
-  # find the java.awt.event.KeyEvent::VK constant
-  # for the letter after the &. Then set it on the item's
-  # mnemonic
-  def mnemonic( item )
-    ix = text.index '&'
-    if ix
-      item.mnemonic = eval( "java.awt.event.KeyEvent::VK_#{text[ix+1..ix+1].upcase}" )
-    end
-  end
-  
-  def menu_item
-    if @menu_item.nil?
-      @menu_item =
-      if checkable
-        javax.swing.JCheckBoxMenuItem.new
-      else
-        javax.swing.JMenuItem.new
-      end
-      
-      menu_item.text = plain_text
-      mnemonic( menu_item )
-      menu_item.accelerator = shortcut
-      menu_item.tool_tip_text = tool_tip
-      menu_item.add_action_listener do |event|
-        handler.call( event )
-      end
-    end
-    @menu_item
   end
 end
 
@@ -70,46 +27,6 @@ module ActionBuilder
     Action.new( self ).tap( &block )
   end
   
-  def create_key_sequence( sequence )
-    if sequence.is_a?( javax.swing.KeyStroke )
-      sequence
-    else
-      # munge keystroke to something getKeyStroke recognises
-      # file:///usr/share/doc/java-sdk-docs-1.6.0.10/html/api/javax/swing/KeyStroke.html#getKeyStroke%28java.lang.String%29
-      # Yes, the space MUST be last in the charset, otherwise Ctrl-" fails
-      modifiers = sequence.split( /[-+ ]/ )
-      last = modifiers.pop
-      
-      modifier_mask = modifiers.inject(0) do |mask,value|
-        mask | eval( "java.awt.event.InputEvent::#{value.upcase}_DOWN_MASK" )
-      end
-      
-      keystroke =
-      if last.length == 1
-        case last
-          # these two seem to break the KeyStroke parsing algorithm
-          when "'"
-            javax.swing.KeyStroke.getKeyStroke( java.awt.event.KeyEvent::VK_QUOTE, modifier_mask )
-            
-          when '"'
-            javax.swing.KeyStroke.getKeyStroke( java.awt.event.KeyEvent::VK_QUOTE, modifier_mask | java.awt.event.InputEvent::SHIFT_DOWN_MASK )
-          
-          # just grab the character code of the last character in the string
-          # TODO this won't work in unicode or utf-8
-          else
-            javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last.bytes.first ), modifier_mask )
-        end
-      else
-        # F keys
-        # insert, delete, tab etc
-        found = java.awt.event.KeyEvent.constants.grep( /#{last}/i )
-        raise "too many options for #{sequence}: #{found.inspect}" if found.size != 1
-        javax.swing.KeyStroke.getKeyStroke( eval( "java.awt.event.KeyEvent::#{found.first}" ), modifier_mask )
-      end
-      keystroke || raise( "unknown keystroke #{sequence} => #{modifiers.inspect} #{last}" )
-    end
-  end
-
   # set up the code to be executed when an action is triggered,
   def action_method_or_block( action, options, &block )
     # connect the action to some code

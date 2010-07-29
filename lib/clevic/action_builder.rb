@@ -6,7 +6,6 @@ collections of actions more rubyish. It must have
  - an add_action method 
  - separator, which returns something which is_a? Separator
  - create_action( &block ), which creates an Action object
- - create_key_sequence( sequence ) which creates a keyboard shortcut
  - action_method_or_block( action, options, &block ) which handles events
   
 Menus are generally made up of a collection of actions.
@@ -127,7 +126,7 @@ module ActionBuilder
         options.each do |k,v|
           next if k == :method
           if k == :shortcut
-            action.shortcut = create_key_sequence( v )
+            action.shortcut = v
           else
             action.send( "#{k.to_s}=", v )
           end

@@ -14,6 +14,7 @@ module ActionBuilder
     Qt::Action.new( parent, &block )
   end
   
+  # TODO move this into Action, like the swing adapter
   def create_key_sequence( sequence )
     Qt::KeySequence.new( sequence )
   end
