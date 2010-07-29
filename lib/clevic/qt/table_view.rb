@@ -200,38 +200,6 @@ class TableView < Qt::TableView
     end
   end
   
-  def ditto_right
-    sanity_check_ditto
-    sanity_check_read_only
-    if current_index.column >= model.column_count - 1
-      emit status_text( 'No column to the right' )
-    else
-      one_up_right = current_index.choppy {|i| i.row -= 1; i.column += 1 }
-      sanity_check_types( one_up_right, current_index )
-      current_index.attribute_value = one_up_right.attribute_value
-      model.data_changed( current_index )
-    end
-  end
-  
-  def ditto_left
-    sanity_check_ditto
-    sanity_check_read_only
-    unless current_index.column > 0
-      emit status_text( 'No column to the left' )
-    else
-      one_up_left = current_index.choppy { |i| i.row -= 1; i.column -= 1 }
-      sanity_check_types( one_up_left, current_index )
-      current_index.attribute_value = one_up_left.attribute_value
-      model.data_changed( current_index )
-    end
-  end
-  
-  def insert_current_date
-    sanity_check_read_only
-    current_index.attribute_value = Time.now
-    model.data_changed( current_index )
-  end
-  
   def open_editor
     edit( current_index )
     delegate = item_delegate( current_index )

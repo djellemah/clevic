@@ -93,7 +93,7 @@ class TableView
     # add model actions, if they're defined
     list( :model ) do |ab|
       entity_view.define_actions( self, ab )
-      separator
+      separator unless collect_actions.empty?
     end
     
     # list of actions in the edit menu

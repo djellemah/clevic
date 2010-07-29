@@ -52,38 +52,6 @@ class CellRenderer < javax.swing.table.DefaultTableCellRenderer
   end
 end
 
-KeyEvent = java.awt.event.KeyEvent
-class KeyEvent
-  def alt?
-    modifiers & self.class::ALT_MASK != 0
-  end
-  
-  def ctrl?
-    modifiers & self.class::CTRL_MASK != 0
-  end
-  
-  def meta?
-    modifiers & self.class::META_MASK != 0
-  end
-  
-  def self.function_keys
-    @function_keys ||= (1..24).map{|i| eval( "VK_F#{i}" ) }
-  end
-  
-  def fx?
-    self.class.function_keys.include?( key_code )
-  end
-  
-  def shift?
-    modifiers & self.class::SHIFT_MASK != 0
-  end
-  
-  def plain?
-    modifiers == 0
-  end
-end
-
-
 class ClevicTable < javax.swing.JTable
   def processKeyBinding( key_stroke, key_event, condition, pressed )
     # don't auto-start if it's a Ctrl, or Alt-modified key
@@ -107,25 +75,50 @@ class TableView < javax.swing.JScrollPane
   # - an instance of Clevic::View
   # - an instance of TableModel
   def initialize( arg, &block )
-    @jtable = ClevicTable.new
+    super( @jtable = ClevicTable.new )
+    
+    # seems like this MUST go after the super call (or maybe the
+    # ClevicTable constructor), otherwise Swing throws an error
+    # somewhere deep inside something. It's not clear right now.
     
     # This should theoretically close editors when focus is lost
     # saving whatever values are in there
-    @jtable.put_client_property( "terminateEditOnFocusLost", true )
+    jtable.put_client_property( "terminateEditOnFocusLost", true )
     
-    @jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new( self ) )
-    @jtable.auto_resize_mode = javax.swing.JTable::AUTO_RESIZE_OFF
-    @jtable.selection_mode = javax.swing.ListSelectionModel::MULTIPLE_INTERVAL_SELECTION
-    @jtable.column_selection_allowed = true
-    @jtable.cell_selection_enabled = true
-    @jtable.font = Clevic.tahoma
+    # no auto-resizing of columns
+    jtable.auto_resize_mode = javax.swing.JTable::AUTO_RESIZE_OFF
     
-    super( @jtable )
+    # selection of all kinds allowed
+    jtable.selection_mode = javax.swing.ListSelectionModel::MULTIPLE_INTERVAL_SELECTION
+    jtable.row_selection_allowed = true
+    jtable.column_selection_allowed = true
+    jtable.cell_selection_enabled = true
     
+    # appearance
+    jtable.font = Clevic.tahoma
+    
+    jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new( self ) )
+
     framework_init( arg, &block )
     
-    # set popup menu
-    #~ @jtable.setComponentPopupMenu(JPopupMenu popup) 
+    # this must go after framework_init, because it needs the actions
+    # which are set up in there
+    jtable.component_popup_menu = popup_menu
+  end
+  
+  def popup_menu
+    @popup_menu ||= javax.swing.JPopupMenu.new.tap do |menu|
+      model_actions.each do |action|
+        menu << action.clone.tap{|a| a.shortcut = nil}
+      end
+      
+      # now do the generic edit items
+      edit_actions.each do |action|
+        menu << action.clone.tap{|a| a.shortcut = nil}
+      end
+      
+      menu.pack
+    end
   end
   
   attr_reader :jtable

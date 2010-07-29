@@ -2,35 +2,6 @@
 require 'clevic/view'
 require 'clevic/swing/action_builder'
 
-JTabbedPane = javax.swing.JTabbedPane
-class JTabbedPane
-  def each
-    (0...tab_count).each do |index|
-      yield component_at( index )
-    end
-  end
-  include Enumerable
-end
-
-Component = java.awt.Component
-class Component
-  def <<( obj )
-    case obj
-    when Clevic::Separator
-      add_separator
-    
-    when String
-      add obj.to_java_string
-    
-    when Clevic::Action
-      add obj.menu_item
-    
-    else
-      add obj
-    end
-  end
-end
-
 module Clevic
 
 =begin rdoc
@@ -41,15 +12,27 @@ added.
 class Browser < javax.swing.JFrame
   #~ slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab()}
   
-  attr_reader :tables_tab
   attr_reader :menu_edit, :menu_search, :menu_table
   
   def initialize
     super
     
-    # do menus and widgets
-    # menu
-    self.jmenu_bar = javax.swing.JMenuBar.new.tap do |menu_bar|
+    self.jmenu_bar = menu_bar
+    self.icon_image = icon
+    
+    # add the tables tab
+    add( tables_tab, java.awt.BorderLayout::CENTER )
+    
+    # add the status bar
+    add( status_bar, java.awt.BorderLayout::SOUTH )
+    
+    load_views
+    update_menus
+    self.title = [database_name, 'Clevic'].compact.join ' '
+  end
+  
+  def menu_bar
+    javax.swing.JMenuBar.new.tap do |menu_bar|
       menu_bar << javax.swing.JMenu.new( 'File' ).tap do |menu|
         menu.mnemonic = java.awt.event.KeyEvent::VK_F
         menu << "Open"
@@ -97,37 +80,47 @@ class Browser < javax.swing.JFrame
       end
       menu_bar << @menu_table
     end
-    
-    # set icon. MUST come after call to setup_ui
-    icon_path = Pathname.new( __FILE__ ).parent.parent + "icons/icon.png"
-    raise "icon.png not found" unless icon_path.file?
-    self.icon_image = javax.swing.ImageIcon.new( icon_path.realpath.to_s ).image
-    
-    # add the tables tab
-    @tables_tab = javax.swing.JTabbedPane.new
-    self.content_pane.add @tables_tab
-    
-    # tell tab to not take focus
-    tables_tab.focusable = false
-    
-    # tab navigation
-    @tables_tab.add_change_listener do |change_event|
-      puts "change_event: #{change_event.source.inspect}"
-      puts "change_event.source.selected_index: #{change_event.source.selected_index.inspect}"
-      current_changed
-      # TODO tell exiting tab to save currently editing row/cell
+  end
+  
+  def icon
+    @icon ||=
+    begin
+      icon_path = Pathname.new( __FILE__ ).parent.parent + "icons/icon.png"
+      raise "icon.png not found" unless icon_path.file?
+      javax.swing.ImageIcon.new( icon_path.realpath.to_s ).image
     end
-
-    load_views
-    update_menus
-    self.title = [database_name, 'Clevic'].compact.join ' '
+  end
+  
+  def tables_tab
+    @tables_tab ||= javax.swing.JTabbedPane.new.tap do |tables_tab|
+      # tell tab to not take focus
+      tables_tab.focusable = false
+    
+      # tab navigation
+      tables_tab.add_change_listener do |change_event|
+        puts "change_event: #{change_event.source.inspect}"
+        puts "change_event.source.selected_index: #{change_event.source.selected_index.inspect}"
+        current_changed
+        # TODO tell exiting tab to save currently editing row/cell
+      end
+    end
+  end
+  
+  def status_bar
+    @status_bar ||= javax.swing.JLabel.new.tap do |status_bar|
+      status_bar.horizontal_alignment = javax.swing.SwingConstants::RIGHT
+      # just so the bar actually displays
+      status_bar.text = " "
+    end
   end
   
   # Set the main window title to the name of the database, if we can find it.
   def database_name
     table_view.model.entity_class.db.url rescue ''
-  end  
+  end
   
+  # called by current_changed to update the Edit menu to the menus
+  # defined by the currently selected view
   def update_menus
     # update edit menu
     menu_edit.remove_all

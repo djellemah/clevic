@@ -97,4 +97,18 @@ class Action
   end
 end
 
+# dummy class for creating a menu separator
+class Separator < Action
+  def initialize
+    super(nil)
+  end
+  
+  def shortcut
+    nil
+  end
+  
+  def menu_item
+  end
+end
+
 end

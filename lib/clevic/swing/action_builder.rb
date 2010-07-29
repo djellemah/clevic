@@ -6,18 +6,10 @@ require 'changes'
 
 module Clevic
 
-# dummy class for creating a menu separator
-module Separator
-  def menu_item
-    self
-  end
-end
-
 module ActionBuilder
   # Create a new separator and add a new separator.
   def separator
-    Object.new.tap do |action|
-      action.extend( Separator )
+    Separator.new.tap do |action|
       add_action action
       collect_actions << action
     end
