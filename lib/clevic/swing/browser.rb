@@ -23,7 +23,7 @@ class Component
       add obj.to_java_string
     
     when Clevic::Action
-      add obj.text.to_java_string
+      add obj.menu_item
     
     else
       add obj
@@ -42,7 +42,7 @@ class Browser < javax.swing.JFrame
   #~ slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab()}
   
   attr_reader :tables_tab
-  attr_reader :menu_edit, :menu_search
+  attr_reader :menu_edit, :menu_search, :menu_table
   
   def initialize
     super
@@ -62,7 +62,7 @@ class Browser < javax.swing.JFrame
       @menu_search = javax.swing.JMenu.new( 'Search' ).tap {|m| m.mnemonic = java.awt.event.KeyEvent::VK_S}
       menu_bar << menu_search
       
-      menu_bar << javax.swing.JMenu.new( 'Table' ).tap do |menu|
+      @menu_table = javax.swing.JMenu.new( 'Table' ).tap do |menu|
         menu.mnemonic = java.awt.event.KeyEvent::VK_T
         menu << Action.new( self ) do |action|
           action.name = :next_tab
@@ -72,7 +72,7 @@ class Browser < javax.swing.JFrame
             puts "next tab"
             next_tab
           end
-        end.menu_item
+        end
         
         menu << Action.new( self ) do |action|
           action.name = :previous_tab
@@ -82,10 +82,10 @@ class Browser < javax.swing.JFrame
             puts "previous tab"
             previous_tab
           end
-        end.menu_item
+        end
         
         if $options[:debug]
-          menu << Action.new( self ).tap do |action|
+          menu << Action.new( self ) do |action|
             action.name = :dump
             action.text = "&Dump"
             action.shortcut = "Ctrl+D"
@@ -95,6 +95,7 @@ class Browser < javax.swing.JFrame
           end
         end
       end
+      menu_bar << @menu_table
     end
     
     # set icon. MUST come after call to setup_ui
@@ -133,18 +134,18 @@ class Browser < javax.swing.JFrame
     
     # do the model-specific menu items first
     table_view.model_actions.each do |action|
-      menu_edit << action.menu_item
+      menu_edit << action
     end
     
     # now do the generic edit items
     table_view.edit_actions.each do |action|
-      menu_edit << action.menu_item
+      menu_edit << action
     end
     
     # update search menu
     menu_search.remove_all
     table_view.search_actions.each do |action|
-      menu_search << action.menu_item
+      menu_search << action
     end
   end
   
@@ -204,20 +205,20 @@ class Browser < javax.swing.JFrame
         # create the the table_view and the table_model for the entity_class
         tab = Clevic::TableView.new( view )
         
-        # show status messages
-        # TODO connect this
-        #~ tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
-        
         # add a new tab
         tables_tab.add( tab.title, tab )
         
-        puts "TODO: add the table to the Table menu"
+        # add the table to the Table menu
         menu_table << Action.new( self ) do |action|
           action.text = tab.title
           action.handler do
-            tables_tab.current_widget = tab
+            tables_tab.current = tab
           end
         end
+        
+        puts 'show status messages'
+        # TODO connect this
+        #~ tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
         
         # handle filter status changed, so we can provide a visual indication
         #~ tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
@@ -226,10 +227,8 @@ class Browser < javax.swing.JFrame
           #~ tables_tab.set_tab_text( tables_tab.current_index, filter_title )
         #~ end
       rescue Exception => e
-        puts
         puts "UI from #{view} will not be available: #{e.message}"
-        puts e.backtrace #if $options[:debug]
-        puts
+        puts e.backtrace
       end
     end
   end

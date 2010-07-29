@@ -17,11 +17,17 @@ class Action
   # find the java.awt.event.KeyEvent::VK constant
   # for the letter after the &. Then set it on the item's
   # mnemonic. Because JMenuItem.setMnemonic won't take a nil
-  def set_mnemonic( menu_item )
-    ix = text.index '&'
-    if ix
-      menu_item.mnemonic = eval( "java.awt.event.KeyEvent::VK_#{text.chars.to_a[ix+1].upcase}" )
+  def mnemonic
+    if @mnemonic.nil?
+      ix = text.index '&'
+      @mnemonic =
+      if ix
+        eval( "java.awt.event.KeyEvent::VK_#{text[ix+1..ix+1].upcase}" )
+      else
+        false
+      end
     end
+    @mnemonic
   end
   
   def menu_item
@@ -34,8 +40,8 @@ class Action
       end
       
       menu_item.text = plain_text
-      set_mnemonic( menu_item )
-      menu_item.accelerator = parse_shortcut( shortcut )
+      menu_item.mnemonic = mnemonic if mnemonic
+      menu_item.accelerator = parse_shortcut( shortcut ) unless shortcut.nil?
       menu_item.tool_tip_text = tool_tip
       menu_item.add_action_listener do |event|
         handler.call( event )
@@ -52,6 +58,14 @@ class Action
     # Yes, the space MUST be last in the charset, otherwise Ctrl-" fails
     modifiers = sequence.split( /[-+ ]/ )
     last = modifiers.pop
+    
+    # ewww
+    last_char_code =
+    if RUBY_VERSION <= '1.8.6'
+      last[0]
+    else
+      last.bytes.first
+    end
     
     modifier_mask = modifiers.inject(0) do |mask,value|
       mask | eval( "java.awt.event.InputEvent::#{value.upcase}_DOWN_MASK" )
@@ -70,7 +84,7 @@ class Action
         # just grab the character code of the last character in the string
         # TODO this won't work in unicode or utf-8
         else
-          javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last.bytes.first ), modifier_mask )
+          javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last_char_code ), modifier_mask )
       end
     else
       # F keys

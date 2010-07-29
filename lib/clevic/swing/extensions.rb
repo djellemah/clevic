@@ -29,3 +29,22 @@ class TableModelEvent
     first_row == 0 && last_row == java.lang.Integer::MAX_VALUE
   end
 end
+
+JTabbedPane = javax.swing.JTabbedPane
+class JTabbedPane
+  include Enumerable
+  
+  def each
+    (0...count).each do |index|
+      yield getComponentAt( index )
+    end
+  end
+  
+  def count
+    getTabCount
+  end
+  
+  def current=( component )
+    self.selected_component = component
+  end
+end
