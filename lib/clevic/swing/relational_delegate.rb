@@ -24,7 +24,6 @@ module Clevic
 # The ids of the model objects are stored in the item data
 # and the item text is fetched from them using attribute_path.
 class RelationalDelegate < ComboDelegate
-  
   def initialize( field )
     super
     unless find_options[:conditions].nil?
@@ -47,18 +46,8 @@ class RelationalDelegate < ComboDelegate
   
   def populate( entity )
     # add set of all possible related entities
-    entity_class.adaptor.find( :all, find_options ).each do |x|
-      editor << x
-    end
-  end
-  
-  # send data to the editor
-  def setEditorData( editor, model_index )
-    if is_combo?( editor )
-      unless model_index.attribute_value.nil?
-        editor.current_index = editor.find_data( model_index.attribute_value.id.to_variant )
-      end
-      editor.line_edit.select_all
+    entity_class.adaptor.find( :all, find_options ).each do |instance|
+      editor << instance
     end
   end
   
@@ -66,21 +55,6 @@ class RelationalDelegate < ComboDelegate
   def restricted?
     true
   end
-  
-  # return an entity object
-  def translate_from_editor_text( editor, text )
-    item_index = editor.find_text( text )
-    
-    # fetch record id from editor item_data
-    item_data = editor.item_data( item_index )
-    if item_data.valid?
-      # get the entity it refers to, if there is one
-      # use find_by_id so that if it's not found, nil will
-      # be returned
-      entity_class.adaptor.find( item_data.to_int )
-    end
-  end
-  
 end
 
 end

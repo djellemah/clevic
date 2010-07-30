@@ -64,6 +64,7 @@ class CellEditor
   attr_accessor :listeners
   
 	def getTableCellEditorComponent(jtable, value, selected, row_index, column_index)
+    puts "getTableCellEditorComponent selected: #{selected.inspect}"
     @index = @table_view.model.create_index( row_index, column_index )
     # use the delegate's component
     @editor = @index.field.delegate.component( @index.entity )
@@ -89,8 +90,8 @@ class CellEditor
   def getCellEditorValue
     # TODO this probably won't work for editable combos
     if @editor.editable?
-      # what to do with partial value?
-      "getCellEditorValue partical value"
+      # get the editor's text field value
+      @editor.editor.item
     else
       @editor.selected_item 
     end
@@ -98,6 +99,7 @@ class CellEditor
   
   # Asks the editor if it can start editing using anEvent.
   def isCellEditable(event_object)
+    puts "editable? event_object: #{event_object.inspect}"
     true
   end
   
@@ -108,6 +110,7 @@ class CellEditor
   
   # Returns true if the editing cell should be selected, false otherwise.
   def shouldSelectCell(event_object)
+    puts "select? event_object: #{event_object.inspect}"
     true
   end
   

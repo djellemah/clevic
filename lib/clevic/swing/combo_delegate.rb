@@ -18,6 +18,7 @@ class ComboDelegate < Delegate
   def new_combo_box
     # renderer should call field.transform_attribute( item )
     javax.swing.JComboBox.new.tap do |combo|
+      combo.font = Clevic.tahoma
       @original_renderer = combo.renderer
       combo.renderer = self
     end
@@ -34,10 +35,13 @@ class ComboDelegate < Delegate
   end
   
   def new_line_editor( value )
-    javax.swing.JTextField.new( value )
+    javax.swing.JTextField.new( value ).tap do |line|
+      line.font = Clevic.tahoma
+    end
   end
   
   def configure_prefix
+    Kernel.print "#{__FILE__}:#{__LINE__} "
     puts "TODO: implement ComboDelegate#configure_prefix"
   end
   
@@ -50,11 +54,12 @@ class ComboDelegate < Delegate
     if needs_combo?
       @editor = new_combo_box
       
-      # add the current item, if it isn't there already
-      populate_current( entity )
-      
       # subclasses fill in the rest of the entries
       populate( entity )
+      
+      # add the current item, if it isn't there already
+      # should therefore come after populate
+      populate_current( entity )
       
       # create a nil entry
       add_nil_item if allow_null?
@@ -62,7 +67,7 @@ class ComboDelegate < Delegate
       # allow prefix matching from the keyboard
       configure_prefix
       
-      # don't insert if restricted
+      # don't all text editing if restricted
       configure_editable
       
       # set the correct value in the list
@@ -135,7 +140,7 @@ class ComboDelegate < Delegate
     # is filtered, we always have the current value if the filter
     # excludes it
     item = field.attribute_value_for( entity )
-    editor << item if item && !editor.include?( item )
+    editor.insert_item_at( item, 0 ) if item && !editor.include?( item )
   end
 
   def add_nil_item
@@ -146,45 +151,6 @@ class ComboDelegate < Delegate
     editor.selected_item = field.attribute_value_for( entity )
   end
   
-  # This translates the text from the editor into something that is
-  # stored in an underlying model. Intended to be overridden by subclasses.
-  def translate_from_editor_text( editor, text )
-    index = editor.find_text( text )
-    
-    if index == -1
-      text unless restricted?
-    else
-      editor.item_data( index ).value
-    end
-  end
-  
-  # Send the data from the editor to the model. The data will
-  # be translated by translate_from_editor_text,
-  def setModelData( editor, abstract_item_model, model_index )
-    if is_combo?( editor )
-      dump_editor_state( editor )
-      value = 
-      if editor.completer.current_row == -1
-        # item doesn't exist in the list, add it if not restricted
-        editor.current_text unless restricted?
-      elsif editor.completer.completion_count == editor.count
-        # selection from drop down. if it's empty, we want a nil
-        editor.current_text
-      else
-        # there is a matching completion, so use it
-        editor.completer.current_completion
-      end
-      
-      if value != nil
-        model_index.attribute_value = translate_from_editor_text( editor, value )
-      end
-      
-    else
-      model_index.attribute_value = editor.text
-    end
-    abstract_item_model.data_changed( model_index )
-  end
-
 end
 
 end

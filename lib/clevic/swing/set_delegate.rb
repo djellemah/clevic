@@ -19,8 +19,8 @@ class SetDelegate < ComboDelegate
     field.restricted || false
   end
   
-  def populate( editor, table_index )
-    field.set_for( table_index.entity ).each do |item|
+  def populate( entity )
+    field.set_for( entity ).each do |item|
       if item.is_a?( Array )
         # this is a hash-like set, so use key as db value
         # and value as display value
