@@ -7,7 +7,6 @@ module Clevic
 # :frequency can be set as an option. Boolean. If it's true
 # the options are sorted in order of most frequently used first.
 class DistinctDelegate < ComboDelegate
-  
   def needs_combo?
     # works except when there is a '' in the column
     entity_class.adaptor.count( attribute.to_s, find_options ) > 0
@@ -25,10 +24,6 @@ class DistinctDelegate < ComboDelegate
       value = row[attribute]
       editor << value
     end
-  end
-  
-  def translate_from_editor_text( editor, text )
-    text
   end
 end
 

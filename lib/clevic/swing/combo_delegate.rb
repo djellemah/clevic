@@ -6,6 +6,8 @@ module Clevic
 Base class for other delegates using Combo boxes.
 
 Generally these will be created using a Clevic::ModelBuilder.
+
+TODO set up keystroke auto-finding
 =end
 class ComboDelegate < Delegate
   def initialize( field )
