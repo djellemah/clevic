@@ -15,10 +15,10 @@ class ShowDelegates
   end
   
   def view
-    @view ||= Clevic::View.order.first.new
+    @view ||= Clevic::View[:invoice].new
   end
 
-  def build( entity = entry )
+  def build( entity = entity )
     # add controls
     controls = view.fields.map do |name,field|
       puts "name: #{name.inspect}"
@@ -31,8 +31,12 @@ class ShowDelegates
     end
   end
   
-  def entry
-    Entry[ (Entry.count * rand ).to_i ] || entry
+  def model
+    view.entity_class
+  end
+  
+  def entity
+    @entity ||= model[ (model.count * rand ).to_i ] || entity
   end
   
   def show
@@ -43,9 +47,13 @@ class ShowDelegates
   end
 end
 
-ShowDelegates.new.tap do |sd|
-  sd.build.each do |control|
-    sd.frame.content_pane.add( control )
+def run
+  ShowDelegates.new.tap do |sd|
+    sd.build.each do |control|
+      sd.frame.content_pane.add( control )
+    end
+    sd.show
   end
-  sd.show
 end
+
+run unless $0 == 'jirb'
