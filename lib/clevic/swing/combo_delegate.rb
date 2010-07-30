@@ -3,8 +3,7 @@ require 'clevic/swing/delegate'
 module Clevic
 
 =begin rdoc
-Base class for other delegates using Combo boxes. Emit focus out signals,
-because ComboBox stupidly doesn't.
+Base class for other delegates using Combo boxes.
 
 Generally these will be created using a Clevic::ModelBuilder.
 =end
@@ -13,34 +12,58 @@ class ComboDelegate < Delegate
     super( field )
   end
   
-  # Convert Qt:: constants from the integer value to a string value.
-  def hint_string( hint )
-    hs = String.new
-    Qt::AbstractItemDelegate.constants.each do |x|
-      hs = x if eval( "Qt::AbstractItemDelegate::#{x}.to_i" ) == hint.to_i
-    end
-    hs
+  attr_reader :editor
+  
+  def new_combo_box
+    javax.swing.JComboBox.new
   end
-    
-  def dump_editor_state( editor )
-    if $options[:debug]
-      puts "#{self.class.name}"
-			puts "editor.completer.completion_count: #{editor.completer.completion_count}"
-			puts "editor.completer.current_completion: #{editor.completer.current_completion}"
-			puts "editor.find_text( editor.completer.current_completion ): #{editor.find_text( editor.completer.current_completion )}"
-			puts "editor.current_text: #{editor.current_text}"
-			puts "editor.count: #{editor.count}"
-			puts "editor.completer.current_row: #{editor.completer.current_row}"
-			puts "editor.item_data( editor.current_index ): #{editor.item_data( editor.current_index ).inspect}"
-      puts
-		end
+  
+  def new_line_editor( value )
+    javax.swing.JTextField.new( value )
+  end
+  
+  def configure_prefix
+    # Qt is       @editor.editable = true
+  end
+  
+  def configure_editable
+    # Qt is@editor.insert_policy = Qt::ComboBox::NoInsert if restricted?
+  end
+  
+  # Create a GUI widget and fill it with the possible values.
+  def component( entity )
+    if needs_combo?
+      @editor = new_combo_box
+      
+      # subclasses fill in the rest of the entries
+      populate( entity )
+      
+      # add the current item, if it isn't there already
+      populate_current( entity )
+      
+      # create a nil entry
+      add_nil_item if allow_null?
+      
+      # allow prefix matching from the keyboard
+      configure_prefix
+      
+      # don't insert if restricted
+      configure_editable
+    else
+      @editor =
+      if restricted?
+        emit parent.status_text( empty_set_message )
+        nil
+      else
+        new_line_editor( field.edit_format( entity ) )
+      end
+    end
+    editor
   end
   
   # open the combo box, just like if f4 was pressed
   def full_edit
-    if is_combo?( @editor )
-      @editor.show_popup
-    end
+    editor.show_popup if is_combo?
   end
   
   # returns true if the editor allows values outside of a predefined
@@ -56,7 +79,7 @@ class ComboDelegate < Delegate
   
   # Subclasses should override this to fill the combo box
   # list with values.
-  def populate( editor, model_index )
+  def populate( entity )
     raise "subclass responsibility"
   end
   
@@ -65,8 +88,8 @@ class ComboDelegate < Delegate
     raise "subclass responsibility"
   end
 
-  def is_combo?( editor )
-    editor.class == Qt::ComboBox
+  def is_combo?
+    editor.is_a?( javax.swing.JComboBox )
   end
   
   # return true if this field has no data (needs_combo? is false)
@@ -84,54 +107,23 @@ class ComboDelegate < Delegate
   # if this delegate has an empty set, return the message, otherwise
   # return nil.
   def if_empty_message
-    if empty_set?
-      empty_set_message
-    end
+    empty_set_message if empty_set?
   end
   
-  def populate_current( editor, model_index )
-    # add the current entry, if it isn't there already
-    # TODO add it in the correct order
-    if ( editor.find_data( model_index.gui_value.to_variant ) == -1 )
-      editor.add_item( model_index.gui_value, model_index.gui_value.to_variant )
+  # add the current item, unless it's already in the combo data
+  def populate_current( entity )
+    # always add the current selection, if it isn't already there
+    # and it makes sense. This is to make sure that if the list
+    # is filtered, we always have the current value if the filter
+    # excludes it
+    item = field.value_for( entity )
+    if item && !editor.include?( item )
+      editor << item
     end
   end
 
-  def add_nil_item( editor )
-    if ( editor.find_data( nil.to_variant ) == -1 )
-      editor.add_item( '', nil.to_variant )
-    end
-  end
-  
-  # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
-  def createEditor( parent_widget, style_option_view_item, model_index )
-    if needs_combo?
-      @editor = Qt::ComboBox.new( parent_widget )
-      
-      # subclasses fill in the rest of the entries
-      populate( @editor, model_index )
-      
-      # add the current item, if it isn't there already
-      populate_current( @editor, model_index )
-      
-      # create a nil entry
-      add_nil_item( @editor ) if allow_null?
-      
-      # allow prefix matching from the keyboard
-      @editor.editable = true
-      
-      # don't insert if restricted
-      @editor.insert_policy = Qt::ComboBox::NoInsert if restricted?
-    else
-      @editor =
-      if restricted?
-        emit parent.status_text( empty_set_message )
-        nil
-      else
-        Qt::LineEdit.new( model_index.gui_value, parent_widget )
-      end
-    end
-    @editor
+  def add_nil_item
+    editor << nil unless editor.include?( nil )
   end
   
   # Override the Qt::ItemDelegate method.
@@ -144,16 +136,6 @@ class ComboDelegate < Delegate
     editor.set_geometry( rect )
   end
 
-  # Override the Qt method to send data to the editor from the model.
-  def setEditorData( editor, model_index )
-    if is_combo?( editor )
-      editor.current_index = editor.find_data( model_index.attribute_value.to_variant )
-      editor.line_edit.select_all if editor.editable
-    else
-      editor.text = model_index.gui_value
-    end
-  end
-  
   # This translates the text from the editor into something that is
   # stored in an underlying model. Intended to be overridden by subclasses.
   def translate_from_editor_text( editor, text )

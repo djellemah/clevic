@@ -64,7 +64,7 @@ module Clevic
     # belongs_to or has_one relationships, or a plain value
     # for model attributes
     def attribute_value
-      entity.send( attribute )
+      field.attribute_value_for( entity )
     end
     
     # set the value of the attribute, without following the

@@ -189,7 +189,8 @@ class Field
     end
   end
   
-  # The UI delegate class for the field. In Qt, this is a subclass of AbstractItemDelegate.
+  # The UI delegate class for the field. The delegate class knows how to create a UI
+  # for this field using whatever GUI toolkit is selected
   attr_accessor :delegate
   
   # The attribute on the AR entity that forms the basis for this field.
@@ -356,7 +357,11 @@ EOF
   def decoration_for( entity )
     nil
   end
-
+  
+  def attribute_value_for( entity )
+    entity.send( attribute )
+  end
+  
   # Called by Clevic::TableModel to get the foreground color value
   def foreground_for( entity )
     cache_value_for( :foreground, entity ) {|x| string_or_color(x)}

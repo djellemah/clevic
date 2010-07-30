@@ -59,7 +59,7 @@ module Clevic
     end
     
     def fields
-      @fields ||= define_ui
+      @fields ||= define_ui.fields
     end
     
     # used by the framework-specific code to name widgets

@@ -1,5 +1,20 @@
 require 'clevic/swing/delegate'
 
+JComboBox = javax.swing.JComboBox
+class JComboBox
+  def << ( value )
+    model.addElement( value )
+  end
+  
+  def each
+    (0...model.size).each do |i|
+      yield model.getElementAt( i )
+    end
+  end
+  
+  include Enumerable
+end
+
 module Clevic
 
 # Edit a relation from an id and display a list of relevant entries.
@@ -8,7 +23,7 @@ module Clevic
 # 
 # The ids of the model objects are stored in the item data
 # and the item text is fetched from them using attribute_path.
-class RelationalDelegate < Delegate
+class RelationalDelegate < ComboDelegate
   
   def initialize( field )
     super
@@ -30,32 +45,11 @@ class RelationalDelegate < Delegate
     "There must be records in #{entity_class.name.humanize} for this field to be editable."
   end
   
-  # add the current item, unless it's already in the combo data
-  def populate_current( editor, model_index )
-    # always add the current selection, if it isn't already there
-    # and it makes sense. This is to make sure that if the list
-    # is filtered, we always have the current value if the filter
-    # excludes it
-    unless model_index.nil?
-      item = model_index.attribute_value
-      if item
-        item_index = editor.find_data( item.id.to_variant )
-        if item_index == -1
-          add_to_list( editor, model_index, item )
-        end
-      end
-    end
-  end
-
-  def populate( editor, model_index )
+  def populate( entity )
     # add set of all possible related entities
     entity_class.adaptor.find( :all, find_options ).each do |x|
-      add_to_list( editor, model_index, x )
+      editor << x
     end
-  end
-  
-  def add_to_list( editor, model_index, item )
-    editor.add_item( model_index.field.transform_attribute( item ), item.id.to_variant )
   end
   
   # send data to the editor
@@ -73,7 +67,7 @@ class RelationalDelegate < Delegate
     true
   end
   
-  # return an AR entity object
+  # return an entity object
   def translate_from_editor_text( editor, text )
     item_index = editor.find_text( text )
     

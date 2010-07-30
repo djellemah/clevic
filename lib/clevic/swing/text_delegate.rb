@@ -9,6 +9,12 @@ module Clevic
     class TextEditor < javax.swing.JComponent
     end
     
+    
+    def component( entity )
+      puts "TODO: implement TextDelegate#component"
+      javax.swing.JTextField.new( field.value_for( entity ) )
+    end
+    
     # this is overridden in Qt::ItemDelegate, but that
     # always catches the return key. Which we want for text editing.
     # Instead, we use Ctrl-Enter to save the edited text.

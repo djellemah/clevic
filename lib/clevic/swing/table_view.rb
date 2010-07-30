@@ -52,7 +52,68 @@ class CellRenderer < javax.swing.table.DefaultTableCellRenderer
   end
 end
 
+class CellEditor
+  include javax.swing.table.TableCellEditor
+  
+  def initialize( table_view )
+    super()
+    @table_view = table_view
+    @listeners = []
+  end
+  
+  attr_accessor :listeners
+  
+	def getTableCellEditorComponent(jtable, value, selected, row_index, column_index)
+    field = @table_view.model.fields[column_index]
+    begin
+      field.delegate.component
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
+      edit_value = field.transform_attribute( value )
+      puts "edit_value: #{edit_value.inspect}"
+      javax.swing.JTextField.new( edit_value.to_java_string )
+    end
+  end
+
+  # Adds a listener to the list that's notified when the editor stops, or cancels editing.
+  def addCellEditorListener(cell_editor_listener)
+    listeners << cell_editor_listener
+  end
+  
+  # Tells the editor to cancel editing and not accept any partially edited value.
+  def cancelCellEditing
+  end
+  
+  # Returns the value contained in the editor.
+  def getCellEditorValue
+  end
+  
+  # Asks the editor if it can start editing using anEvent.
+  def isCellEditable(event_object)
+    true
+  end
+  
+  # Removes a listener from the list that's notified
+  def removeCellEditorListener(cell_editor_listener)
+    listeners.delete cell_editor_listener
+  end
+  
+  # Returns true if the editing cell should be selected, false otherwise.
+  def shouldSelectCell(event_object)
+    true
+  end
+  
+  # Tells the editor to stop editing and accept any partially edited value as the value of the editor
+  # true if editing was stopped, false otherwise
+  def stopCellEditing
+    true
+  end
+end
+
 class ClevicTable < javax.swing.JTable
+  attr_accessor :table_view
+  
   def processKeyBinding( key_stroke, key_event, condition, pressed )
     # don't auto-start if it's a Ctrl, or Alt-modified key
     # or a function key. Hopefully this doesn't get checked
@@ -67,6 +128,11 @@ class ClevicTable < javax.swing.JTable
   ensure
     put_client_property( "JTable.autoStartsEdit", true )
   end
+
+  # override to make things simpler
+  def getCellEditor( row_index, column_index )
+    @cell_editor ||= CellEditor.new( self )
+  end
 end
 
 # The view class
@@ -76,6 +142,7 @@ class TableView < javax.swing.JScrollPane
   # - an instance of TableModel
   def initialize( arg, &block )
     super( @jtable = ClevicTable.new )
+    @jtable.table_view = self
     
     # seems like this MUST go after the super call (or maybe the
     # ClevicTable constructor), otherwise Swing throws an error
@@ -397,6 +464,7 @@ class TableView < javax.swing.JScrollPane
     set_item_delegate_for_column( col, delegate )
   end
   
+  # TODO is this even used?
   def delegate( attribute, delegate_class, options = nil )
     col = model.attributes.index( attribute )
     delegate = delegate_class.new( self, attribute, options )
