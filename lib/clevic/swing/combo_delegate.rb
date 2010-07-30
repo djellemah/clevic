@@ -15,7 +15,21 @@ class ComboDelegate < Delegate
   attr_reader :editor
   
   def new_combo_box
-    javax.swing.JComboBox.new
+    # renderer should call field.transform_attribute( item )
+    javax.swing.JComboBox.new.tap do |combo|
+      @original_renderer = combo.renderer
+      combo.renderer = self
+    end
+  end
+  
+  include javax.swing.ListCellRenderer
+  
+  # return the component to render the values in the list
+  # we just transform the value, and pass it to the
+  # pre-existing renderer for the combo.
+  def getListCellRendererComponent(jlist, value, index, selected, cell_has_focus)
+    display_value = field.transform_attribute( value )
+    @original_renderer.getListCellRendererComponent(jlist, display_value, index, selected, cell_has_focus)
   end
   
   def new_line_editor( value )
@@ -116,10 +130,8 @@ class ComboDelegate < Delegate
     # and it makes sense. This is to make sure that if the list
     # is filtered, we always have the current value if the filter
     # excludes it
-    item = field.value_for( entity )
-    if item && !editor.include?( item )
-      editor << item
-    end
+    item = field.attribute_value_for( entity )
+    editor << item if item && !editor.include?( item )
   end
 
   def add_nil_item

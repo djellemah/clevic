@@ -10,6 +10,12 @@ module Clevic
       @order
     end
     
+    def self.[]( view_name )
+      order.find do |view|
+        view.name =~ /#{view_name.to_s}/i
+      end
+    end
+    
     # Handle situations where the array passed to 
     # Clevic::View.order has entity_class
     # objects in it. In other words, if there is one, pass back it's

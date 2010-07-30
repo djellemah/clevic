@@ -249,9 +249,9 @@ EOF
   def value_for( entity )
     begin
       return nil if entity.nil?
-      transform_attribute( entity.send( attribute ) )
+      transform_attribute( attribute_value_for( entity ) )
     rescue Exception => e
-      puts "error for #{entity}.#{entity.send( attribute ).inspect} in value_for: #{e.message}"
+      puts "error for #{entity}.#{attribute_value_for( entity ).inspect} in value_for: #{e.message}"
       puts e.backtrace
     end
   end
