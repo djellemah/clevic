@@ -12,6 +12,7 @@ class ComboDelegate < Delegate
     super( field )
   end
   
+  # this is the GUI component / widget that is displayed
   attr_reader :editor
   
   def new_combo_box
@@ -37,11 +38,11 @@ class ComboDelegate < Delegate
   end
   
   def configure_prefix
-    # Qt is       @editor.editable = true
+    puts "TODO: implement ComboDelegate#configure_prefix"
   end
   
   def configure_editable
-    # Qt is@editor.insert_policy = Qt::ComboBox::NoInsert if restricted?
+    editor.editable = !restricted?
   end
   
   # Create a GUI widget and fill it with the possible values.
@@ -49,11 +50,11 @@ class ComboDelegate < Delegate
     if needs_combo?
       @editor = new_combo_box
       
-      # subclasses fill in the rest of the entries
-      populate( entity )
-      
       # add the current item, if it isn't there already
       populate_current( entity )
+      
+      # subclasses fill in the rest of the entries
+      populate( entity )
       
       # create a nil entry
       add_nil_item if allow_null?
@@ -63,6 +64,9 @@ class ComboDelegate < Delegate
       
       # don't insert if restricted
       configure_editable
+      
+      # set the correct value in the list
+      select_current( entity )
     else
       @editor =
       if restricted?
@@ -138,16 +142,10 @@ class ComboDelegate < Delegate
     editor << nil unless editor.include?( nil )
   end
   
-  # Override the Qt::ItemDelegate method.
-  def updateEditorGeometry( editor, style_option_view_item, model_index )
-    rect = style_option_view_item.rect
-    
-    # ask the editor for how much space it wants, and set the editor
-    # to that size when it displays in the table
-    rect.set_width( [editor.size_hint.width,rect.width].max ) if is_combo?( editor )
-    editor.set_geometry( rect )
+  def select_current( entity )
+    editor.selected_item = field.attribute_value_for( entity )
   end
-
+  
   # This translates the text from the editor into something that is
   # stored in an underlying model. Intended to be overridden by subclasses.
   def translate_from_editor_text( editor, text )

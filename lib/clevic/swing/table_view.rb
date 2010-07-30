@@ -21,9 +21,9 @@ class CellRenderer < javax.swing.table.DefaultTableCellRenderer
     @table_view = table_view
   end
   
-  def getTableCellRendererComponent( table, value, isSelected, hasFocus, row_index, column_index )
-    index = SwingTableIndex.new( table.model, row_index, column_index )
-    component = super( table, index.display_value, isSelected, hasFocus, row_index, column_index )
+  def getTableCellRendererComponent( table, value, selected, has_focus, row_index, column_index )
+    index = table.model.create_index( row_index, column_index )
+    component = super( table, index.display_value, selected, has_focus, row_index, column_index )
     
     # set alignment
     component.horizontal_alignment =
@@ -64,16 +64,9 @@ class CellEditor
   attr_accessor :listeners
   
 	def getTableCellEditorComponent(jtable, value, selected, row_index, column_index)
-    field = @table_view.model.fields[column_index]
-    begin
-      field.delegate.component
-    rescue Exception => e
-      puts e.message
-      puts e.backtrace
-      edit_value = field.transform_attribute( value )
-      puts "edit_value: #{edit_value.inspect}"
-      javax.swing.JTextField.new( edit_value.to_java_string )
-    end
+    @index = @table_view.model.create_index( row_index, column_index )
+    # use the delegate's component
+    @editor = @index.field.delegate.component( @index.entity )
   end
 
   # Adds a listener to the list that's notified when the editor stops, or cancels editing.
@@ -81,12 +74,26 @@ class CellEditor
     listeners << cell_editor_listener
   end
   
+  def change_event
+    @change_event ||= javax.swing.event.ChangeEvent.new( self )
+  end
+  
   # Tells the editor to cancel editing and not accept any partially edited value.
   def cancelCellEditing
+    listeners.each do |listener|
+      listener.editingCancelled( change_event )
+    end
   end
   
   # Returns the value contained in the editor.
   def getCellEditorValue
+    # TODO this probably won't work for editable combos
+    if @editor.editable?
+      # what to do with partial value?
+      "getCellEditorValue partical value"
+    else
+      @editor.selected_item 
+    end
   end
   
   # Asks the editor if it can start editing using anEvent.
@@ -107,6 +114,11 @@ class CellEditor
   # Tells the editor to stop editing and accept any partially edited value as the value of the editor
   # true if editing was stopped, false otherwise
   def stopCellEditing
+    listeners.each do |listener|
+      listener.editingStopped( change_event )
+    end
+    # TODO can return false here if editing should not stop
+    # for some reason, ie validation didn't succeed
     true
   end
 end
@@ -131,7 +143,14 @@ class ClevicTable < javax.swing.JTable
 
   # override to make things simpler
   def getCellEditor( row_index, column_index )
-    @cell_editor ||= CellEditor.new( self )
+    index = table_view.model.create_index( row_index, column_index )
+    if index.field.delegate.nil?
+      # use the table's component
+      super( row_index, column_index )
+    else
+      # use our component
+      @cell_editor ||= CellEditor.new( self )
+    end
   end
 end
 
