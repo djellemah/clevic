@@ -41,7 +41,7 @@ class TableView
         model_builder.exec_ui_block( &block )
         
         # make sure the TableView has a fully-populated TableModel
-        # self.model is necessary to invoke the Qt layer
+        # self.model is necessary to invoke the GUI layer
         self.model = model_builder.build( self )
         self.object_name = arg.widget_name
         
@@ -308,33 +308,37 @@ class TableView
     end
   end
   
+  def search_dialog
+    @search_dialog ||= SearchDialog.new
+  end
+  
   # display a search dialog, and find the entered text
   def find
-    @search_dialog ||= SearchDialog.new
-    result = @search_dialog.exec( current_index.gui_value )
+    result = search_dialog.exec( current_index.gui_value )
     
     busy_cursor do
       case
         when result.accepted?
-          search_for = @search_dialog.search_text
-          search( @search_dialog )
+          search( search_dialog )
         when result.rejected?
           puts "Don't search"
         else
-          puts "unknown dialog code #{result}"
+          puts "unknown dialog result #{result}"
       end
     end
   end
   
   def find_next
+    # yes, this must be an @ otherwise it lazy-creates
+    # and will never be nil
     if @search_dialog.nil?
       emit_status_text( 'No previous find' )
     else
       busy_cursor do
-        save_from_start = @search_dialog.from_start?
-        @search_dialog.from_start = false
-        search( @search_dialog )
-        @search_dialog.from_start = save_from_start
+        save_from_start = search_dialog.from_start?
+        search_dialog.from_start = false
+        search( search_dialog )
+        search_dialog.from_start = save_from_start
       end
     end
   end
@@ -418,6 +422,21 @@ class TableView
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
   
+  # ask the question in a dialog. If the user says yes, execute the block
+  def delete_multiple_cells?( question = 'Are you sure you want to delete multiple cells?', &block )
+    sanity_check_read_only
+    
+    # go ahead with delete if there's only 1 cell, or the user says OK
+    delete_ok =
+    if selection_model.selected_indexes.size > 1
+      confirm_dialog( question, "Multiple Delete" ).accepted?
+    else
+      true
+    end
+    
+    yield if delete_ok
+  end
+  
   # Ask if multiple cell delete is OK, then replace contents
   # of selected cells with nil.
   def delete_cells
@@ -447,7 +466,7 @@ class TableView
   
   def delete_rows
     delete_multiple_cells?( 'Are you sure you want to delete multiple rows?' ) do
-      model.remove_rows( selection_model.selected_indexes.map{|index| index.row} )
+      model.remove_rows( selection_model.row_indexes )
     end
   end
   
@@ -500,9 +519,7 @@ class TableView
   end
   
   def save_current_row
-    if !current_index.nil? && current_index.valid?
-      save_row( current_index )
-    end
+    save_row( current_index )
   end
   
   # save the entity in the row of the given index
@@ -628,7 +645,7 @@ class TableView
   def search( search_criteria )
     indexes = model.search( current_index, search_criteria )
     if indexes.size > 0
-      emit status_text( "Found #{search_criteria.search_text} at row #{indexes.first.row}" )
+      emit_status_text( "Found #{search_criteria.search_text} at row #{indexes.first.row}" )
       selection_model.clear
       self.current_index = indexes.first
     else

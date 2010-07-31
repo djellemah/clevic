@@ -40,12 +40,11 @@ class TableModel < javax.swing.table.AbstractTableModel
     fireTableRowsInserted( collection.size, collection.size ) 
   end
   
-  def remove_row_start( index )
-    raise NotImplementedError
-  end
-  
-  def remove_row_end( index )
-    raise NotImplementedError
+  def remove_notify( rows, &block )
+    # no need to do anything before removing rows
+    yield
+    # tell the views
+    fireTableRowsDeleted( rows.first, rows.last )
   end
   
   # TODO update status of vertical header

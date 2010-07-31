@@ -87,16 +87,19 @@ class TableModel
   
   # rows is a collection of integers specifying row indices to remove
   def remove_rows( rows )
-    # delete from the end to avoid holes affecting the indexing
-    rows.uniq.sort.reverse.each do |index|
-      # remove the item from the collection
-      # NOTE call this within each iteration because
-      # the rows array may be non-contiguous
-      remove_row_start( index )
-      removed = collection.delete_at( index )
-      remove_row_end( index )
-      # destroy the db object, and its associated table row
-      removed.destroy
+    # don't delete rows twice
+    rows_in_order = rows.uniq.sort
+    
+    remove_notify( rows_in_order ) do
+      # delete from the end to avoid holes affecting the indexing
+      rows_in_order.reverse.each do |index|
+        # remove the item from the collection
+        # NOTE call this within each iteration because
+        # the rows array may be non-contiguous
+        removed = collection.delete_at( index )
+        # destroy the db object, and its associated table row
+        removed.destroy
+      end
     end
     
     # create a new row if auto_new is on

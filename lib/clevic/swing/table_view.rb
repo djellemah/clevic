@@ -428,35 +428,19 @@ class TableView < javax.swing.JScrollPane
     end
   end
   
-  # display a search dialog, and find the entered text
-  def find
-    @search_dialog ||= SearchDialog.new
-    result = @search_dialog.exec( current_index.gui_value )
-    
-    busy_cursor do
-      case
-        when result.accepted?
-          search_for = @search_dialog.search_text
-          search( @search_dialog )
-        when result.rejected?
-          puts "Don't search"
-        else
-          puts "unknown dialog result #{result.inspect}"
-      end
-    end
+  def search_dialog
+    raise NotImplementedError
   end
   
-  def find_next
-    if @search_dialog.nil?
-      emit status_text( 'No previous find' )
-    else
-      busy_cursor do
-        save_from_start = @search_dialog.from_start?
-        @search_dialog.from_start = false
-        search( @search_dialog )
-        @search_dialog.from_start = save_from_start
-      end
+  def confirm_dialog( question, title )
+    cd = ConfirmDialog.new do |dialog|
+      dialog.parent = self
+      dialog.question = question
+      dialog.title = title
+      dialog['Ok'] = :accept, :default
+      dialog['Cancel'] = :reject
     end
+    cd.show
   end
   
   # return an array of the current selection, or the
@@ -477,20 +461,6 @@ class TableView < javax.swing.JScrollPane
   # calculate the size of the column from the string value of the data
   def column_width( col, data )
     @jtable.getFontMetrics( @jtable.font).stringWidth( data ) + 5
-  end
-  
-  # TODO is this even used?
-  def relational_delegate( attribute, options )
-    col = model.attributes.index( attribute )
-    delegate = RelationalDelegate.new( self, model.columns[col], options )
-    set_item_delegate_for_column( col, delegate )
-  end
-  
-  # TODO is this even used?
-  def delegate( attribute, delegate_class, options = nil )
-    col = model.attributes.index( attribute )
-    delegate = delegate_class.new( self, attribute, options )
-    set_item_delegate_for_column( col, delegate )
   end
   
   # is current_index on the last row?
@@ -521,16 +491,6 @@ class TableView < javax.swing.JScrollPane
     end
   end
   
-  def moveCursor( cursor_action, modifiers )
-    # TODO use this as a preload indicator
-    super
-  end
-
-  # copied from actionpack
-  def pluralize(count, singular, plural = nil)
-    "#{count || 0} " + ((count == 1 || count == '1') ? singular : (plural || singular.pluralize))
-  end
-
   # Paste a CSV array to the index, replacing whatever is at that index
   # and whatever is at other indices matching the size of the pasted
   # csv array. Create new rows if there aren't enough.
@@ -563,63 +523,6 @@ class TableView < javax.swing.JScrollPane
     end
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
-  
-  # ask the question in a dialog. If the user says yes, execute the block
-  def delete_multiple_cells?( question = 'Are you sure you want to delete multiple cells?', &block )
-    sanity_check_read_only
-    
-    # go ahead with delete if there's only 1 cell, or the user says OK
-    delete_ok =
-    if selection_model.selected_indexes.size > 1
-      # confirmation message, until there are undos
-      msg = Qt::MessageBox.new(
-        Qt::MessageBox::Question,
-        'Multiple Delete',
-        question,
-        Qt::MessageBox::Yes | Qt::MessageBox::No,
-        self
-      )
-      msg.exec == Qt::MessageBox::Yes
-    else
-      true
-    end
-    
-    yield if delete_ok
-  end
-  
-  # Ask if multiple cell delete is OK, then replace contents
-  # of selected cells with nil.
-  def delete_cells
-    delete_multiple_cells? do
-      cells_deleted = false
-      
-      # do delete
-      selection_model.selected_indexes.each do |index|
-        index.attribute_value = nil
-        cells_deleted = true
-      end
-      
-      # deletes were done, so call data_changed
-      if cells_deleted
-        # save affected rows
-        selection_model.row_indexes.each do |index|
-          index.entity.save
-        end
-        
-        # emit data changed for all ranges
-        selection_model.selection.each do |selection_range|
-          model.data_changed( selection_range )
-        end
-      end
-    end
-  end
-  
-  def delete_rows
-    delete_multiple_cells?( 'Are you sure you want to delete multiple rows?' ) do
-      model.remove_rows( selection_model.selected_indexes.map{|index| index.row} )
-    end
-  end
-  
   
   def show_error( msg )
     raise NotImplementedError, msg
