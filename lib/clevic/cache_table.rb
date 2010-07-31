@@ -84,7 +84,7 @@ class CacheTable < Array
           [key,value]
         end
       end
-      find_options[:conditions] = Hash[ conditions ]
+      find_options[:conditions] = Hash[ *conditions.flatten ]
     end
   end
 
