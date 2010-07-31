@@ -550,11 +550,15 @@ class TableView < javax.swing.JScrollPane
     model.create_index( @jtable.selected_row, @jtable.selected_column )
   end
 
+  def wait_cursor
+    @wait_cursor ||= java.awt.Cursor.new( java.awt.Cursor::WAIT_CURSOR )
+  end
+  
   # show a busy cursor, do the block, back to normal cursor
   # return value of block
   def busy_cursor( &block )
     save_cursor = cursor
-    self.cursor = java.awt.Cursor.new( java.awt.Cursor::WAIT_CURSOR )
+    self.cursor = wait_cursor
     rv = yield
   ensure
     self.cursor = save_cursor

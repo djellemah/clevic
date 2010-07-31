@@ -1,3 +1,15 @@
+AbstractButton = javax.swing.AbstractButton
+class AbstractButton
+  def mnemonic=( arg )
+    case arg
+    when String
+      self.setMnemonic( arg.to_char )
+    else
+      self.setMnemonic( arg )
+    end
+  end
+end
+
 Component = java.awt.Component
 class Component
   def <<( obj )
@@ -15,6 +27,21 @@ class Component
       add obj
     end
   end
+end
+
+JComboBox = javax.swing.JComboBox
+class JComboBox
+  def << ( value )
+    model.addElement( value )
+  end
+  
+  def each
+    (0...model.size).each do |i|
+      yield model.getElementAt( i )
+    end
+  end
+  
+  include Enumerable
 end
 
 JTabbedPane = javax.swing.JTabbedPane

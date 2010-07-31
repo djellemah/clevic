@@ -215,7 +215,7 @@ class TableView
   
   def sanity_check_read_only_table
     if model.read_only?
-      emit emit_status_text( 'Can\'t modify a read-only table.' )
+      emit_status_text( 'Can\'t modify a read-only table.' )
       throw :insane
     end
   end
@@ -309,12 +309,12 @@ class TableView
   end
   
   def search_dialog
-    @search_dialog ||= SearchDialog.new
+    @search_dialog ||= SearchDialog.new( nil )
   end
   
   # display a search dialog, and find the entered text
   def find
-    result = search_dialog.exec( current_index.gui_value )
+    result = search_dialog.exec( current_index.display_value )
     
     busy_cursor do
       case
@@ -640,8 +640,6 @@ class TableView
   # * whole_words?
   # * direction ( :forward, :backward )
   # * from_start?
-  #
-  # TODO formalise this?
   def search( search_criteria )
     indexes = model.search( current_index, search_criteria )
     if indexes.size > 0
@@ -649,7 +647,7 @@ class TableView
       selection_model.clear
       self.current_index = indexes.first
     else
-      emit status_text( "No match found for #{search_criteria.search_text}" )
+      emit_status_text( "No match found for #{search_criteria.search_text}" )
     end
   end
 

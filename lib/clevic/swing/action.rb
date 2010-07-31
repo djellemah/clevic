@@ -59,14 +59,6 @@ class Action
     modifiers = sequence.split( /[-+ ]/ )
     last = modifiers.pop
     
-    # ewww
-    last_char_code =
-    if RUBY_VERSION <= '1.8.6'
-      last[0]
-    else
-      last.bytes.first
-    end
-    
     modifier_mask = modifiers.inject(0) do |mask,value|
       mask | eval( "java.awt.event.InputEvent::#{value.upcase}_DOWN_MASK" )
     end
@@ -81,10 +73,8 @@ class Action
         when '"'
           javax.swing.KeyStroke.getKeyStroke( java.awt.event.KeyEvent::VK_QUOTE, modifier_mask | java.awt.event.InputEvent::SHIFT_DOWN_MASK )
         
-        # just grab the character code of the last character in the string
-        # TODO this won't work in unicode or utf-8
         else
-          javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last_char_code ), modifier_mask )
+          javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last.to_char ), modifier_mask )
       end
     else
       # F keys

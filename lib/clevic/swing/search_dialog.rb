@@ -1,43 +1,51 @@
-AbstractButton = javax.swing.AbstractButton
-class AbstractButton
-  def mnemonic=( string_value )
-    self.setMnemonic( string_value[0] )
-  end
-end
+require 'clevic/extensions.rb'
+require 'clevic/swing/extensions.rb'
 
 module Clevic
   class SearchDialog < javax.swing.JDialog
-    def initialize( parent, modal = true )
+    def initialize( parent = nil, modal = true )
       super(parent)
-      self.modal = modal
       init_controls
       init_layout
+      
+      self.default_close_operation = javax.swing.WindowConstants::HIDE_ON_CLOSE
+      self.name = "SearchDialog"
+      self.modal = modal
+      self.title = "Search"
+      
+      # Enter triggers Ok button
+      root_pane.default_button = ok_button
+      
+      # TODO finish this for Esc key to close dialog
+      #~ esc = javax.swing.KeyStroke.getKeyStroke( KeyEvent.VK_ESCAPE, 0 )
+      #~ root_pane.registerKeyboardAction( actionListener, stroke, javax.swing.JComponent.WHEN_IN_FOCUSED_WINDOW )
     end
-
-    attr_reader :match_flags
+    
+    # after the dialog, this will be either accepted or rejected
+    attr_reader :status
     
     def from_start?
-      from_start.value
+      from_start.selected
     end
     
     def from_start=( value )
-      from_start.value = value
+      from_start.selected = value
     end
     
     def regex?
-      regex.value
+      regex.selected
     end
     
     def whole_words?
-      whole_words.value
+      whole_words.selected
     end
     
     def forwards?
-      forwards.checked?
+      forwards.selected
     end
     
     def backwards?
-      backwards.checked?
+      backwards.selected
     end
     
     # return either :backwards or :forwards
@@ -47,25 +55,51 @@ module Clevic
       raise "direction not known"
     end
     
+    # show the dialog, wait for close,
+    # return an object that understands rejected? and accepted?
     def exec( text = '' )
-      search_combo.edit_text = text.to_s
-      search_combo.set_focus
-      retval = @dialog.exec
+      self.search_text = text
+      search_combo.request_focus
+      search_combo.editor.select_all
+      
+      # modal dialog, so this will wait
+      show
       
       # remember previous searches
-      if search_combo.find_text( search_combo.current_text ) == -1
-        search_combo.add_item( search_combo.current_text )
+      unless search_combo.include?( search_text )
+        search_combo << search_text
       end
       
-      retval
+      self
+    end
+    
+    def search_text=( value )
+      search_combo.editor.item = value.to_s
     end
     
     def search_text
-      search_combo.current_text
+      search_combo.editor.item
+    end
+    
+    def accepted?
+      status == :accept
+    end
+    
+    def accept!
+      @status = :accept
+    end
+    
+    def rejected?
+      status == :reject
+    end
+    
+    def reject!
+      @status = :reject
     end
     
     attr_reader :search_label, :search_combo
-    attr_reader :from_start, :whole_words, :regex, :forwards, :backwards
+    attr_reader :from_start, :whole_words, :regex
+    attr_reader :forwards, :backwards
     attr_reader :ok_button, :cancel_button
     
     def init_controls
@@ -101,6 +135,7 @@ module Clevic
         forwards.mnemonic = 'F'
         forwards.text = "Forwards"
         forwards.name = "forwards"
+        forwards.selected = true
       end
       
       @backwards = javax.swing.JRadioButton.new.tap do |backwards|
@@ -113,19 +148,24 @@ module Clevic
         ok_button.mnemonic = 'O'
         ok_button.text = "Ok"
         ok_button.name = "ok_button"
+        ok_button.add_action_listener do |event|
+          hide
+          accept!
+        end
       end
 
       @cancel_button = javax.swing.JButton.new.tap do |cancel_button|
         cancel_button.mnemonic = 'C'
         cancel_button.text = "Cancel"
         cancel_button.name = "cancel_button"
+        cancel_button.add_action_listener do |event|
+          hide
+          reject!
+        end
       end
-
-      self.default_close_operation = javax.swing.WindowConstants::DISPOSE_ON_CLOSE
-      self.name = "SearchDialog"
     end
     
-    # this was originally Java, so it's really ugly.
+    # this was originally Java from NetBeans, so it's really ugly.
     def init_layout
       content_pane.layout = javax.swing.GroupLayout.new( content_pane ).tap do |layout|
         

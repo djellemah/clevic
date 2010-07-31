@@ -11,6 +11,18 @@ class Object
   end
 end
 
+class String
+  # just grab the character code of the last character in the string
+  # TODO this won't work in unicode or utf-8
+  def to_char
+    if RUBY_VERSION <= '1.8.6'
+      self[0]
+    else
+      bytes.first
+    end
+  end
+end
+
 class Array
   def sparse_hash
     Hash[ *(first..last).map do |index|

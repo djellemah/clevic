@@ -1,20 +1,5 @@
 require 'clevic/swing/delegate'
 
-JComboBox = javax.swing.JComboBox
-class JComboBox
-  def << ( value )
-    model.addElement( value )
-  end
-  
-  def each
-    (0...model.size).each do |i|
-      yield model.getElementAt( i )
-    end
-  end
-  
-  include Enumerable
-end
-
 module Clevic
 
 # Edit a relation from an id and display a list of relevant entries.
