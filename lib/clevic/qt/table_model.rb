@@ -40,12 +40,11 @@ class TableModel < Qt::AbstractTableModel
     raise "TODO: call TableView.currentChanged, or something like that"
   end
   
-  def remove_row_start( index )
-    begin_remove_rows( Qt::ModelIndex.invalid, index, index )
-  end
-  
-  def remove_row_end( index )
-      end_remove_rows
+  def remove_notify( rows, &block )
+    begin_remove_rows( Qt::ModelIndex.invalid, rows.first, rows.last )
+    # do the removal
+    yield
+    end_remove_rows
   end
   
   # save the AR model at the given index, if it's dirty
