@@ -262,10 +262,6 @@ class TableView < javax.swing.JScrollPane
     @jtable.edit_cell_at( table_index.row, table_index.column )
   end
   
-  def delegate( table_index )
-    table_index.field.delegate
-  end
-  
   # copy current selection to clipboard as CSV
   # could also use a javax.activation.DataHandler
   # for a more sophisticated API
@@ -364,104 +360,6 @@ class TableView < javax.swing.JScrollPane
     end
   end
   
-  def sanity_check_read_only
-    if current_index.field.read_only?
-      emit status_text( 'Can\'t copy into read-only field.' )
-    elsif current_index.entity.readonly?
-      emit status_text( 'Can\'t copy into read-only record.' )
-    else
-      sanity_check_read_only_table
-      return
-    end
-    throw :insane
-  end
-  
-  def sanity_check_read_only_table
-    if model.read_only?
-      emit status_text( 'Can\'t modify a read-only table.' )
-      throw :insane
-    end
-  end
-  
-  def ditto
-    sanity_check_ditto
-    sanity_check_read_only
-    one_up_index = current_index.choppy { |i| i.row -= 1 }
-    previous_value = one_up_index.attribute_value
-    if current_index.attribute_value != previous_value
-      current_index.attribute_value = previous_value
-      model.data_changed( current_index )
-    end
-  end
-  
-  # from and to are ModelIndex instances. Throws :insane if
-  # their fields don't have the same attribute_type.
-  def sanity_check_types( from, to )
-    unless from.field.attribute_type == to.field.attribute_type
-      emit_status_text( 'Incompatible data' )
-      throw :insane
-    end
-  end
-  
-  def ditto_right
-    sanity_check_ditto
-    sanity_check_read_only
-    if current_index.column >= model.column_count - 1
-      emit status_text( 'No column to the right' )
-    else
-      one_up_right = current_index.choppy {|i| i.row -= 1; i.column += 1 }
-      sanity_check_types( one_up_right, current_index )
-      current_index.attribute_value = one_up_right.attribute_value
-      model.data_changed( current_index )
-    end
-  end
-  
-  def ditto_left
-    sanity_check_ditto
-    sanity_check_read_only
-    unless current_index.column > 0
-      emit status_text( 'No column to the left' )
-    else
-      one_up_left = current_index.choppy { |i| i.row -= 1; i.column -= 1 }
-      sanity_check_types( one_up_left, current_index )
-      current_index.attribute_value = one_up_left.attribute_value
-      model.data_changed( current_index )
-    end
-  end
-  
-  def insert_current_date
-    sanity_check_read_only
-    current_index.attribute_value = Time.now
-    model.data_changed( current_index )
-  end
-  
-  def open_editor
-    edit( current_index )
-    delegate = item_delegate( current_index )
-    delegate.full_edit
-  end
-  
-  # Delete the current selection. If it's a set of rows, just delete
-  # them. If it's a rectangular selection, set the cells to nil.
-  # TODO make sure all affected rows are saved.
-  def delete_selection
-    sanity_check_read_only
-
-    # translate from ModelIndex objects to row indices
-    rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
-    unless rows.empty?
-      # header rows are selected, so delete them
-      model.remove_rows( rows ) 
-    else
-      # otherwise various cells are selected, so delete the cells
-      delete_cells
-    end
-  end
-  
-  def search_dialog
-    raise NotImplementedError
-  end
-  
   def confirm_dialog( question, title )
     cd = ConfirmDialog.new do |dialog|
       dialog.parent = self
@@ -471,16 +369,6 @@ class TableView < javax.swing.JScrollPane
       dialog['Cancel'] = :reject
     end
     cd.show
-  end
-  
-  # return an array of the current selection, or the
-  # current index in an array if the selection is empty
-  def selection_or_current
-    indexes_or_current( selection_model.selected_indexes )
-  end
-  
-  def selected_rows_or_current
-    indexes_or_current( selection_model.row_indexes )
   end
   
   # set the size of the column from the sample
@@ -493,16 +381,6 @@ class TableView < javax.swing.JScrollPane
     @jtable.getFontMetrics( @jtable.font).stringWidth( data ) + 5
   end
   
-  # is current_index on the last row?
-  def last_row?
-    current_index.row == model.row_count - 1
-  end
-  
-  # is current_index on the bottom_right cell?
-  def last_cell?
-    current_index.row == model.row_count - 1 && current_index.column == model.column_count - 1
-  end
-  
   # forward to @jtable
   def model=( model )
     @jtable.model = model
@@ -511,14 +389,6 @@ class TableView < javax.swing.JScrollPane
   
   def model
     @jtable.model
-  end
-  
-  # resize all fields based on heuristics rather
-  # than iterating through the entire data model
-  def resize_columns
-    model.fields.each_with_index do |field, index|
-      auto_size_column( index, field.sample )
-    end
   end
   
   # Paste a CSV array to the index, replacing whatever is at that index
