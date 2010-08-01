@@ -257,6 +257,15 @@ class TableView < javax.swing.JScrollPane
     end
   end
   
+  # called from the framework-independent part to edit a cell
+  def edit( table_index )
+    @jtable.edit_cell_at( table_index.row, table_index.column )
+  end
+  
+  def delegate( table_index )
+    table_index.field.delegate
+  end
+  
   # copy current selection to clipboard as CSV
   # could also use a javax.activation.DataHandler
   # for a more sophisticated API

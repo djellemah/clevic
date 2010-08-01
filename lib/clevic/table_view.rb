@@ -273,14 +273,12 @@ class TableView
   end
   
   def open_editor
+    # tell the table to edit here
     edit( current_index )
-    delegate = item_delegate( current_index )
-    delegate.full_edit
-  end
-  
-  def itemDelegate( model_index )
-    @pre_delegate_index = model_index
-    super
+    
+    # tell the editing component to do full edit, eg if it's a combo
+    # box to open the list.
+    delegate( current_index ).andand.full_edit
   end
   
   # Add a new row and move to it, provided we're not in a read-only view.
