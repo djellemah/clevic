@@ -324,14 +324,35 @@ class TableView < javax.swing.JScrollPane
     end
   end
   
-  # TODO display message in status bar, ie pass up to parent window
-  def emit_status_text( msg )
-    puts "emit_status_text msg: #{msg.inspect}"
+  def status_text_listeners
+    @status_text_listeners ||= Set.new
+  end
+  
+  # If msg is provided, yield to stored block.
+  # If block is provided, store it for later.
+  def emit_status_text( msg = nil, &notifier_block )
+    if block_given?
+      status_text_listeners << notifier_block
+    else
+      status_text_listeners.each do |notify|
+        notify.call( msg )
+      end
+    end
+  end
+  
+  def filter_status_listeners
+    @filter_status_listeners ||= Set.new
   end
   
   # emit whether the view is filtered or not
-  def emit_filter_status( bool )
-    puts "emit_filter_status: #{bool}"
+  def emit_filter_status( bool = nil, &notifier_block )
+    if block_given?
+      filter_status_listeners << notifier_block
+    else
+      filter_status_listeners.each do |notify|
+        notify.call( bool )
+      end
+    end
   end
   
   def sanity_check_read_only

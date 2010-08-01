@@ -7,11 +7,7 @@ module Clevic
       
       # Better make the status message now, before the indexes become invalid
       @status_message =
-      begin
-        "Filtered on #{filter_indexes.first.field.label} = #{filter_indexes.first.gui_value}"
-      rescue
-        "Filtered"
-      end
+      "Filtered on #{filter_indexes.first.field.label} = #{filter_indexes.first.display_value}"
     end
     
     # Do the filtering. Return true if successful, false otherwise.

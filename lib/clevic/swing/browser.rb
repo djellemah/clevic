@@ -110,7 +110,18 @@ class Browser < javax.swing.JFrame
     @status_bar ||= javax.swing.JLabel.new.tap do |status_bar|
       status_bar.horizontal_alignment = javax.swing.SwingConstants::RIGHT
       # just so the bar actually displays
-      status_bar.text = " "
+      status_bar.text = "Welcome to Clevic"
+    end
+  end
+  
+  def status_bar_timer
+    @status_bar_timer ||= javax.swing.Timer.new( 20000, nil ).tap do |timer|
+      timer.repeats = false
+      timer.action_command = 'hide_status_message'
+      timer.add_action_listener do |event|
+        status_bar.text = nil
+        timer.stop
+      end
     end
   end
   
@@ -209,16 +220,24 @@ class Browser < javax.swing.JFrame
           end
         end
         
-        puts 'show status messages'
-        # TODO connect this
-        #~ tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
+        tab.emit_status_text do |msg|
+          status_bar.text = msg
+          # hide the message after a while.
+          status_bar_timer.start
+        end
         
         # handle filter status changed, so we can provide a visual indication
-        #~ tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
-          #~ # update the tab, so there's a visual indication of filtering
-          #~ filter_title = ( tab.filtered ? '| ' : '' ) + translate( tab.title )
-          #~ tables_tab.set_tab_text( tables_tab.current_index, filter_title )
-        #~ end
+        tab.emit_filter_status do |status|
+          # update the tab, so there's a visual indication of filtering
+          filter_title = ( tab.filtered? ? '| ' : '' ) + tab.title
+          tables_tab.set_title_at( tables_tab.selected_index, filter_title )
+          
+          if tab.filtered?
+            tables_tab.set_tool_tip_text_at( tables_tab.selected_index, tab.filtered.status_message )
+          else
+            tables_tab.set_tool_tip_text_at( tables_tab.selected_index, nil )
+          end
+        end
       rescue Exception => e
         puts "UI from #{view} will not be available: #{e.message}"
         puts e.backtrace
