@@ -14,7 +14,7 @@ task :website_generate => :ruby_env do
 end
 
 desc 'Upload website files to rubyforge'
-task :website_upload do
+task :upload_website do
   host = "#{rubyforge_username}@rubyforge.org"
   remote_dir = "/var/www/gforge-projects/#{PATH}/"
   local_dir = 'website'
