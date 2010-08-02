@@ -194,7 +194,7 @@ class Browser < javax.swing.JFrame
   # Create the tabs, each with a collection for a particular entity class.
   # views come from Clevic::View.order
   def load_views
-    views = Clevic::View.order.uniq
+    views = Clevic::View.views
     Kernel.raise "no views to display" if views.empty?
     
     # Add all existing model objects as tabs, one each
@@ -202,7 +202,7 @@ class Browser < javax.swing.JFrame
       begin
         view = view_class.new
         unless view.entity_class.table_exists?
-          puts "No table for #{view.entity_class.inspect}"
+          puts "Browser::load_views: No table for #{view.entity_class.inspect}"
           next
         end
           
@@ -220,27 +220,31 @@ class Browser < javax.swing.JFrame
           end
         end
         
-        tab.emit_status_text do |msg|
-          status_bar.text = msg
-          # hide the message after a while.
-          status_bar_timer.start
-        end
-        
-        # handle filter status changed, so we can provide a visual indication
-        tab.emit_filter_status do |status|
-          # update the tab, so there's a visual indication of filtering
-          filter_title = ( tab.filtered? ? '| ' : '' ) + tab.title
-          tables_tab.set_title_at( tables_tab.selected_index, filter_title )
-          
-          if tab.filtered?
-            tables_tab.set_tool_tip_text_at( tables_tab.selected_index, tab.filtered.status_message )
-          else
-            tables_tab.set_tool_tip_text_at( tables_tab.selected_index, nil )
-          end
-        end
+        init_connections( tab )
       rescue Exception => e
         puts "UI from #{view} will not be available: #{e.message}"
         puts e.backtrace
+      end
+    end
+  end
+  
+  def init_connections( tab )
+    tab.emit_status_text do |msg|
+      status_bar.text = msg
+      # hide the message after a while.
+      status_bar_timer.start
+    end
+    
+    # handle filter status changed, so we can provide a visual indication
+    tab.emit_filter_status do |status|
+      # update the tab, so there's a visual indication of filtering
+      filter_title = ( tab.filtered? ? '| ' : '' ) + tab.title
+      tables_tab.set_title_at( tables_tab.selected_index, filter_title )
+      
+      if tab.filtered?
+        tables_tab.set_tool_tip_text_at( tables_tab.selected_index, tab.filtered.status_message )
+      else
+        tables_tab.set_tool_tip_text_at( tables_tab.selected_index, nil )
       end
     end
   end

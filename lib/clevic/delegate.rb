@@ -1,6 +1,10 @@
+require 'clevic/field_valuer.rb'
+
 module Clevic
 
 class Delegate
+  include FieldValuer
+
   def initialize( field )
     @field = field
   end

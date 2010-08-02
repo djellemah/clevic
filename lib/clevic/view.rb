@@ -10,6 +10,12 @@ module Clevic
       @order
     end
     
+    # sometimes order has duplicates. So this is all unique
+    # defined views in order of definition, or as specified.
+    def self.views
+      order.uniq
+    end
+    
     def self.[]( view_name )
       order.find do |view|
         view.name =~ /#{view_name.to_s}/i
