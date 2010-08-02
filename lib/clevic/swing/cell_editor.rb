@@ -14,8 +14,15 @@ class CellEditor
   attr_accessor :listeners
   attr_reader :index
   
-  def delegate
+  def default_delegate!
+    if index.field.delegate.nil?
+      index.field.delegate = TextDelegate.new( index.field )
+    end
     index.field.delegate
+  end
+  
+  def delegate
+    index.field.delegate || default_delegate!
   end
   
   # override TableCellEditor methods

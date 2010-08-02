@@ -65,14 +65,7 @@ class ClevicTable < javax.swing.JTable
 
   # override to make things simpler
   def getCellEditor( row_index, column_index )
-    index = table_view.model.create_index( row_index, column_index )
-    if index.field.delegate.nil?
-      # use the table's component
-      super( row_index, column_index )
-    else
-      # use our component
-      @cell_editor ||= CellEditor.new( self )
-    end
+    @cell_editor ||= CellEditor.new( self )
   rescue
     puts $!.backtrace
     puts $!.message
@@ -156,7 +149,7 @@ class TableView < javax.swing.JScrollPane
         
         entity_view.notify_data_changed( self, top_left, bottom_right )
         
-        raise "TODO: call currentChanged, or something like that?"
+        puts "#{__FILE__}:#{__LINE__}:do something to save to db?"
       rescue Exception => e
         puts "#{model.entity_view.class.name}: #{e.message}"
         puts e.backtrace
