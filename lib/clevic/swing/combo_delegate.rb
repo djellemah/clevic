@@ -11,16 +11,18 @@ TODO set up keystroke auto-finding
 =end
 class ComboDelegate < Delegate
   def initialize( field )
-    super( field )
+    super
   end
   
   # this is the GUI component / widget that is displayed
   attr_reader :editor
   
-  def new_combo_box
+  def combo_box
     # renderer should call field.transform_attribute( item )
-    javax.swing.JComboBox.new.tap do |combo|
+    @combo_box ||= javax.swing.JComboBox.new.tap do |combo|
       combo.font = Clevic.tahoma
+      
+      # allow for transform of objects to their requested display values
       @original_renderer = combo.renderer
       combo.renderer = self
     end
@@ -36,8 +38,8 @@ class ComboDelegate < Delegate
     @original_renderer.getListCellRendererComponent(jlist, display_value, index, selected, cell_has_focus)
   end
   
-  def new_line_editor( value )
-    javax.swing.JTextField.new( value ).tap do |line|
+  def line_editor( value )
+    @line_editor ||= javax.swing.JTextField.new( value ).tap do |line|
       line.font = Clevic.tahoma
     end
   end
@@ -52,9 +54,9 @@ class ComboDelegate < Delegate
   end
   
   # Create a GUI widget and fill it with the possible values.
-  def component( entity )
+  def init_component
     if needs_combo?
-      @editor = new_combo_box
+      @editor = combo_box
       
       # subclasses fill in the rest of the entries
       populate( entity )
@@ -77,10 +79,10 @@ class ComboDelegate < Delegate
     else
       @editor =
       if restricted?
-        emit parent.status_text( empty_set_message )
+        show_message( empty_set_message )
         nil
       else
-        new_line_editor( field.edit_format( entity ) )
+        line_editor( field.edit_format( entity ) )
       end
     end
     editor
@@ -89,6 +91,11 @@ class ComboDelegate < Delegate
   # open the combo box, just like if f4 was pressed
   def full_edit
     editor.show_popup if is_combo?
+  end
+  
+  # open the combo box, just like if f4 was pressed
+  def minimal_edit
+    editor.hide_popup if is_combo?
   end
   
   # returns true if the editor allows values outside of a predefined
@@ -153,6 +160,19 @@ class ComboDelegate < Delegate
     editor.selected_item = field.attribute_value_for( entity )
   end
   
+  def value
+    # editor could be either a combo or a line (DistinctDelegate with no values yet)
+    if is_combo?
+      if editor.editable?
+        # get the editor's text field value
+        editor.editor.item
+      else
+        editor.selected_item 
+      end
+    else
+      editor.text
+    end
+  end
 end
 
 end

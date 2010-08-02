@@ -17,8 +17,7 @@ UI definition in a Clevic::View, or from the default Clevic::View created by
 including the Clevic::Record module in a ActiveRecord::Base or Sequel::Model subclass.
 =end
 class TableModel < javax.swing.table.AbstractTableModel
-  # TODO this arg is for the Qt bindings. Do we really need it?
-  def initialize( qt_parent = nil )
+  def initialize
     super()
   end
   

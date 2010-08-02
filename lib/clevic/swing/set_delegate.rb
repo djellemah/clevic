@@ -22,6 +22,7 @@ class SetDelegate < ComboDelegate
   def populate( entity )
     field.set_for( entity ).each do |item|
       if item.is_a?( Array )
+        puts "#{__FILE__}:#{__LINE__}:probably can't deal with item: #{item.inspect}"
         # this is a hash-like set, so use key as db value
         # and value as display value
         class << item

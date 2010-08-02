@@ -8,6 +8,10 @@ require 'clevic/swing'
 require File.dirname( __FILE__ ) + '/../models/times_psql_models.rb'
 
 class ShowDelegates
+  def initialize
+    @controls = {}
+  end
+  
   def frame
     @frame ||= javax.swing.JFrame.new.tap do |frame|
       frame.layout = javax.swing.BoxLayout.new( frame.content_pane, javax.swing.BoxLayout::PAGE_AXIS )
@@ -17,17 +21,20 @@ class ShowDelegates
   def view
     @view ||= Clevic::View[:invoice].new
   end
-
+  
+  attr_reader :controls
+  
   def build( entity = entity )
     # add controls
-    controls = view.fields.map do |name,field|
-      puts "name: #{name.inspect}"
+    view.fields.map do |name,field|
       component = 
       if field.delegate
         field.delegate.component( entity )
       else
         javax.swing.JLabel.new( name.to_s )
       end
+      @controls[name] = component
+      component
     end
   end
   
@@ -41,7 +48,7 @@ class ShowDelegates
   
   def show
     # general setup
-    frame.default_close_operation = javax.swing.JFrame::EXIT_ON_CLOSE
+    frame.default_close_operation = javax.swing.JFrame::HIDE_ON_CLOSE
     frame.pack
     frame.visible = true 
   end

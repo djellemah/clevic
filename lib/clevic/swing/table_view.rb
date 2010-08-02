@@ -1,19 +1,12 @@
 require 'fastercsv'
 
 require 'clevic/swing/action_builder.rb'
+require 'clevic/swing/cell_editor.rb'
 
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
 
 module Clevic
-
-def self.tahoma
-  if @font.nil?
-    found = java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "Tahoma"}.first
-    @font = found.deriveFont( 13.0 )
-  end
-  @font
-end
 
 class CellRenderer < javax.swing.table.DefaultTableCellRenderer
   def initialize( table_view )
@@ -52,80 +45,6 @@ class CellRenderer < javax.swing.table.DefaultTableCellRenderer
   end
 end
 
-class CellEditor
-  include javax.swing.table.TableCellEditor
-  
-  def initialize( table_view )
-    super()
-    @table_view = table_view
-    @listeners = []
-  end
-  
-  attr_accessor :listeners
-  
-	def getTableCellEditorComponent(jtable, value, selected, row_index, column_index)
-    puts "getTableCellEditorComponent selected: #{selected.inspect}"
-    @index = @table_view.model.create_index( row_index, column_index )
-    # use the delegate's component
-    @editor = @index.field.delegate.component( @index.entity )
-  end
-
-  # Adds a listener to the list that's notified when the editor stops, or cancels editing.
-  def addCellEditorListener(cell_editor_listener)
-    listeners << cell_editor_listener
-  end
-  
-  def change_event
-    @change_event ||= javax.swing.event.ChangeEvent.new( self )
-  end
-  
-  # Tells the editor to cancel editing and not accept any partially edited value.
-  def cancelCellEditing
-    listeners.each do |listener|
-      listener.editingCancelled( change_event )
-    end
-  end
-  
-  # Returns the value contained in the editor.
-  def getCellEditorValue
-    # TODO this probably won't work for editable combos
-    if @editor.editable?
-      # get the editor's text field value
-      @editor.editor.item
-    else
-      @editor.selected_item 
-    end
-  end
-  
-  # Asks the editor if it can start editing using anEvent.
-  def isCellEditable(event_object)
-    puts "editable? event_object: #{event_object.inspect}"
-    true
-  end
-  
-  # Removes a listener from the list that's notified
-  def removeCellEditorListener(cell_editor_listener)
-    listeners.delete cell_editor_listener
-  end
-  
-  # Returns true if the editing cell should be selected, false otherwise.
-  def shouldSelectCell(event_object)
-    puts "select? event_object: #{event_object.inspect}"
-    true
-  end
-  
-  # Tells the editor to stop editing and accept any partially edited value as the value of the editor
-  # true if editing was stopped, false otherwise
-  def stopCellEditing
-    listeners.each do |listener|
-      listener.editingStopped( change_event )
-    end
-    # TODO can return false here if editing should not stop
-    # for some reason, ie validation didn't succeed
-    true
-  end
-end
-
 class ClevicTable < javax.swing.JTable
   attr_accessor :table_view
   
@@ -154,6 +73,11 @@ class ClevicTable < javax.swing.JTable
       # use our component
       @cell_editor ||= CellEditor.new( self )
     end
+  rescue
+    puts $!.backtrace
+    puts $!.message
+    puts index.entity.inspect
+    nil
   end
 end
 
@@ -185,6 +109,7 @@ class TableView < javax.swing.JScrollPane
     
     # appearance
     jtable.font = Clevic.tahoma
+    self.font = Clevic.tahoma
     
     jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new( self ) )
 
@@ -226,10 +151,8 @@ class TableView < javax.swing.JScrollPane
         top_left = model.create_index( table_model_event.first_row, table_model_event.column )
         bottom_right = model.create_index( table_model_event.last_row, table_model_event.column )
         
-        Kernel.print "#{__FILE__}:#{__LINE__}"
-        puts "top_left: #{top_left.inspect}"
-        Kernel.print "#{__FILE__}:#{__LINE__}"
-        puts "bottom_right: #{bottom_right.inspect}"
+        puts "#{__FILE__}:#{__LINE__}:top_left: #{top_left.inspect}"
+        puts "#{__FILE__}:#{__LINE__}:bottom_right: #{bottom_right.inspect}"
         
         entity_view.notify_data_changed( self, top_left, bottom_right )
         

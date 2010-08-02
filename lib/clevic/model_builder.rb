@@ -584,7 +584,7 @@ class ModelBuilder
     # build the model with all it's collections
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
-    @model = Clevic::TableModel.new( table_view )
+    @model = Clevic::TableModel.new
     @model.builder = self
     @model.entity_view = entity_view
     @model.fields = @fields.values

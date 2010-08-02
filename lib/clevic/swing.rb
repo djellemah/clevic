@@ -12,3 +12,15 @@ end
 # no require the generic parts
 require 'clevic/table_model'
 require 'clevic/table_view'
+
+module Clevic
+
+def self.tahoma
+  if @font.nil?
+    found = java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "Tahoma"}.first
+    @font = found.deriveFont( 13.0 )
+  end
+  @font
+end
+
+end
