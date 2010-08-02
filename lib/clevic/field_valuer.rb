@@ -17,6 +17,10 @@ module Clevic
       field.do_edit_format( raw_value ) unless raw_value.nil?
     end
     
+    def attribute_value
+      field.attribute_value_for( entity )
+    end
+    
     def tooltip
       case
         # show validation errors

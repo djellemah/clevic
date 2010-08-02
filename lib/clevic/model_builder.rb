@@ -429,7 +429,13 @@ class ModelBuilder
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {}, &block )
     read_only_default!( attribute, options )
-    @fields[attribute] = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    field = @fields[attribute] = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    field.delegate = 
+    if field.meta.type == :boolean
+      BooleanDelegate.new( field )
+    else
+      TextDelegate.new( field )
+    end
   end
   
   # an ordinary field like plain, except that a larger edit area can be used

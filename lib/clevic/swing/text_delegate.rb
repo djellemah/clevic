@@ -5,7 +5,7 @@ module Clevic
   class TextDelegate < Delegate
     def init_component
       editor.text = edit_value
-      editor.select_all
+      #~ editor.select_all
     end
     
     def editor

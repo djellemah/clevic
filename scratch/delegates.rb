@@ -4,6 +4,7 @@ require 'rubygems'
 require 'sequel'
 
 require 'clevic/swing'
+require 'clevic/extensions.rb'
 
 require File.dirname( __FILE__ ) + '/../models/times_psql_models.rb'
 
@@ -29,9 +30,13 @@ class ShowDelegates
     view.fields.map do |name,field|
       component = 
       if field.delegate
-        field.delegate.init_component( entity )
+        field.delegate.with do |d|
+          d.entity = entity
+          d.init_component
+          d.editor
+        end
       else
-        javax.swing.JLabel.new( name.to_s )
+        javax.swing.JLabel.new( "no delegate #{name.to_s}" )
       end
       @controls[name] = component
       component
