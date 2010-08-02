@@ -4,7 +4,7 @@ module Clevic
 
   class TextDelegate < Delegate
     def init_component
-      editor.text = field.value_for( entity )
+      editor.text = index.edit_value
     end
     
     def editor
