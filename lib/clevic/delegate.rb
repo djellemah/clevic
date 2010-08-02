@@ -24,6 +24,10 @@ class Delegate
     field.find_options
   end
   
+  def is_combo?
+    false
+  end
+  
   # change the visual state of the editor to the biggest / most
   # space-consuming it can be. This grew out of combo boxes having
   # a drop-down that can show or hide.

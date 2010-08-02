@@ -72,6 +72,37 @@ class ClevicTable < javax.swing.JTable
     puts index.entity.inspect
     nil
   end
+
+  # for mouse events, only edit if the cell is
+  # already selected provided it isn't a combo
+  # box, in which case show the drop-down arrow, but
+  # not the drop-down itself.
+  def editCellAt( row, column, event )
+    if event
+      index = table_view.model.create_index(row,column)
+      edit_ok =
+      if event.is_a?( java.awt.event.MouseEvent ) && !index.field.delegate.andand.is_combo?
+        # the table_view selection model is mine. The JTable one is not.
+        # Maybe that's weird.
+        table_view.selection_model.with do |sm|
+          sm.single_cell? && sm.selected?( row, column )
+        end
+      else
+        true
+      end
+      
+      # must call superclass here to do the edit rather than
+      # just returning whether it should be edited. Java. tsk tsk.
+      if edit_ok
+        super 
+      else
+        false
+      end
+    else
+      # no event, so do whatever JTable does, which seems to work OK.
+      super
+    end
+  end
 end
 
 # The view class

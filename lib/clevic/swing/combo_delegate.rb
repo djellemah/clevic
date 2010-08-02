@@ -121,7 +121,9 @@ class ComboDelegate < Delegate
   end
 
   def is_combo?
-    editor.is_a?( javax.swing.JComboBox )
+    # Assume we're a combo if we don't have an editor yet, otherwise
+    # check
+    editor.nil? || editor.is_a?( javax.swing.JComboBox )
   end
   
   # return true if this field has no data (needs_combo? is false)

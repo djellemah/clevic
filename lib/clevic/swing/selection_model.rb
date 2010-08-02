@@ -49,6 +49,13 @@ class SelectionModel
     jtable.selected_row_count == 1 && jtable.selected_column_count == 1
   end
   
+  def selected?( row, column )
+    selected_indexes.first.with do |index|
+      index.row == row &&
+      index.column == column
+    end
+  end
+  
   def row_indexes
     jtable.selected_rows.to_a
   end

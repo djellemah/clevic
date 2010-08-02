@@ -29,7 +29,7 @@ class ShowDelegates
     view.fields.map do |name,field|
       component = 
       if field.delegate
-        field.delegate.component( entity )
+        field.delegate.init_component( entity )
       else
         javax.swing.JLabel.new( name.to_s )
       end
