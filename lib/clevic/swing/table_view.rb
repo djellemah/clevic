@@ -19,13 +19,7 @@ class CellRenderer < javax.swing.table.DefaultTableCellRenderer
     component = super( table, index.display_value, selected, has_focus, row_index, column_index )
     
     # set alignment
-    component.horizontal_alignment =
-    case index.field.alignment
-      when :left; javax.swing.SwingConstants::LEFT
-      when :right; javax.swing.SwingConstants::RIGHT
-      when :centre, :center; javax.swing.SwingConstants::CENTER
-      else javax.swing.SwingConstants::LEADING
-    end
+    component.horizontal_alignment = index.field.swing_alignment
     
     # set text colour
     component.foreground = index.field.foreground_for( index.entity ) ||
@@ -65,7 +59,20 @@ class ClevicTable < javax.swing.JTable
 
   # override to make things simpler
   def getCellEditor( row_index, column_index )
-    @cell_editor ||= CellEditor.new( self )
+    index = table_view.model.create_index( row_index, column_index )
+    
+    # Basically, this is for boolean editing. Number of mouse
+    # clicks and so on is horribly complicated, so just let the
+    # code in javax.swing.whatever handle it.
+    # It has to go here and not in CellEditor, otherwise
+    # listeners and things are wrong.
+    if data_class = index.field.delegate.native
+      # use the default editor for this class of object
+      getDefaultEditor( data_class )
+    else
+      # use the Clevic CellEditor
+      @cell_editor ||= CellEditor.new( self )
+    end
   rescue
     puts $!.backtrace
     puts $!.message
@@ -81,7 +88,7 @@ class ClevicTable < javax.swing.JTable
     if event
       index = table_view.model.create_index(row,column)
       edit_ok =
-      if event.is_a?( java.awt.event.MouseEvent ) && !index.field.delegate.andand.is_combo?
+      if event.is_a?( java.awt.event.MouseEvent ) && index.field.delegate.needs_pre_selection?
         # the table_view selection model is mine. The JTable one is not.
         # Maybe that's weird.
         table_view.selection_model.with do |sm|
@@ -94,7 +101,7 @@ class ClevicTable < javax.swing.JTable
       # must call superclass here to do the edit rather than
       # just returning whether it should be edited. Java. tsk tsk.
       if edit_ok
-        super 
+        super
       else
         false
       end

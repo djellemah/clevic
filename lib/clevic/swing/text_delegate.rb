@@ -5,14 +5,14 @@ module Clevic
   class TextDelegate < Delegate
     def init_component
       editor.text = edit_value
-      #~ editor.select_all
+      editor.select_all
     end
     
     def editor
-      @editor ||= javax.swing.JTextField.new
+      @editor ||= javax.swing.JTextField.new.tap do |e|
+        e.horizontal_alignment = field.swing_alignment
+      end
     end
-    
-    # TODO maybe full_edit should open in a separate window?
     
     def value
       editor.text
@@ -20,6 +20,10 @@ module Clevic
     
     def minimal_edit
       editor.select_all
+    end
+    
+    def needs_pre_selection?
+      true
     end
   end
 

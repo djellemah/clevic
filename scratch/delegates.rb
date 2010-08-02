@@ -9,9 +9,11 @@ require 'clevic/extensions.rb'
 require File.dirname( __FILE__ ) + '/../models/times_psql_models.rb'
 
 class ShowDelegates
-  def initialize
+  def initialize( view_name = :entry )
     @controls = {}
   end
+  
+  attr_accessor :view_name
   
   def frame
     @frame ||= javax.swing.JFrame.new.tap do |frame|
@@ -20,7 +22,7 @@ class ShowDelegates
   end
   
   def view
-    @view ||= Clevic::View[:invoice].new
+    @view ||= Clevic::View[view_name].new
   end
   
   attr_reader :controls

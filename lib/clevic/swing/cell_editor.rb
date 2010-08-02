@@ -14,19 +14,8 @@ class CellEditor
   attr_accessor :listeners
   attr_reader :index
   
-  def default_delegate!
-    if index.field.delegate.nil?
-      if index.field.type == :boolean
-        index.field.delegate = TextDelegate.new( index.field )
-      else
-        index.field.delegate = TextDelegate.new( index.field )
-      end
-    end
-    index.field.delegate
-  end
-  
   def delegate
-    index.field.delegate || default_delegate!
+    index.field.delegate
   end
   
   # override TableCellEditor methods
@@ -36,7 +25,7 @@ class CellEditor
     # remember index for later. The delegate and the editor and the value
     # all come from it.
     @index = @table_view.model.create_index( row_index, column_index )
-      
+    
     # use the delegate's component. It actually comes from the index, which
     # is a bit weird. But anyway.
     delegate.entity = @index.entity

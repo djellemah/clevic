@@ -21,6 +21,15 @@ class Field
       end
     end
   end
+  
+  def swing_alignment
+    case alignment
+    when :left; javax.swing.SwingConstants::LEFT
+    when :right; javax.swing.SwingConstants::RIGHT
+    when :centre, :center; javax.swing.SwingConstants::CENTER
+    else javax.swing.SwingConstants::LEADING
+    end
+  end
 end
 
 end
