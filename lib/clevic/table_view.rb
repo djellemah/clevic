@@ -278,7 +278,7 @@ class TableView
     
     # tell the editing component to do full edit, eg if it's a combo
     # box to open the list.
-    current_index.field.delegate.andand.full_edit
+    current_index.field.delegate.full_edit
   end
   
   # Add a new row and move to it, provided we're not in a read-only view.

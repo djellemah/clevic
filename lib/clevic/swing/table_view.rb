@@ -84,7 +84,7 @@ class ClevicTable < javax.swing.JTable
   # already selected provided it isn't a combo
   # box, in which case show the drop-down arrow, but
   # not the drop-down itself.
-  def editCellAt( row, column, event )
+  def editCellAt( row, column, event = nil )
     if event
       index = table_view.model.create_index(row,column)
       edit_ok =
@@ -213,7 +213,10 @@ class TableView < javax.swing.JScrollPane
   
   # called from the framework-independent part to edit a cell
   def edit( table_index )
-    @jtable.edit_cell_at( table_index.row, table_index.column )
+    # TODO keyboard focus doesn't seem to be reassigned to combo
+    # when editing is started this way.
+    puts "#{__FILE__}:#{__LINE__}:table_index: #{table_index.inspect}"
+    @jtable.editCellAt( table_index.row, table_index.column )
   end
   
   # copy current selection to clipboard as CSV
