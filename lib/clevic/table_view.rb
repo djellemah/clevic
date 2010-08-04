@@ -6,6 +6,9 @@ require 'clevic/filter_command.rb'
 
 module Clevic
 
+class PasteError < RuntimeError
+end
+
 # Various methods common to view classes
 class TableView
   # TODO reactivate
@@ -345,6 +348,10 @@ class TableView
   def paste
     # if it's text from an external program, call paste_text
     # otherwise use the java-native-application or whatever mime type it is
+    # for now assume plain text
+    paste_text
+  rescue PasteError => e
+    emit_status_text e.message
   end
   
   # TODO probably need a PasteParser or something, to figure
@@ -357,15 +364,25 @@ class TableView
     sanity_check_read_only
     
     text = read_clipboard
-    arr = FasterCSV.parse( text )
     
-    return true if selection_model.selection.size != 1
+    # assume it's tab-separated if there's a tab in the data
+    col_sep =
+    if text.include?( "\t" )
+      "\t"
+    else
+      ","
+    end
+      
+    arr = FasterCSV.parse( text, :col_sep => col_sep )
     
-    selected_index = selection_model.selected_indexes.first
+    if selection_model.ranges.size != 1
+      raise PasteError, "Can't paste to multiple selections"
+    end
     
     if selection_model.single_cell?
+      selected_index = selection_model.selected_indexes.first
       # only one cell selected, so paste like a spreadsheet
-      if text.empty?
+      if text.strip.empty?
         # just clear the current selection
         selected_index.attribute_value = nil
       else
@@ -377,9 +394,8 @@ class TableView
         # set all selected indexes to the value
         value = arr.first.first
         selection_model.selected_indexes.each do |index|
-          index.edit_value = value
-          # TODO save records to db?
-          puts "#{__FILE__}:#{__LINE__}: not saving changes"
+          index.text_value = value
+          puts "#{__FILE__}:#{__LINE__}: TODO decide if changes should be saved here"
           #~ model.save( index )
         end
         
@@ -390,8 +406,13 @@ class TableView
           change.bottom_right = sorted.last
         end
       else
-        return true if selection_model.ranges.first.height != arr.size
-        return true if selection_model.ranges.first.width != arr.first.size
+        if selection_model.ranges.first.height != arr.size
+          raise PasteError, "Height of paste area (#{selection_model.ranges.first.height}) doesn't match height of data (#{arr.size})."
+        end
+        
+        if selection_model.ranges.first.width != arr.first.size
+          raise PasteError, "Width of paste area (#{selection_model.ranges.first.width}) doesn't match width of data (#{arr.first.size})."
+        end
         
         # size is the same, so do the paste
         paste_to_index( selected_index, arr )
@@ -411,7 +432,7 @@ class TableView
         unless top_left_index.column + field_index >= model.column_count
           # do paste
           cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
-          cell_index.edit_value = field
+          cell_index.text_value = field
         else
           emit_status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
         end

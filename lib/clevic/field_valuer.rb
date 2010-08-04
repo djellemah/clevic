@@ -18,6 +18,8 @@ module Clevic
       field.do_edit_format( raw_value ) unless raw_value.nil?
     end
     
+    # Set the value from an editable text representation
+    # of the value
     def edit_value=( value )
       # translate the value from the ui to something that
       # the model will understand
@@ -65,6 +67,23 @@ module Clevic
       end
     end
   
+    # set the field value from a value that could be
+    # a text representation a-la edit_value, or possible
+    # a name from a related entity
+    def text_value=( value )
+      case field.display
+      when Symbol
+        # we have a related class of some kind, 
+        candidates = field.related_class.adaptor.find( field.display => value )
+        raise "too many candidates for #{value}: #{candidates.inspect}" if candidates.size != 1
+        self.attribute_value = candidates.first
+      when NilClass
+        self.edit_value = value
+      else
+        puts "#{__FILE__}:#{__LINE__}:display is a not a symbol or nil: #{display.inspect}"
+      end
+    end
+    
     # fetch the value of the attribute, without following
     # the full path. This will return a related entity for
     # belongs_to or has_one relationships, or a plain value
