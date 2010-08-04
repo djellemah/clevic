@@ -46,9 +46,8 @@ class TableModel < javax.swing.table.AbstractTableModel
     fireTableRowsDeleted( rows.first, rows.last )
   end
   
-  # TODO update status of vertical header
   def update_vertical_header( index )
-    puts "TODO update_vertical_header not implemented"
+    puts "#{__FILE__}:#{__LINE__}: TODO update_vertical_header not implemented"
   end
   
   # Tell the UI we had a major data change
@@ -149,20 +148,20 @@ class TableModel < javax.swing.table.AbstractTableModel
   end
   
   def isCellEditable( row_index, column_index )
-    index = SwingTableIndex.new( self, row_index, column_index )
+    index = create_index( row_index, column_index )
     !( index.field.read_only? || index.entity.andand.readonly? || read_only? )
   end
   
   # Provide data to UI
   def getValueAt( row_index, column_index )
-    SwingTableIndex.new( self, row_index, column_index ).attribute_value
+    create_index( row_index, column_index ).attribute_value
   rescue
     puts $!.inspect
     nil
   end
   
   def setValueAt( value, row_index, column_index )
-    index = SwingTableIndex.new( self, row_index, column_index )
+    index = create_index( row_index, column_index )
     puts "setting index: #{index.inspect} to #{value.inspect}"
     
     # Don't allow the primary key to be changed
@@ -171,18 +170,23 @@ class TableModel < javax.swing.table.AbstractTableModel
     # translate the value from the ui to something that
     # the DB entity will understand
     begin
-      index.attribute_value =
-      case
-        when value.class.name == 'java.util.Date'
+      if value.is_a?( java.util.Date )
+        index.attribute_value =
+        case value
+        # more specific descendant first
+        when java.util.Time
+          Time.new( value.hour, value.min, value.sec )
+          
+        when java.util.Date
           Date.new( value.year, value.month, value.day )
         
-        when value.class.name == 'java.util.Time'
-          Time.new( value.hour, value.min, value.sec )
-        
         else
-          translate_to_db_object( index, value )
-        
+          raise "don't know how to convert a #{value.class.name}:#{value.inspect}"
+        end
+      else
+        index.edit_value = value
       end
+      
       puts "NOT SAVING YET index: #{index.inspect}"
       data_changed( index )
     rescue Exception => e

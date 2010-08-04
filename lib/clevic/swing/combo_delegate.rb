@@ -59,11 +59,11 @@ class ComboDelegate < Delegate
       @editor = combo_box
       
       # subclasses fill in the rest of the entries
-      populate( entity )
+      populate
       
       # add the current item, if it isn't there already
       # should therefore come after populate
-      populate_current( entity )
+      populate_current
       
       # create a nil entry
       add_nil_item if allow_null?
@@ -75,14 +75,14 @@ class ComboDelegate < Delegate
       configure_editable
       
       # set the correct value in the list
-      select_current( entity )
+      select_current
     else
       @editor =
       if restricted?
         show_message( empty_set_message )
         nil
       else
-        line_editor( field.edit_format( entity ) )
+        line_editor( edit_value )
       end
     end
     editor
@@ -111,7 +111,7 @@ class ComboDelegate < Delegate
   
   # Subclasses should override this to fill the combo box
   # list with values.
-  def populate( entity )
+  def populate
     raise "subclass responsibility"
   end
   
@@ -145,12 +145,12 @@ class ComboDelegate < Delegate
   end
   
   # add the current item, unless it's already in the combo data
-  def populate_current( entity )
+  def populate_current
     # always add the current selection, if it isn't already there
     # and it makes sense. This is to make sure that if the list
     # is filtered, we always have the current value if the filter
     # excludes it
-    item = field.attribute_value_for( entity )
+    item = attribute_value
     editor.insert_item_at( item, 0 ) if item && !editor.include?( item )
   end
 
@@ -158,8 +158,8 @@ class ComboDelegate < Delegate
     editor << nil unless editor.include?( nil )
   end
   
-  def select_current( entity )
-    editor.selected_item = field.attribute_value_for( entity )
+  def select_current
+    editor.selected_item = attribute_value
   end
   
   def value

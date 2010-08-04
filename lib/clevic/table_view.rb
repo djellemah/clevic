@@ -147,53 +147,6 @@ class TableView
     buffer.string
   end
   
-  # TODO need refactor between Clevic and ui framework
-  def paste_csv( paste_text )
-    sanity_check_read_only
-    
-    arr = FasterCSV.parse( paste_text )
-    
-    selection_model.selected_indexes.
-    return true if selection_model.selection.size != 1
-    
-    selection_range = selection_model.selection.first
-    selected_index = selection_model.selected_indexes.first
-    
-    if selection_model.selection.size == 1 && selection_range.single_cell?
-      # only one cell selected, so paste like a spreadsheet
-      if text.empty?
-        # just clear the current selection
-        model.setData( selected_index, nil.to_variant )
-      else
-        paste_to_index( selected_index, arr )
-      end
-    else
-      if arr.size == 1 && arr.first.size == 1
-        # only one value to paste, and multiple selection, so
-        # set all selected indexes to the value
-        value = arr.first.first
-        selection_model.selected_indexes.each do |index|
-          set_model_data( index, value.to_variant, Qt::PasteRole )
-          # save records to db
-          model.save( index )
-        end
-        
-        # notify of changed data
-        model.data_changed do |change|
-          sorted = selection_model.selected_indexes.sort
-          change.top_left = sorted.first
-          change.bottom_right = sorted.last
-        end
-      else
-        return true if selection_range.height != arr.size
-        return true if selection_range.width != arr.first.size
-        
-        # size is the same, so do the paste
-        paste_to_index( selected_index, arr )
-      end
-    end
-  end
-  
   def sanity_check_ditto
     if current_index.row == 0
       emit_status_text( 'No previous record to copy.' )
@@ -388,7 +341,65 @@ class TableView
     "#{count || 0} " + ((count == 1 || count == '1') ? singular : (plural || singular.pluralize))
   end
 
-  # Paste a CSV array to the index, replacing whatever is at that index
+  # get something from the clipboard and put it at the current selection
+  def paste
+    # if it's text from an external program, call paste_text
+    # otherwise use the java-native-application or whatever mime type it is
+  end
+  
+  # TODO probably need a PasteParser or something, to figure
+  # out if a file is tsv or csv
+  # Try tsv first, because number formats often have embedded ','.
+  # Check for rectangularness, ie sv_arr.map{|row| row.size}.uniq.size == 1
+  # if tsv doesn't work, try with csv and test for rectangularness
+  # if it's less than the field's max length(if there is one), assum it's one string.
+  def paste_text
+    sanity_check_read_only
+    
+    text = read_clipboard
+    arr = FasterCSV.parse( text )
+    
+    return true if selection_model.selection.size != 1
+    
+    selected_index = selection_model.selected_indexes.first
+    
+    if selection_model.single_cell?
+      # only one cell selected, so paste like a spreadsheet
+      if text.empty?
+        # just clear the current selection
+        selected_index.attribute_value = nil
+      else
+        paste_to_index( selected_index, arr )
+      end
+    else
+      if arr.size == 1 && arr.first.size == 1
+        # only one value to paste, and multiple selection, so
+        # set all selected indexes to the value
+        value = arr.first.first
+        selection_model.selected_indexes.each do |index|
+          index.edit_value = value
+          # TODO save records to db?
+          puts "#{__FILE__}:#{__LINE__}: not saving changes"
+          #~ model.save( index )
+        end
+        
+        # notify of changed data
+        model.data_changed do |change|
+          sorted = selection_model.selected_indexes.sort
+          change.top_left = sorted.first
+          change.bottom_right = sorted.last
+        end
+      else
+        return true if selection_model.ranges.first.height != arr.size
+        return true if selection_model.ranges.first.width != arr.first.size
+        
+        # size is the same, so do the paste
+        paste_to_index( selected_index, arr )
+      end
+    end
+  end
+  
+  # Paste an array to the index, replacing whatever is at that index
   # and whatever is at other indices matching the size of the pasted
   # csv array. Create new rows if there aren't enough.
   def paste_to_index( top_left_index, csv_arr )
@@ -400,7 +411,7 @@ class TableView
         unless top_left_index.column + field_index >= model.column_count
           # do paste
           cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
-          model.setData( cell_index, field.to_variant, Qt::PasteRole )
+          cell_index.edit_value = field
         else
           emit_status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
         end
@@ -417,7 +428,6 @@ class TableView
         i.column += csv_arr.first.size - 1
       end
     end
-    emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
   
   # ask the question in a dialog. If the user says yes, execute the block

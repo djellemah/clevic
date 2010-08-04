@@ -37,6 +37,10 @@ method in ModelBuilder, whereas ruby attributes are for the internal workings.
 TODO decide whether value_for type methods take an entity and do_something methods
 take a value.
 
+TODO the xxx_for methods are in here because their return values don't change
+by entity. Well, maybe sometimes they do. Anyway, need to find a better location
+for these and a better caching strategy.
+
 TODO this class is a bit confused about whether it handles metadata or record data, or both.
 
 TODO meta needs to handle virtual fields better.
@@ -69,7 +73,7 @@ class Field
   property :label
   
   ##
-  # For relational fields, this is the class_name for the related AR entity.
+  # For relational fields, this is the class_name for the related entity.
   # TODO not used anymore?
   property :class_name
   
@@ -249,9 +253,9 @@ EOF
   def value_for( entity )
     begin
       return nil if entity.nil?
-      transform_attribute( attribute_value_for( entity ) )
+      transform_attribute( entity.send( attribute ) )
     rescue Exception => e
-      puts "error for #{entity}.#{attribute_value_for( entity ).inspect} in value_for: #{e.message}"
+      puts "error for #{entity}.#{entity.send( attribute ).inspect} in value_for: #{e.message}"
       puts e.backtrace
     end
   end
@@ -356,10 +360,6 @@ EOF
   # TODO Doesn't do anything useful yet.
   def decoration_for( entity )
     nil
-  end
-  
-  def attribute_value_for( entity )
-    entity.send( attribute )
   end
   
   # Called by Clevic::TableModel to get the foreground color value

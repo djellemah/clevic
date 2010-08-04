@@ -19,7 +19,7 @@ class SetDelegate < ComboDelegate
     field.restricted || false
   end
   
-  def populate( entity )
+  def populate
     field.set_for( entity ).each do |item|
       if item.is_a?( Array )
         puts "#{__FILE__}:#{__LINE__}:probably can't deal with item: #{item.inspect}"

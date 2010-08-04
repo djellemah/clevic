@@ -171,7 +171,6 @@ class TableView < javax.swing.JScrollPane
   def connect_view_signals( entity_view )
     model.addTableModelListener do |table_model_event|
       begin
-        puts "table changed event: #{table_model_event.inspect}"
         # pass changed events to view definitions
         return unless table_model_event.updated?
         
@@ -182,12 +181,7 @@ class TableView < javax.swing.JScrollPane
         top_left = model.create_index( table_model_event.first_row, table_model_event.column )
         bottom_right = model.create_index( table_model_event.last_row, table_model_event.column )
         
-        puts "#{__FILE__}:#{__LINE__}:top_left: #{top_left.inspect}"
-        puts "#{__FILE__}:#{__LINE__}:bottom_right: #{bottom_right.inspect}"
-        
         entity_view.notify_data_changed( self, top_left, bottom_right )
-        
-        puts "#{__FILE__}:#{__LINE__}:do something to save to db?"
       rescue Exception => e
         puts "#{model.entity_view.class.name}: #{e.message}"
         puts e.backtrace
@@ -215,7 +209,7 @@ class TableView < javax.swing.JScrollPane
   def edit( table_index )
     # TODO keyboard focus doesn't seem to be reassigned to combo
     # when editing is started this way.
-    puts "#{__FILE__}:#{__LINE__}:table_index: #{table_index.inspect}"
+    puts "#{__FILE__}:#{__LINE__}: TODO full edit doesn't transfer keyboard focus"
     @jtable.editCellAt( table_index.row, table_index.column )
   end
   
@@ -224,66 +218,16 @@ class TableView < javax.swing.JScrollPane
   # for a more sophisticated API
   # TODO use 	javaJVMLocalObjectMimeType 
   # file:///usr/share/doc/java-sdk-docs-1.6.0.10/html/api/java/awt/datatransfer/DataFlavor.html#javaJVMLocalObjectMimeType
+  # also use a DataFlavor with mimetype application/x-java-serialized-object
+  # to transfer between cells.
   def copy_current_selection
     transferable = java.awt.datatransfer.StringSelection.new( current_selection_csv )
     clipboard = java.awt.Toolkit.default_toolkit.system_clipboard
     clipboard.setContents( transferable, transferable )
   end
   
-  # TODO refactor with Clevic::TableView
-  def paste
-    # yes, this MUST be camelCase cos it's a field not a method
-    df = java.awt.datatransfer.DataFlavor.stringFlavor
-    # also system_selection
-    cb = java.awt.Toolkit.default_toolkit.system_clipboard
-    clipboard_value = cb.getData( df ).to_s
-    puts "clipboard_value: #{clipboard_value.inspect}"
-    
-    sanity_check_read_only
-    
-    # remove trailing "\n" if there is one
-    text = clipboard.text.chomp
-    arr = FasterCSV.parse( text )
-    
-    # TODO what did this do?
-    #~ selection_model.selected_indexes.
-    return true if selection_model.selection.size != 1
-    
-    selected_index = selection_model.selected_indexes.first
-    
-    if selection_model.single_cell?
-      # only one cell selected, so paste like a spreadsheet
-      if text.empty?
-        # just clear the current selection
-        model.setData( selected_index, nil.to_variant )
-      else
-        paste_to_index( selected_index, arr )
-      end
-    else
-      if arr.size == 1 && arr.first.size == 1
-        # only one value to paste, and multiple selection, so
-        # set all selected indexes to the value
-        value = arr.first.first
-        selection_model.selected_indexes.each do |index|
-          set_model_data( index, value )
-          # save records to db
-          model.save( index )
-        end
-        
-        # notify of changed data
-        model.data_changed do |change|
-          sorted = selection_model.selected_indexes.sort
-          change.top_left = sorted.first
-          change.bottom_right = sorted.last
-        end
-      else
-        return true if selection_model.ranges.first.height != arr.size
-        return true if selection_model.ranges.first.width != arr.first.size
-        
-        # size is the same, so do the paste
-        paste_to_index( selected_index, arr )
-      end
-    end
+  def read_clipboard
+    java.awt.Toolkit.default_toolkit.system_clipboard.getData( java.awt.datatransfer.DataFlavor.stringFlavor ).to_s
   end
   
   def status_text_listeners
@@ -346,39 +290,6 @@ class TableView < javax.swing.JScrollPane
   
   def model
     @jtable.model
-  end
-  
-  # Paste a CSV array to the index, replacing whatever is at that index
-  # and whatever is at other indices matching the size of the pasted
-  # csv array. Create new rows if there aren't enough.
-  # TODO implement
-  def paste_to_index( top_left_index, csv_arr )
-    csv_arr.each_with_index do |row,row_index|
-      # append row if we need one
-      model.add_new_item if top_left_index.row + row_index >= model.row_count
-      
-      row.each_with_index do |field, field_index|
-        unless top_left_index.column + field_index >= model.column_count
-          # do paste
-          cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
-          model.setData( cell_index, field.to_variant, Qt::PasteRole )
-        else
-          emit status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
-        end
-      end
-      # save records to db
-      model.save( top_left_index.choppy {|i| i.row += row_index; i.column = 0 } )
-    end
-    
-    # make the gui refresh
-    model.data_changed do |change|
-      change.top_left = top_left_index
-      change.bottom_right = top_left_index.choppy do |i|
-        i.row += csv_arr.size - 1
-        i.column += csv_arr.first.size - 1
-      end
-    end
-    emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
   
   def show_error( msg )

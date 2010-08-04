@@ -2,6 +2,8 @@ require 'clevic/field_valuer.rb'
 
 module Clevic
 
+# This has both a field and an entity, so it's a perfect candidate
+# for including FieldValuer, which it does.
 class Delegate
   include FieldValuer
 

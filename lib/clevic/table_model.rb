@@ -153,59 +153,6 @@ class TableModel
     end
   end
   
-  # TODO still think this should be in Field, becaues it's not specific
-  # to table-style views
-  def translate_to_db_object( table_index, value )
-    type = table_index.meta.type
-    # translate the value from the ui to something that
-    # the AR model will understand
-    case
-      # allow flexibility in entering dates. For example
-      # 16jun, 16-jun, 16 jun, 16 jun 2007 would be accepted here
-      # TODO need to be cleverer about which year to use
-      # for when you're entering 16dec and you're in the next
-      # year
-      when [:date,:datetime].include?( type ) && value =~ %r{^(\d{1,2})[ /-]?(\w{3})$}
-        Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
-      
-      # if a digit only is entered, fetch month and year from
-      # previous row
-      when [:date,:datetime].include?( type ) && value =~ %r{^(\d{1,2})$}
-        previous_entity = collection[index.row - 1]
-        # year,month,day
-        Date.new( previous_entity.date.year, previous_entity.date.month, $1.to_i )
-      
-      # this one is mostly to fix date strings that have come
-      # out of the db and been formatted
-      when [:date,:datetime].include?( type ) && value =~ %r{^(\d{2})[ /-](\w{3})[ /-](\d{2})$}
-        Date.parse( "#$1 #$2 20#$3" )
-      
-      # allow lots of flexibility in entering times
-      # 01:17, 0117, 117, 1 17, are all accepted
-      when type == :time && value =~ %r{^(\d{1,2}).?(\d{2})$}
-        Time.parse( "#$1:#$2" )
-      
-      # remove thousand separators, allow for space and comma
-      # instead of . as a decimal separator
-      when type == :decimal
-        # do various transforms
-        value = 
-        case
-          # accept a space or a comma instead of a . for floats
-          when value =~ /(.*?)(\d)[ ,](\d{2})$/
-            "#$1#$2.#$3"
-          else
-            value
-        end
-        
-        # strip remaining commas
-        value.gsub( ',', '' )
-      
-      else
-        value
-    end
-  end
-  
   class DataChange
     class ModelIndexProxy
       attr_accessor :row
