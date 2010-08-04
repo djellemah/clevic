@@ -66,6 +66,12 @@ module Clevic
           value
       end
     end
+    
+    def find_related( attribute, value )
+      candidates = field.related_class.adaptor.find( :all, :conditions => {attribute => value} )
+      raise "too many candidates for #{value}: #{candidates.inspect}" if candidates.size != 1
+      candidates.first
+    end
   
     # set the field value from a value that could be
     # a text representation a-la edit_value, or possible
@@ -74,13 +80,21 @@ module Clevic
       case field.display
       when Symbol
         # we have a related class of some kind, 
-        candidates = field.related_class.adaptor.find( field.display => value )
-        raise "too many candidates for #{value}: #{candidates.inspect}" if candidates.size != 1
-        self.attribute_value = candidates.first
+        self.attribute_value = find_related( field.display, value )
+      
       when NilClass
         self.edit_value = value
+      
+      when String
+        # allow plain strings, but not dotted paths
+        if field.display['.']
+          raise "display (#{field.display}) is a dotted path"
+        else
+          self.attribute_value = find_related( field.display.to_sym, value )
+        end
+      
       else
-        puts "#{__FILE__}:#{__LINE__}:display is a not a symbol or nil: #{display.inspect}"
+        raise "display is a not a symbol or nil: #{display.inspect}"
       end
     end
     

@@ -39,6 +39,9 @@ class CellRenderer < javax.swing.table.DefaultTableCellRenderer
   end
 end
 
+# TODO make sure JTable doesn't grab Ctrl-C and do its own copy routine.
+# TODO make sure Delegates use the correct copy routines.
+# TODO make sure Ctrl-V uses TableView paste routine
 class ClevicTable < javax.swing.JTable
   attr_accessor :table_view
   

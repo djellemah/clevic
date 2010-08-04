@@ -269,8 +269,7 @@ class TableModel < Qt::AbstractTableModel
       when qt_paste_role
         if index.meta.type == :association
           field = index.field
-          association_class = field.class_name.constantize
-          candidates = association_class.find( :all, :conditions => [ "#{field.attribute_path[1]} = ?", variant.value ] )
+          candidates = field.related_class.find( :all, :conditions => [ "#{field.attribute_path[1]} = ?", variant.value ] )
           case candidates.size
             when 0; puts "No match for #{variant.value}"
             when 1; index.attribute_value = candidates[0]

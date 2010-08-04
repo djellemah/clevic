@@ -73,11 +73,6 @@ class Field
   property :label
   
   ##
-  # For relational fields, this is the class_name for the related entity.
-  # TODO not used anymore?
-  property :class_name
-  
-  ##
   # One of the alignment specifiers - :left, :centre, :right or :justified.
   # Defaults to right for numeric fields, centre for boolean, and left for
   # other values.
@@ -308,6 +303,12 @@ EOF
   # return the result of the attribute + the path
   def column
     [attribute.to_s, path].compact.join('.')
+  end
+  
+  # return the class object of a related class if this is a relational
+  # field, otherwise nil
+  def related_class
+    @related_class ||= eval( entity_class.reflections[attribute].class_name || attribute.to_s.classify )
   end
   
   # return an array of the various attribute parts

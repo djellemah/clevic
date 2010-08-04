@@ -70,8 +70,8 @@ class Sampler
   end
   
   def related_sample
-    if display.respond_to?( :to_sym )
-      Sampler.new( eval( meta.class_name ), display.to_sym, nil, &@format_block ).compute
+    if display.is_a?( Symbol )
+      Sampler.new( eval( meta.class_name ), display, nil, &@format_block ).compute
     end
   end
 end

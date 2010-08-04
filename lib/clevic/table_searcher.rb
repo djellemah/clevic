@@ -47,9 +47,8 @@ protected
       
       # TODO this will only work with a path value with no dots
       # otherwise the SQL gets complicated with joins etc
-      related_class = eval field.meta.class_name
-      related_class \
-        .filter( related_class.primary_key.qualify( related_class.table_name ) => field.meta.key.qualify( field.entity_class.table_name ) ) \
+      field.related_class \
+        .filter( field.related_class.primary_key.qualify( field.related_class.table_name ) => field.meta.key.qualify( field.entity_class.table_name ) ) \
         .select( field.display.to_sym )
     else
       # for this table

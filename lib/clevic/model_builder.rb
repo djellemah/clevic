@@ -480,9 +480,6 @@ class ModelBuilder
   # or as a dotted path
   def relational( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    if field.class_name.nil?
-      field.class_name = entity_class.reflections[attribute].class_name || attribute.to_s.classify
-    end
     
     # check after all possible options have been collected
     raise ":display must be specified" if field.display.nil?

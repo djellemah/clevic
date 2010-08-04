@@ -275,21 +275,17 @@ class RelationalDelegate < ComboDelegate
   def initialize( parent, field )
     super
     unless find_options[:conditions].nil?
-      find_options[:conditions].gsub!( /true/, entity_class.adaptor.quoted_true )
-      find_options[:conditions].gsub!( /false/, entity_class.adaptor.quoted_false )
+      find_options[:conditions].gsub!( /true/, field.related_class.adaptor.quoted_true )
+      find_options[:conditions].gsub!( /false/, field.related_class.adaptor.quoted_false )
     end
   end
   
-  def entity_class
-    @entity_class ||= ( field.class_name || field.attribute.to_s.classify ).constantize
-  end
-  
   def needs_combo?
-    entity_class.adaptor.count( :conditions => find_options[:conditions] ) > 0
+    field.related_class.adaptor.count( :conditions => find_options[:conditions] ) > 0
   end
   
   def empty_set_message
-    "There must be records in #{entity_class.name.humanize} for this field to be editable."
+    "There must be records in #{field.related_class.name.humanize} for this field to be editable."
   end
   
   # add the current item, unless it's already in the combo data
@@ -311,7 +307,7 @@ class RelationalDelegate < ComboDelegate
 
   def populate( editor, model_index )
     # add set of all possible related entities
-    entity_class.adaptor.find( :all, find_options ).each do |x|
+    field.related_class.adaptor.find( :all, find_options ).each do |x|
       add_to_list( editor, model_index, x )
     end
   end
@@ -345,7 +341,7 @@ class RelationalDelegate < ComboDelegate
       # get the entity it refers to, if there is one
       # use find_by_id so that if it's not found, nil will
       # be returned
-      entity_class.adaptor.find( item_data.to_int )
+      field.related_class.adaptor.find( item_data.to_int )
     end
   end
   

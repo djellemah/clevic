@@ -135,17 +135,10 @@ class TableView
   end
   
   # return the current selection as csv
-  # TODO need refactor between Clevic and framework
   def current_selection_csv
     buffer = StringIO.new
     selected_rows.each do |row|
-      buffer << 
-      row.map do |index|
-        value = index.raw_value
-        unless value.nil?
-          index.field.do_edit_format( value )
-        end
-      end.to_csv
+      buffer << row.map {|index| index.edit_value }.to_csv
     end
     buffer.string
   end

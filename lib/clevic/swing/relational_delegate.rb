@@ -12,26 +12,22 @@ class RelationalDelegate < ComboDelegate
   def initialize( field )
     super
     unless find_options[:conditions].nil?
-      find_options[:conditions].gsub!( /true/, entity_class.adaptor.quoted_true )
-      find_options[:conditions].gsub!( /false/, entity_class.adaptor.quoted_false )
+      find_options[:conditions].gsub!( /true/, field.related_class.adaptor.quoted_true )
+      find_options[:conditions].gsub!( /false/, field.related_class.adaptor.quoted_false )
     end
   end
   
-  def entity_class
-    @entity_class ||= ( field.class_name || field.attribute.to_s.classify ).constantize
-  end
-  
   def needs_combo?
-    entity_class.adaptor.count( :conditions => find_options[:conditions] ) > 0
+    field.related_class.adaptor.count( :conditions => find_options[:conditions] ) > 0
   end
   
   def empty_set_message
-    "There must be records in #{entity_class.name.humanize} for this field to be editable."
+    "There must be records in #{field.related_class.name.humanize} for this field to be editable."
   end
   
   def populate
     # add set of all possible related entities
-    entity_class.adaptor.find( :all, find_options ).each do |instance|
+    field.related_class.adaptor.find( :all, find_options ).each do |instance|
       editor << instance
     end
   end
