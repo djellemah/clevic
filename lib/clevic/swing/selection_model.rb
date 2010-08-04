@@ -21,6 +21,14 @@ class SelectionRange
   def width
     @column_range.distance
   end
+  
+  def top_left
+    SwingTableIndex.new( nil, @row_range.first, @column_range.first )
+  end
+  
+  def bottom_right
+    SwingTableIndex.new( nil, @row_range.last, @column_range.last )
+  end
 end
 
 class SelectionModel

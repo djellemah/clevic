@@ -24,7 +24,7 @@ module ActionBuilder
     # connect the action to some code
     if options.has_key?( :method )
       action.handler do |event|
-        puts "action_method_or_block event: #{event.inspect}" if $options[:debug]
+        puts "#{__FILE__}:#{__LINE__}:action.name: #{action.name.inspect}"
         action_triggered do
           # active is from Qt checkbox-menu-items
           send_args = [ options[:method], options.has_key?( :checkable ) ? action.menu_item.selected? : nil ].compact

@@ -71,6 +71,16 @@ module Clevic
       [ entity.errors[field_name.to_sym] ].flatten
     end
     
+    # sort by row, then column
+    def <=>( other )
+      row_comp = self.row <=> other.row
+      if row_comp == 0
+        self.column <=> other.column
+      else
+        row_comp
+      end
+    end
+    
     def inspect
       "#<TableIndex (#{row},#{column}) '#{raw_value rescue "no raw value: #{$!.message}"}'>"
     end

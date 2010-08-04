@@ -103,11 +103,13 @@ class TableView
     list( :edit ) do
       #~ new_action :action_cut, 'Cu&t', :shortcut => 'Ctrl-X'
       action :action_save, '&Save', :shortcut => 'Ctrl+S', :method => :save_current_row
+      #~ action :action_cut, 'Cu&t', :shortcut => 'Ctrl+X', :method => :cut_current_selection
       action :action_copy, '&Copy', :shortcut => 'Ctrl+C', :method => :copy_current_selection
       action :action_paste, '&Paste', :shortcut => 'Ctrl+V', :method => :paste
+      action :action_delete, '&Delete', :shortcut => 'Del', :method => :delete_selection
       separator
-      action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
-      action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
+      action :action_ditto, 'D&itto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
+      action :action_ditto_right, 'Ditto Ri&ght', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
       action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left, :tool_tip => 'Copy field one to left from previous record'
       action :action_insert_date, 'Insert Date', :shortcut => 'Ctrl+;', :method => :insert_current_date
       action :action_open_editor, '&Open Editor', :shortcut => 'F4', :method => :open_editor
@@ -245,7 +247,9 @@ class TableView
     sanity_check_read_only
 
     # translate from ModelIndex objects to row indices
-    rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
+    puts "#{__FILE__}:#{__LINE__}:implement vertical_header"
+    #~ rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
+    rows = []
     unless rows.empty?
       # header rows are selected, so delete them
       model.remove_rows( rows ) 
@@ -474,12 +478,13 @@ class TableView
       # deletes were done, so call data_changed
       if cells_deleted
         # save affected rows
-        selection_model.row_indexes.each do |index|
-          index.entity.save
-        end
+        # TODO not sure if rows should be saved here
+        #~ selection_model.row_indexes.each do |index|
+          #~ index.entity.save
+        #~ end
         
         # emit data changed for all ranges
-        selection_model.selection.each do |selection_range|
+        selection_model.ranges.each do |selection_range|
           model.data_changed( selection_range )
         end
       end
@@ -521,12 +526,6 @@ class TableView
         # TODO this is actually a shortcut
         when event.ctrl? && event.return?
           new_row
-        
-        when event.delete?
-          if selection_model.selected_indexes.size > 1
-            delete_selection
-            return true
-          end
         
         else
           #~ puts event.inspect

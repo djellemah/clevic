@@ -50,7 +50,7 @@ class ClevicTable < javax.swing.JTable
     # or a function key. Hopefully this doesn't get checked
     # for every single keystroke while editing - those should
     # be captured by the cell editor.
-    if key_event.alt? || key_event.ctrl? || key_event.meta? || key_event.fx?
+    if key_event.alt? || key_event.ctrl? || key_event.meta? || key_event.fx? || key_event.del?
       put_client_property( "JTable.autoStartsEdit", false )
     end
     
@@ -146,12 +146,40 @@ class TableView < javax.swing.JScrollPane
     self.font = Clevic.tahoma
     
     jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new( self ) )
-
+    
+    fix_input_map
+    
     framework_init( arg, &block )
     
     # this must go after framework_init, because it needs the actions
     # which are set up in there
     jtable.component_popup_menu = popup_menu
+  end
+  
+  class EmptyAction < javax.swing.AbstractAction
+    def actionPerformed( action_event ); end
+  end
+  
+  def empty_action
+    @empty_action ||= EmptyAction.new
+  end
+  
+  def add_map( key_string, action = empty_action )
+    map.put( javax.swing.KeyStroke.getKeyStroke( key_string ), action )
+  end
+  
+  def map
+    @map ||= jtable.getInputMap( javax.swing.JComponent::WHEN_ANCESTOR_OF_FOCUSED_COMPONENT )
+  end
+  
+  # This puts empty actions in the local keyboard map so that the
+  # generic keyboard map doesn't catch them and prevent our menu actions
+  # from being triggered
+  def fix_input_map
+    add_map 'ctrl pressed C'
+    add_map 'ctrl pressed V'
+    add_map 'ctrl pressed X'
+    add_map 'pressed DEL'
   end
   
   def popup_menu

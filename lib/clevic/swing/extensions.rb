@@ -115,6 +115,10 @@ unless defined? KeyEvent
       self.class.function_keys.include?( key_code )
     end
     
+    def del?
+      key_code == VK_DELETE
+    end
+    
     def shift?
       modifiers & self.class::SHIFT_MASK != 0
     end
