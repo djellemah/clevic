@@ -37,8 +37,8 @@ class SelectionModel
   # return a collection of selection ranges
   def ranges
     rv = []
-    jtable.selected_rows.group.each do |row_group|
-      jtable.selected_columns.group.each do |column_group|
+    jtable.selected_rows.to_a.group.each do |row_group|
+      jtable.selected_columns.to_a.group.each do |column_group|
         rv << SelectionRange.new( row_group.range, column_group.range )
       end
     end
