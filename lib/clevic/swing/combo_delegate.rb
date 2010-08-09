@@ -25,6 +25,7 @@ class ComboDelegate < Delegate
       # allow for transform of objects to their requested display values
       @original_renderer = combo.renderer
       combo.renderer = self
+      combo.editable = true
     end
   end
   
@@ -45,8 +46,7 @@ class ComboDelegate < Delegate
   end
   
   def configure_prefix
-    Kernel.print "#{__FILE__}:#{__LINE__} "
-    puts "TODO: implement ComboDelegate#configure_prefix"
+    puts "#{__FILE__}:#{__LINE__}:TODO implement ComboDelegate#configure_prefix"
   end
   
   def configure_editable
