@@ -17,6 +17,12 @@ class RelationalDelegate < ComboDelegate
     end
   end
   
+  # use the Clevic::ComboBox class because JCombobox is remarkably stupid
+  # about far too many things.
+  def combo_class
+    ComboBox
+  end
+  
   def needs_combo?
     field.related_class.adaptor.count( :conditions => find_options[:conditions] ) > 0
   end

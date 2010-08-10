@@ -2,6 +2,32 @@ require 'clevic/swing/delegate'
 
 module Clevic
 
+class KeySelectionManager
+  include javax.swing.JComboBox::KeySelectionManager
+  
+  def initialize( combo )
+    @combo = combo
+  end
+  
+  # return index, or -1 if there is none
+  def selectionForKey( achar, combo_box_model )
+    puts "#{__FILE__}:#{__LINE__}:achar: #{achar.inspect}"
+    -1
+  end
+end
+
+# all this just to format a display item...
+class ComboBox < javax.swing.JComboBox
+  def initialize( field )
+    super()
+    @field = field
+  end
+  
+  def configureEditor( combo_box_editor, entity )
+    combo_box_editor.item = @field.transform_attribute( entity )
+  end
+end
+
 =begin rdoc
 Base class for other delegates using Combo boxes.
 
@@ -17,15 +43,18 @@ class ComboDelegate < Delegate
   # this is the GUI component / widget that is displayed
   attr_reader :editor
   
+  def combo_class
+    javax.swing.JComboBox
+  end
+  
   def combo_box
     # renderer should call field.transform_attribute( item )
-    @combo_box ||= javax.swing.JComboBox.new.tap do |combo|
+    @combo_box ||= combo_class.new( field ).tap do |combo|
       combo.font = Clevic.tahoma
       
       # allow for transform of objects to their requested display values
       @original_renderer = combo.renderer
       combo.renderer = self
-      combo.editable = true
     end
   end
   
@@ -50,7 +79,8 @@ class ComboDelegate < Delegate
   end
   
   def configure_editable
-    editor.editable = !restricted?
+    #~ editor.editable = !restricted?
+    editor.editable = true
   end
   
   # Create a GUI widget and fill it with the possible values.
@@ -165,11 +195,11 @@ class ComboDelegate < Delegate
   def value
     # editor could be either a combo or a line (DistinctDelegate with no values yet)
     if is_combo?
-      if editor.editable?
+      if restricted?
+        editor.selected_item 
+      else
         # get the editor's text field value
         editor.editor.item
-      else
-        editor.selected_item 
       end
     else
       editor.text
