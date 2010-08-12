@@ -1,3 +1,30 @@
+# these two are from
+# http://kofno.wordpress.com/2007/05/05/jruby-swingutilitiesinvoke_block_later/
+class BlockRunner < java.lang.Thread
+  def initialize(&proc)
+    @p = proc
+  end
+  
+  def run
+    @p.call
+  end
+end
+
+unless defined? SwingUtilities
+  SwingUtilities = javax.swing.SwingUtilities
+
+  def SwingUtilities.invoke_block_later(&proc)
+    r = BlockRunner.new &proc
+    invoke_later r
+  end
+end
+
+module Kernel
+  def invoke_later( &block )
+    javax.swing.SwingUtilities.invoke_block_later( &block )
+  end
+end
+
 unless defined? AbstractButton
   AbstractButton = javax.swing.AbstractButton
   class AbstractButton
@@ -8,6 +35,15 @@ unless defined? AbstractButton
       else
         self.setMnemonic( arg )
       end
+    end
+  end
+end
+
+unless defined? CaretEvent
+  CaretEvent = javax.swing.event.CaretEvent
+  class CaretEvent
+    def inspect
+      "<CaretEvent dot=#{dot} mark=#{mark} source=#{source}>"
     end
   end
 end

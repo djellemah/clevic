@@ -30,7 +30,7 @@ module Clevic
     def attribute_list( attribute, attribute_value, by_description, by_frequency, find_options, &block )
       lister = AttributeList.new( @entity_class, attribute, attribute_value, find_options )
       ds = lister.dataset( by_description, by_frequency )
-      ds.each( &block )
+      ds.map( &block )
     end
   end
   

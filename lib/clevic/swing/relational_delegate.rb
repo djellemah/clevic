@@ -31,11 +31,10 @@ class RelationalDelegate < ComboDelegate
     "There must be records in #{field.related_class.name.humanize} for this field to be editable."
   end
   
-  def populate
+  def population
     # add set of all possible related entities
-    field.related_class.adaptor.find( :all, find_options ).each do |instance|
-      editor << instance
-    end
+    puts "#{__FILE__}:#{__LINE__}"
+    field.related_class.adaptor.find( :all, find_options )
   end
   
   # don't allow new values

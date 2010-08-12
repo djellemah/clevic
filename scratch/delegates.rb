@@ -55,7 +55,7 @@ class ShowDelegates
   
   def show
     # general setup
-    frame.default_close_operation = javax.swing.JFrame::HIDE_ON_CLOSE
+    frame.default_close_operation = ( $0 == 'jirb' ? javax.swing.JFrame::HIDE_ON_CLOSE : javax.swing.JFrame::EXIT_ON_CLOSE )
     frame.pack
     frame.visible = true 
   end

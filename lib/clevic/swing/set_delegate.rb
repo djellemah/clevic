@@ -19,8 +19,8 @@ class SetDelegate < ComboDelegate
     field.restricted || false
   end
   
-  def populate
-    field.set_for( entity ).each do |item|
+  def population
+    field.set_for( entity ).map do |item|
       if item.is_a?( Array )
         puts "#{__FILE__}:#{__LINE__}:probably can't deal with item: #{item.inspect}"
         # this is a hash-like set, so use key as db value
@@ -33,7 +33,7 @@ class SetDelegate < ComboDelegate
           def toString; self; end
         end
       end
-      editor.add_item( item )
+      item
     end
   end
 end

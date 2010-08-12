@@ -2,20 +2,6 @@ require 'clevic/swing/delegate'
 
 module Clevic
 
-class KeySelectionManager
-  include javax.swing.JComboBox::KeySelectionManager
-  
-  def initialize( combo )
-    @combo = combo
-  end
-  
-  # return index, or -1 if there is none
-  def selectionForKey( achar, combo_box_model )
-    puts "#{__FILE__}:#{__LINE__}:achar: #{achar.inspect}"
-    -1
-  end
-end
-
 # all this just to format a display item...
 class ComboBox < javax.swing.JComboBox
   def initialize( field )
@@ -24,32 +10,38 @@ class ComboBox < javax.swing.JComboBox
   end
   
   def configureEditor( combo_box_editor, entity )
-    combo_box_editor.item = @field.transform_attribute( entity )
+    if entity.is_a? String
+      puts "#{__FILE__}:#{__LINE__}:entity: #{entity.inspect}"
+    else
+      combo_box_editor.item = @field.transform_attribute( entity )
+      combo_box_editor.select_all
+    end
   end
 end
 
 =begin rdoc
 Base class for other delegates using Combo boxes.
-
-Generally these will be created using a Clevic::ModelBuilder.
-
-TODO set up keystroke auto-finding
 =end
 class ComboDelegate < Delegate
   def initialize( field )
     super
+    @autocompleting = false
   end
   
-  # this is the GUI component / widget that is displayed
+  # Return the GUI component / widget that is displayed when editing.
+  # Usually this will be a combo box widget, but it can be a text editor
+  # in some cases.
   attr_reader :editor
   
   def combo_class
-    javax.swing.JComboBox
+    ComboBox
   end
   
-  def combo_box
-    # renderer should call field.transform_attribute( item )
-    @combo_box ||= combo_class.new( field ).tap do |combo|
+  def create_combo_box
+    # create a new combo class each time, otherwise
+    # we have to get into managing cleaning out the model
+    # and so on
+    combo_class.new( field ).tap do |combo|
       combo.font = Clevic.tahoma
       
       # allow for transform of objects to their requested display values
@@ -64,29 +56,38 @@ class ComboDelegate < Delegate
   # we just transform the value, and pass it to the
   # pre-existing renderer for the combo.
   def getListCellRendererComponent(jlist, value, index, selected, cell_has_focus)
-    display_value = field.transform_attribute( value )
-    @original_renderer.getListCellRendererComponent(jlist, display_value, index, selected, cell_has_focus)
+    @original_renderer.getListCellRendererComponent(jlist, display_for( value ), index, selected, cell_has_focus)
   end
   
+  # Return a string to be shown to the user.
+  # model_value is an item stored in the combo box model.
+  def display_for( model_value )
+    field.transform_attribute( model_value )
+  end
+  
+  # return a new text editor. This is for distinct_delegate when there
+  # are no other values to choose from.
+  # TODO move into distinct_delegate then?
   def line_editor( value )
     @line_editor ||= javax.swing.JTextField.new( value ).tap do |line|
       line.font = Clevic.tahoma
     end
   end
   
+  # Some GUIs (Qt) can just set this. Swing can't.
   def configure_prefix
-    puts "#{__FILE__}:#{__LINE__}:TODO implement ComboDelegate#configure_prefix"
   end
   
+  # TODO kinda redundant because all combos must be editable
+  # to support prefix matching
   def configure_editable
-    #~ editor.editable = !restricted?
     editor.editable = true
   end
   
   # Create a GUI widget and fill it with the possible values.
   def init_component
     if needs_combo?
-      @editor = combo_box
+      @editor = create_combo_box
       
       # subclasses fill in the rest of the entries
       populate
@@ -101,11 +102,28 @@ class ComboDelegate < Delegate
       # allow prefix matching from the keyboard
       configure_prefix
       
-      # don't all text editing if restricted
+      # don't allow text editing if restricted
       configure_editable
       
       # set the correct value in the list
       select_current
+      
+      # pick up events from editor
+      # but only after all the other config, otherwise we get
+      # events triggered by the setup, which isn't helpful.
+      editor.editor.editor_component.document.add_document_listener do |event|
+        # don't do anything if autocomplete manipulations are in progress
+        unless @autocompleting
+          if event.type == javax.swing.event.DocumentEvent::EventType::REMOVE
+            invoke_later do
+              repopulate
+            end
+          else
+            # only suggest on inserts and updates. Not on deletes.
+            filter_prefix( editor.editor.item )
+          end
+        end
+      end
     else
       @editor =
       if restricted?
@@ -116,6 +134,64 @@ class ComboDelegate < Delegate
       end
     end
     editor
+  end
+  
+  # populate the combo box. Try overriding population first, otherwise
+  # it might become necessary to also override filter_prefix
+  def populate
+    population.each do |item|
+      editor << item
+    end
+  end
+  
+  # Recreate the model and fill it with anything in population that
+  # matches the prefix, or all items if prefix is null.
+  # Then set the editor text value to either text, or to the previous
+  # value.
+  # Order is important: if the text is set first it's overridden when
+  # the model is populated.
+  def repopulate( prefix = nil, text = nil )
+    autocomplete do
+      save_item = editor.editor.item
+      prefix ||= editor.editor.item
+      editor.model = editor.model.class.new
+      population.select {|item| display_for( item ) =~ /^#{prefix}/i }.each do |item|
+        editor << item
+      end
+      editor.editor.item = text || save_item
+    end
+  end
+    
+  # make sure we don't react to document change events
+  # while we're doing autocompletion. Reentrant
+  def autocomplete( &block )
+    @autocompleting = true
+    yield
+  ensure
+    @autocompleting = false
+  end
+  
+  # http://www.drdobbs.com/184404457 for autocompletion steps
+  def filter_prefix( prefix )
+    # search for matching item
+    candidate = population.map{|item| display_for( item ) }.select {|x| x =~ /^#{prefix}/i }.first
+    unless candidate.nil?
+      first_not_of = candidate.match( /^#{prefix}/i ).offset(0).last
+      invoke_later do
+        autocomplete do
+          # set the shortlist, and the text editor value
+          repopulate prefix, candidate
+          
+          # set the suggestion selection
+          editor.editor.editor_component.with do |text_edit|
+            # highlight the suggested match, and leave caret
+            # at the beginning of the suggested text
+            text_edit.caret_position = candidate.length
+            text_edit.move_caret_position( first_not_of )
+          end
+        end
+      end
+    end
   end
   
   # open the combo box, just like if f4 was pressed
@@ -141,7 +217,7 @@ class ComboDelegate < Delegate
   
   # Subclasses should override this to fill the combo box
   # list with values.
-  def populate
+  def population
     raise "subclass responsibility"
   end
   
@@ -198,7 +274,7 @@ class ComboDelegate < Delegate
       if restricted?
         editor.selected_item 
       else
-        # get the editor's text field value
+        puts "#{__FILE__}:#{__LINE__}:get the editor's text field value"
         editor.editor.item
       end
     else
