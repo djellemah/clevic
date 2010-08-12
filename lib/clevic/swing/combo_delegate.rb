@@ -9,13 +9,16 @@ class ComboBox < javax.swing.JComboBox
     @field = field
   end
   
-  def configureEditor( combo_box_editor, entity )
-    if entity.is_a? String
-      puts "#{__FILE__}:#{__LINE__}:entity: #{entity.inspect}"
+  def configureEditor( combo_box_editor, item )
+    value =
+    if @field.related_class && item.is_a?( @field.related_class )
+      @field.transform_attribute( item )
     else
-      combo_box_editor.item = @field.transform_attribute( entity )
-      combo_box_editor.select_all
+      item
     end
+    
+    combo_box_editor.item = value
+    combo_box_editor.select_all
   end
 end
 
@@ -155,10 +158,13 @@ class ComboDelegate < Delegate
       save_item = editor.editor.item
       prefix ||= editor.editor.item
       editor.model = editor.model.class.new
-      population.select {|item| display_for( item ) =~ /^#{prefix}/i }.each do |item|
-        editor << item
-      end
+      matching, non_matching = population.partition{ |item| display_for( item ) =~ /^#{prefix}/i }
+      puts "matching: #{matching.inspect}"
+      puts "non_matching: #{non_matching.inspect}"
+      matching.each {|item| editor << item}
+      non_matching.each {|item| editor << item}
       editor.editor.item = text || save_item
+      puts "#{__FILE__}:#{__LINE__}:TODO: set selected item"
     end
   end
     

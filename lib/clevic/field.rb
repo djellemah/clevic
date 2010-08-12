@@ -308,6 +308,7 @@ EOF
   # return the class object of a related class if this is a relational
   # field, otherwise nil
   def related_class
+    return nil if entity_class.reflections[attribute].nil?
     @related_class ||= eval( entity_class.reflections[attribute].class_name || attribute.to_s.classify )
   end
   
