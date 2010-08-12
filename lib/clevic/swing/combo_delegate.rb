@@ -159,8 +159,6 @@ class ComboDelegate < Delegate
       prefix ||= editor.editor.item
       editor.model = editor.model.class.new
       matching, non_matching = population.partition{ |item| display_for( item ) =~ /^#{prefix}/i }
-      puts "matching: #{matching.inspect}"
-      puts "non_matching: #{non_matching.inspect}"
       matching.each {|item| editor << item}
       non_matching.each {|item| editor << item}
       editor.editor.item = text || save_item
@@ -257,6 +255,7 @@ class ComboDelegate < Delegate
   end
   
   # add the current item, unless it's already in the combo data
+  # TODO this isn't included in population
   def populate_current
     # always add the current selection, if it isn't already there
     # and it makes sense. This is to make sure that if the list
