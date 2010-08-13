@@ -148,7 +148,8 @@ class ComboDelegate < Delegate
   end
   
   # Recreate the model and fill it with anything in population that
-  # matches the prefix, or all items if prefix is null.
+  # matches the prefix first, followed by anything in the population that
+  # doesn't match the prefix.
   # Then set the editor text value to either text, or to the previous
   # value.
   # Order is important: if the text is set first it's overridden when
