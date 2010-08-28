@@ -67,9 +67,10 @@ class CellEditor < javax.swing.JComponent
     listeners.delete cell_editor_listener
   end
   
-  # Not used, as of Java-1.2
+  # Docs say not used, as of Java-1.2. But it is used. Not sure
+  # what to do with it, really.
   def shouldSelectCell(event_object)
-    raise "Not used"
+    true
   end
   
   # Tells the editor to stop editing and accept any partially edited value as the value of the editor
