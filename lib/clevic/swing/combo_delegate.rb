@@ -18,7 +18,16 @@ class ComboBox < javax.swing.JComboBox
     end
     
     combo_box_editor.item = value
-    combo_box_editor.select_all
+  end
+
+  # Get the first keystroke when editing starts.
+  # Doesn't seem to be called after that.
+  # Pfaugh. Stupid Java API
+  def processKeyBinding( key_stroke, key_event, condition, pressed )
+    if key_event.typed? && !key_event.action_key?
+      editor.editor_component.text = java.lang.Character.new( key_event.key_char ).toString
+    end
+    super
   end
 end
 
@@ -127,6 +136,18 @@ class ComboDelegate < Delegate
           end
         end
       end
+      
+      # set focus and selection in edit part of combo
+      editor.editor.editor_component.with do |text_edit|
+        unless text_edit.text.nil?
+          # highlight the suggested match, and leave caret
+          # at the end of the selected text
+          text_edit.caret_position = 0
+          text_edit.move_caret_position( text_edit.text.length )
+          text_edit.request_focus_in_window
+        end
+      end
+
     else
       @editor =
       if restricted?

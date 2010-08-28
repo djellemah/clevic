@@ -3,10 +3,13 @@ module Clevic
 # This is the glue class that interfaces with JTable's API
 # There's usually only ever one of them for any given JTable, 
 # so it's created once, and then re-used repeatedly.
-class CellEditor
+# Must inherit from JComponent so that it gets focus
+# when the editing starts
+class CellEditor < javax.swing.JComponent
   include javax.swing.table.TableCellEditor
   
   def initialize( table_view )
+    super()
     @table_view = table_view
     @listeners = []
   end
@@ -65,6 +68,7 @@ class CellEditor
   end
   
   # Returns true if the editing cell should be selected, false otherwise.
+  # Seems to be only called in the F2 edit start path
   def shouldSelectCell(event_object)
     # This is mostly a workaround for a JTable behaviour where a single-click
     # always opens a combo box *with* it's drop-down. I don't want that.

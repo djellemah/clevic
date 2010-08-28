@@ -162,6 +162,19 @@ unless defined? KeyEvent
     def plain?
       modifiers == 0
     end
+    
+    def esc?
+      key_code == VK_ESCAPE
+    end
+    
+    # a KEY_TYPED event
+    def typed?
+      getID == self.class::KEY_TYPED
+    end
+    
+    def inspect
+      "<KeyEvent id=#{getID} #{self.class.getKeyText(key_code)} '#{key_char}'>"
+    end
   end
 end
 

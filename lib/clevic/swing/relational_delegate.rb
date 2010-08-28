@@ -33,7 +33,6 @@ class RelationalDelegate < ComboDelegate
   
   def population
     # add set of all possible related entities
-    puts "#{__FILE__}:#{__LINE__}"
     field.related_class.adaptor.find( :all, find_options )
   end
   

@@ -50,7 +50,7 @@ class ClevicTable < javax.swing.JTable
     # or a function key. Hopefully this doesn't get checked
     # for every single keystroke while editing - those should
     # be captured by the cell editor.
-    if key_event.alt? || key_event.ctrl? || key_event.meta? || key_event.fx? || key_event.del?
+    if key_event.alt? || key_event.ctrl? || key_event.meta? || key_event.fx? || key_event.del? || key_event.esc?
       put_client_property( "JTable.autoStartsEdit", false )
     end
     
@@ -131,6 +131,9 @@ class TableView < javax.swing.JScrollPane
     # This should theoretically close editors when focus is lost
     # saving whatever values are in there
     jtable.put_client_property( "terminateEditOnFocusLost", true )
+    
+    # cell editors get focus immediately on editor start
+    jtable.surrendersFocusOnKeystroke = true
     
     # no auto-resizing of columns
     jtable.auto_resize_mode = javax.swing.JTable::AUTO_RESIZE_OFF
