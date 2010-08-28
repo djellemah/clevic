@@ -69,6 +69,15 @@ unless defined? Component
   end
 end
 
+unless defined? EventObject
+  EventObject = java.util.EventObject
+  class EventObject
+    def inspect
+      "<#{self.class.name} #{param_string}>"
+    end
+  end
+end
+
 unless defined? JComboBox
   JComboBox = javax.swing.JComboBox
   class JComboBox
@@ -216,6 +225,25 @@ unless defined? TableModelEvent
     # rows, ie a fireTableDataChanged() was called
     def all_rows?
       first_row == 0 && last_row == java.lang.Integer::MAX_VALUE
+    end
+  end
+end
+
+unless defined? DocumentEvent
+  DocumentEvent = javax.swing.event.DocumentEvent
+  module DocumentEvent
+    def inspect
+      "<DocumentEvent type=#{type} offset=#{offset} length=#{length}>"
+    end
+  end
+end
+
+
+unless defined? ItemEvent
+  ItemEvent = java.awt.event.ItemEvent
+  class ItemEvent
+    def inspect
+      "<ItemEvent state=#{const_lookup state_change} ps=#{param_string}>"
     end
   end
 end

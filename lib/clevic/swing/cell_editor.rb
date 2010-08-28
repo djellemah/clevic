@@ -67,17 +67,9 @@ class CellEditor < javax.swing.JComponent
     listeners.delete cell_editor_listener
   end
   
-  # Returns true if the editing cell should be selected, false otherwise.
-  # Seems to be only called in the F2 edit start path
+  # Not used, as of Java-1.2
   def shouldSelectCell(event_object)
-    # This is mostly a workaround for a JTable behaviour where a single-click
-    # always opens a combo box *with* it's drop-down. I don't want that.
-    # Once the editor is displayed in the cell, whatever controls it has
-    # can be used to open it further if necessary.
-    delegate.minimal_edit
-    
-    # yes, select the cell. Whatever that means.
-    true
+    raise "Not used"
   end
   
   # Tells the editor to stop editing and accept any partially edited value as the value of the editor

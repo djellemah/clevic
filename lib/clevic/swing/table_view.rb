@@ -243,7 +243,6 @@ class TableView < javax.swing.JScrollPane
   def edit( table_index )
     # TODO keyboard focus doesn't seem to be reassigned to combo
     # when editing is started this way.
-    puts "#{__FILE__}:#{__LINE__}: TODO full edit doesn't transfer keyboard focus"
     @jtable.editCellAt( table_index.row, table_index.column )
   end
   

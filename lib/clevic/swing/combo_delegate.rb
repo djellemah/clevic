@@ -3,11 +3,16 @@ require 'clevic/swing/delegate'
 module Clevic
 
 # all this just to format a display item...
+# .... and work around various other Swing stupidities
 class ComboBox < javax.swing.JComboBox
   def initialize( field )
     super()
     @field = field
   end
+  
+  # set to true by processKeyBinding when a character
+  # key is pressed. Used by the autocomplete code.
+  attr_reader :typing
   
   def configureEditor( combo_box_editor, item )
     value =
@@ -27,6 +32,7 @@ class ComboBox < javax.swing.JComboBox
     if key_event.typed? && !key_event.action_key?
       editor.editor_component.text = java.lang.Character.new( key_event.key_char ).toString
     end
+    @typing = !key_event.action_key?
     super
   end
 end
@@ -34,6 +40,12 @@ end
 =begin rdoc
 Base class for other delegates using Combo boxes.
 =end
+# FIXME error with keyboard handling
+# To duplicate:
+# - press F2
+# - use arrows to select
+# - Press Enter
+# - press Tab or Shift-Tab
 class ComboDelegate < Delegate
   def initialize( field )
     super
@@ -125,7 +137,7 @@ class ComboDelegate < Delegate
       # events triggered by the setup, which isn't helpful.
       editor.editor.editor_component.document.add_document_listener do |event|
         # don't do anything if autocomplete manipulations are in progress
-        unless @autocompleting
+        unless @autocompleting || !editor.typing
           if event.type == javax.swing.event.DocumentEvent::EventType::REMOVE
             invoke_later do
               repopulate
@@ -177,14 +189,21 @@ class ComboDelegate < Delegate
   # the model is populated.
   def repopulate( prefix = nil, text = nil )
     autocomplete do
+      # save text and popup
       save_item = editor.editor.item
+      dropdown_visible = editor.popup_visible?
+      
+      # repopulate based on the prefix
       prefix ||= editor.editor.item
       editor.model = editor.model.class.new
+      # split set into things to display at the top, and things to display further down
       matching, non_matching = population.partition{ |item| display_for( item ) =~ /^#{prefix}/i }
       matching.each {|item| editor << item}
       non_matching.each {|item| editor << item}
+      
+      # restore text and popup
       editor.editor.item = text || save_item
-      puts "#{__FILE__}:#{__LINE__}:TODO: set selected item"
+      editor.popup_visible = dropdown_visible
     end
   end
     
@@ -199,7 +218,7 @@ class ComboDelegate < Delegate
   
   # http://www.drdobbs.com/184404457 for autocompletion steps
   def filter_prefix( prefix )
-    # search for matching item
+    # search for matching item in the UI display_for for the items in the combo model
     candidate = population.map{|item| display_for( item ) }.select {|x| x =~ /^#{prefix}/i }.first
     unless candidate.nil?
       first_not_of = candidate.match( /^#{prefix}/i ).offset(0).last
@@ -220,9 +239,20 @@ class ComboDelegate < Delegate
     end
   end
   
-  # open the combo box, just like if f4 was pressed
+  # open the combo box, just like if F4 was pressed
+  # big trouble here with JComboBox firing an comboEdited action
+  # (probably) on focusGained
+  # which causes the popup to be hidden again
   def full_edit
-    editor.show_popup if is_combo?
+    if is_combo?
+      # Must request focus and then once focus is received, show popup.
+      # Otherwise focus received hides popup.
+      invoke_later do
+        #~ editor.add_focus_listener( LittleFocusPopper.new )
+        #~ editor.request_focus_in_window
+        editor.show_popup
+      end
+    end
   end
   
   # open the combo box, just like if f4 was pressed
@@ -243,6 +273,9 @@ class ComboDelegate < Delegate
   
   # Subclasses should override this to fill the combo box
   # list with values.
+  # TODO resolve whether the current item is included, even
+  # if it isn't in the population already, ie it's excluded
+  # by date or something like that.
   def population
     raise "subclass responsibility"
   end
@@ -299,12 +332,14 @@ class ComboDelegate < Delegate
     # editor could be either a combo or a line (DistinctDelegate with no values yet)
     if is_combo?
       if restricted?
-        editor.selected_item 
+        puts "#{__FILE__}:#{__LINE__}:editor.selected_item: #{editor.selected_item.inspect}"
+        editor.selected_item
       else
         puts "#{__FILE__}:#{__LINE__}:get the editor's text field value"
         editor.editor.item
       end
     else
+      puts "#{__FILE__}:#{__LINE__}:line item value: #{editor.text}"
       editor.text
     end
   end
