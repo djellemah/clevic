@@ -56,6 +56,8 @@ class ClevicTable < javax.swing.JTable
     
     # do what JTable normally does with keys
     super
+  rescue
+    
   ensure
     put_client_property( "JTable.autoStartsEdit", true )
   end
@@ -317,7 +319,12 @@ class TableView < javax.swing.JScrollPane
   
   # forward to @jtable
   def model=( model )
+    emitter_block = lambda do |index,value,message|
+      puts "emit_data_error #{message} #{index.inspect} #{value}"
+    end
+    @jtable.model.remove_data_error( emitter_block ) if @jtable.model.respond_to? :remove_data_error
     @jtable.model = model
+    @jtable.model.emit_data_error( emitter_block ) if @jtable.model.respond_to? :emit_data_error
     resize_columns
   end
   

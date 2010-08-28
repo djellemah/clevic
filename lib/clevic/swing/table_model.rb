@@ -4,8 +4,9 @@ require 'andand'
 
 require 'clevic/extensions.rb'
 require 'clevic/swing/extensions.rb'
-require 'clevic/model_column'
-require 'clevic/table_index'
+require 'clevic/model_column.rb'
+require 'clevic/table_index.rb'
+require 'clevic/emitter.rb'
 
 require 'clevic/swing/swing_table_index.rb'
 
@@ -17,17 +18,17 @@ UI definition in a Clevic::View, or from the default Clevic::View created by
 including the Clevic::Record module in a ActiveRecord::Base or Sequel::Model subclass.
 =end
 class TableModel < javax.swing.table.AbstractTableModel
+  include Emitter
+  
+  # index, value, message
+  emitter :data_error
+  
   def initialize
     super()
   end
   
   def create_index( row, column )
     SwingTableIndex.new( self, row, column )
-  end
-  
-  # TODO not really sure what this do yet. Related to data_error signal from Qt
-  def fireDataError( index, value, message )
-    puts "fireDataError: #{index.inspect}, #{value.inspect}, #{message}"
   end
   
   # add a new item, and set defaults from the Clevic::View
@@ -192,7 +193,7 @@ class TableModel < javax.swing.table.AbstractTableModel
     rescue Exception => e
       puts e.backtrace
       puts e.message
-      fireDataError( index, value, e.message )
+      emit_data_error( index, value, e.message )
     end
   end
   
