@@ -12,10 +12,6 @@ class DistinctDelegate < ComboDelegate
     entity_class.adaptor.count( attribute.to_s, find_options ) > 0
   end
   
-  def populate_current
-    # already done in the SQL query in populate, so don't even check
-  end
-  
   # strings are stored in the model
   def display_for( model_value )
     model_value

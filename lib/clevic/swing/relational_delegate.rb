@@ -32,8 +32,11 @@ class RelationalDelegate < ComboDelegate
   end
   
   def population
-    # add set of all possible related entities
-    field.related_class.adaptor.find( :all, find_options )
+    # add set of all possible related entities,
+    # including the currently selected entity
+    ary = field.related_class.adaptor.find( :all, find_options )
+    ary << attribute_value unless ary.include?( attribute_value )
+    ary
   end
   
   # don't allow new values

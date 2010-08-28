@@ -113,12 +113,10 @@ class ComboDelegate < Delegate
     if needs_combo?
       @editor = create_combo_box
       
-      # subclasses fill in the rest of the entries
-      populate
-      
-      # add the current item, if it isn't there already
-      # should therefore come after populate
-      populate_current
+      # add all entries from population
+      population.each do |item|
+        editor << item
+      end
       
       # create a nil entry
       add_nil_item if allow_null?
@@ -149,7 +147,7 @@ class ComboDelegate < Delegate
         end
       end
       
-      # set focus and selection in edit part of combo
+      # set initial focus and selection in edit part of combo
       editor.editor.editor_component.with do |text_edit|
         unless text_edit.text.nil?
           # highlight the suggested match, and leave caret
@@ -170,14 +168,6 @@ class ComboDelegate < Delegate
       end
     end
     editor
-  end
-  
-  # populate the combo box. Try overriding population first, otherwise
-  # it might become necessary to also override filter_prefix
-  def populate
-    population.each do |item|
-      editor << item
-    end
   end
   
   # Recreate the model and fill it with anything in population that
@@ -309,17 +299,6 @@ class ComboDelegate < Delegate
     empty_set_message if empty_set?
   end
   
-  # add the current item, unless it's already in the combo data
-  # TODO this isn't included in population
-  def populate_current
-    # always add the current selection, if it isn't already there
-    # and it makes sense. This is to make sure that if the list
-    # is filtered, we always have the current value if the filter
-    # excludes it
-    item = attribute_value
-    editor.insert_item_at( item, 0 ) if item && !editor.include?( item )
-  end
-
   def add_nil_item
     editor << nil unless editor.include?( nil )
   end
