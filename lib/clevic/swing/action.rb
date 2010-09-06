@@ -1,3 +1,5 @@
+require 'gather'
+
 module Clevic
 
 class Action
