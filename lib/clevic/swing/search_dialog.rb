@@ -4,7 +4,13 @@ require 'clevic/swing/extensions.rb'
 module Clevic
   class SearchDialog < javax.swing.JDialog
     def initialize( parent = nil, modal = true )
-      super(parent)
+      if parent
+        # JDK 5 barfs on this
+        super(parent)
+      else
+        super()
+      end
+      
       init_controls
       init_layout
       

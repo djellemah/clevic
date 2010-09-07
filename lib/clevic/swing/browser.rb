@@ -115,9 +115,10 @@ class Browser < javax.swing.JFrame
   end
   
   def status_bar_timer
-    @status_bar_timer ||= javax.swing.Timer.new( 20000, nil ).tap do |timer|
+    @status_bar_timer ||= javax.swing.Timer.new( 15000, nil ).tap do |timer|
       timer.repeats = false
-      timer.action_command = 'hide_status_message'
+      # This is only for 1.6
+      #~ timer.action_command = 'hide_status_message'
       timer.add_action_listener do |event|
         status_bar.text = nil
         timer.stop

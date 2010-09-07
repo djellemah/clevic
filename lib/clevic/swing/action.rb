@@ -75,8 +75,21 @@ class Action
         when '"'
           javax.swing.KeyStroke.getKeyStroke( java.awt.event.KeyEvent::VK_QUOTE, modifier_mask | java.awt.event.InputEvent::SHIFT_DOWN_MASK )
         
+        # the conversion in else doesn't work for these
+        when '['
+          javax.swing.KeyStroke.getKeyStroke( java.awt.event.KeyEvent::VK_OPEN_BRACKET, modifier_mask )
+          
+        when ']'
+          javax.swing.KeyStroke.getKeyStroke( java.awt.event.KeyEvent::VK_CLOSE_BRACKET, modifier_mask )
+          
+        when ';'
+          javax.swing.KeyStroke.getKeyStroke( java.awt.event.KeyEvent::VK_SEMICOLON, modifier_mask )
+          
         else
-          javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last.to_char ), modifier_mask )
+          keystring = javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last.to_char ), modifier_mask ).toString
+          puts "keystring: #{keystring.inspect}"
+          # have to do this conversion for Mac OS X
+          javax.swing.KeyStroke.getKeyStroke( keystring.gsub( /typed/, 'pressed' ) )
       end
     else
       # F keys
@@ -85,6 +98,7 @@ class Action
       raise "too many options for #{sequence}: #{found.inspect}" if found.size != 1
       javax.swing.KeyStroke.getKeyStroke( eval( "java.awt.event.KeyEvent::#{found.first}" ), modifier_mask )
     end
+    puts "keystroke: #{keystroke.inspect}"
     keystroke || raise( "unknown keystroke #{sequence} => #{modifiers.inspect} #{last}" )
   end
 end

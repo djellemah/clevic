@@ -187,6 +187,15 @@ unless defined? KeyEvent
   end
 end
 
+unless defined? KeyStroke
+  KeyStroke = javax.swing.KeyStroke
+  class KeyStroke
+    def inspect
+      toString
+    end
+  end
+end
+
 unless defined? MouseEvent
   MouseEvent = java.awt.event.MouseEvent
   class MouseEvent
