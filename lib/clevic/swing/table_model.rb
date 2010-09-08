@@ -191,8 +191,8 @@ class TableModel < javax.swing.table.AbstractTableModel
       puts "NOT SAVING YET index: #{index.inspect}"
       data_changed( index )
     rescue Exception => e
+      puts "#{__FILE__}:#{__LINE__}:e.message: #{e.message}"
       puts e.backtrace
-      puts e.message
       emit_data_error( index, value, e.message )
     end
   end

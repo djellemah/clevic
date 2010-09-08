@@ -56,8 +56,8 @@ class ClevicTable < javax.swing.JTable
     
     # do what JTable normally does with keys
     super
-  rescue
-    
+  rescue Exception => e
+    table_view.model.emit_data_error( index, value, e.message )
   ensure
     put_client_property( "JTable.autoStartsEdit", true )
   end
@@ -79,8 +79,8 @@ class ClevicTable < javax.swing.JTable
       @cell_editor ||= CellEditor.new( self )
     end
   rescue
+    puts "#{__FILE__}:#{__LINE__}:$!.message: #{$!.message}"
     puts $!.backtrace
-    puts $!.message
     puts index.entity.inspect
     nil
   end
@@ -218,8 +218,10 @@ class TableView < javax.swing.JScrollPane
         bottom_right = model.create_index( table_model_event.last_row, table_model_event.column )
         
         entity_view.notify_data_changed( self, top_left, bottom_right )
+        
+        to_next_index
       rescue Exception => e
-        puts "#{model.entity_view.class.name}: #{e.message}"
+        show_error e.message
         puts e.backtrace
       end
     end
@@ -318,13 +320,14 @@ class TableView < javax.swing.JScrollPane
   end
   
   # forward to @jtable
+  # also handle model#emit_data_error
   def model=( model )
     emitter_block = lambda do |index,value,message|
-      puts "emit_data_error #{message} #{index.inspect} #{value}"
+      emit_status_text "#{message}: #{value}"
     end
-    @jtable.model.remove_data_error( emitter_block ) if @jtable.model.respond_to? :remove_data_error
+    @jtable.model.remove_data_error( &emitter_block ) if @jtable.model.respond_to? :remove_data_error
     @jtable.model = model
-    @jtable.model.emit_data_error( emitter_block ) if @jtable.model.respond_to? :emit_data_error
+    @jtable.model.emit_data_error( &emitter_block ) if @jtable.model.respond_to? :emit_data_error
     resize_columns
   end
   
@@ -333,7 +336,7 @@ class TableView < javax.swing.JScrollPane
   end
   
   def show_error( msg )
-    raise NotImplementedError, msg
+    emit_status_text msg
   end
   
   def selection_model

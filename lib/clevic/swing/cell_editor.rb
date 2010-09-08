@@ -83,6 +83,11 @@ class CellEditor < javax.swing.JComponent
     # can return false here if editing should not stop
     # for some reason, ie validation didn't succeed
     true
+  rescue
+    puts
+    puts $!.backtrace
+    puts "returning false from stopCellEditing"
+    false
   end
 end
 

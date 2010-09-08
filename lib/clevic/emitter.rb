@@ -19,6 +19,7 @@ module Clevic
             if block_given?
               #{emitter_name}_listeners << notifier_block
             else
+              puts "emit_#{emitter_name} called with " + args.inspect
               #{emitter_name}_listeners.each do |notify|
                 notify.call( *args )
               end

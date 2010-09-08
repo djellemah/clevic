@@ -696,6 +696,10 @@ class TableView
     raise "framework responsibility"
   end
   
+  # set next_index for certain operations. Is only activated when
+  # to_next_index is called.
+  attr_accessor :next_index
+
 protected
   
   # show a busy cursor, do the block, back to normal cursor
@@ -720,7 +724,14 @@ protected
     # retval needed here because reject! returns nil if nothing was rejected
     retval
   end
-  
+
+  # move to next_index, if it's set
+  def to_next_index
+    if next_index
+      self.current_index = next_index
+      self.next_index = nil
+    end
+  end
 end
 
 end

@@ -22,6 +22,10 @@ module Clevic
       end
     end
     
+    def prev
+      choppy( :row => row - 1 )
+    end
+    
     # return the attribute of the underlying entity corresponding
     # to the column of this index
     def attribute
