@@ -36,9 +36,13 @@ module Clevic
         # if a digit only is entered, fetch month and year from
         # previous row
         when [:date,:datetime].include?( field.meta.type ) && value =~ %r{^(\d{1,2})$}
-          previous_entity = collection[index.row - 1]
           # year,month,day
-          Date.new( previous_entity.date.year, previous_entity.date.month, $1.to_i )
+          prev_date = prev.attribute_value
+          if prev_date
+            Date.new( prev_date.year, prev_date.month, $1.to_i )
+          else
+            value
+          end
         
         # this one is mostly to fix date strings that have come
         # out of the db and been formatted
