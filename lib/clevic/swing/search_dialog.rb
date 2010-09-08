@@ -172,61 +172,56 @@ module Clevic
     end
     
     # this was originally Java from NetBeans, so it's really ugly.
+    # Note that for 1.5 compatibility, we have to use org.jdesktop.layout.GroupLayout
+    # and include swing-layout-1.0.3.jar
     def init_layout
-      content_pane.layout = javax.swing.GroupLayout.new( content_pane ).tap do |layout|
-        
-        # horizontal group
-        layout.setHorizontalGroup(
-          layout.createParallelGroup(javax.swing.GroupLayout::Alignment::LEADING) \
-          .addGroup(layout.createSequentialGroup() \
-            .addContainerGap() \
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout::Alignment::LEADING) \
-              .addGroup(layout.createSequentialGroup() \
-                .addGap(21, 21, 21) \
-                .addComponent(search_label) \
-                .addPreferredGap(javax.swing.LayoutStyle::ComponentPlacement::RELATED) \
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout::Alignment::LEADING, false) \
-                  .addComponent(search_combo, 0, 192, java.lang.Short::MAX_VALUE) \
-                  .addComponent(from_start, javax.swing.GroupLayout::DEFAULT_SIZE, javax.swing.GroupLayout::DEFAULT_SIZE, java.lang.Short::MAX_VALUE) \
-                  .addComponent(regex, javax.swing.GroupLayout::DEFAULT_SIZE, javax.swing.GroupLayout::DEFAULT_SIZE, java.lang.Short::MAX_VALUE) \
-                  .addComponent(whole_words, javax.swing.GroupLayout::DEFAULT_SIZE, javax.swing.GroupLayout::DEFAULT_SIZE, java.lang.Short::MAX_VALUE) \
-                  .addComponent(forwards, javax.swing.GroupLayout::DEFAULT_SIZE, javax.swing.GroupLayout::DEFAULT_SIZE, java.lang.Short::MAX_VALUE) \
-                  .addComponent(backwards))) \
-              .addGroup(layout.createSequentialGroup() \
-                .addComponent(ok_button) \
-                .addPreferredGap(javax.swing.LayoutStyle::ComponentPlacement::RELATED, 137, java.lang.Short::MAX_VALUE) \
-                .addComponent(cancel_button))) \
-            .addGap(20, 20, 20)
-          )
-        )
-        
-        # vertical group
+      content_pane.layout = org.jdesktop.layout.GroupLayout.new( content_pane ).tap do |layout|
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup( \
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING) \
+            .add(layout.createSequentialGroup() \
+                .addContainerGap() \
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING) \
+                    .add(layout.createSequentialGroup() \
+                        .add(21, 21, 21) \
+                        .add(search_label) \
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED) \
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING, false) \
+                            .add(search_combo, 0, 192, java.lang.Short::MAX_VALUE) \
+                            .add(from_start, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, java.lang.Short::MAX_VALUE) \
+                            .add(regex, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, java.lang.Short::MAX_VALUE) \
+                            .add(whole_words, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, java.lang.Short::MAX_VALUE) \
+                            .add(forwards, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, java.lang.Short::MAX_VALUE) \
+                            .add(backwards))) \
+                    .add(layout.createSequentialGroup() \
+                        .add(ok_button) \
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED, 160, java.lang.Short::MAX_VALUE) \
+                        .add(cancel_button))) \
+                .add(16, 16, 16)) \
+        );
         layout.setVerticalGroup(
-          layout.createParallelGroup(javax.swing.GroupLayout::Alignment::LEADING) \
-          .addGroup(layout.createSequentialGroup() \
-            .addGap(31, 31, 31) \
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout::Alignment::BASELINE) \
-              .addComponent(search_combo, javax.swing.GroupLayout::PREFERRED_SIZE, javax.swing.GroupLayout::DEFAULT_SIZE, javax.swing.GroupLayout::PREFERRED_SIZE) \
-              .addComponent(search_label)
-            ) \
-            .addGap(18, 18, 18) \
-            .addComponent(from_start) \
-            .addPreferredGap(javax.swing.LayoutStyle::ComponentPlacement::RELATED) \
-            .addComponent(regex) \
-            .addPreferredGap(javax.swing.LayoutStyle::ComponentPlacement::RELATED) \
-            .addComponent(whole_words) \
-            .addGap(18, 18, 18) \
-            .addComponent(forwards) \
-            .addPreferredGap(javax.swing.LayoutStyle::ComponentPlacement::RELATED) \
-            .addComponent(backwards) \
-            .addGap(18, 18, 18) \
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout::Alignment::BASELINE) \
-              .addComponent(ok_button) \
-              .addComponent(cancel_button)
-            ) \
-            .addContainerGap(27, java.lang.Short::MAX_VALUE)
-          )
-        )
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING) \
+            .add(org.jdesktop.layout.GroupLayout::TRAILING, layout.createSequentialGroup() \
+                .addContainerGap(23, java.lang.Short::MAX_VALUE) \
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::BASELINE) \
+                    .add(search_combo, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE) \
+                    .add(search_label)) \
+                .add(18, 18, 18) \
+                .add(from_start) \
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED) \
+                .add(regex) \
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED) \
+                .add(whole_words) \
+                .add(18, 18, 18) \
+                .add(forwards) \
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED) \
+                .add(backwards) \
+                .add(18, 18, 18) \
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::BASELINE) \
+                    .add(ok_button) \
+                    .add(cancel_button)) \
+                .add(20, 20, 20)) \
+        );
       end
       pack
     end
