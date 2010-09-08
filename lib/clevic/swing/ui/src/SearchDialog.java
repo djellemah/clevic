@@ -137,6 +137,7 @@ public class SearchDialog extends javax.swing.JDialog {
             public void run() {
                 javax.swing.JDialog dialog = new javax.swing.JDialog(new javax.swing.JFrame(), true);
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
                         System.exit(0);
                     }
