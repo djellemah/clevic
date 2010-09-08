@@ -31,101 +31,101 @@ public class SearchDialog extends javax.swing.JDialog {
     private void initComponents() {
 
         direction_button_group = new javax.swing.ButtonGroup();
-        jLabel1 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox();
-        jCheckBox1 = new javax.swing.JCheckBox();
-        jCheckBox2 = new javax.swing.JCheckBox();
-        jCheckBox3 = new javax.swing.JCheckBox();
-        jRadioButton1 = new javax.swing.JRadioButton();
-        jRadioButton2 = new javax.swing.JRadioButton();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        search_label = new javax.swing.JLabel();
+        search_combo = new javax.swing.JComboBox();
+        from_start = new javax.swing.JCheckBox();
+        regex = new javax.swing.JCheckBox();
+        whole_words = new javax.swing.JCheckBox();
+        forwards = new javax.swing.JRadioButton();
+        backwards = new javax.swing.JRadioButton();
+        ok_button = new javax.swing.JButton();
+        cancel_button = new javax.swing.JButton();
 
         setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
-        setName("Form"); // NOI18N
+        setName("SearchDialog"); // NOI18N
 
-        jLabel1.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(SearchDialog.class).getString("jLabel1.text")); // NOI18N
-        jLabel1.setName("jLabel1"); // NOI18N
+        search_label.setText("Search"); // NOI18N
+        search_label.setName("search_label"); // NOI18N
 
-        jComboBox1.setEditable(true);
-        jComboBox1.setName("jComboBox1"); // NOI18N
+        search_combo.setEditable(true);
+        search_combo.setName("search_combo"); // NOI18N
 
-        jCheckBox1.setMnemonic('F');
-        jCheckBox1.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(SearchDialog.class).getString("from_start.text")); // NOI18N
-        jCheckBox1.setName("from_start"); // NOI18N
+        from_start.setMnemonic('F');
+        from_start.setText("From Start"); // NOI18N
+        from_start.setName("from_start"); // NOI18N
 
-        jCheckBox2.setMnemonic('R');
-        jCheckBox2.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(SearchDialog.class).getString("jCheckBox2.text")); // NOI18N
-        jCheckBox2.setName("jCheckBox2"); // NOI18N
+        regex.setMnemonic('R');
+        regex.setText("Regular Expression"); // NOI18N
+        regex.setName("regex"); // NOI18N
 
-        jCheckBox3.setMnemonic('W');
-        jCheckBox3.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(SearchDialog.class).getString("jCheckBox3.text")); // NOI18N
-        jCheckBox3.setName("jCheckBox3"); // NOI18N
+        whole_words.setMnemonic('W');
+        whole_words.setText("Whole words"); // NOI18N
+        whole_words.setName("whole_words"); // NOI18N
 
-        direction_button_group.add(jRadioButton1);
-        jRadioButton1.setMnemonic('F');
-        jRadioButton1.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(SearchDialog.class).getString("jRadioButton1.text")); // NOI18N
-        jRadioButton1.setName("jRadioButton1"); // NOI18N
+        direction_button_group.add(forwards);
+        forwards.setMnemonic('F');
+        forwards.setText("Forwards"); // NOI18N
+        forwards.setName("forwards"); // NOI18N
 
-        direction_button_group.add(jRadioButton2);
-        jRadioButton2.setMnemonic('B');
-        jRadioButton2.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(SearchDialog.class).getString("jRadioButton2.text")); // NOI18N
-        jRadioButton2.setName("jRadioButton2"); // NOI18N
+        direction_button_group.add(backwards);
+        backwards.setMnemonic('B');
+        backwards.setText("Backwards"); // NOI18N
+        backwards.setName("backwards"); // NOI18N
 
-        jButton1.setMnemonic('O');
-        jButton1.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(SearchDialog.class).getString("jButton1.text")); // NOI18N
-        jButton1.setName("jButton1"); // NOI18N
+        ok_button.setMnemonic('O');
+        ok_button.setText("OK"); // NOI18N
+        ok_button.setName("ok_button"); // NOI18N
 
-        jButton2.setMnemonic('C');
-        jButton2.setText(org.jdesktop.application.Application.getInstance().getContext().getResourceMap(SearchDialog.class).getString("jButton2.text")); // NOI18N
-        jButton2.setName("jButton2"); // NOI18N
+        cancel_button.setMnemonic('C');
+        cancel_button.setText("Cancel"); // NOI18N
+        cancel_button.setName("cancel_button"); // NOI18N
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(21, 21, 21)
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jComboBox1, 0, 192, Short.MAX_VALUE)
-                            .addComponent(jCheckBox1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jCheckBox2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jCheckBox3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jRadioButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jRadioButton2)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 160, Short.MAX_VALUE)
-                        .addComponent(jButton2)))
-                .addGap(16, 16, 16))
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(layout.createSequentialGroup()
+                        .add(21, 21, 21)
+                        .add(search_label)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                            .add(search_combo, 0, 192, Short.MAX_VALUE)
+                            .add(from_start, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(regex, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(whole_words, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(forwards, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .add(backwards)))
+                    .add(layout.createSequentialGroup()
+                        .add(ok_button)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 160, Short.MAX_VALUE)
+                        .add(cancel_button)))
+                .add(16, 16, 16))
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                 .addContainerGap(23, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
-                .addGap(18, 18, 18)
-                .addComponent(jCheckBox1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jCheckBox2)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jCheckBox3)
-                .addGap(18, 18, 18)
-                .addComponent(jRadioButton1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jRadioButton2)
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
-                    .addComponent(jButton2))
-                .addGap(20, 20, 20))
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(search_combo, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(search_label))
+                .add(18, 18, 18)
+                .add(from_start)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(regex)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(whole_words)
+                .add(18, 18, 18)
+                .add(forwards)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(backwards)
+                .add(18, 18, 18)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
+                    .add(ok_button)
+                    .add(cancel_button))
+                .add(20, 20, 20))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -147,16 +147,16 @@ public class SearchDialog extends javax.swing.JDialog {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    public javax.swing.JRadioButton backwards;
+    public javax.swing.JButton cancel_button;
     public javax.swing.ButtonGroup direction_button_group;
-    public javax.swing.JButton jButton1;
-    public javax.swing.JButton jButton2;
-    public javax.swing.JCheckBox jCheckBox1;
-    public javax.swing.JCheckBox jCheckBox2;
-    public javax.swing.JCheckBox jCheckBox3;
-    public javax.swing.JComboBox jComboBox1;
-    public javax.swing.JLabel jLabel1;
-    public javax.swing.JRadioButton jRadioButton1;
-    public javax.swing.JRadioButton jRadioButton2;
+    public javax.swing.JRadioButton forwards;
+    public javax.swing.JCheckBox from_start;
+    public javax.swing.JButton ok_button;
+    public javax.swing.JCheckBox regex;
+    public javax.swing.JComboBox search_combo;
+    public javax.swing.JLabel search_label;
+    public javax.swing.JCheckBox whole_words;
     // End of variables declaration//GEN-END:variables
 
 }

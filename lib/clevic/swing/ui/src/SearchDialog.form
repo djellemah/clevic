@@ -9,7 +9,7 @@
     <Property name="font" type="java.awt.Font" noResource="true" editor="org.netbeans.beaninfo.editors.FontEditor">
       <Font name="Tahoma" size="12" style="0"/>
     </Property>
-    <Property name="name" type="java.lang.String" value="Form" noResource="true"/>
+    <Property name="name" type="java.lang.String" value="SearchDialog" noResource="true"/>
   </Properties>
   <SyntheticProperties>
     <SyntheticProperty name="formSizePolicy" type="int" value="2"/>
@@ -20,7 +20,7 @@
     <AuxValue name="FormSettings_generateFQN" type="java.lang.Boolean" value="true"/>
     <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
-    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
+    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="2"/>
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="1"/>
@@ -34,21 +34,21 @@
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
                       <EmptySpace min="-2" pref="21" max="-2" attributes="0"/>
-                      <Component id="jLabel1" min="-2" max="-2" attributes="0"/>
+                      <Component id="search_label" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                          <Component id="jComboBox1" alignment="0" pref="192" max="32767" attributes="1"/>
-                          <Component id="jCheckBox1" alignment="0" max="32767" attributes="1"/>
-                          <Component id="jCheckBox2" alignment="0" max="32767" attributes="1"/>
-                          <Component id="jCheckBox3" alignment="0" max="32767" attributes="1"/>
-                          <Component id="jRadioButton1" alignment="0" max="32767" attributes="1"/>
-                          <Component id="jRadioButton2" alignment="0" min="-2" max="-2" attributes="1"/>
+                          <Component id="search_combo" alignment="0" pref="192" max="32767" attributes="1"/>
+                          <Component id="from_start" alignment="0" max="32767" attributes="1"/>
+                          <Component id="regex" alignment="0" max="32767" attributes="1"/>
+                          <Component id="whole_words" alignment="0" max="32767" attributes="1"/>
+                          <Component id="forwards" alignment="0" max="32767" attributes="1"/>
+                          <Component id="backwards" alignment="0" min="-2" max="-2" attributes="1"/>
                       </Group>
                   </Group>
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="jButton1" min="-2" max="-2" attributes="0"/>
+                      <Component id="ok_button" min="-2" max="-2" attributes="0"/>
                       <EmptySpace pref="160" max="32767" attributes="0"/>
-                      <Component id="jButton2" min="-2" max="-2" attributes="0"/>
+                      <Component id="cancel_button" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
@@ -60,23 +60,23 @@
           <Group type="102" alignment="1" attributes="0">
               <EmptySpace pref="23" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="jComboBox1" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="search_combo" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="search_label" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace type="separate" max="-2" attributes="0"/>
-              <Component id="jCheckBox1" min="-2" max="-2" attributes="0"/>
+              <Component id="from_start" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jCheckBox2" min="-2" max="-2" attributes="0"/>
+              <Component id="regex" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jCheckBox3" min="-2" max="-2" attributes="0"/>
+              <Component id="whole_words" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="separate" max="-2" attributes="0"/>
-              <Component id="jRadioButton1" min="-2" max="-2" attributes="0"/>
+              <Component id="forwards" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="jRadioButton2" min="-2" max="-2" attributes="0"/>
+              <Component id="backwards" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="separate" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="3" attributes="0">
-                  <Component id="jButton1" alignment="3" min="-2" max="-2" attributes="0"/>
-                  <Component id="jButton2" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="ok_button" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="cancel_button" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
           </Group>
@@ -84,74 +84,74 @@
     </DimensionLayout>
   </Layout>
   <SubComponents>
-    <Component class="javax.swing.JLabel" name="jLabel1">
+    <Component class="javax.swing.JLabel" name="search_label">
       <Properties>
-        <Property name="text" type="java.lang.String" resourceKey="jLabel1.text"/>
-        <Property name="name" type="java.lang.String" value="jLabel1" noResource="true"/>
+        <Property name="text" type="java.lang.String" value="Search" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="search_label" noResource="true"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JComboBox" name="jComboBox1">
+    <Component class="javax.swing.JComboBox" name="search_combo">
       <Properties>
         <Property name="editable" type="boolean" value="true"/>
         <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
           <StringArray count="0"/>
         </Property>
-        <Property name="name" type="java.lang.String" value="jComboBox1" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="search_combo" noResource="true"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JCheckBox" name="jCheckBox1">
+    <Component class="javax.swing.JCheckBox" name="from_start">
       <Properties>
         <Property name="mnemonic" type="int" value="70"/>
-        <Property name="text" type="java.lang.String" resourceKey="from_start.text"/>
+        <Property name="text" type="java.lang.String" value="From Start" noResource="true"/>
         <Property name="name" type="java.lang.String" value="from_start" noResource="true"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JCheckBox" name="jCheckBox2">
+    <Component class="javax.swing.JCheckBox" name="regex">
       <Properties>
         <Property name="mnemonic" type="int" value="82"/>
-        <Property name="text" type="java.lang.String" resourceKey="jCheckBox2.text"/>
-        <Property name="name" type="java.lang.String" value="jCheckBox2" noResource="true"/>
+        <Property name="text" type="java.lang.String" value="Regular Expression" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="regex" noResource="true"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JCheckBox" name="jCheckBox3">
+    <Component class="javax.swing.JCheckBox" name="whole_words">
       <Properties>
         <Property name="mnemonic" type="int" value="87"/>
-        <Property name="text" type="java.lang.String" resourceKey="jCheckBox3.text"/>
-        <Property name="name" type="java.lang.String" value="jCheckBox3" noResource="true"/>
+        <Property name="text" type="java.lang.String" value="Whole words" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="whole_words" noResource="true"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JRadioButton" name="jRadioButton1">
+    <Component class="javax.swing.JRadioButton" name="forwards">
       <Properties>
         <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
           <ComponentRef name="direction_button_group"/>
         </Property>
         <Property name="mnemonic" type="int" value="70"/>
-        <Property name="text" type="java.lang.String" resourceKey="jRadioButton1.text"/>
-        <Property name="name" type="java.lang.String" value="jRadioButton1" noResource="true"/>
+        <Property name="text" type="java.lang.String" value="Forwards" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="forwards" noResource="true"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JRadioButton" name="jRadioButton2">
+    <Component class="javax.swing.JRadioButton" name="backwards">
       <Properties>
         <Property name="buttonGroup" type="javax.swing.ButtonGroup" editor="org.netbeans.modules.form.RADComponent$ButtonGroupPropertyEditor">
           <ComponentRef name="direction_button_group"/>
         </Property>
         <Property name="mnemonic" type="int" value="66"/>
-        <Property name="text" type="java.lang.String" resourceKey="jRadioButton2.text"/>
-        <Property name="name" type="java.lang.String" value="jRadioButton2" noResource="true"/>
+        <Property name="text" type="java.lang.String" value="Backwards" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="backwards" noResource="true"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JButton" name="jButton1">
+    <Component class="javax.swing.JButton" name="ok_button">
       <Properties>
         <Property name="mnemonic" type="int" value="79"/>
-        <Property name="text" type="java.lang.String" resourceKey="jButton1.text"/>
-        <Property name="name" type="java.lang.String" value="jButton1" noResource="true"/>
+        <Property name="text" type="java.lang.String" value="OK" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="ok_button" noResource="true"/>
       </Properties>
     </Component>
-    <Component class="javax.swing.JButton" name="jButton2">
+    <Component class="javax.swing.JButton" name="cancel_button">
       <Properties>
         <Property name="mnemonic" type="int" value="67"/>
-        <Property name="text" type="java.lang.String" resourceKey="jButton2.text"/>
-        <Property name="name" type="java.lang.String" value="jButton2" noResource="true"/>
+        <Property name="text" type="java.lang.String" value="Cancel" noResource="true"/>
+        <Property name="name" type="java.lang.String" value="cancel_button" noResource="true"/>
       </Properties>
     </Component>
   </SubComponents>
