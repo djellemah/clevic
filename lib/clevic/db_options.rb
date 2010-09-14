@@ -21,7 +21,7 @@ with the options value passed in (in this case $options).
 Values have to_s called on them so they can be symbols or strings.
 
 #--
-TODO inherit from HashCollector
+TODO inherit from Gather
 =end
 class DbOptions
   attr_reader :options
