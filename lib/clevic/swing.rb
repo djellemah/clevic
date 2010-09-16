@@ -14,9 +14,10 @@ require 'clevic/swing/table_view.rb'
   require child.to_s
 end
 
-# no require the generic parts
+# now require the generic parts
 require 'clevic/table_model'
 require 'clevic/table_view'
+require 'clevic.rb'
 
 module Clevic
 
