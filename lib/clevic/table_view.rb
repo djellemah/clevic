@@ -429,7 +429,11 @@ class TableView
         unless top_left_index.column + field_index >= model.column_count
           # do paste
           cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
-          cell_index.text_value = field
+          begin
+            cell_index.text_value = field
+          rescue
+            emit_status_text( $!.message )
+          end
         else
           emit_status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
         end

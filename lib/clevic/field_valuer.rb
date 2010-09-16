@@ -73,7 +73,9 @@ module Clevic
     
     def find_related( attribute, value )
       candidates = field.related_class.adaptor.find( :all, :conditions => {attribute => value} )
-      raise "too many candidates for #{value}: #{candidates.inspect}" if candidates.size != 1
+      if candidates.size != 1
+        raise "#{candidates.size} != 1 candidates for #{value}: #{candidates.inspect}"
+      end
       candidates.first
     end
   
