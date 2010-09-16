@@ -46,9 +46,6 @@ module Clevic
     
     def self.entity_class=( some_class )
       @entity_class = some_class
-      unless @entity_class.respond_to? :meta
-        Clevic.define_meta( @entity_class )
-      end
     end
     
     def self.widget_name( *args )
