@@ -1,3 +1,4 @@
+require 'andand'
 require 'clevic/swing/delegate'
 
 module Clevic
@@ -25,9 +26,8 @@ class ComboBox < javax.swing.JComboBox
     combo_box_editor.item = value
   end
 
-  # Get the first keystroke when editing starts.
-  # Doesn't seem to be called after that.
-  # Pfaugh. Stupid Java API
+  # Get the first keystroke when editing starts, and make sure it's entered
+  # into the combo box text edit component, if it's not an action key.
   def processKeyBinding( key_stroke, key_event, condition, pressed )
     if key_event.typed? && !key_event.action_key?
       editor.editor_component.text = java.lang.Character.new( key_event.key_char ).toString
@@ -109,7 +109,7 @@ class ComboDelegate < Delegate
   end
   
   # Create a GUI widget and fill it with the possible values.
-  def init_component
+  def init_component( cell_editor = nil )
     if needs_combo?
       @editor = create_combo_box
       
@@ -145,6 +145,11 @@ class ComboDelegate < Delegate
             filter_prefix( editor.editor.item )
           end
         end
+      end
+      
+      # catch the enter key action event
+      editor.editor.editor_component.add_action_listener do |event|
+        cell_editor.andand.stopCellEditing
       end
       
       # set initial focus and selection in edit part of combo
@@ -311,10 +316,9 @@ class ComboDelegate < Delegate
     # editor could be either a combo or a line (DistinctDelegate with no values yet)
     if is_combo?
       if restricted?
-        puts "#{__FILE__}:#{__LINE__}:editor.selected_item: #{editor.selected_item.inspect}"
         editor.selected_item
       else
-        puts "#{__FILE__}:#{__LINE__}:get the editor's text field value"
+        puts "#{__FILE__}:#{__LINE__}:get the editor's text field value. Take away this output when we know it works. Ie when this gets printed."
         editor.editor.item
       end
     else

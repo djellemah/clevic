@@ -57,7 +57,7 @@ class ClevicTable < javax.swing.JTable
     # do what JTable normally does with keys
     super
   rescue Exception => e
-    table_view.model.emit_data_error( index, value, e.message )
+    table_view.model.emit_data_error( table_view.current_index, nil, e.message )
   ensure
     put_client_property( "JTable.autoStartsEdit", true )
   end
@@ -205,13 +205,14 @@ class TableView < javax.swing.JScrollPane
   attr_reader :jtable
   
   def connect_view_signals( entity_view )
+    # pick up model changes and pass them to the Clevic::View object
     model.addTableModelListener do |table_model_event|
       begin
         # pass changed events to view definitions
         return unless table_model_event.updated?
         
-        # unlikely to be useful, and in fact causes a very very long
-        # calculation
+        # unlikely to be useful to models, and in fact causes a very very long
+        # calculation. So don't pass it on.
         return if table_model_event.all_rows?
           
         top_left = model.create_index( table_model_event.first_row, table_model_event.column )

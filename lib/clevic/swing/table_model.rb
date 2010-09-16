@@ -163,7 +163,7 @@ class TableModel < javax.swing.table.AbstractTableModel
   
   def setValueAt( value, row_index, column_index )
     index = create_index( row_index, column_index )
-    puts "setting index: #{index.inspect} to #{value.inspect}"
+    #~ puts "setting index: #{index.inspect} to #{value.inspect}"
     
     # Don't allow the primary key to be changed
     return if index.attribute == entity_class.primary_key.to_sym
@@ -188,7 +188,8 @@ class TableModel < javax.swing.table.AbstractTableModel
         index.edit_value = value
       end
       
-      puts "NOT SAVING YET index: #{index.inspect}"
+      index.entity.save
+      
       data_changed( index )
     rescue Exception => e
       puts "#{__FILE__}:#{__LINE__}:e.message: #{e.message}"

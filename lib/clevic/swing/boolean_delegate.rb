@@ -3,7 +3,7 @@ require 'clevic/swing/delegate'
 module Clevic
 
   class BooleanDelegate < Delegate
-    def init_component
+    def init_component( cell_editor )
       editor.selected = attribute_value
     end
     

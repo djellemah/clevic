@@ -32,7 +32,8 @@ class CellEditor < javax.swing.JComponent
     # use the delegate's component. It actually comes from the index, which
     # is a bit weird. But anyway.
     delegate.entity = @index.entity
-    delegate.init_component
+    # need self so combo boxes can get back here and stop editing when enter is pressed
+    delegate.init_component( self )
     delegate.editor
   end
 

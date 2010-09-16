@@ -34,7 +34,7 @@ class Entry < Sequel::Model
         if model_index.entity.invoice.nil?
           entity_view.invoice_from_project( table_view, model_index ) do
             # move here next if the invoice was changed
-            table_view.next_index model_index.choppy( :column => :start )
+            table_view.next_index = model_index.choppy( :column => :start )
           end
         end
       end

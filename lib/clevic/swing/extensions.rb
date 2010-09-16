@@ -73,7 +73,11 @@ unless defined? EventObject
   EventObject = java.util.EventObject
   class EventObject
     def inspect
-      "<#{self.class.name} #{param_string}>"
+      if respond_to?( :paramString )
+        "<#{self.class.name} #{param_string}>"
+      else
+        "<#{self.class.name} #{toString}>"
+      end
     end
   end
 end
