@@ -1,18 +1,24 @@
 require 'clevic.rb'
 
-# db connection
-Clevic::DbOptions.connect( $options ) do
-  # use a different db for testing, so real data doesn't get broken.
-  if options[:database].nil? || options[:database].empty?
-    database( debug? ? :accounts_test : :accounts )
-  else
-    database options[:database]
+if respond_to?( :'jruby?' ) && jruby?
+  constring = "jdbc:postgresql://#{host}/accounts_test?user=#{$options[:username] || 'times'}&password=general"
+  puts "constring: #{constring.inspect}"
+  Sequel.connect( constring )
+else
+  # db connection
+  Clevic::DbOptions.connect( $options ) do
+    # use a different db for testing, so real data doesn't get broken.
+    if options[:database].nil? || options[:database].empty?
+      database( debug? ? :accounts_test : :accounts )
+    else
+      database options[:database]
+    end
+    # for AR
+    #~ adapter :postgresql
+    # for Sequel
+    adapter :postgres
+    username options[:username].blank? ? 'accounts' : options[:username]
   end
-  # for AR
-  #~ adapter :postgresql
-  # for Sequel
-  adapter :postgres
-  username options[:username].blank? ? 'accounts' : options[:username]
 end
 
 class Entry < Sequel::Model
@@ -36,6 +42,7 @@ class Entry < Sequel::Model
         end
       end
     end
+    distinct :supplier
     relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
     relational  :credit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
     plain       :amount, :sample => 999999.99
