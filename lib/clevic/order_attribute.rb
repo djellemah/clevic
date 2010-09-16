@@ -51,4 +51,13 @@ class OrderAttribute
     self.direction == other.direction and
     self.attribute == other.attribute
   end
+  
+  # return -1 for desc, 1 for asc
+  def to_i
+    case direction
+      when :asc; 1
+      when :desc; -1
+      else; raise "unknown direction #{direction}"
+    end
+  end
 end

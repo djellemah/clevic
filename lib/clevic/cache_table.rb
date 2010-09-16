@@ -128,9 +128,33 @@ class CacheTable < Array
     self.class.new( entity_class, args || find_options )
   end
   
+  # key is what we're searching for. candidate
+  # is what the current candidate is. direction is 1
+  # for sorted ascending, and -1 for sorted descending
+  # TODO retrieve nulls first/last from dataset. In sequel (>3.13.0)
+  # this is related to entity_class.filter( :release_date.desc(:nulls=>:first), :name.asc(:nulls=>:last) )
+  def compare( key, candidate, direction )
+    if ( key_nil = key.nil? ) || candidate.nil?
+      if key == candidate
+        # both nil, ie equal
+        0
+      else
+        # assume nil is sorted greater
+        # TODO this should be retrieved from the db
+        # ie candidate(nil) <=> key is 1
+        # and key <=> candidate(nil) is -1
+        key_nil ? -1 : 1
+      end
+    else
+      candidate <=> key
+    end * direction
+    # reverse the result if we're searching a desc attribute,
+    # where direction will be -1
+  end
+  
   # find the index for the given entity, using a binary search algorithm (bsearch).
   # The order_by ActiveRecord style options are used to do the binary search.
-  # 0 is returned if the entity is nil
+  # nil is returned if the entity is nil
   # nil is returned if the array is empty
   def index_for_entity( entity )
     return nil if size == 0 || entity.nil?
@@ -142,22 +166,22 @@ class CacheTable < Array
       bsearch do |candidate|
         # find using all sort attributes
         order_attributes.inject(0) do |result,attribute|
+          # value from the block should be in [-1,0,1],
+          # similar to candidate <=> entity
           if result == 0
+            # they're equal, so compare attribute values
             method = attribute.attribute.to_sym
+            
             # compare taking ordering direction into account
-            retval =
-            if attribute.direction == :asc
-              candidate.send( method ) <=> entity.send( method )
-            else
-              entity.send( method ) <=> candidate.send( method )
-            end
+            retval = compare( entity.send( method ), candidate.send( method ), attribute.to_i )
+            
             # exit now because we have a difference
             next( retval ) if retval != 0
             
             # otherwise try with the next order attribute
             retval
           else
-            # they're equal, so try next order attribute
+            # recurse out because we have a difference already
             result
           end
         end
