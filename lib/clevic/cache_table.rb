@@ -30,7 +30,7 @@ class CacheTable < Array
     # must be before sanitise_options
     @entity_class = entity_class
     # must be before anything that uses options
-    @find_options = find_options.clone
+    @find_options = (find_options || {}).clone
     sanitise_options!
     
     # size the array and fill it with nils. They'll be filled
