@@ -4,7 +4,6 @@ module Clevic
 
   class TextDelegate < Delegate
     # TODO check that VK_ENTER stops editing
-    # TODO JTextArea editor
     def init_component( cell_editor )
       editor.text = edit_value
       editor.select_all

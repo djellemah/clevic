@@ -442,7 +442,7 @@ class ModelBuilder
   def text( attribute, options = {}, &block )
     read_only_default!( attribute, options )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    field.delegate = TextDelegate.new( field )
+    field.delegate = TextAreaDelegate.new( field )
     @fields[attribute] = field
   end
   
