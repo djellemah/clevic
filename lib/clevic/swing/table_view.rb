@@ -350,8 +350,24 @@ class TableView < javax.swing.JScrollPane
     @jtable.setColumnSelectionInterval( table_index.column, table_index.column )
     @jtable.setRowSelectionInterval( table_index.row, table_index.row )
     
-    column_width = @jtable.column_model.getColumn( table_index.column ).width
-    rect = java.awt.Rectangle.new( column_width * table_index.column, @jtable.row_height * table_index.row, column_width, @jtable.row_height )
+    # x position. Should be sum of widths of all columns up to the beginning of this one
+    # ie not including this one, hence the -1
+    xpos = (0..table_index.column-1).inject(0) do |sum,column_index|
+      sum + @jtable.column_model.getColumn( column_index ).width
+    end
+    
+    rect = java.awt.Rectangle.new(
+      xpos,
+      
+      # y position
+      @jtable.row_height * table_index.row,
+      
+      # width of this column
+      @jtable.column_model.getColumn( table_index.column ).width,
+      
+      # height
+      @jtable.row_height
+    )
     @jtable.scrollRectToVisible( rect )
   end
   
