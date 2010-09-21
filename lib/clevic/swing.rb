@@ -27,7 +27,6 @@ def self.tahoma
     begin
       java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "Tahoma"}.first
     rescue
-      puts "oops. Using SansSerif"
       java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "SansSerif"}.first
     end
     @font = found.deriveFont( 13.0 )
