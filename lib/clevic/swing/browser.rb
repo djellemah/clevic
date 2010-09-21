@@ -17,6 +17,11 @@ class Browser < javax.swing.JFrame
   def initialize
     super
     
+    # make it more appley
+    java.lang.System.setProperty( "apple.laf.useScreenMenuBar", "true" )
+    java.lang.System.setProperty( "com.apple.mrj.application.apple.menu.about.name", title_string )
+    javax.swing.UIManager.setLookAndFeel( javax.swing.UIManager.getSystemLookAndFeelClassName() )
+
     self.jmenu_bar = menu_bar
     self.icon_image = icon
     
@@ -28,7 +33,11 @@ class Browser < javax.swing.JFrame
     
     load_views
     update_menus
-    self.title = [database_name, 'Clevic'].compact.join ' '
+    self.title = title_string
+  end
+  
+  def title_string
+    [database_name, 'Clevic'].compact.join ' '
   end
   
   def menu_bar

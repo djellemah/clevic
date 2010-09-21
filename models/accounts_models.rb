@@ -1,23 +1,31 @@
 require 'clevic.rb'
 
+host = ENV['PGHOST'] || 'localhost'
+$options ||= {}
+
 if respond_to?( :'jruby?' ) && jruby?
-  constring = "jdbc:postgresql://#{host}/accounts_test?user=#{$options[:username] || 'times'}&password=general"
+  constring = "jdbc:postgresql://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general"
   puts "constring: #{constring.inspect}"
   Sequel.connect( constring )
 else
-  # db connection
-  Clevic::DbOptions.connect( $options ) do
-    # use a different db for testing, so real data doesn't get broken.
-    if options[:database].nil? || options[:database].empty?
-      database( debug? ? :accounts_test : :accounts )
-    else
-      database options[:database]
+  if false
+    # db connection
+    Clevic::DbOptions.connect( $options ) do
+      # use a different db for testing, so real data doesn't get broken.
+      if options[:database].nil? || options[:database].empty?
+        database( debug? ? :accounts_test : :accounts )
+      else
+        database options[:database]
+      end
+      # for AR
+      #~ adapter :postgresql
+      # for Sequel
+      adapter :postgres
+      username options[:username].blank? ? 'accounts' : options[:username]
     end
-    # for AR
-    #~ adapter :postgresql
-    # for Sequel
-    adapter :postgres
-    username options[:username].blank? ? 'accounts' : options[:username]
+  else
+    require 'sequel'
+    Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general" )
   end
 end
 

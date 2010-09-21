@@ -62,7 +62,12 @@ class Action
     last = modifiers.pop
     
     modifier_mask = modifiers.inject(0) do |mask,value|
-      mask | eval( "java.awt.event.InputEvent::#{value.upcase}_DOWN_MASK" )
+      mask |
+      if value =~ /ctrl/i
+        java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()
+      else
+        eval( "java.awt.event.InputEvent::#{value.upcase}_DOWN_MASK" )
+      end
     end
     
     keystroke =

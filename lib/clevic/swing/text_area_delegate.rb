@@ -17,14 +17,16 @@ module Clevic
     # TODO check that Ctrl-VK_ENTER stops editing
     def init_component( cell_editor )
       @cell_editor = cell_editor
+      cell_editor.addCellEditorListener do |event|
+        puts
+      end
       text_component.text = edit_value
       text_component.rows = edit_value.count( "\n" ) + 2
-      #~ text_component.columns = 
       text_component.select_all
     end
     
     def editor
-      @editor ||= EditorScrollPane.new( text_component )
+      @editor ||= EditorScrollPane.new( text_component, javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS )
     end
     
     def text_component
