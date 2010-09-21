@@ -180,9 +180,11 @@ class TableView < javax.swing.JScrollPane
   # This puts empty actions in the local keyboard map so that the
   # generic keyboard map doesn't catch them and prevent our menu actions
   # from being triggered
+  # TODO I'm sure this isn't the right way to do this.
   def fix_input_map
     add_map 'ctrl pressed C'
     add_map 'ctrl pressed V'
+    add_map 'meta pressed V'
     add_map 'ctrl pressed X'
     add_map 'pressed DEL'
   end
