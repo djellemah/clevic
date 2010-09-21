@@ -23,13 +23,14 @@ module Clevic
 
 def self.tahoma
   if @font.nil?
-    @font = 
+    found =
     begin
-      found = java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "Tahoma"}.first
+      java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "Tahoma"}.first
     rescue
-      found = java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "SansSerif"}.first
-      found.deriveFont( 13.0 )
+      puts "oops. Using SansSerif"
+      java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "SansSerif"}.first
     end
+    @font = found.deriveFont( 13.0 )
   end
   @font
 end
