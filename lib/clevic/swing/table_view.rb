@@ -156,6 +156,12 @@ class TableView < javax.swing.JScrollPane
     
     framework_init( arg, &block )
     
+    # add a selection listener to show position of current cursor
+    # this only gets the row
+    jtable.selection_model.addListSelectionListener do |event|
+      emit_status_text( "row: #{jtable.selection_model.getLeadSelectionIndex + 1}" )
+    end
+    
     # this must go after framework_init, because it needs the actions
     # which are set up in there
     jtable.component_popup_menu = popup_menu
