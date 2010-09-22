@@ -25,9 +25,10 @@ def self.tahoma
   if @font.nil?
     @font = 
     begin
-      found =java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "Tahoma"}.first
+      found = java.awt.GraphicsEnvironment.local_graphics_environment.all_fonts.select {|f| f.font_name == "Tahoma"}.first
       found.deriveFont( 13.0 )
-    rescue
+      java.awt.Font.new( 'DialogInput', java.awt.Font::PLAIN, 13 )
+  rescue
       java.awt.Font.new( 'DialogInput', java.awt.Font::PLAIN, 13 )
     end
   end
