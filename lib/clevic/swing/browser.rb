@@ -17,6 +17,8 @@ class Browser < javax.swing.JFrame
   def initialize
     super
     
+    java.lang.System.setProperty( "com.apple.mrj.application.apple.menu.about.name", title_string )
+
     self.jmenu_bar = menu_bar
     self.icon_image = icon
     
@@ -262,7 +264,6 @@ class Browser < javax.swing.JFrame
   def self.run( args )
     # make it more appley
     java.lang.System.setProperty( "apple.laf.useScreenMenuBar", "true" )
-    java.lang.System.setProperty( "com.apple.mrj.application.apple.menu.about.name", title_string )
     javax.swing.UIManager.setLookAndFeel( javax.swing.UIManager.getSystemLookAndFeelClassName() )
 
     # load models
