@@ -17,11 +17,6 @@ class Browser < javax.swing.JFrame
   def initialize
     super
     
-    # make it more appley
-    java.lang.System.setProperty( "apple.laf.useScreenMenuBar", "true" )
-    java.lang.System.setProperty( "com.apple.mrj.application.apple.menu.about.name", title_string )
-    javax.swing.UIManager.setLookAndFeel( javax.swing.UIManager.getSystemLookAndFeelClassName() )
-
     self.jmenu_bar = menu_bar
     self.icon_image = icon
     
@@ -265,9 +260,17 @@ class Browser < javax.swing.JFrame
   end
   
   def self.run( args )
+    # make it more appley
+    java.lang.System.setProperty( "apple.laf.useScreenMenuBar", "true" )
+    java.lang.System.setProperty( "com.apple.mrj.application.apple.menu.about.name", title_string )
+    javax.swing.UIManager.setLookAndFeel( javax.swing.UIManager.getSystemLookAndFeelClassName() )
+
+    # load models
     args.each do |arg|
       load_models( Pathname.new( arg ) )
     end
+    
+    # make top-level UI
     browser = Browser.new
     browser.default_close_operation = javax.swing.JFrame::EXIT_ON_CLOSE
     browser.pack
