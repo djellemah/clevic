@@ -425,6 +425,10 @@ class ModelBuilder
   
   # should this table automatically show a new blank record?
   def auto_new?; @auto_new; end
+  
+  def title( value )
+    entity_view.title = value
+  end
 
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {}, &block )

@@ -64,8 +64,9 @@ module Clevic
     
     # The title to display, eg in a tab
     def title
-      self.class.name
+      @title || self.class.name
     end
+    attr_writer :title
     
     def fields
       @fields ||= define_ui.fields
