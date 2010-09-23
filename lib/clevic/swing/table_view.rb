@@ -327,12 +327,19 @@ class TableView < javax.swing.JScrollPane
     @jtable.getFontMetrics( @jtable.font).stringWidth( data ) + 5
   end
   
+  def trim_middle( value, max = 40 )
+    if value.length > max
+      "#{value[0..(max/2-2)]}...#{value[-(max/2-2)..-1]}"
+    else
+      value
+    end
+  end
+  
   # forward to @jtable
   # also handle model#emit_data_error
   def model=( model )
     emitter_block = lambda do |index,value,message|
-      puts "#{__FILE__}:#{__LINE__}:index.entity: #{index.entity.inspect}"
-      emit_status_text "#{message}: #{value}"
+      show_error "#{message}: #{trim_middle( value, 40 )}"
     end
     @jtable.model.remove_data_error( &emitter_block ) if @jtable.model.respond_to? :remove_data_error
     @jtable.model = model
@@ -344,8 +351,14 @@ class TableView < javax.swing.JScrollPane
     @jtable.model
   end
   
-  def show_error( msg )
-    emit_status_text msg
+  def show_error( msg, title = "Error" )
+    @pane ||= javax.swing.JOptionPane.new(
+      '',
+      javax.swing.JOptionPane::ERROR_MESSAGE,
+      javax.swing.JOptionPane::DEFAULT_OPTION
+    )
+    @pane.message = msg
+    @pane.create_dialog( self, title ).show
   end
   
   def selection_model

@@ -102,7 +102,7 @@ class TableView
     # list of actions in the edit menu
     list( :edit ) do
       #~ new_action :action_cut, 'Cu&t', :shortcut => 'Ctrl-X'
-      action :action_save, '&Save', :shortcut => 'Ctrl+S', :method => :save_current_row
+      action :action_save, '&Save', :shortcut => 'Ctrl+S', :method => :save_current_rows
       #~ action :action_cut, 'Cu&t', :shortcut => 'Ctrl+X', :method => :cut_current_selection
       action :action_copy, '&Copy', :shortcut => 'Ctrl+C', :method => :copy_current_selection
       action :action_paste, '&Paste', :shortcut => 'Ctrl+V', :method => :paste
@@ -582,8 +582,10 @@ class TableView
     end
   end
   
-  def save_current_row
-    save_row( current_index )
+  def save_current_rows
+    selection_model.row_indexes.each do |row_index|
+      save_row( model.create_index( row_index, 0 ) )
+    end
   end
   
   # save the entity in the row of the given index
@@ -593,7 +595,13 @@ class TableView
     if !index.nil? && index.valid?
       saved = model.save( index )
       if !saved
-        show_error( model.collection[index.row].errors.to_a.join("\n") )
+        # construct error message(s)
+        msg = index.entity.errors.map do |field, errors|
+          abbr_value = trim_middle( index.entity.send(field) )
+          "#{field} (#{abbr_value}) #{errors.join(',')}"
+        end.join( "\n" )
+        
+        show_error( msg, "Validation Errors" )
       end
       saved
     end
