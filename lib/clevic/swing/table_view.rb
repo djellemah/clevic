@@ -41,7 +41,6 @@ end
 
 # TODO make sure JTable doesn't grab Ctrl-C and do its own copy routine.
 # TODO make sure Delegates use the correct copy routines.
-# TODO make sure Ctrl-V uses TableView paste routine
 class ClevicTable < javax.swing.JTable
   attr_accessor :table_view
   
@@ -266,14 +265,14 @@ class TableView < javax.swing.JScrollPane
   # file:///usr/share/doc/java-sdk-docs-1.6.0.10/html/api/java/awt/datatransfer/DataFlavor.html#javaJVMLocalObjectMimeType
   # also use a DataFlavor with mimetype application/x-java-serialized-object
   # to transfer between cells.
+  # TODO use the Clevic::Clipboard
   def copy_current_selection
     transferable = java.awt.datatransfer.StringSelection.new( current_selection_csv )
-    clipboard = java.awt.Toolkit.default_toolkit.system_clipboard
-    clipboard.setContents( transferable, transferable )
+    clipboard.system.setContents( transferable, transferable )
   end
   
-  def read_clipboard
-    java.awt.Toolkit.default_toolkit.system_clipboard.getData( java.awt.datatransfer.DataFlavor.stringFlavor ).to_s
+  def clipboard
+    @clipboard = Clipboard.new
   end
   
   def status_text_listeners
@@ -332,6 +331,7 @@ class TableView < javax.swing.JScrollPane
   # also handle model#emit_data_error
   def model=( model )
     emitter_block = lambda do |index,value,message|
+      puts "#{__FILE__}:#{__LINE__}:index.entity: #{index.entity.inspect}"
       emit_status_text "#{message}: #{value}"
     end
     @jtable.model.remove_data_error( &emitter_block ) if @jtable.model.respond_to? :remove_data_error

@@ -426,6 +426,7 @@ class ModelBuilder
   # should this table automatically show a new blank record?
   def auto_new?; @auto_new; end
   
+  # DSL for changing the title
   def title( value )
     entity_view.title = value
   end

@@ -6,7 +6,19 @@ a hash instead of a class.
 =end
 class ModelColumn
   # these are from AR
-  attr_accessor :primary, :scale, :sql_type, :name, :precision, :default, :limit, :type, :meta
+  attr_accessor :primary, :scale, :sql_type, :name, :precision, :default, :type, :meta
+  
+  attr_writer :limit
+  
+  # if it's not here, it's probably from Sequel, so figure it out from
+  # the db_type
+  def limit
+    unless @limit
+      db_type =~ /\((\d+)\)/
+      @limit = $1.to_i
+    end
+    @limit
+  end
   
   # these are from Sequel::Model.columns_hash
   attr_accessor :ruby_default, :primary_key, :allow_null, :db_type

@@ -343,24 +343,61 @@ class TableView
 
   # get something from the clipboard and put it at the current selection
   def paste
+    sanity_check_read_only
+    
     # if it's text from an external program, call paste_text
     # otherwise use the java-native-application or whatever mime type it is
     # for now assume plain text
-    paste_text
+    case
+    when clipboard.html?
+      paste_html
+    when clipboard.text?
+      paste_text
+    else
+      raise PasteError, "clipboard has neither text nor html, so can't paste"
+    end
   rescue PasteError => e
     emit_status_text e.message
+  end
+  
+  def paste_html
+    require 'hpricot'
+
+    html = clipboard['text/html']
+    
+    doc =
+    if html.is_a? Hpricot::Doc
+      html
+    else
+      Hpricot.parse( html )
+    end
+    
+    ary = ( doc / :tr ).map do |row|
+      ( row / :td ).map do |cell|
+        # trim leading and trailing \r\n\t
+        
+        # check for br
+        unless cell.search( '//br' ).empty?
+          # treat br as separate lines
+          cell.search('//text()').map( &:to_s ).join("\n")
+        else
+          # otherwise just join text elements
+          cell.search( '//text()' ).join('')
+        end.gsub( /^[\r\n\t]*/, '').gsub( /[\r\n\t]*$/, '')
+      end
+    end
+    
+    paste_array ary
   end
   
   # TODO probably need a PasteParser or something, to figure
   # out if a file is tsv or csv
   # Try tsv first, because number formats often have embedded ','.
-  # Check for rectangularness, ie sv_arr.map{|row| row.size}.uniq.size == 1
+  # Check for rectangularness, ie csv_arr.map{|row| row.size}.uniq.size == 1
   # if tsv doesn't work, try with csv and test for rectangularness
   # if it's less than the field's max length(if there is one), assum it's one string.
   def paste_text
-    sanity_check_read_only
-    
-    text = read_clipboard
+    text = clipboard['text/plain']
     
     # assume it's tab-separated if there's a tab in the data
     col_sep =
@@ -370,8 +407,10 @@ class TableView
       ","
     end
       
-    arr = FasterCSV.parse( text, :col_sep => col_sep )
-    
+    paste_array( FasterCSV.parse( text, :col_sep => col_sep ) )
+  end
+  
+  def paste_array( arr )
     if selection_model.ranges.size != 1
       raise PasteError, "Can't paste to multiple selections"
     end
@@ -379,7 +418,7 @@ class TableView
     if selection_model.single_cell?
       selected_index = selection_model.selected_indexes.first
       # only one cell selected, so paste like a spreadsheet
-      if text.strip.empty?
+      if arr.size == 0 or ( arr.size == 1 and arr.first.size == 0 )
         # just clear the current selection
         selected_index.attribute_value = nil
       else

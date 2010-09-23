@@ -123,6 +123,10 @@ class TableModel
       # AR model not changed
       true
     end
+  rescue
+    puts $!.message
+    puts $!.backtrace
+    emit_data_error( index, nil, $!.message )
   end
   
   def reload_data( options = nil )
