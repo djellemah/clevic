@@ -69,15 +69,15 @@ class TableModel
   
   # add a new item, and set defaults from the Clevic::View
   # add_new_item_start and add_new_item_end are provided by
-  # the including class
+  # the GUI framework-specific class
   def add_new_item
     add_new_item_start
-    # set default values without triggering changed
+    
     entity = entity_class.new
+    
+    # set default values without triggering changed
     fields.each do |f|
-      unless f.default.nil?
-        f.set_default_for( entity )
-      end
+      f.set_default_for( entity ) unless f.default.nil?
     end
     
     collection << entity
@@ -88,17 +88,18 @@ class TableModel
   # rows is a collection of integers specifying row indices to remove
   def remove_rows( rows )
     # don't delete rows twice
+    # put the entities to be removed in a separate collection
+    # I can't figure out why the collection fails when they're
+    # removed directly
     rows_in_order = rows.uniq.sort
+    removals = rows_in_order.map do |index|
+      collection[index]
+    end
     
     remove_notify( rows_in_order ) do
-      # delete from the end to avoid holes affecting the indexing
-      rows_in_order.reverse.each do |index|
-        # remove the item from the collection
-        # NOTE call this within each iteration because
-        # the rows array may be non-contiguous
-        removed = collection.delete_at( index )
+      removals.each do |to_remove|
         # destroy the db object, and its associated table row
-        removed.destroy
+        to_remove.destroy unless to_remove.nil? || to_remove.new?
       end
     end
     

@@ -328,7 +328,7 @@ class TableView < javax.swing.JScrollPane
   end
   
   def trim_middle( value, max = 40 )
-    if value.length > max
+    if value && value.length > max
       "#{value[0..(max/2-2)]}...#{value[-(max/2-2)..-1]}"
     else
       value

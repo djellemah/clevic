@@ -11,7 +11,6 @@ end
 
 # Various methods common to view classes
 class TableView
-  # TODO reactivate
   include ActionBuilder
   
   # the current filter command
@@ -244,18 +243,24 @@ class TableView
   # them. If it's a rectangular selection, set the cells to nil.
   # TODO make sure all affected rows are saved.
   def delete_selection
-    sanity_check_read_only
-
-    # translate from ModelIndex objects to row indices
-    puts "#{__FILE__}:#{__LINE__}:implement vertical_header"
-    #~ rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
-    rows = []
-    unless rows.empty?
-      # header rows are selected, so delete them
-      model.remove_rows( rows ) 
-    else
-      # otherwise various cells are selected, so delete the cells
-      delete_cells
+    busy_cursor do
+      begin
+        sanity_check_read_only
+        
+        # TODO translate from ModelIndex objects to row indices
+        puts "#{__FILE__}:#{__LINE__}:implement vertical_header"
+        #~ rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
+        rows = []
+        unless rows.empty?
+          # header rows are selected, so delete them
+          model.remove_rows( rows ) 
+        else
+          # otherwise various cells are selected, so delete the cells
+          delete_cells
+        end
+      rescue
+        show_error $!.message
+      end
     end
   end
   
@@ -343,21 +348,23 @@ class TableView
 
   # get something from the clipboard and put it at the current selection
   def paste
-    sanity_check_read_only
-    
-    # Try text/html then text/plain as tsv or csv
-    # TODO maybe use the java-native-application at some point for
-    # cut'n'paste internally
-    case
-    when clipboard.html?
-      paste_html
-    when clipboard.text?
-      paste_text
-    else
-      raise PasteError, "clipboard has neither text nor html, so can't paste"
+    busy_cursor do
+      sanity_check_read_only
+      
+      # Try text/html then text/plain as tsv or csv
+      # TODO maybe use the java-native-application at some point for
+      # cut'n'paste internally
+      case
+      when clipboard.html?
+        paste_html
+      when clipboard.text?
+        paste_text
+      else
+        raise PasteError, "clipboard has neither text nor html, so can't paste"
+      end
     end
   rescue PasteError => e
-    emit_status_text e.message
+    show_error e.message
   end
   
   def paste_html
@@ -371,6 +378,20 @@ class TableView
       html
     else
       Hpricot.parse( html )
+    end
+    
+    # check for potential gotchas
+    spans = doc.search( "//td[@rowspan > 1 || @colspan > 1]" )
+    if spans.size > 0
+      # make an itemised list of 
+      cell_list = spans.map{|x| "- #{x.inner_text}"}.join("\n")
+      raise PasteError, <<-EOF
+Pasting will not work because source contains spanning cells.
+If the source is a spreadsheet, you probably have merged cells
+somewhere. Split them, and try copy and paste again.
+Cells contain
+#{cell_list}
+      EOF
     end
     
     ary = ( doc / :tr ).map do |row|
@@ -391,7 +412,7 @@ class TableView
     paste_array ary
   end
   
-  # TODO probably need a PasteParser or something, to figure
+  # LATER probably need a PasteParser or something, to figure
   # out if a file is tsv or csv
   # Try tsv first, because number formats often have embedded ','.
   # Check for rectangularness, ie csv_arr.map{|row| row.size}.uniq.size == 1
@@ -461,6 +482,8 @@ class TableView
   # and whatever is at other indices matching the size of the pasted
   # csv array. Create new rows if there aren't enough.
   def paste_to_index( top_left_index, csv_arr )
+    csv_arr_size = csv_arr.size
+    puts "#{__FILE__}:#{__LINE__}:csv_arr.first.size: #{csv_arr.first.size.inspect}"
     csv_arr.each_with_index do |row,row_index|
       # append row if we need one
       model.add_new_item if top_left_index.row + row_index >= model.row_count
@@ -469,10 +492,13 @@ class TableView
         unless top_left_index.column + field_index >= model.column_count
           # do paste
           cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
+          emit_status_text( "pasted #{row_index+1} of #{csv_arr_size}")
           begin
             cell_index.text_value = field
           rescue
-            emit_status_text( $!.message )
+            puts $!.message
+            puts $!.backtrace
+            show_error( $!.message )
           end
         else
           emit_status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
@@ -522,10 +548,9 @@ class TableView
       # deletes were done, so call data_changed
       if cells_deleted
         # save affected rows
-        # TODO not sure if rows should be saved here
-        #~ selection_model.row_indexes.each do |index|
-          #~ index.entity.save
-        #~ end
+        selection_model.row_indexes.each do |row_index|
+          save_row( model.create_index( row_index, 0 ) )
+        end
         
         # emit data changed for all ranges
         selection_model.ranges.each do |selection_range|
@@ -536,8 +561,14 @@ class TableView
   end
   
   def delete_rows
-    delete_multiple_cells?( 'Are you sure you want to delete multiple rows?' ) do
-      model.remove_rows( selection_model.row_indexes )
+    delete_multiple_cells?( "Are you sure you want to delete #{selection_model.row_indexes.size} rows?" ) do
+      begin
+        model.remove_rows( selection_model.row_indexes )
+      rescue
+        puts $!.message
+        puts $!.backtrace
+        show_error $!.message
+      end
     end
   end
   
@@ -757,7 +788,7 @@ protected
   # show a busy cursor, do the block, back to normal cursor
   # return value of block
   # TODO implement generic way of indicating framework responsibility
-  :busy_cursor
+  # :busy_cursor
   
   # return either the set of indexes with all invalid indexes
   # remove, or the current selection.
