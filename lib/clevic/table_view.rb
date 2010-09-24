@@ -345,9 +345,9 @@ class TableView
   def paste
     sanity_check_read_only
     
-    # if it's text from an external program, call paste_text
-    # otherwise use the java-native-application or whatever mime type it is
-    # for now assume plain text
+    # Try text/html then text/plain as tsv or csv
+    # TODO maybe use the java-native-application at some point for
+    # cut'n'paste internally
     case
     when clipboard.html?
       paste_html
@@ -365,6 +365,7 @@ class TableView
 
     html = clipboard['text/html']
     
+    # This should really be factored out somewhere and tested thoroughly
     doc =
     if html.is_a? Hpricot::Doc
       html
@@ -431,8 +432,8 @@ class TableView
         value = arr.first.first
         selection_model.selected_indexes.each do |index|
           index.text_value = value
-          puts "#{__FILE__}:#{__LINE__}: TODO decide if changes should be saved here"
-          #~ model.save( index )
+          # save records to db via view, so we get error messages
+          save_row( index )
         end
         
         # notify of changed data
@@ -477,8 +478,8 @@ class TableView
           emit_status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
         end
       end
-      # save records to db
-      model.save( top_left_index.choppy {|i| i.row += row_index; i.column = 0 } )
+      # save records to db via view, so we get error messages
+      save_row( top_left_index.choppy {|i| i.row += row_index; i.column = 0 } )
     end
     
     # make the gui refresh
