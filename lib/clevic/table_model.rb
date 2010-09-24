@@ -97,11 +97,17 @@ class TableModel
     end
     
     remove_notify( rows_in_order ) do
-      removals.each do |to_remove|
+      removals.each do |to_remove, index|
         # destroy the db object, and its associated table row
         to_remove.destroy unless to_remove.nil? || to_remove.new?
       end
     end
+    
+    # because it's too bloody complicated to figure out which items
+    # were deleted and then remove them from the collection. And there
+    # most likely isn't a big hit for doing this, unless there's a lot
+    # of cached calcuation in the entities.
+    self.collection = collection.renew
     
     # create a new row if auto_new is on
     # should really be in a signal handler
