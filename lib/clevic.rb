@@ -7,6 +7,7 @@ module Clevic
 end
 
 require 'clevic/sequel_ar_adapter.rb'
+require 'clevic/sequel_length_validation.rb'
 require 'clevic/db_options.rb'
 require 'clevic/record.rb'
 require 'clevic/view.rb'
