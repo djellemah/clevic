@@ -6,9 +6,6 @@ require 'clevic/filter_command.rb'
 
 module Clevic
 
-class PasteError < RuntimeError
-end
-
 # Various methods common to view classes
 class TableView
   include ActionBuilder
@@ -17,17 +14,7 @@ class TableView
   attr_accessor :filtered
   def filtered?; !@filtered.nil?; end
   
-  # status_text is called when this object was to display something in the status bar
-  # error_test is emitted when an error of some kind must be displayed to the user.
-  # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
-  #~ unless methods.include?( 'emit_status_text' )
-    #~ def emit_status_text( astring ); raise "GUI framework glue responsibility"; end
-  #~ end
-  
-  #~ unless methods.include?( 'emit_filter_status' )
-    #~ def emit_filter_status( abool ); raise "GUI framework glue responsibility"; end
-  #~ end
-  
+  # Called from the gui-framework adapter code in this class
   # arg is:
   # - an instance of Clevic::View
   # - an instance of TableModel
@@ -126,7 +113,7 @@ class TableView
     
     separator
     
-    # list of actions called search
+    # list of actions for search
     list( :search ) do
       action :action_find, '&Find', :shortcut => 'Ctrl+F', :method => :find
       action :action_find_next, 'Find &Next', :shortcut => 'Ctrl+G', :method => :find_next
@@ -346,178 +333,6 @@ class TableView
     "#{count || 0} " + ((count == 1 || count == '1') ? singular : (plural || singular.pluralize))
   end
 
-  # get something from the clipboard and put it at the current selection
-  def paste
-    busy_cursor do
-      sanity_check_read_only
-      
-      # Try text/html then text/plain as tsv or csv
-      # TODO maybe use the java-native-application at some point for
-      # cut'n'paste internally
-      case
-      when clipboard.html?
-        paste_html
-      when clipboard.text?
-        paste_text
-      else
-        raise PasteError, "clipboard has neither text nor html, so can't paste"
-      end
-    end
-  rescue PasteError => e
-    show_error e.message
-  end
-  
-  def paste_html
-    require 'hpricot'
-
-    html = clipboard['text/html']
-    
-    # This should really be factored out somewhere and tested thoroughly
-    doc =
-    if html.is_a? Hpricot::Doc
-      html
-    else
-      Hpricot.parse( html )
-    end
-    
-    # check for potential gotchas
-    spans = doc.search( "//td[@rowspan > 1 || @colspan > 1]" )
-    if spans.size > 0
-      # make an itemised list of 
-      cell_list = spans.map{|x| "- #{x.inner_text}"}.join("\n")
-      raise PasteError, <<-EOF
-Pasting will not work because source contains spanning cells.
-If the source is a spreadsheet, you probably have merged cells
-somewhere. Split them, and try copy and paste again.
-Cells contain
-#{cell_list}
-      EOF
-    end
-    
-    ary = ( doc / :tr ).map do |row|
-      ( row / :td ).map do |cell|
-        # trim leading and trailing \r\n\t
-        
-        # check for br
-        unless cell.search( '//br' ).empty?
-          # treat br as separate lines
-          cell.search('//text()').map( &:to_s ).join("\n")
-        else
-          # otherwise just join text elements
-          cell.search( '//text()' ).join('')
-        end.gsub( /^[\r\n\t]*/, '').gsub( /[\r\n\t]*$/, '')
-      end
-    end
-    
-    paste_array ary
-  end
-  
-  # LATER probably need a PasteParser or something, to figure
-  # out if a file is tsv or csv
-  # Try tsv first, because number formats often have embedded ','.
-  # Check for rectangularness, ie csv_arr.map{|row| row.size}.uniq.size == 1
-  # if tsv doesn't work, try with csv and test for rectangularness
-  # if it's less than the field's max length(if there is one), assum it's one string.
-  def paste_text
-    text = clipboard['text/plain']
-    
-    # assume it's tab-separated if there's a tab in the data
-    col_sep =
-    if text.include?( "\t" )
-      "\t"
-    else
-      ","
-    end
-      
-    paste_array( FasterCSV.parse( text, :col_sep => col_sep ) )
-  end
-  
-  def paste_array( arr )
-    if selection_model.ranges.size != 1
-      raise PasteError, "Can't paste to multiple selections"
-    end
-    
-    if selection_model.single_cell?
-      selected_index = selection_model.selected_indexes.first
-      # only one cell selected, so paste like a spreadsheet
-      if arr.size == 0 or ( arr.size == 1 and arr.first.size == 0 )
-        # just clear the current selection
-        selected_index.attribute_value = nil
-      else
-        paste_to_index( selected_index, arr )
-      end
-    else
-      if arr.size == 1 && arr.first.size == 1
-        # only one value to paste, and multiple selection, so
-        # set all selected indexes to the value
-        value = arr.first.first
-        selection_model.selected_indexes.each do |index|
-          index.text_value = value
-          # save records to db via view, so we get error messages
-          save_row( index )
-        end
-        
-        # notify of changed data
-        model.data_changed do |change|
-          sorted = selection_model.selected_indexes.sort
-          change.top_left = sorted.first
-          change.bottom_right = sorted.last
-        end
-      else
-        if selection_model.ranges.first.height != arr.size
-          raise PasteError, "Height of paste area (#{selection_model.ranges.first.height}) doesn't match height of data (#{arr.size})."
-        end
-        
-        if selection_model.ranges.first.width != arr.first.size
-          raise PasteError, "Width of paste area (#{selection_model.ranges.first.width}) doesn't match width of data (#{arr.first.size})."
-        end
-        
-        # size is the same, so do the paste
-        paste_to_index( selected_index, arr )
-      end
-    end
-  end
-  
-  # Paste an array to the index, replacing whatever is at that index
-  # and whatever is at other indices matching the size of the pasted
-  # csv array. Create new rows if there aren't enough.
-  def paste_to_index( top_left_index, csv_arr )
-    csv_arr_size = csv_arr.size
-    puts "#{__FILE__}:#{__LINE__}:csv_arr.first.size: #{csv_arr.first.size.inspect}"
-    csv_arr.each_with_index do |row,row_index|
-      # append row if we need one
-      model.add_new_item if top_left_index.row + row_index >= model.row_count
-      
-      row.each_with_index do |field, field_index|
-        unless top_left_index.column + field_index >= model.column_count
-          # do paste
-          cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
-          emit_status_text( "pasted #{row_index+1} of #{csv_arr_size}")
-          begin
-            cell_index.text_value = field
-          rescue
-            puts $!.message
-            puts $!.backtrace
-            show_error( $!.message )
-          end
-        else
-          emit_status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
-        end
-      end
-      # save records to db via view, so we get error messages
-      save_row( top_left_index.choppy {|i| i.row += row_index; i.column = 0 } )
-    end
-    
-    # make the gui refresh
-    model.data_changed do |change|
-      change.top_left = top_left_index
-      change.bottom_right = top_left_index.choppy do |i|
-        i.row += csv_arr.size - 1
-        i.column += csv_arr.first.size - 1
-      end
-    end
-  end
-  
   # ask the question in a dialog. If the user says yes, execute the block
   def delete_multiple_cells?( question = 'Are you sure you want to delete multiple cells?', &block )
     sanity_check_read_only
@@ -816,5 +631,7 @@ protected
     end
   end
 end
+
+require 'clevic/table_view_paste.rb'
 
 end
