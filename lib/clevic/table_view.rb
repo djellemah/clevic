@@ -633,7 +633,7 @@ Cells contain
           "#{field} (#{abbr_value}) #{errors.join(',')}"
         end.join( "\n" )
         
-        show_error( msg, "Validation Errors" )
+        show_error( "#{index.rc} #{msg}", "Validation Errors" )
       end
       saved
     end

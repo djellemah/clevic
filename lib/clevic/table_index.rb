@@ -88,5 +88,11 @@ module Clevic
     def inspect
       "#<TableIndex (#{row},#{column}) '#{raw_value rescue "no raw value: #{$!.message}"}'>"
     end
+    
+    # return a string (row,column)
+    # suitable for displaying to users, ie 1-based not 0-based
+    def rc
+      "(#{row+1},#{column+1})"
+    end
   end
 end

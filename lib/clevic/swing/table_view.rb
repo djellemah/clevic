@@ -2,42 +2,12 @@ require 'fastercsv'
 
 require 'clevic/swing/action_builder.rb'
 require 'clevic/swing/cell_editor.rb'
+require 'clevic/swing/cell_renderer.rb'
 
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
 
 module Clevic
-
-class CellRenderer < javax.swing.table.DefaultTableCellRenderer
-  def initialize( table_view )
-    super()
-    @table_view = table_view
-  end
-  
-  def getTableCellRendererComponent( table, value, selected, has_focus, row_index, column_index )
-    index = table.model.create_index( row_index, column_index )
-    component = super( table, index.display_value, selected, has_focus, row_index, column_index )
-    
-    # set alignment
-    component.horizontal_alignment = index.field.swing_alignment
-    
-    # set text colour
-    component.foreground = index.field.foreground_for( index.entity ) ||
-    if index.field.read_only? || index.entity.andand.readonly? || @table_view.model.read_only?
-      java.awt.Color.lightGray
-    end
-    
-    # set tooltip
-    component.tool_tip_text = index.tooltip
-    
-    component
-  rescue
-    puts $!.backtrace
-    puts $!.message
-    puts index.entity.inspect
-    nil
-  end
-end
 
 # TODO make sure JTable doesn't grab Ctrl-C and do its own copy routine.
 # TODO make sure Delegates use the correct copy routines.
@@ -339,7 +309,7 @@ class TableView < javax.swing.JScrollPane
   # also handle model#emit_data_error
   def model=( model )
     emitter_block = lambda do |index,value,message|
-      show_error "#{message}: #{trim_middle( value, 40 )}"
+      show_error "#{index.rc} #{message}: #{trim_middle( value, 40 )}"
     end
     @jtable.model.remove_data_error( &emitter_block ) if @jtable.model.respond_to? :remove_data_error
     @jtable.model = model
