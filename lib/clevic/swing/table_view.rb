@@ -119,6 +119,9 @@ class TableView < javax.swing.JScrollPane
     jtable.font = Clevic.tahoma
     self.font = Clevic.tahoma
     
+    # make sure grid shows, even on mac
+    jtable.show_grid = true
+    
     jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new( self ) )
     
     fix_input_map

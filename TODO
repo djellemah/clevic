@@ -2,7 +2,6 @@ export to CSV
 relational_delegate not used?
 Accounts not landing after Ditto with auto-fill-in
 cut'n'paste in text/plain, text/csv, text/yml and application/clevic
-HasFinder gem for complex reusable sql
 provide for easier directories for a setup.
 ModelBuilder#modify_field to override default_ui definitions. Or a better way to reuse field definitions.
 use rubigen for creating model definition files?
@@ -20,7 +19,6 @@ tests. Use ZenTest to generate tests
 Check out ar-extensions. Like operators look nice.
 make sure ActiveRecord doesn't keep updating column definitions. ie production mode.
 caching of repeated related entity lookups. Possibly ActiveRecord::QueryCache
-Ramen http://ramen.rubyforge.org/ for metadata. MySQL and MSSQL only right now.
 
 metadata for virtual fields. Add a member to Field for class_name.constantize
 consolidate metadata across TableModel, and Field. Would like to have it all in Field.
