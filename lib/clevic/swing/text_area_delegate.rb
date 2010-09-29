@@ -18,7 +18,7 @@ module Clevic
     def init_component( cell_editor )
       @cell_editor = cell_editor
       text_component.text = edit_value
-      text_component.rows = edit_value.count( "\n" ) + 2
+      text_component.rows = ( edit_value.andand.count( "\n" ) || 0 ) + 2
       text_component.select_all
     end
     
