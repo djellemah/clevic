@@ -1,5 +1,7 @@
 module Clevic
 
+  # TODO when focus leaves a cell editor component, it ends up
+  # in the RowHeader. Which is incorrect.
   class RowHeaderModel < javax.swing.table.AbstractTableModel
     # Need a Clevic::TableModel here because the underlying
     # connection isn't always the same instance. Because of
@@ -58,6 +60,12 @@ module Clevic
   # for main table to get focus back when a cell editor is clicked
   # TODO sort out error/validation row colouring
   class RowHeader < javax.swing.JTable
+    # for reloading and ease of testing
+    # should probably fix this in Kernel or Module or Class
+    unless ancestors.include?( javax.swing.table.TableCellRenderer )
+      include javax.swing.table.TableCellRenderer
+    end
+    
     # this will add a row header to the passed table_view
     def initialize( table_view )
       @table_view = table_view
@@ -94,33 +102,92 @@ module Clevic
         vp.preferred_size = preferred_size
       end
       
-      self.request_focus_enabled = false
+      row_selection_handlers
     end
+    
     attr_reader :table_view
     
-    # TODO use coloring code once I've done vertical header
-    def headerData( section, orientation, role )
-      value = 
-      case role
-        when qt_background_role
-          if orientation == Qt::Vertical
-            item = collection[section]
-            case
-              when !item.errors.empty?
-                Qt::Color.new( 'orange' )
-              when item.changed?
-                Qt::Color.new( 'yellow' )
-            end
+    # transfer row header selection to full row selections in the main
+    # table. Also clear the row header selection if a main table
+    # selection happens.
+    def row_selection_handlers
+      # add a selection listener to select data table rows
+      selection_model.addListSelectionListener do |event|
+        begin
+          @row_header_selection = true
+          # selection process finished, so clear selection and start again
+          table_view.jtable.selection_model.clear_selection
+          
+          #select the whole row
+          table_view.jtable.setColumnSelectionInterval( table_view.model.fields.size-1, 0 )
+          
+          # select each, erm, selected row
+          getSelectedRows.to_a.each do |row|
+            table_view.jtable.selection_model.addSelectionInterval( row, row )
           end
           
-        else
-          #~ puts "headerData section: #{section}, role: #{const_as_string(role)}" if $options[:debug]
-          nil
+          # make sure jtable gets focus again
+          table_view.request_focus
+        ensure
+          @row_header_selection = false
+        end
       end
       
-      return value.to_variant
+      table_view.jtable.selection_model.addListSelectionListener do |event|
+        selection_model.clear_selection unless @row_header_selection
+      end
     end
     
+    # return self so that getTableCellRendererComponent is called
+    def getCellRenderer( row, column )
+      self
+    end
+    
+    # Implementation of TableCellRenderer
+    # return renderer Component
+    def getTableCellRendererComponent(jtable, value,is_selected,has_focus,row,column)
+      item = table_view.model.collection[row]
+      color =
+      case
+      # there's a validation error
+      when !item.errors.empty?
+        java.awt.Color::orange
+      
+      # record isn't saved yet
+      when item.changed?
+        java.awt.Color::yellow 
+      
+      when is_selected
+        javax.swing.UIManager.get 'Table.selectionBackground'
+      end
+      
+      default_renderer = get_default_renderer( java.lang.Object ).getTableCellRendererComponent(jtable,value,is_selected,has_focus,row,column)
+      
+      # if we have a color by now, then we need to just use a JLabel to
+      # render the cell so we don't mess with the original renderer.
+      # Otherwise use the default renderer
+      renderer =
+      if color
+        javax.swing.JLabel.new.tap do |label|
+          label.font = default_renderer.font
+          
+          label.text = value.to_s
+          
+          label.background = color
+          label.opaque = true
+          
+          label.horizontal_alignment = default_renderer.horizontal_alignment
+        end
+      else
+        puts "default_renderer: #{default_renderer}"
+        
+        default_renderer
+      end
+      renderer.tool_tip_text = "id=#{item.id}"
+      
+      renderer
+    end
+
   end
 
 end
