@@ -76,14 +76,15 @@ module Clevic
       self.minimum_size = java.awt.Dimension.new( column_width, minimum_size.height )
 
       # put a count above the row number header
-      @count_label = javax.swing.JLabel.new( row_count.to_s )
-      @count_label.font = self.font
-      @count_label.horizontal_alignment = javax.swing.JComponent::CENTER_ALIGNMENT
-      table_view.set_corner( javax.swing.ScrollPaneConstants::UPPER_LEFT_CORNER, @count_label )
-      
-      # make sure count label is updated when the model changes
-      model.add_table_model_listener do |event|
-        @count_label.text = row_count.to_s
+      @count_label = javax.swing.JLabel.new( row_count.to_s ).tap do |count_label|
+        count_label.font = self.font
+        count_label.horizontal_alignment = javax.swing.JComponent::CENTER_ALIGNMENT
+        table_view.set_corner( javax.swing.ScrollPaneConstants::UPPER_LEFT_CORNER, count_label )
+        
+        # make sure count label is updated when the model changes
+        model.add_table_model_listener do |event|
+          count_label.text = row_count.to_s
+        end
       end
       
       # insert into the row header side of the scrollpane
