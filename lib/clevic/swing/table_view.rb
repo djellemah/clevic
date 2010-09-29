@@ -27,6 +27,8 @@ class ClevicTable < javax.swing.JTable
     # do what JTable normally does with keys
     super
   rescue Exception => e
+    puts e.message
+    puts e.backtrace
     table_view.model.emit_data_error( table_view.current_index, nil, e.message )
   ensure
     put_client_property( "JTable.autoStartsEdit", true )
