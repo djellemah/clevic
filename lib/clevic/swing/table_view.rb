@@ -3,6 +3,7 @@ require 'fastercsv'
 require 'clevic/swing/action_builder.rb'
 require 'clevic/swing/cell_editor.rb'
 require 'clevic/swing/cell_renderer.rb'
+require 'clevic/swing/row_header.rb'
 
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
@@ -137,6 +138,9 @@ class TableView < javax.swing.JScrollPane
     # this must go after framework_init, because it needs the actions
     # which are set up in there
     jtable.component_popup_menu = popup_menu
+    
+    # add the row header
+    RowHeader.new( self )
   end
   
   class EmptyAction < javax.swing.AbstractAction

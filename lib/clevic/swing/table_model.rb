@@ -88,66 +88,6 @@ class TableModel < javax.swing.table.AbstractTableModel
     end
   end
   
-  # TODO use coloring code once I've done vertical header
-  def headerData( section, orientation, role )
-    value = 
-    case role
-      when qt_display_role
-        case orientation
-          when Qt::Horizontal
-            labels[section]
-          when Qt::Vertical
-            # don't force a fetch from the db
-            if collection.cached_at?( section )
-              collection[section].id
-            else
-              section
-            end
-        end
-        
-      when qt_text_alignment_role
-        case orientation
-          when Qt::Vertical
-            Qt::AlignRight | Qt::AlignVCenter
-        end
-          
-      when Qt::SizeHintRole
-        # anything other than nil here makes the headers disappear.
-        nil
-        
-      when qt_tooltip_role
-        case orientation
-          when Qt::Horizontal
-            fields[section].tooltip
-            
-          when Qt::Vertical
-            case
-              when !collection[section].errors.empty?
-                'Invalid data'
-              when collection[section].changed?
-                'Unsaved changes'
-            end
-        end
-        
-      when qt_background_role
-        if orientation == Qt::Vertical
-          item = collection[section]
-          case
-            when !item.errors.empty?
-              Qt::Color.new( 'orange' )
-            when item.changed?
-              Qt::Color.new( 'yellow' )
-          end
-        end
-        
-      else
-        #~ puts "headerData section: #{section}, role: #{const_as_string(role)}" if $options[:debug]
-        nil
-    end
-    
-    return value.to_variant
-  end
-  
   def isCellEditable( row_index, column_index )
     index = create_index( row_index, column_index )
     !( index.field.read_only? || index.entity.andand.readonly? || read_only? )
