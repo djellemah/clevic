@@ -28,6 +28,7 @@ def reload
   @frame.andand.dispose
   load __FILE__
   load 'clevic/swing/row_header.rb'
+  load 'clevic/swing/table_view.rb'
 end
 
 run unless $0 == 'jirb'

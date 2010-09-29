@@ -62,7 +62,6 @@ module Clevic
     def initialize( table_view )
       @table_view = table_view
       super( RowHeaderModel.new( table_view.model ) )
-      #~ self.show_grid = table_view.jtable.show_grid
       self.font = table_view.font
       self.grid_color = java.awt.Color::white
       

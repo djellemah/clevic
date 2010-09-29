@@ -122,6 +122,8 @@ class TableView < javax.swing.JScrollPane
     
     # make sure grid shows, even on mac
     jtable.show_grid = true
+    # because OSX sets this to the same color as the foreground. Duh.
+    jtable.grid_color = java.awt.SystemColor.controlHighlight
     
     jtable.setDefaultRenderer( java.lang.Object, CellRenderer.new( self ) )
     
