@@ -72,9 +72,17 @@ module Clevic
       # set the width
       column_model.column( 0 ).preferred_width = table_view.column_width( 0, "  #{row_count}" )
       
-      # make sure the field label shows up
-      # don't need it for now cos we're using the row number
-      #~ table_view.set_corner( javax.swing.ScrollPaneConstants::UPPER_LEFT_CORNER, table_header )
+      # put a count above the row number header
+      @count_label = javax.swing.JLabel.new( row_count.to_s )
+      @count_label.font = self.font
+      @count_label.horizontal_alignment = javax.swing.JComponent::CENTER_ALIGNMENT
+      table_view.set_corner( javax.swing.ScrollPaneConstants::UPPER_LEFT_CORNER, @count_label )
+      
+      # update count
+      model.add_table_model_listener do |event|
+        @count_label.text = row_count.to_s
+      end
+      
       
       # insert into the row header side of the scrollpane
       table_view.row_header = javax.swing.JViewport.new.tap do |vp|
