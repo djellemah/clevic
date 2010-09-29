@@ -69,24 +69,27 @@ module Clevic
       set_default_renderer( java.lang.Object, table_header.default_renderer )
       
       # set the width
-      column_model.column( 0 ).preferred_width = table_view.column_width( 0, "  #{row_count}" )
+      column_width = table_view.column_width( 0, "  #{row_count}" )
+      column_model.column( 0 ).preferred_width = column_width
       
+      # This is a workaround either for OSX, or java-1.5.0_19-b02-306
+      self.minimum_size = java.awt.Dimension.new( column_width, minimum_size.height )
+
       # put a count above the row number header
       @count_label = javax.swing.JLabel.new( row_count.to_s )
       @count_label.font = self.font
       @count_label.horizontal_alignment = javax.swing.JComponent::CENTER_ALIGNMENT
       table_view.set_corner( javax.swing.ScrollPaneConstants::UPPER_LEFT_CORNER, @count_label )
       
-      # update count
+      # make sure count label is updated when the model changes
       model.add_table_model_listener do |event|
         @count_label.text = row_count.to_s
       end
       
-      
       # insert into the row header side of the scrollpane
       table_view.row_header = javax.swing.JViewport.new.tap do |vp|
         vp.view = self
-        # make sure size is passed along
+        # make sure size is passed along to viewport
         vp.preferred_size = preferred_size
       end
       
