@@ -2,6 +2,8 @@ module Clevic
 
   # TODO when focus leaves a cell editor component, it ends up
   # in the RowHeader. Which is incorrect.
+  # TODO Weirdness with deleting a row. Takes a long time to get back to user
+  # TODO TextArea not working.
   class RowHeaderModel < javax.swing.table.AbstractTableModel
     # Need a Clevic::TableModel here because the underlying
     # connection isn't always the same instance. Because of
@@ -113,6 +115,7 @@ module Clevic
     def row_selection_handlers
       # add a selection listener to select data table rows
       selection_model.addListSelectionListener do |event|
+        puts "event: #{event.inspect}"
         begin
           @row_header_selection = true
           # selection process finished, so clear selection and start again
@@ -147,43 +150,28 @@ module Clevic
     # return renderer Component
     def getTableCellRendererComponent(jtable, value,is_selected,has_focus,row,column)
       item = table_view.model.collection[row]
-      color =
+      renderer = get_default_renderer( java.lang.Object ).getTableCellRendererComponent(jtable,value,is_selected,has_focus,row,column)
+      
       case
       # there's a validation error
       when !item.errors.empty?
-        java.awt.Color::orange
+        renderer.background = java.awt.Color::orange
+        renderer.opaque = true
+        renderer.tool_tip_text = "validation errors"
       
       # record isn't saved yet
       when item.changed?
-        java.awt.Color::yellow 
+        renderer.background = java.awt.Color::yellow
+        renderer.opaque = true
+        renderer.tool_tip_text = "not saved"
       
       when is_selected
-        javax.swing.UIManager.get 'Table.selectionBackground'
-      end
+        renderer.background = javax.swing.UIManager.get 'Table.selectionBackground'
       
-      default_renderer = get_default_renderer( java.lang.Object ).getTableCellRendererComponent(jtable,value,is_selected,has_focus,row,column)
-      
-      # if we have a color by now, then we need to just use a JLabel to
-      # render the cell so we don't mess with the original renderer.
-      # Otherwise use the default renderer
-      renderer =
-      if color
-        javax.swing.JLabel.new.tap do |label|
-          label.font = default_renderer.font
-          
-          label.text = value.to_s
-          
-          label.background = color
-          label.opaque = true
-          
-          label.horizontal_alignment = default_renderer.horizontal_alignment
-        end
       else
-        puts "default_renderer: #{default_renderer}"
+        renderer.tool_tip_text = "id=#{item.id}"
         
-        default_renderer
       end
-      renderer.tool_tip_text = "id=#{item.id}"
       
       renderer
     end
