@@ -1,4 +1,5 @@
 # This has all the code for handling pasting
+require 'hpricot'
 
 module Clevic
 
@@ -32,8 +33,6 @@ class TableView
   # Check for presence of tr tags, and make sure there are no colspan or rowspan attributes
   # on td tags.
   def paste_html
-    require 'hpricot'
-    
     emit_status_text "Fetching data."
     html = clipboard.html
     
