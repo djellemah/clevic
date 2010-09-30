@@ -88,12 +88,14 @@ Cells contain
   # Try tsv first, because number formats often have embedded ','.
   # if tsv doesn't work, try with csv and test for rectangularness
   # otherwise assume it's one string.
+  # TODO could also heuristically check paste selection area
   def paste_text
     text = clipboard.text
     
     case text
       when /\t/
         paste_array( FasterCSV.parse( text, :col_sep => "\t" ) )
+      # assume multi-line text, or text with commas, is csv
       when /[,\n]/
         paste_array( FasterCSV.parse( text, :col_sep => ',' ) )
       else
