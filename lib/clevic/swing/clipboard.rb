@@ -19,6 +19,7 @@ require 'io/like'
 
 module Clevic
 
+  # Wrapper for java.io.InputStream to make it nicer for Ruby
   class Stream
     def initialize( input_stream )
       @input_stream = input_stream
