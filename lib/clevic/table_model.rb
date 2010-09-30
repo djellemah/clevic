@@ -62,9 +62,7 @@ class TableModel
   def collection=( arr )
     @collection = arr
     # fill in an empty record for data entry
-    if collection.size == 0 && auto_new?
-      collection << entity_class.new
-    end
+    add_new_item if collection.empty? && auto_new?
   end
   
   # add a new item, and set defaults from the Clevic::View
