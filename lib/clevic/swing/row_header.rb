@@ -68,6 +68,9 @@ module Clevic
       include javax.swing.table.TableCellRenderer
     end
     
+    # The Clevic::TableView instance
+    attr_reader :table_view
+    
     # this will add a row header to the passed table_view
     def initialize( table_view )
       @table_view = table_view
@@ -107,37 +110,55 @@ module Clevic
       row_selection_handlers
     end
     
-    attr_reader :table_view
-    
-    # transfer row header selection to full row selections in the main
+    # Transfer row header selection to full row selections in the main
     # table. Also clear the row header selection if a main table
     # selection happens.
     def row_selection_handlers
       # add a selection listener to select data table rows
-      selection_model.addListSelectionListener do |event|
-        puts "event: #{event.inspect}"
-        begin
-          @row_header_selection = true
-          # selection process finished, so clear selection and start again
-          table_view.jtable.selection_model.clear_selection
-          
-          #select the whole row
-          table_view.jtable.setColumnSelectionInterval( table_view.model.fields.size-1, 0 )
-          
-          # select each, erm, selected row
-          getSelectedRows.to_a.each do |row|
-            table_view.jtable.selection_model.addSelectionInterval( row, row )
-          end
-          
-          # make sure jtable gets focus again
-          table_view.request_focus
-        ensure
-          @row_header_selection = false
-        end
+      selection_model.addListSelectionListener do |list_event|
+        process_list_selection( list_event )
       end
       
+      # selections in the main table must clear any selections
+      # in the row header, ie self
       table_view.jtable.selection_model.addListSelectionListener do |event|
-        selection_model.clear_selection unless @row_header_selection
+        selection_model.clear_selection unless row_header_selecting
+      end
+    end
+    
+    # guard to make sure changes to main table selection don't feed back.
+    def row_header_selecting( &block )
+      if block_given?
+        begin
+          @row_header_selecting = true
+          yield
+        ensure
+          @row_header_selecting = false
+        end
+      else
+        @row_header_selecting
+      end
+    end
+    
+    def process_list_selection( event )
+      # tell the main table handler we're busy
+      row_header_selecting do
+        # clear main table selection and start again
+        table_view.jtable.selection_model.clear_selection
+        
+        # select the whole row in main table. Subsequent row selections will also
+        # select the whole row. What a broken API.
+        table_view.jtable.setColumnSelectionInterval( table_view.model.fields.size-1, 0 )
+        
+        selected_rows.each do |row|
+          table_view.jtable.selection_model.addSelectionInterval( row, row )
+        end
+        
+        # make sure the keyboard focus is on the latest selected row
+        table_view.jtable.selection_model.addSelectionInterval( selection_model.lead_selection_index, selection_model.lead_selection_index )
+        
+        # make sure main table gets focus again
+        table_view.request_focus
       end
     end
     
@@ -167,6 +188,7 @@ module Clevic
       
       when is_selected
         renderer.background = javax.swing.UIManager.get 'Table.selectionBackground'
+        renderer.tool_tip_text = "id=#{item.id}"
       
       else
         renderer.tool_tip_text = "id=#{item.id}"

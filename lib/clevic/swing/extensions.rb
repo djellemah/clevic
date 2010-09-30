@@ -203,15 +203,27 @@ end
 unless defined? MouseEvent
   MouseEvent = java.awt.event.MouseEvent
   class MouseEvent
-    def inspect
-      <<EOF
-
-  button: #{const_lookup(button) {|b| b =~ /BUTTON/} }
-  click_count: #{click_count.inspect}
-  modifiers_ex_text: #{self.class.getModifiersExText(modifiers)}
-  component: #{component.inspect}
-EOF
+    def pressed?
+      getID == MOUSE_PRESSED
     end
+    
+    def released?
+      getID == MOUSE_RELEASED
+    end
+    
+    def clicked?
+      getID == MOUSE_CLICKED
+    end
+    
+    #~ def inspect
+      #~ <<EOF
+
+  #~ button: #{const_lookup(button) {|b| b =~ /BUTTON/} }
+  #~ click_count: #{click_count.inspect}
+  #~ modifiers_ex_text: #{self.class.getModifiersExText(modifiers)}
+  #~ component: #{component.inspect}
+#~ EOF
+    #~ end
   end
 end
 
