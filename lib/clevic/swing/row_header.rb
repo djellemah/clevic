@@ -1,9 +1,9 @@
 module Clevic
 
-  # TODO when focus leaves a cell editor component, it ends up
-  # in the RowHeader. Which is incorrect.
   # TODO Weirdness with deleting a row. Takes a long time to get back to user
   # TODO TextArea not working.
+  # TODO make sure a click in the main table when a row selection is active selects the main table cell
+  # TODO allow for clevic/table_view to access the row selection for deletes
   class RowHeaderModel < javax.swing.table.AbstractTableModel
     # Need a Clevic::TableModel here because the underlying
     # connection isn't always the same instance. Because of
@@ -30,7 +30,7 @@ module Clevic
 
     # override TableModel method
     def getColumnName( column_index )
-      "id"
+      "row"
     end
     
     def getColumnClass( column_index )
@@ -58,9 +58,10 @@ module Clevic
     end
   end
 
-  # TODO sort out focus loss from main table, and inability
-  # for main table to get focus back when a cell editor is clicked
-  # TODO sort out error/validation row colouring
+  # The JTable used to display a row header, and allow row selection.
+  # Also handles highlighting rows for different states, eg validation errors
+  # or unsaved.
+  # TODO need to add exceptions thrown by a Model.save to the error list in the model
   class RowHeader < javax.swing.JTable
     # for reloading and ease of testing
     # should probably fix this in Kernel or Module or Class
