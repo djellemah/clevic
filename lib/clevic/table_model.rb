@@ -119,7 +119,7 @@ class TableModel
     if item.changed?
       if item.valid?
         retval = item.save
-        update_vertical_header( index )
+        data_changed( index )
         retval
       else
         false

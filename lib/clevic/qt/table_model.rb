@@ -49,6 +49,7 @@ class TableModel < Qt::AbstractTableModel
   
   # save the AR model at the given index, if it's dirty
   def update_vertical_header( index )
+    raise "preferably use data_changed here, if possible"
     emit headerDataChanged( Qt::Vertical, index.row, index.row )
   end
   
