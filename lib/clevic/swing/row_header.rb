@@ -175,8 +175,14 @@ module Clevic
       renderer = get_default_renderer( java.lang.Object ).getTableCellRendererComponent(jtable,value,is_selected,has_focus,row,column)
       
       case
+      # no highlighting for an empty item
+      when item.nil?
+        renderer.background = java.awt.Color::yellow
+        renderer.opaque = true
+        renderer.tool_tip_text = "deleted elsewhere"
+        
       # there's a validation error
-      when !item.errors.empty?
+      when item.errors && !item.errors.empty?
         renderer.background = java.awt.Color::orange
         renderer.opaque = true
         renderer.tool_tip_text = "validation errors"
@@ -185,7 +191,7 @@ module Clevic
       when item.changed?
         renderer.background = java.awt.Color::yellow
         renderer.opaque = true
-        renderer.tool_tip_text = "not saved"
+        renderer.tool_tip_text = "row not saved"
       
       when is_selected
         renderer.background = javax.swing.UIManager.get 'Table.selectionBackground'
