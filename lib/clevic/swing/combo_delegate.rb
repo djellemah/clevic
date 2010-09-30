@@ -61,6 +61,11 @@ class ComboDelegate < Delegate
     ComboBox
   end
   
+  # the cell must be selected before the edit can be clicked
+  def needs_pre_selection?
+    true
+  end
+  
   def create_combo_box
     # create a new combo class each time, otherwise
     # we have to get into managing cleaning out the model

@@ -31,6 +31,10 @@ module Clevic
     def native
       false
     end
+    
+    def inspect
+      "<#{self.class.name} native=#{native} needs_pre_selection=#{needs_pre_selection?}>"
+    end
   end
 
 end

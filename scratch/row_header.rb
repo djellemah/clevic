@@ -28,6 +28,7 @@ def reload
   load 'clevic/swing/row_header.rb'
   load 'clevic/swing/table_view.rb'
   load 'clevic/swing/table_view_focus.rb'
+  load 'clevic/swing/delegate.rb'
 end
 
 run unless $0 == 'jirb'
