@@ -4,6 +4,7 @@ require 'clevic/swing/action_builder.rb'
 require 'clevic/swing/cell_editor.rb'
 require 'clevic/swing/cell_renderer.rb'
 require 'clevic/swing/row_header.rb'
+require 'clevic/swing/table_view_focus.rb'
 
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
@@ -139,6 +140,9 @@ class TableView < javax.swing.JScrollPane
     
     # add the row header
     RowHeader.new( self )
+    
+    # make sure focus goes to the right place
+    self.focus_traversal_policy = TableViewFocus.new( self )
   end
   
   class EmptyAction < javax.swing.AbstractAction

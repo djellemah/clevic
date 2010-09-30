@@ -14,8 +14,6 @@ def run
     view = Clevic::View.order.first.new
     @table_view = Clevic::TableView.new( view )
     
-    #~ @row_header = Clevic::RowHeader.new( @table_view )
-    
     # display
     frame.content_pane.add( @table_view )
     frame.default_close_operation = javax.swing.JFrame::DISPOSE_ON_CLOSE
@@ -29,6 +27,7 @@ def reload
   load __FILE__
   load 'clevic/swing/row_header.rb'
   load 'clevic/swing/table_view.rb'
+  load 'clevic/swing/table_view_focus.rb'
 end
 
 run unless $0 == 'jirb'
