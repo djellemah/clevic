@@ -94,7 +94,7 @@ Cells contain
     case text
       when /\t/
         paste_array( FasterCSV.parse( text, :col_sep => "\t" ) )
-      when /,/
+      when /[,\n]/
         paste_array( FasterCSV.parse( text, :col_sep => ',' ) )
       else
         paste_value_to_selection( text )
