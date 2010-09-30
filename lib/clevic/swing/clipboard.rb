@@ -57,9 +57,18 @@ module Clevic
       mime_types.include?( 'text/plain' )
     end
     
+    def text; contents('text/plain'); end
+    
+    def text=( value )
+      transferable = java.awt.datatransfer.StringSelection.new( value )
+      system.setContents( transferable, transferable )
+    end
+    
     def html?
       mime_types.include?( 'text/html' )
     end
+    
+    def html; contents('text/html'); end
     
     def mime_types
       flavours.map( &:simple_type ).sort.uniq
@@ -69,9 +78,31 @@ module Clevic
       flavours.map( &:mime_type )
     end
     
+    # matcher is either a string or a regex, ie something
+    # that can be passed to Array#grep
+    def has?( matcher )
+      !full_mime_types.grep( matcher ).empty?
+    end
+    
+    # try a bunch of encodings for the given mime_type, and give
+    # back a String containing the result
     def contents( mime_type )
-      flavor = java.awt.datatransfer.DataFlavor.new( "#{mime_type}; class=java.lang.String; charset=UTF-8" )
-      system.getData( flavor )
+      case
+        # try UTF-8 first because it seems more robust
+        when has?( %r{#{mime_type}.*String.*utf-8}i )
+          data "#{mime_type}; class=java.lang.String; charset=UTF-8"
+        
+        # now string Unicode, just in case
+        when has?( %r{#{mime_type}.*String.*unicode}i )
+          data "#{mime_type}; class=java.lang.String; charset=unicode"
+          
+        # This is to handle clevic-clevic pastes
+        when has?( %r{#{mime_type}.*Stream.*unicode}i )
+          stream( "#{mime_type}; class=java.io.InputStream; charset=unicode" ).read
+        
+        else
+          raise "Don't know how to get #{mime_type}"
+      end
     end
     
     def data( full_mime_type )
@@ -79,9 +110,8 @@ module Clevic
       system.getData( flavor )
     end
     
-    def stream( mime_type )
-      flavor = java.awt.datatransfer.DataFlavor.new( "#{mime_type}; class=java.io.InputStream; charset=UTF-8" )
-      Stream.new( system.getData( flavor ) )
+    def stream( full_mime_type )
+      Stream.new( data( full_mime_type ) )
     end
     
     def []( mime_type )

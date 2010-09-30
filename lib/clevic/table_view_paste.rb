@@ -13,8 +13,8 @@ class TableView
       sanity_check_read_only
       
       # Try text/html then text/plain as tsv or csv
-      # TODO maybe use the java-native-application at some point for
-      # cut'n'paste internally
+      # LATER maybe use the java-native-application at some point for
+      # cut'n'paste internally?
       case
       when clipboard.html?
         paste_html
@@ -35,7 +35,7 @@ class TableView
     require 'hpricot'
     
     emit_status_text "Fetching data."
-    html = clipboard['text/html']
+    html = clipboard.html
     
     # This should really be factored out somewhere and tested thoroughly
     emit_status_text "Analysing data."
@@ -89,7 +89,7 @@ Cells contain
   # if tsv doesn't work, try with csv and test for rectangularness
   # otherwise assume it's one string.
   def paste_text
-    text = clipboard['text/plain']
+    text = clipboard.text
     
     case text
       when /\t/

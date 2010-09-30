@@ -122,6 +122,12 @@ class TableView
     end
   end
   
+  # copy current selection to clipboard as CSV
+  # TODO add text/csv, text/tab-separated-values, text/html as well as text/plain
+  def copy_current_selection
+    clipboard.text = current_selection_csv
+  end
+  
   # return the current selection as csv
   def current_selection_csv
     buffer = StringIO.new

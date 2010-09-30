@@ -237,19 +237,12 @@ class TableView < javax.swing.JScrollPane
     @jtable.editCellAt( table_index.row, table_index.column )
   end
   
-  # copy current selection to clipboard as CSV
   # could also use a javax.activation.DataHandler
   # for a more sophisticated API
   # TODO use 	javaJVMLocalObjectMimeType 
   # file:///usr/share/doc/java-sdk-docs-1.6.0.10/html/api/java/awt/datatransfer/DataFlavor.html#javaJVMLocalObjectMimeType
   # also use a DataFlavor with mimetype application/x-java-serialized-object
   # to transfer between cells.
-  # TODO use the Clevic::Clipboard
-  def copy_current_selection
-    transferable = java.awt.datatransfer.StringSelection.new( current_selection_csv )
-    clipboard.system.setContents( transferable, transferable )
-  end
-  
   def clipboard
     @clipboard = Clipboard.new
   end
