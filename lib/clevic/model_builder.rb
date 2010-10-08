@@ -491,6 +491,20 @@ class ModelBuilder
     field.delegate = RelationalDelegate.new( field )
     @fields[attribute] = field
   end
+  
+  def tags( attribute, options = {}, &block )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    
+    # build a collection setter if necessary
+    unless entity_class.respond_to? "#{attribute}="
+      raise NotImplementedError, "Need to build a collection setter"
+    end
+  
+    # check after all possible options have been collected
+    raise ":display must be specified" if field.display.nil?
+    field.delegate = TagDelegate.new( field )
+    @fields[attribute] = field
+  end
 
   # mostly used in the new block to define the set of records
   # for the TableModel, but may also be

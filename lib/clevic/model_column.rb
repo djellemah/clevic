@@ -32,6 +32,21 @@ class ModelColumn
   # TODO not sure where these are from
   attr_accessor :order, :class, :conditions
   
+  # For Sequel many_to_many
+  attr_accessor :left_key,
+    :left_keys,
+    :right_key,
+    :right_keys,
+    :left_primary_key,
+    :left_primary_keys,
+    :uses_left_composite_keys,
+    :uses_right_composite_keys,
+    :cartesian_product_number,
+    :join_table,
+    :left_key_alias,
+    :graph_join_table_conditions,
+    :graph_join_table_join_type
+  
   # added by us
   attr_accessor :association
   def association?; association; end
