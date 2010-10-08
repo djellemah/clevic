@@ -2,6 +2,32 @@ require 'clevic/swing/delegate'
 
 module Clevic
 
+# Handle updates and notifications for the tag editor
+class TagEditorModel
+  include javax.swing.ListModel
+  include javax.swing.DocumentModel
+  
+  # Adds a listener to the list that's notified each time a change to the data model occurs.
+  def addListDataListener(list_data_listener)
+    @listeners << list_data_listener
+  end
+  
+  def removeListDataListener(list_data_listener)
+    @listeners.delete list_data_listener
+  end
+  
+  # Returns the value at the specified index.
+  # Object getElementAt(int index)
+  def getElementAt(int index)
+  end
+  
+  # Returns the length of the list.
+  # int getSize()
+  def getSize()
+  end
+  
+end
+
 # all this just to format a display item...
 # .... and work around various other Swing stupidities
 class TagEditor < javax.swing.JComponent
@@ -9,12 +35,8 @@ class TagEditor < javax.swing.JComponent
     super()
     @field = field
     
-    init_layout()
+    init_layout
   end
-  
-  # set to true by processKeyBinding when a character
-  # key is pressed. Used by the autocomplete code.
-  attr_reader :typing
   
   def configureEditor( combo_box_editor, item )
     value =
@@ -24,7 +46,7 @@ class TagEditor < javax.swing.JComponent
       item
     end
     
-    combo_box_editor.item = value
+    editor.model = field
   end
   
   # Get the first keystroke when editing starts, and make sure it's entered
@@ -36,8 +58,10 @@ class TagEditor < javax.swing.JComponent
     @typing = !key_event.action_key?
     super
   end
+  
+  attr_reader :text_field, :item_scroll, :item_list, :ok_button, :cancel_button, :add_button, :remove_button
 
-  def init_layout
+  def create_fields
     @text_field = javax.swing.JTextField.new
     @item_scroll = javax.swing.JScrollPane.new
     @item_list = javax.swing.JList.new
@@ -45,66 +69,70 @@ class TagEditor < javax.swing.JComponent
     @cancel_button = javax.swing.JButton.new
     @add_button = javax.swing.JButton.new
     @remove_button = javax.swing.JButton.new
+  end
+  
+  def init_layout
+    create_fields
+    text_field.setName("text_field");
 
-    @text_field.setName("text_field"); // NOI18N
+    item_scroll.setName("item_scroll");
 
-    @item_scroll.setName("item_scroll"); // NOI18N
+    item_list.setName("item_list");
+    item_scroll.setViewportView(item_list);
 
-    @item_list.setName("item_list"); // NOI18N
-    @item_scroll.setViewportView(item_list);
+    ok_button.setText("OK");
+    ok_button.setToolTipText("Accept edits");
+    ok_button.setName("ok_button");
 
-    @ok_button.setText("OK"); // NOI18N
-    @ok_button.setToolTipText("Accept selection"); // NOI18N
-    @ok_button.setName("ok_button"); // NOI18N
+    cancel_button.setText("Cancel");
+    cancel_button.setToolTipText("Cancel edits");
+    cancel_button.setName("cancel_button");
 
-    @cancel_button.setText("Cancel"); // NOI18N
-    @cancel_button.setName("cancel_button"); // NOI18N
+    add_button.setText("+");
+    add_button.setToolTipText("Add a new item");
+    add_button.setBorder(nil);
+    add_button.setName("add_button");
 
-    @add_button.setText("+"); // NOI18N
-    @add_button.setToolTipText("Add a new item"); // NOI18N
-    @add_button.setBorder(null);
-    @add_button.setName("add_button"); // NOI18N
+    remove_button.setText("-");
+    remove_button.setToolTipText("Remove selected item");
+    remove_button.setBorder(nil);
+    remove_button.setName("remove_button");
 
-    @remove_button.setText("-"); // NOI18N
-    @remove_button.setToolTipText("Remove selected item"); // NOI18N
-    @remove_button.setBorder(null);
-    @remove_button.setName("remove_button"); // NOI18N
-
-    layout = org.jdesktop.layout.GroupLayout( self );
+    layout = org.jdesktop.layout.GroupLayout.new( self );
     setLayout(layout);
     layout.setHorizontalGroup(
-        layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING)
-        .add(layout.createSequentialGroup()
-            .addContainerGap()
-            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING)
-                .add(item_scroll, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, 210, java.lang.Short::MAX_VALUE)
-                .add(text_field, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, 210, java.lang.Short::MAX_VALUE)
-                .add(layout.createSequentialGroup()
-                    .add(ok_button)
-                    .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED, 82, java.lang.Short::MAX_VALUE)
-                    .add(cancel_button))
-                .add(layout.createSequentialGroup()
-                    .add(add_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)
-                    .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED)
-                    .add(remove_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)))
-            .addContainerGap())
+        layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING) \
+        .add(layout.createSequentialGroup() \
+            .addContainerGap() \
+            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING) \
+                .add(item_scroll, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, 210, java.lang.Short::MAX_VALUE) \
+                .add(text_field, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, 210, java.lang.Short::MAX_VALUE) \
+                .add(layout.createSequentialGroup() \
+                    .add(ok_button) \
+                    .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED, 82, java.lang.Short::MAX_VALUE) \
+                    .add(cancel_button)) \
+                .add(layout.createSequentialGroup() \
+                    .add(add_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE) \
+                    .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED) \
+                    .add(remove_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE))) \
+            .addContainerGap()) \
     );
     layout.setVerticalGroup(
-        layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING)
-        .add(layout.createSequentialGroup()
-            .addContainerGap()
-            .add(text_field, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)
-            .add(18, 18, 18)
-            .add(item_scroll, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 202, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)
-            .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED)
-            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::BASELINE)
-                .add(add_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)
-                .add(remove_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 19, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE))
-            .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED, 30, java.lang.Short::MAX_VALUE)
-            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::BASELINE)
-                .add(ok_button)
-                .add(cancel_button))
-            .addContainerGap())
+        layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING) \
+        .add(layout.createSequentialGroup() \
+            .addContainerGap() \
+            .add(text_field, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE) \
+            .add(18, 18, 18) \
+            .add(item_scroll, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 202, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE) \
+            .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED) \
+            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::BASELINE) \
+                .add(add_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE) \
+                .add(remove_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 19, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)) \
+            .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED, 30, java.lang.Short::MAX_VALUE) \
+            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::BASELINE) \
+                .add(ok_button) \
+                .add(cancel_button)) \
+            .addContainerGap()) \
     );
   end
 end
