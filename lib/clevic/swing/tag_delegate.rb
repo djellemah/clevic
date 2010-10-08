@@ -27,10 +27,6 @@ class TagEditor < javax.swing.JComponent
     combo_box_editor.item = value
   end
   
-  def init_layout
-    
-  end
-
   # Get the first keystroke when editing starts, and make sure it's entered
   # into the combo box text edit component, if it's not an action key.
   def processKeyBinding( key_stroke, key_event, condition, pressed )
@@ -39,6 +35,77 @@ class TagEditor < javax.swing.JComponent
     end
     @typing = !key_event.action_key?
     super
+  end
+
+  def init_layout
+    @text_field = javax.swing.JTextField.new
+    @item_scroll = javax.swing.JScrollPane.new
+    @item_list = javax.swing.JList.new
+    @ok_button = javax.swing.JButton.new
+    @cancel_button = javax.swing.JButton.new
+    @add_button = javax.swing.JButton.new
+    @remove_button = javax.swing.JButton.new
+
+    @text_field.setName("text_field"); // NOI18N
+
+    @item_scroll.setName("item_scroll"); // NOI18N
+
+    @item_list.setName("item_list"); // NOI18N
+    @item_scroll.setViewportView(item_list);
+
+    @ok_button.setText("OK"); // NOI18N
+    @ok_button.setToolTipText("Accept selection"); // NOI18N
+    @ok_button.setName("ok_button"); // NOI18N
+
+    @cancel_button.setText("Cancel"); // NOI18N
+    @cancel_button.setName("cancel_button"); // NOI18N
+
+    @add_button.setText("+"); // NOI18N
+    @add_button.setToolTipText("Add a new item"); // NOI18N
+    @add_button.setBorder(null);
+    @add_button.setName("add_button"); // NOI18N
+
+    @remove_button.setText("-"); // NOI18N
+    @remove_button.setToolTipText("Remove selected item"); // NOI18N
+    @remove_button.setBorder(null);
+    @remove_button.setName("remove_button"); // NOI18N
+
+    layout = org.jdesktop.layout.GroupLayout( self );
+    setLayout(layout);
+    layout.setHorizontalGroup(
+        layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING)
+        .add(layout.createSequentialGroup()
+            .addContainerGap()
+            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING)
+                .add(item_scroll, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, 210, java.lang.Short::MAX_VALUE)
+                .add(text_field, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, 210, java.lang.Short::MAX_VALUE)
+                .add(layout.createSequentialGroup()
+                    .add(ok_button)
+                    .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED, 82, java.lang.Short::MAX_VALUE)
+                    .add(cancel_button))
+                .add(layout.createSequentialGroup()
+                    .add(add_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)
+                    .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED)
+                    .add(remove_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)))
+            .addContainerGap())
+    );
+    layout.setVerticalGroup(
+        layout.createParallelGroup(org.jdesktop.layout.GroupLayout::LEADING)
+        .add(layout.createSequentialGroup()
+            .addContainerGap()
+            .add(text_field, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, org.jdesktop.layout.GroupLayout::DEFAULT_SIZE, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)
+            .add(18, 18, 18)
+            .add(item_scroll, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 202, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)
+            .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED)
+            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::BASELINE)
+                .add(add_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE)
+                .add(remove_button, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE, 19, org.jdesktop.layout.GroupLayout::PREFERRED_SIZE))
+            .addPreferredGap(org.jdesktop.layout.LayoutStyle::RELATED, 30, java.lang.Short::MAX_VALUE)
+            .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout::BASELINE)
+                .add(ok_button)
+                .add(cancel_button))
+            .addContainerGap())
+    );
   end
 end
 
