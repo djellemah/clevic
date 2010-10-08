@@ -8,6 +8,8 @@ class TagEditor < javax.swing.JComponent
   def initialize( field )
     super()
     @field = field
+    
+    init_layout()
   end
   
   # set to true by processKeyBinding when a character
@@ -23,6 +25,10 @@ class TagEditor < javax.swing.JComponent
     end
     
     combo_box_editor.item = value
+  end
+  
+  def init_layout
+    
   end
 
   # Get the first keystroke when editing starts, and make sure it's entered

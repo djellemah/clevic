@@ -1,6 +1,11 @@
 require 'clevic.rb'
 
-$options ||= { :username => ENV['PGUSER'] || ENV['USER'], :host => ENV['PGHOST'] || 'localhost' }
+$options = {} unless defined?( $options )
+
+$options[:username] = ENV['PGUSER'] || ENV['USER']
+$options[:host] = ENV['PGHOST'] || 'localhost'
+
+puts "$options: #{$options.inspect}"
 
 if RUBY_PLATFORM == 'java'
   constring = "jdbc:postgresql://#{$options[:host]}/contacts?user=#{$options[:username] || 'contacts'}"

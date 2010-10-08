@@ -496,8 +496,8 @@ class ModelBuilder
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
     
     # build a collection setter if necessary
-    unless entity_class.respond_to? "#{attribute}="
-      raise NotImplementedError, "Need to build a collection setter"
+    unless entity_class.instance_methods.include? "#{attribute}="
+      raise NotImplementedError, "Need to build a collection setter for '#{attribute}='"
     end
   
     # check after all possible options have been collected
