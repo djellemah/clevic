@@ -144,6 +144,17 @@ module Clevic
       end
     end
     
+    class Valuer
+      include FieldValuer
+      attr_accessor :field, :entity
+      def initialize( field, entity )
+        @field, @entity = field, entity
+      end
+    end
+    
+    def self.valuer( field, entity )
+      Valuer.new(field,entity)
+    end
   end
   
   # Provides the minimum necessary for valuing, ie for irb testing

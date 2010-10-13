@@ -15,6 +15,7 @@ def run
     
     # the editor
     @tag_editor = Clevic::TagEditor.new( @view.fields[:tags] )
+    @tag_editor.configureEditor( nil, Contact.first )
     
     # display
     frame.content_pane.add( @tag_editor )

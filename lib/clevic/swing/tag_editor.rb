@@ -5,13 +5,14 @@ module Clevic
 # Handle updates and notifications for the tag editor
 class TagEditorModel
   include javax.swing.ListModel
-  #~ include javax.swing.DocumentModel
   
   # Bit of a hack, but ok.
   attr_accessor :field
+  attr_accessor :entity
   
-  def initialize( field )
+  def initialize( field, entity )
     @field = field
+    @entity = entity
     @listeners = []
   end
   
@@ -26,6 +27,10 @@ class TagEditorModel
   
   def items
     field.related_class.all
+  end
+  
+  def linked_items
+    @linked_items ||= FieldValuer.valuer( field, entity ).attribute_value
   end
   
   def items=( ary )
@@ -45,19 +50,10 @@ class TagEditorModel
           #~ Sent after the indices in the index0,index1 interval have been inserted in the data model.
  #~ void 	intervalRemoved(ListDataEvent e) 
  
-  class Valuer
-    include Clevic::SimpleFieldValuer
-  end
-  
-  def valuer
-    @valuer ||= Valuer.new.tap{|v| v.field = field.many_fields.first}
-  end
- 
   # Returns the value at the specified index.
   # Object getElementAt(int index)
   def getElementAt(index)
-    valuer.entity = items[index]
-    valuer.display_value
+    items[index]
   end
   
   # Returns the length of the list.
@@ -67,7 +63,7 @@ class TagEditorModel
   end
   
   def as_text
-    items.map{|x| self.entity = x; display_value}.join(',')
+    linked_items.map{|x| FieldValuer.valuer( field.many_fields.first, x ).display_value }.join(',')
   end
 end
 
@@ -84,21 +80,56 @@ class TagEditor < javax.swing.JComponent
   end
   
   attr_reader :field
+  attr_reader :entity
   
-  def configureEditor( combo_box_editor, item )
-    value =
-    if @field.related_class && item.is_a?( @field.related_class )
-      @field.transform_attribute( item )
-    else
-      item
+  # Hopefully called by the editor framework
+  def configureEditor( editor, entity )
+    @entity = entity
+    @linked_items = nil
+    item_list.model = TagEditorModel.new( field, @entity )
+    text_field.text = item_list.model.as_text
+  end
+
+  class CellRenderer < javax.swing.JComponent
+    include Clevic::SimpleFieldValuer
+    
+    def initialize( tag_editor, item, width )
+      super()
+      @tag_editor, @item = tag_editor, item
+      self.layout = javax.swing.BoxLayout.new( self, javax.swing.BoxLayout::X_AXIS )
+      self << @checkbox = javax.swing.JCheckBox.new.tap do |checkbox|
+        checkbox.text = display_value
+      end
+      self.preferred_size = java.awt.Dimension.new( width, @checkbox.preferred_size.height )
+      validate
     end
     
-    editor.model = TagEditorModel.new( field )
-  end
-  
-  class CellRenderer < javax.swing.JComponent
-    def initialize( item )
-      
+    attr_reader :item
+    
+    def item=( value )
+      @item = value
+      @checkbox.text = display_value
+    end
+    
+    def background=( color )
+      self.setBackground( color )
+      @checkbox.background = color
+    end
+    
+    def focus=( bool )
+      @checkbox.focus_painted = bool
+    end
+    
+    def entity
+      @item
+    end
+    
+    def field
+      @tag_editor.field.many_fields.first
+    end
+    
+    def linked=( bool )
+      @checkbox.selected = bool
     end
   end
   
@@ -107,24 +138,33 @@ class TagEditor < javax.swing.JComponent
   end
   
   def getListCellRendererComponent( jlist, value, index, is_selected, cell_has_focus )
-    @renderer ||= javax.swing.JLabel.new
-    @renderer.text = value.andand.to_s || 'enmpty value'
+    @renderer ||= CellRenderer.new( self, value, jlist.width )
+    @renderer.item = value
+    
+    # set colors
+    @renderer.background = is_selected ? jlist.selection_background : jlist.background
+    @renderer.foreground = is_selected ? jlist.selection_foreground : jlist.foreground
+    
+    # set existence
+    @renderer.linked = linked_items.include?( value )
+    
+    # try to draw focus. Doesn't do much in a list view
+    @renderer.focus = cell_has_focus
+    
+    @renderer.validate
     @renderer
   end
   
   def more_setup
     item_list.cell_renderer = self
-    item_list.model = TagEditorModel.new( field )
   end
   
-  # Get the first keystroke when editing starts, and make sure it's entered
-  # into the combo box text edit component, if it's not an action key.
   def processKeyBinding( key_stroke, key_event, condition, pressed )
-    if key_event.typed? && !key_event.action_key?
-      editor.editor_component.text = java.lang.Character.new( key_event.key_char ).toString
+    if key_stroke.key_code == java.awt.event.KeyEvent::VK_SPACE
+      puts "space"
+    else
+      super
     end
-    @typing = !key_event.action_key?
-    super
   end
   
   attr_reader :text_field, :item_scroll, :item_list, :ok_button, :cancel_button, :add_button, :remove_button
