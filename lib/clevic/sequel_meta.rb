@@ -44,11 +44,15 @@ module Sequel
         
         # reload from current metadata
         def meta!
-          @meta = {}
-          db_schema.merge( association_reflections ).each do |key,value|
-            @meta[key] = ModelColumn.new( key, value )
+          @meta = nil
+          meta
+        end
+        
+        # column and relations, but not keys for defined relations
+        def attributes
+          meta.reject do |column,model_column|
+            meta.values.map( &:keys ).include?( [ column ] )
           end
-          @meta
         end
       end
       

@@ -64,4 +64,8 @@ class ModelColumn
   def name
     @name
   end
+  
+  def related_class
+    @related_class ||= eval class_name
+  end
 end

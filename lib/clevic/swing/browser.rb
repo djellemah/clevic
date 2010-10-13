@@ -6,8 +6,7 @@ module Clevic
 
 =begin rdoc
 The main application class. Display one tabs for each descendant of Clevic::View
-in Clevic::View.order. DefaultView classes created by Clevic::Record are automatically
-added.
+in Clevic::View.order. DefaultView classes created by Clevic::Record are included.
 =end
 class Browser < javax.swing.JFrame
   #~ slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab()}
@@ -17,6 +16,7 @@ class Browser < javax.swing.JFrame
   def initialize
     super
     
+    # set OSX application title
     java.lang.System.setProperty( "com.apple.mrj.application.apple.menu.about.name", title_string )
 
     self.jmenu_bar = menu_bar

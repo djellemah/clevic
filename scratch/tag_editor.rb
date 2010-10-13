@@ -11,10 +11,10 @@ require File.dirname( __FILE__ ) + '/../models/contacts.rb'
 def run
   @frame = javax.swing.JFrame.new.tap do |frame|
     # the view
-    @view = Clevic::View.order.first.new
+    @view = Clevic::DefaultContactView.new
     
     # the editor
-    @tag_editor = Clevic::TagEditor.new( @view.fields )
+    @tag_editor = Clevic::TagEditor.new( @view.fields[:tags] )
     
     # display
     frame.content_pane.add( @tag_editor )
@@ -28,6 +28,7 @@ def reload
   @frame.andand.dispose
   load __FILE__
   load 'clevic/swing/tag_delegate.rb'
+  load 'clevic/swing/tag_editor.rb'
   load 'clevic/swing/delegate.rb'
   load 'clevic/model_builder.rb'
 end

@@ -37,7 +37,7 @@ class TableSearcher
 protected
   # return a Sequel expression for the name of the field to use as a comparison
   def search_field_expression
-    if field.is_association?
+    if field.association?
       # for related tables
       unless [String,Symbol].include?( field.display.class )
         raise( "search field #{field.inspect} cannot search lambda display" ) 

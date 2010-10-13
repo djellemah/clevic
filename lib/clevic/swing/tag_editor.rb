@@ -5,14 +5,14 @@ module Clevic
 # Handle updates and notifications for the tag editor
 class TagEditorModel
   include javax.swing.ListModel
-  include javax.swing.DocumentModel
+  #~ include javax.swing.DocumentModel
   
   # Bit of a hack, but ok.
-  include FieldValuer
-  attr_accessor :entity
+  attr_accessor :field
   
   def initialize( field )
     @field = field
+    @listeners = []
   end
   
   # Adds a listener to the list that's notified each time a change to the data model occurs.
@@ -25,7 +25,7 @@ class TagEditorModel
   end
   
   def items
-    
+    field.related_class.all
   end
   
   def items=( ary )
@@ -45,11 +45,19 @@ class TagEditorModel
           #~ Sent after the indices in the index0,index1 interval have been inserted in the data model.
  #~ void 	intervalRemoved(ListDataEvent e) 
  
+  class Valuer
+    include Clevic::SimpleFieldValuer
+  end
+  
+  def valuer
+    @valuer ||= Valuer.new.tap{|v| v.field = field.many_fields.first}
+  end
+ 
   # Returns the value at the specified index.
   # Object getElementAt(int index)
   def getElementAt(index)
-    self.entity = items[index]
-    display_value
+    valuer.entity = items[index]
+    valuer.display_value
   end
   
   # Returns the length of the list.
@@ -70,8 +78,12 @@ class TagEditor < javax.swing.JComponent
     super()
     @field = field
     
+    create_fields
     init_layout
+    more_setup
   end
+  
+  attr_reader :field
   
   def configureEditor( combo_box_editor, item )
     value =
@@ -82,6 +94,27 @@ class TagEditor < javax.swing.JComponent
     end
     
     editor.model = TagEditorModel.new( field )
+  end
+  
+  class CellRenderer < javax.swing.JComponent
+    def initialize( item )
+      
+    end
+  end
+  
+  unless ancestors.include?( Java::JavaxSwing::ListCellRenderer )
+    include javax.swing.ListCellRenderer
+  end
+  
+  def getListCellRendererComponent( jlist, value, index, is_selected, cell_has_focus )
+    @renderer ||= javax.swing.JLabel.new
+    @renderer.text = value.andand.to_s || 'enmpty value'
+    @renderer
+  end
+  
+  def more_setup
+    item_list.cell_renderer = self
+    item_list.model = TagEditorModel.new( field )
   end
   
   # Get the first keystroke when editing starts, and make sure it's entered
@@ -107,8 +140,6 @@ class TagEditor < javax.swing.JComponent
   end
   
   def init_layout
-    create_fields
-    
     # This is mostly cut-n-pasted from the Netbeans Java sources. So don't tweak it.
     text_field.setName("text_field");
 

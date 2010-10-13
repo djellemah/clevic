@@ -365,6 +365,8 @@ class ModelBuilder
   
   # Create a definition for entity_view (subclass of Clevic::View).
   # Then execute block using self.instance_eval.
+  # entity_view must respond to entity_class, and if title is called, it
+  # must respond to title.
   def initialize( entity_view, &block )
     @entity_view = entity_view
     @auto_new = true
@@ -478,16 +480,14 @@ class ModelBuilder
     options[:restricted] = true
     combo( attribute, options, &block )
   end
-
-  # for foreign keys. Edited with a combo box using values from the specified
+  
+  # For many_to_one relationships.
+  # Edited with a combo box using values from the specified
   # path on the foreign key model object
   # if options[:format] has a value, it's used either as a block
   # or as a dotted path
   def relational( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    
-    # check after all possible options have been collected
-    raise ":display must be specified" if field.display.nil?
     field.delegate = RelationalDelegate.new( field )
     @fields[attribute] = field
   end
@@ -500,8 +500,6 @@ class ModelBuilder
       raise NotImplementedError, "Need to build a collection setter for '#{attribute}='"
     end
   
-    # check after all possible options have been collected
-    raise ":display must be specified" if field.display.nil?
     field.delegate = TagDelegate.new( field )
     @fields[attribute] = field
   end
@@ -543,52 +541,26 @@ class ModelBuilder
   # * :name
   # * :title
   # * :username
+  # * :to_s
   def default_ui
-    # combine reflections and attributes into one set
-    reflections = entity_class.reflections.keys.map{|x| x.to_s}
-    ui_columns = entity_class.columns.reject{|x| x.name == entity_class.primary_key }.map do |column|
-      # TODO use entity_class.meta and ModelColumn
-      att = column.name.gsub( /_id$/, '' )
-      if reflections.include?( att )
-        att
-      else
-        column.name
-      end
-    end
-    
     # don't create an empty record, because sometimes there are
     # validations that will cause trouble
     auto_new false
     
     # build columns
-    # TODO use ModelColumn for this
-    ui_columns.each do |column|
-      if entity_class.reflections.has_key?( column.to_sym )
-        begin
-          reflection = entity_class.reflections[column.to_sym]
-          if reflection.class == ActiveRecord::Reflection::AssociationReflection
-            related_class = reflection.class_name.constantize
-            
-            # try to find a sensible display class. Default to to_s
-            display_method =
-            %w{#{entity_class.name} name title username}.find( lambda{ 'to_s' } ) do |m|
-              related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
-            end
-            
-            # set the display method
-            relational column.to_sym, :display => display_method
-          else
-            plain column.to_sym
-          end
-        rescue
-          puts $!.message
-          puts $!.backtrace
-          # just do a plain
-          puts "Doing plain for #{entity_class}.#{column}"
-          plain column.to_sym
+    entity_class.attributes.each do |column,model_column|
+      begin
+        if model_column.association?
+          relational column
+        else
+          plain column
         end
-      else
-        plain column.to_sym
+      rescue
+        puts $!.message
+        puts $!.backtrace
+        # just do a plain
+        puts "Doing plain for #{entity_class}.#{column}"
+        plain column
       end
     end
     records :order => entity_class.primary_key

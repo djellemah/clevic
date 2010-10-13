@@ -15,11 +15,10 @@ module Clevic
         "::Clevic::Default#{name.gsub('::','')}View"
       end
       
-      #TODO will have to fix modules here
       def create_view_class
         # create the default view class
         # Don't use Class.new because even if you assign
-        # the result to a contstant, there are still anonymous classes
+        # the result to a constant, there are still anonymous classes
         # hanging around, which gives weird results with Clevic::View.subclasses.
         st,line = <<-EOF, __LINE__
           class #{default_view_class_name} < Clevic::DefaultView

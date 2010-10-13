@@ -60,6 +60,9 @@ class Contact < Sequel::Model
     plain :name
     tags :tags do
       display {|x| x.map(&:name).join(',') }
+      many do |mb|
+        mb.plain :name
+      end
     end
     text :email
     

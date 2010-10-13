@@ -145,4 +145,10 @@ module Clevic
     end
     
   end
+  
+  # Provides the minimum necessary for valuing, ie for irb testing
+  module SimpleFieldValuer
+    include FieldValuer
+    attr_accessor :field, :entity
+  end
 end

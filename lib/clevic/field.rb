@@ -241,6 +241,23 @@ EOF
     default_format!
     default_edit_format!
     default_alignment!
+    default_display! if association?
+  end
+  
+  # x_to_many fields are by definition collections of other entities
+  # In a sense this is a special case of a ModelBuilder, with only one field.
+  def many( &block )
+    @many_builder = ModelBuilder.new( self ) do |mb|
+      if block_given?
+        block.call( mb )
+      else
+        mb.plain related_attribute
+      end
+    end
+  end
+  
+  def many_fields
+    @many_builder.fields
   end
   
   # Return the attribute value for the given Object Relational Model instance, or nil
@@ -276,8 +293,7 @@ EOF
   end
   
   # return true if this is a field for a related table, false otherwise.
-  # TODO rename to remove is_
-  def is_association?
+  def association?
     meta.association?
   end
   
@@ -308,8 +324,8 @@ EOF
   # return the class object of a related class if this is a relational
   # field, otherwise nil
   def related_class
-    return nil if entity_class.reflections[attribute].nil?
-    @related_class ||= eval( entity_class.reflections[attribute].class_name || attribute.to_s.classify )
+    return nil unless entity_class.meta.has_key?( attribute )
+    @related_class ||= eval( entity_class.meta[attribute].class_name || attribute.to_s.classify )
   end
   
   # return an array of the various attribute parts
@@ -470,6 +486,13 @@ protected
     end
   end
 
+  # try to find a sensible display method
+  def default_display!
+    candidates = %W{#{entity_class.name.downcase} name title username to_s}
+    @display ||= candidates.find do |m|
+      related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
+    end || raise( "Can't find one of #{candidates.inspect} in #{related_class.name}" )
+  end
 end
 
 end
