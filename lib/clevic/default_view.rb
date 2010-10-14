@@ -18,20 +18,6 @@ module Clevic
       end
     end
     
-    def self.define_ui_block( &block )
-      @define_ui_block ||= block
-    end
-    
-    def define_ui
-      if self.class.define_ui_block.nil?
-        # use the define_ui from Clevic::View to build a default UI
-        super
-      else
-        # use the provided block
-        model_builder( &self.class.define_ui_block )
-      end
-    end
-    
     def title
       @title ||= entity_class.name.demodulize.tableize.humanize
     end

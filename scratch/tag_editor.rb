@@ -32,6 +32,8 @@ def reload
   load 'clevic/swing/tag_editor.rb'
   load 'clevic/swing/delegate.rb'
   load 'clevic/model_builder.rb'
+  load 'clevic/field.rb'
+  load 'clevic/view.rb'
 end
 
 run unless $0 == 'jirb'

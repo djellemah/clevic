@@ -86,8 +86,8 @@ class TagEditor < javax.swing.JComponent
   def configureEditor( editor, entity )
     @entity = entity
     @linked_items = nil
-    item_list.model = TagEditorModel.new( field, @entity )
-    text_field.text = item_list.model.as_text
+    #~ item_list.model = TagEditorModel.new( field, @entity )
+    #~ text_field.text = item_list.model.as_text
   end
 
   class CellRenderer < javax.swing.JComponent
@@ -156,7 +156,7 @@ class TagEditor < javax.swing.JComponent
   end
   
   def more_setup
-    item_list.cell_renderer = self
+    #~ item_list.cell_renderer = self
   end
   
   def processKeyBinding( key_stroke, key_event, condition, pressed )
@@ -170,9 +170,10 @@ class TagEditor < javax.swing.JComponent
   attr_reader :text_field, :item_scroll, :item_list, :ok_button, :cancel_button, :add_button, :remove_button
 
   def create_fields
+    @item_list = TableView.new( field.many_view )
+
     @text_field = javax.swing.JTextField.new
     @item_scroll = javax.swing.JScrollPane.new
-    @item_list = javax.swing.JList.new
     @ok_button = javax.swing.JButton.new
     @cancel_button = javax.swing.JButton.new
     @add_button = javax.swing.JButton.new

@@ -573,8 +573,8 @@ class ModelBuilder
   
   # This takes all the information collected
   # by the other methods, and returns a new TableModel
-  # with the given table_view as its parent.
-  def build( table_view )
+  # with the given parent (usually a TableView) as its parent.
+  def build( parent )
     # build the model with all it's collections
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
@@ -585,10 +585,10 @@ class ModelBuilder
     @model.read_only = @read_only
     @model.auto_new = auto_new?
     
-    # setup model
-    table_view.object_name = @object_name
+    # set view name
+    parent.object_name = @object_name if parent.respond_to? :object_name
     # set parent for all delegates
-    fields.each {|id,field| field.delegate.parent = table_view unless field.delegate.nil? }
+    fields.each {|id,field| field.delegate.parent = parent unless field.delegate.nil? }
     
     # the data
     @model.collection = records
