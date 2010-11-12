@@ -30,7 +30,6 @@ public class TagEditor extends javax.swing.JPanel {
     private void initComponents() {
 
         text_field = new javax.swing.JTextField();
-        item_scroll = new javax.swing.JScrollPane();
         item_list = new javax.swing.JList();
         ok_button = new javax.swing.JButton();
         cancel_button = new javax.swing.JButton();
@@ -39,10 +38,7 @@ public class TagEditor extends javax.swing.JPanel {
 
         text_field.setName("text_field"); // NOI18N
 
-        item_scroll.setName("item_scroll"); // NOI18N
-
         item_list.setName("item_list"); // NOI18N
-        item_scroll.setViewportView(item_list);
 
         ok_button.setText("OK"); // NOI18N
         ok_button.setToolTipText("Accept selection"); // NOI18N
@@ -68,7 +64,6 @@ public class TagEditor extends javax.swing.JPanel {
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(item_scroll, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)
                     .add(text_field, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)
                     .add(layout.createSequentialGroup()
                         .add(ok_button)
@@ -77,7 +72,8 @@ public class TagEditor extends javax.swing.JPanel {
                     .add(layout.createSequentialGroup()
                         .add(add_button, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(remove_button, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                        .add(remove_button, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(item_list, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 207, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -85,9 +81,9 @@ public class TagEditor extends javax.swing.JPanel {
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(text_field, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(18, 18, 18)
-                .add(item_scroll, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 202, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                .add(item_list, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 199, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(15, 15, 15)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(add_button, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(remove_button, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 19, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -104,7 +100,6 @@ public class TagEditor extends javax.swing.JPanel {
     public javax.swing.JButton add_button;
     public javax.swing.JButton cancel_button;
     public javax.swing.JList item_list;
-    public javax.swing.JScrollPane item_scroll;
     public javax.swing.JButton ok_button;
     public javax.swing.JButton remove_button;
     public javax.swing.JTextField text_field;

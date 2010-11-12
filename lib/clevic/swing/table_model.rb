@@ -76,11 +76,12 @@ class TableModel < javax.swing.table.AbstractTableModel
   
   # override TableModel method
   def getColumnClass( column_index )
-    case fields[column_index].meta.type
+    if fields[column_index].meta.type == :boolean || fields[column_index].delegate.is_a?( BooleanDelegate )
       # easiest way to display a checkbox
-      when :boolean; java.lang.Boolean
+      java.lang.Boolean
+    else
       # This will be a treated as a String value
-      else java.lang.Object
+      java.lang.Object
     end
   end
   
@@ -89,17 +90,46 @@ class TableModel < javax.swing.table.AbstractTableModel
     !( index.field.read_only? || index.entity.andand.readonly? || read_only? )
   end
   
-  # Provide data to UI
+  def valuer_for( index )
+    case 
+    # pull values from entity at index
+    when index.field.entity_class == entity_class
+      index
+    
+    # pull values from the Clevic::View class
+    when entity_view.class.ancestors.include?( Clevic::View )
+      #~ entity_view.entity = index.entity
+      FieldValuer.valuer( index.field, entity_view )
+    
+    else
+      raise "No valuer for #{index.inspect}"
+    end
+  end
+  
+  # Provide raw value to renderers
   def getValueAt( row_index, column_index )
-    create_index( row_index, column_index ).attribute_value
+    index = create_index( row_index, column_index )
+    
+    #~ valuer = valuer_for( index )
+    valuer = index
+    
+    if index.field.delegate.native
+      valuer.display_value
+    else
+      valuer.attribute_value
+    end
+
   rescue
     puts $!.inspect
+    puts $!.backtrace
     nil
   end
   
   def setValueAt( value, row_index, column_index )
     index = create_index( row_index, column_index )
     #~ puts "setting index: #{index.inspect} to #{value.inspect}"
+    #~ valuer = valuer_for( index )
+    valuer = index
     
     # Don't allow the primary key to be changed
     return if index.attribute == entity_class.primary_key.to_sym
@@ -108,7 +138,7 @@ class TableModel < javax.swing.table.AbstractTableModel
     # the DB entity will understand
     begin
       if value.is_a?( java.util.Date )
-        index.attribute_value =
+        valuer.attribute_value =
         case value
         # more specific descendant first
         when java.util.Time
@@ -121,10 +151,10 @@ class TableModel < javax.swing.table.AbstractTableModel
           raise "don't know how to convert a #{value.class.name}:#{value.inspect}"
         end
       else
-        index.edit_value = value
+        valuer.edit_value = value
       end
       
-      index.entity.save
+      valuer.entity.save
       
       data_changed( index )
     rescue Exception => e

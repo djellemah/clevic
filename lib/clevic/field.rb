@@ -213,8 +213,7 @@ class Field
       raise "attribute #{attribute.inspect} must be a symbol"
     end
     
-    # TODO AR dependent
-    unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
+    unless ( entity_class.is_a?( Clevic.base_entity_class ) and entity_class.has_attribute?( attribute ) ) or entity_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
 #{attribute} not found in #{entity_class.name}. Possibilities are:
 #{entity_class.attribute_names.join("\n")}
@@ -270,6 +269,10 @@ EOF
     @many_view ||= View.new( :entity_class => related_class, &block )
   end
   
+  # The model object (eg TableModel) this field is part of.
+  # Set to TableModel by ModelBuilder#build
+  attr_accessor :model
+  
   # Return the attribute value for the given Object Relational Model instance, or nil
   # if entity is nil. Will call transform_attribute.
   def value_for( entity )
@@ -304,7 +307,7 @@ EOF
   
   # return true if this is a field for a related table, false otherwise.
   def association?
-    meta.association?
+    meta.andand.association?
   end
   
   # ModelColumn object
@@ -433,6 +436,10 @@ EOF
     end
   end
   
+  def inspect
+    "#<Clevic::Field id=#{id.inspect}>"
+  end
+  
 protected
 
   # call the conversion_block with the value, or just return the
@@ -503,6 +510,7 @@ protected
       related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
     end || raise( "Can't find one of #{candidates.inspect} in #{related_class.name}" )
   end
+
 end
 
 end

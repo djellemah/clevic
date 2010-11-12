@@ -29,6 +29,11 @@ class TableModel
   attr_accessor :entity_view
   attr_accessor :builder
   
+  # If somre or all the entities in the collection is related to a single entity
+  # somewhere else, this is it. Not sure if this is the right
+  # way to do it, but try anyway.
+  attr_accessor :one
+  
   def entity_class
     entity_view.entity_class
   end

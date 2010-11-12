@@ -53,22 +53,65 @@ class Contact < Sequel::Model
     to_add.each{|x| add_tag x}
   end
   
-  include Clevic::Record
+end
+
+class ContactTags < Clevic::View
+  entity_class Contact
   
-  define_ui do
-    plain :date, :sample => '88-WWW-99'
-    plain :name
-    tags :tags do
-      display {|x| x.map(&:name).join(',') }
-      many do |mb|
-        mb.plain :name
+  attr_accessor :entity
+  
+  def define_ui
+    model_builder do |mb|
+      mb.plain :date, :sample => '88-WWW-99'
+      mb.plain :name
+      mb.tags :tags do |tf|
+        tf.display {|x| x.map(&:name).join(',') }
+        tf.many do |mnb|
+          mnb.check :contacts do |f|
+            f.display do |arg|
+              arg.include?( f.model.one )
+            end
+            
+            f.class_eval do
+              def display=( entity, arg )
+                puts "field display self: #{self.inspect}"
+                puts "field display= #{arg}"
+              end
+            end
+          end
+          
+          #~ mnb.fields[:contacts] = Clevic::Field.new( :contacts, entity_class, {} ).tap do |f|
+            #~ f.delegate = Clevic::BooleanDelegate.new( f )
+            #~ f.display do |arg|
+              #~ arg.include?( f.model.one )
+            #~ end
+          #~ end
+          
+          mnb.plain :name
+        end
       end
+      mb.text :email
+      
+      mb.records     :order => 'name, id'
     end
-    text :email
-    
-    records     :order => 'name, id'
   end
   
+  def linked
+    puts "linked"
+    @linked
+  end
+  
+  def linked=( value )
+    puts "linked=#{value}"
+    @linked = value
+  end
+
+  def self.meta
+    @meta ||= {
+      :linked, ModelColumn.new( :linked, :type => :boolean ),
+      :contacts, ModelColumn.new( :contacts, :type => :boolean ),
+    }
+  end
 end
 
 class Tag < Sequel::Model
@@ -83,4 +126,10 @@ class Tag < Sequel::Model
     
     records  :order => 'category,name'
   end
+
+end
+
+class ContactTag < Sequel::Model( :contacts_tags )
+  many_to_one :contact
+  many_to_one :tag
 end

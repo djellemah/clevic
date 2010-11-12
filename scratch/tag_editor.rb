@@ -10,8 +10,8 @@ require File.dirname( __FILE__ ) + '/../models/contacts.rb'
 
 def run
   @frame = javax.swing.JFrame.new.tap do |frame|
-    # the view
-    @view = Clevic::DefaultContactView.new
+    # the view. Make sure latest definition is loaded
+    @view = ContactTags.new
     
     # the editor
     @tag_editor = Clevic::TagEditor.new( @view.fields[:tags] )
@@ -34,6 +34,7 @@ def reload
   load 'clevic/model_builder.rb'
   load 'clevic/field.rb'
   load 'clevic/view.rb'
+  load 'models/contacts.rb'
 end
 
 run unless $0 == 'jirb'

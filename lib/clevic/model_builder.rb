@@ -400,7 +400,8 @@ class ModelBuilder
   # The collection of Clevic::Field instances where visible == true.
   # the visible may go away.
   def fields
-    @fields.reject{|id,field| !field.visible}
+    #~ @fields.reject{|id,field| !field.visible}
+    @fields
   end
   
   # return the index of the named field in the collection of fields.
@@ -504,6 +505,13 @@ class ModelBuilder
     @fields[attribute] = field
   end
 
+  # force a checkbox
+  def check( attribute, options = {}, &block )
+    read_only_default!( attribute, options )
+    field = @fields[attribute] = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    field.delegate = BooleanDelegate.new( field )
+  end
+  
   # mostly used in the new block to define the set of records
   # for the TableModel, but may also be
   # used as an accessor for records.
@@ -587,8 +595,13 @@ class ModelBuilder
     
     # set view name
     parent.object_name = @object_name if parent.respond_to? :object_name
-    # set parent for all delegates
-    fields.each {|id,field| field.delegate.parent = parent unless field.delegate.nil? }
+    
+    # set UI parent for all delegates
+    # and model for each field
+    fields.each do |id,field|
+      field.delegate.parent = parent unless field.delegate.nil?
+      field.model = @model
+    end
     
     # the data
     @model.collection = records
@@ -613,7 +626,7 @@ protected
         
       when entity_class.reflections.include?( attribute )
         # one-to-one relationships can be edited. many-to-one certainly can't
-        entity_class.meta( attribute ).type != :many_to_one
+        entity_class.meta[attribute].type != :many_to_one
         
       when entity_class.instance_methods.include?( attribute.to_s )
         # read-only if there's no setter for the attribute
