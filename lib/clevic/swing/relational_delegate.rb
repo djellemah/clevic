@@ -1,4 +1,4 @@
-require 'clevic/swing/delegate'
+require 'clevic/swing/combo_delegate'
 
 module Clevic
 
