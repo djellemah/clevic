@@ -35,8 +35,8 @@ class TableModel < Qt::AbstractTableModel
   end
   
   def add_new_item_end
+    # notify listeners that the model has changed
     end_insert_rows
-    raise "TODO: call TableView.currentChanged, or something like that"
   end
   
   def remove_notify( rows, &block )
