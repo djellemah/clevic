@@ -77,6 +77,8 @@ module Clevic
     def setModelData( editor, abstract_item_model, model_index )
       model_index.edit_value = editor.to_plain_text
       abstract_item_model.data_changed( model_index )
+    rescue
+      abstract_item_model.emit_data_error( model_index, editor.to_plain_text, $!.message )
     end
 
   end

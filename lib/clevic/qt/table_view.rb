@@ -115,56 +115,6 @@ class TableView < Qt::TableView
     rows
   end
   
-  # TODO refactor with table_view_paste.rb
-  def paste
-    sanity_check_read_only
-    
-    # remove trailing "\n" if there is one
-    text = Qt::Application::clipboard.text.chomp
-    arr = FasterCSV.parse( text )
-    
-    # dunno what was sposed to be here
-    selection_model.selected_indexes.oops!
-    return true if selection_model.selection.size != 1
-    
-    selection_range = selection_model.selection.first
-    selected_index = selection_model.selected_indexes.first
-    
-    if selection_model.selection.size == 1 && selection_range.single_cell?
-      # only one cell selected, so paste like a spreadsheet
-      if text.empty?
-        # just clear the current selection
-        model.setData( selected_index, nil.to_variant )
-      else
-        paste_to_index( selected_index, arr )
-      end
-    else
-      if arr.size == 1 && arr.first.size == 1
-        # only one value to paste, and multiple selection, so
-        # set all selected indexes to the value
-        value = arr.first.first
-        selection_model.selected_indexes.each do |index|
-          model.setData( index, value.to_variant, Qt::PasteRole )
-          # save records to db
-          model.save( index )
-        end
-        
-        # notify of changed data
-        model.data_changed do |change|
-          sorted = selection_model.selected_indexes.sort
-          change.top_left = sorted.first
-          change.bottom_right = sorted.last
-        end
-      else
-        return true if selection_range.height != arr.size
-        return true if selection_range.width != arr.first.size
-        
-        # size is the same, so do the paste
-        paste_to_index( selected_index, arr )
-      end
-    end
-  end
-  
   def status_text( msg )
     emit status_text( msg )
   end
@@ -268,10 +218,14 @@ class TableView < Qt::TableView
     
     # data errors
     model.connect( SIGNAL( 'data_error(QModelIndex, QVariant, QString)' ) ) do |index,variant,msg|
-      error_message = Qt::ErrorMessage.new( self )
-      error_message.show_message( "Incorrect value '#{variant.value}' entered for field [#{index.attribute.to_s}].\nMessage was: #{msg}" )
-      error_message.show
+      show_error( "Incorrect value '#{variant.value}' entered for field [#{index.attribute.to_s}].\nMessage was: #{msg}" )
     end
+  end
+  
+  def show_error( msg )
+    error_message = Qt::ErrorMessage.new( self )
+    error_message.show_message( msg )
+    error_message.show
   end
   
   # and override this because the Qt bindings don't call
@@ -416,6 +370,8 @@ class TableView < Qt::TableView
   def commitData( editor )
     super
     save_current_row if @hiding
+  rescue
+    show_error "Error saving data from #{editor.inspect}: #{$!.message}"
   end
   
   # bool QAbstractItemView::edit ( const QModelIndex & index, EditTrigger trigger, QEvent * event )

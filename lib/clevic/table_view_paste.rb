@@ -45,41 +45,43 @@ class TableView
       Hpricot.parse( html )
     end
     
-    # make sure we have tabular data
-    raise PasteError, "There is no tabular data on the clipboard." if doc.search( "//tr" ).size == 0
-    
-    # throw exception if there are [col|row]span > 1
-    spans = doc.search( "//td[@rowspan > 1 || @colspan > 1]" )
-    if spans.size > 0
-      # make an itemised list of 
-      cell_list = spans.map{|x| "- #{x.inner_text}"}.join("\n")
-      raise PasteError, <<-EOF
-Pasting will not work because source contains spanning cells.
-If the source is a spreadsheet, you probably have merged cells
-somewhere. Split them, and try copy and paste again.
-Cells contain
-#{cell_list}
-      EOF
-    end
-    
-    # run through the tabular data and convert to simple array
-    emit_status_text "Pasting data."
-    ary = ( doc / :tr ).map do |row|
-      ( row / :td ).map do |cell|
-        # trim leading and trailing \r\n\t
-        
-        # check for br
-        unless cell.search( '//br' ).empty?
-          # treat br as separate lines
-          cell.search('//text()').map( &:to_s ).join("\n")
-        else
-          # otherwise just join text elements
-          cell.search( '//text()' ).join('')
-        end.gsub( /^[\r\n\t]*/, '').gsub( /[\r\n\t]*$/, '')
+    # call the plain text paste if we don't have tabular data
+    if doc.search( "//tr" ).size == 0
+      paste_text
+    else
+      # throw exception if there are [col|row]span > 1
+      spans = doc.search( "//td[@rowspan > 1 || @colspan > 1]" )
+      if spans.size > 0
+        # make an itemised list of 
+        cell_list = spans.map{|x| "- #{x.inner_text}"}.join("\n")
+        raise PasteError, <<-EOF
+  Pasting will not work because source contains spanning cells.
+  If the source is a spreadsheet, you probably have merged cells
+  somewhere. Split them, and try copy and paste again.
+  Cells contain
+  #{cell_list}
+        EOF
       end
+      
+      # run through the tabular data and convert to simple array
+      emit_status_text "Pasting data."
+      ary = ( doc / :tr ).map do |row|
+        ( row / :td ).map do |cell|
+          # trim leading and trailing \r\n\t
+          
+          # check for br
+          unless cell.search( '//br' ).empty?
+            # treat br as separate lines
+            cell.search('//text()').map( &:to_s ).join("\n")
+          else
+            # otherwise just join text elements
+            cell.search( '//text()' ).join('')
+          end.gsub( /^[\r\n\t]*/, '').gsub( /[\r\n\t]*$/, '')
+        end
+      end
+      
+      paste_array ary
     end
-    
-    paste_array ary
   end
   
   # LATER probably need a PasteParser or something, to figure

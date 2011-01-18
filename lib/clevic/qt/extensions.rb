@@ -33,6 +33,10 @@ module Qt
     def ranges
       selection
     end
+    
+    def single_cell?
+      ranges.size == 1 && ranges.first.single_cell?
+    end
   end
   
   # implement accepted? and rejected? for TableView#confirm_dialog and friends

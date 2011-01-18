@@ -25,6 +25,10 @@ class TableModel < Qt::AbstractTableModel
     'data_error(QModelIndex,QVariant,QString)'
   )
   
+  def emit_data_error( index, data, string )
+    emit data_error( index, data.to_variant, string )
+  end
+  
   def initialize( parent = nil )
     super
   end
@@ -209,6 +213,7 @@ class TableModel < Qt::AbstractTableModel
       end.to_variant
         
     rescue Exception => e
+      # this can generate a lot of errors from view code, so don't emit data_error every one
       puts "#{entity_view.class.name}.#{index.field.id}: #{index.inspect} for role: #{const_as_string role} #{value.inspect} #{index.entity.inspect}"
       puts e.message
       puts e.backtrace
