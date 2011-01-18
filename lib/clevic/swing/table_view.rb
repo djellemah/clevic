@@ -237,16 +237,6 @@ class TableView < javax.swing.JScrollPane
     @jtable.editCellAt( table_index.row, table_index.column )
   end
   
-  # could also use a javax.activation.DataHandler
-  # for a more sophisticated API
-  # TODO use 	javaJVMLocalObjectMimeType 
-  # file:///usr/share/doc/java-sdk-docs-1.6.0.10/html/api/java/awt/datatransfer/DataFlavor.html#javaJVMLocalObjectMimeType
-  # also use a DataFlavor with mimetype application/x-java-serialized-object
-  # to transfer between cells.
-  def clipboard
-    @clipboard = Clipboard.new
-  end
-  
   def status_text_listeners
     @status_text_listeners ||= Set.new
   end

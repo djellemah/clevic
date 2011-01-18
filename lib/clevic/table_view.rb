@@ -122,6 +122,11 @@ class TableView
     end
   end
   
+  def clipboard
+    # Clipboard will be a framework-specific class
+    @clipboard = Clipboard.new
+  end
+
   # copy current selection to clipboard as CSV
   # TODO add text/csv, text/tab-separated-values, text/html as well as text/plain
   def copy_current_selection
@@ -241,7 +246,7 @@ class TableView
         sanity_check_read_only
         
         # TODO translate from ModelIndex objects to row indices
-        puts "#{__FILE__}:#{__LINE__}:implement vertical_header"
+        puts "#{__FILE__}:#{__LINE__}:implement vertical_header for delete_selection"
         #~ rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
         rows = []
         unless rows.empty?
@@ -394,6 +399,7 @@ class TableView
   end
   
   # handle certain key combinations that aren't shortcuts
+  # TODO what is returned from here?
   def handle_key_press( event )
     begin
       # call to entity class for shortcuts
@@ -427,11 +433,10 @@ class TableView
           #~ puts event.inspect
         end
       end
-      super
     rescue Exception => e
       puts e.backtrace
       puts e.message
-      show_error( "Error in #{current_index.attribute.to_s}: \"#{e.message}\"" )
+      show_error( "handle_key_press #{__FILE__}:#{__LINE__} error in #{current_index.attribute.to_s}: \"#{e.message}\"" )
     end
   end
   

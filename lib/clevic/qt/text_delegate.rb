@@ -40,7 +40,7 @@ module Clevic
     
     # Override the Qt method
     def createEditor( parent_widget, style_option_view_item, model_index )
-      if false && model_index.gui_value.count("\n") == 0
+      if false && model_index.edit_value.count("\n") == 0
         # futzing about here, really
         @editor = Qt::LineEdit.new( parent_widget )
       else
@@ -69,13 +69,13 @@ module Clevic
 
     # Override the Qt method to send data to the editor from the model.
     def setEditorData( editor, model_index )
-      editor.plain_text = model_index.gui_value
+      editor.plain_text = model_index.edit_value
     end
     
     # Send the data from the editor to the model. The data will
     # be translated by translate_from_editor_text,
     def setModelData( editor, abstract_item_model, model_index )
-      model_index.attribute_value = editor.to_plain_text
+      model_index.edit_value = editor.to_plain_text
       abstract_item_model.data_changed( model_index )
     end
 

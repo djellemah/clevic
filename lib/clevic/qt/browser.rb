@@ -138,7 +138,7 @@ class Browser < Qt::Widget
         tab = Clevic::TableView.new( view )
         
         # show status messages
-        tab.connect( SIGNAL( 'status_text(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
+        tab.connect( SIGNAL( 'status_text_signal(QString)' ) ) { |msg| @layout.statusbar.show_message( msg, 10000 ) }
         
         # add a new tab
         tables_tab.add_tab( tab, translate( tab.title ) )
@@ -152,7 +152,7 @@ class Browser < Qt::Widget
         @layout.menu_model.add_action( action )
         
         # handle filter status changed, so we can provide a visual indication
-        tab.connect SIGNAL( 'filter_status(bool)' ) do |status|
+        tab.connect SIGNAL( 'filter_status_signal(bool)' ) do |status|
           # update the tab, so there's a visual indication of filtering
           filter_title = ( tab.filtered ? '| ' : '' ) + translate( tab.title )
           tables_tab.set_tab_text( tables_tab.current_index, filter_title )

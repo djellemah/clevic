@@ -92,8 +92,8 @@ class ComboDelegate < Clevic::ItemDelegate
   def populate_current( editor, model_index )
     # add the current entry, if it isn't there already
     # TODO add it in the correct order
-    if ( editor.find_data( model_index.gui_value.to_variant ) == -1 )
-      editor.add_item( model_index.gui_value, model_index.gui_value.to_variant )
+    if ( editor.find_data( model_index.display_value.to_variant ) == -1 )
+      editor.add_item( model_index.display_value, model_index.display_value.to_variant )
     end
   end
 
@@ -128,7 +128,7 @@ class ComboDelegate < Clevic::ItemDelegate
         emit parent.status_text( empty_set_message )
         nil
       else
-        Qt::LineEdit.new( model_index.gui_value, parent_widget )
+        Qt::LineEdit.new( model_index.edit_value, parent_widget )
       end
     end
     @editor
@@ -150,7 +150,7 @@ class ComboDelegate < Clevic::ItemDelegate
       editor.current_index = editor.find_data( model_index.attribute_value.to_variant )
       editor.line_edit.select_all if editor.editable
     else
-      editor.text = model_index.gui_value
+      editor.text = model_index.edit_value
     end
   end
   

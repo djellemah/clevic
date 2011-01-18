@@ -45,6 +45,14 @@ module Clevic
     end
   end
   
+  # Wrapper for framework-specigfic clipboard code. Used by TableView.
+  #
+  # could also use a javax.activation.DataHandler
+  # for a more sophisticated API
+  # TODO use 	javaJVMLocalObjectMimeType 
+  # file:///usr/share/doc/java-sdk-docs-1.6.0.10/html/api/java/awt/datatransfer/DataFlavor.html#javaJVMLocalObjectMimeType
+  # also use a DataFlavor with mimetype application/x-java-serialized-object
+  # to transfer between cells.
   class Clipboard
     def system
       @system ||= java.awt.Toolkit.default_toolkit.system_clipboard

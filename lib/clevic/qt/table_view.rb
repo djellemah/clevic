@@ -14,7 +14,15 @@ class TableView < Qt::TableView
   
   # status_text is emitted when this object was to display something in the status bar
   # filter_status is emitted when the filtering changes. Param is true for filtered, false for not filtered.
-  signals 'status_text(QString)', 'filter_status(bool)'
+  signals 'status_text_signal(QString)', 'filter_status_signal(bool)'
+  
+  def emit_filter_status( bool )
+    emit filter_status_signal( bool )
+  end
+  
+  def emit_status_text( string )
+    emit status_text_signal( string )
+  end
   
   # arg is:
   # - an instance of Clevic::View
@@ -93,21 +101,21 @@ class TableView < Qt::TableView
     end
   end
   
-  def copy_current_selection
-    Qt::Application::clipboard.text = current_selection_csv
-  end
-  
+  # return a collection of collections of TableIndex objects
+  # indicating the indices of the current selection
   def selected_rows
     rows = []
     selection_model.selection.each do |selection_range|
       (selection_range.top..selection_range.bottom).each do |row|
-        rows << row
+        rows << (selection_range.top_left.column..selection_range.bottom_right.column).map do |col|
+          model.create_index( row, col )
+        end
       end
     end
     rows
   end
   
-  # TODO refactor with Clevic::TableView
+  # TODO refactor with table_view_paste.rb
   def paste
     sanity_check_read_only
     
@@ -179,26 +187,6 @@ class TableView < Qt::TableView
     end
   end
   
-  def ditto
-    sanity_check_ditto
-    sanity_check_read_only
-    one_up_index = current_index.choppy { |i| i.row -= 1 }
-    previous_value = one_up_index.attribute_value
-    if current_index.attribute_value != previous_value
-      current_index.attribute_value = previous_value
-      model.data_changed( current_index )
-    end
-  end
-  
-  # from and to are ModelIndex instances. Throws :insane if
-  # their fields don't have the same attribute_type.
-  def sanity_check_types( from, to )
-    unless from.field.attribute_type == to.field.attribute_type
-      emit status_text( 'Incompatible data' )
-      throw :insane
-    end
-  end
-  
   def open_editor
     edit( current_index )
     delegate = item_delegate( current_index )
@@ -208,80 +196,6 @@ class TableView < Qt::TableView
   def itemDelegate( model_index )
     @pre_delegate_index = model_index
     super
-  end
-  
-  # Add a new row and move to it, provided we're not in a read-only view.
-  def new_row
-    sanity_check_read_only_table
-    model.add_new_item
-    new_row_index = model.index( model.row_count - 1, 0 )
-    currentChanged( new_row_index, current_index )
-    selection_model.clear
-    self.current_index = new_row_index
-  end
-  
-  # Delete the current selection. If it's a set of rows, just delete
-  # them. If it's a rectangular selection, set the cells to nil.
-  # TODO make sure all affected rows are saved.
-  def delete_selection
-    sanity_check_read_only
-
-    # translate from ModelIndex objects to row indices
-    rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
-    unless rows.empty?
-      # header rows are selected, so delete them
-      model.remove_rows( rows ) 
-    else
-      # otherwise various cells are selected, so delete the cells
-      delete_cells
-    end
-  end
-  
-  # display a search dialog, and find the entered text
-  def find
-    @search_dialog ||= SearchDialog.new
-    result = @search_dialog.exec( current_index.gui_value )
-    
-    override_cursor( Qt::BusyCursor ) do
-      case result
-        when Qt::Dialog::Accepted
-          search_for = @search_dialog.search_text
-          search( @search_dialog )
-        when Qt::Dialog::Rejected
-          puts "Don't search"
-        else
-          puts "unknown dialog code #{result}"
-      end
-    end
-  end
-  
-  def find_next
-    if @search_dialog.nil?
-      emit status_text( 'No previous find' )
-    else
-      override_cursor( Qt::BusyCursor ) do
-        save_from_start = @search_dialog.from_start?
-        @search_dialog.from_start = false
-        search( @search_dialog )
-        @search_dialog.from_start = save_from_start
-      end
-    end
-  end
-  
-  # return an array of the current selection, or the
-  # current index in an array if the selection is empty
-  def selection_or_current
-    indexes_or_current( selection_model.selected_indexes )
-  end
-  
-  def selected_rows_or_current
-    indexes_or_current( selection_model.row_indexes )
-  end
-  
-  # alternative access for auto_size_column
-  def auto_size_attribute( attribute, sample )
-    col = model.attributes.index( attribute )
-    self.set_column_width( col, column_size( col, sample ).width )
   end
   
   # set the size of the column from the sample
@@ -474,6 +388,7 @@ class TableView < Qt::TableView
   
   def keyPressEvent( event )
     handle_key_press( event )
+    super
   end
   
   def set_model_data( table_index, value )
@@ -646,6 +561,8 @@ class TableView < Qt::TableView
   # Don't execute the block if nothing is found.
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
+  # TODO put it in a module and add the module when the tab widgets
+  # are being built.
   def with_table_view( entity_model_or_view, &block )
     tv = find_table_view( entity_model_or_view )
     yield( tv ) unless tv.nil?
@@ -659,27 +576,11 @@ class TableView < Qt::TableView
     tab_widget = parent.parent
     tab_widget.current_widget = self if tab_widget.class == Qt::TabWidget
   end
-  
-protected
 
-  # return either the set of indexes with all invalid indexes
-  # remove, or the current selection.
-  def indexes_or_current( indexes )
-    retval =
-    if indexes.empty?
-      [ current_index ]
-    else
-      indexes
-    end
-    
-    # strip out bad indexes, so other things don't have to check
-    # can't use select because copying indexes causes an abort
-    #~ retval.select{|x| x != nil && x.valid?}
-    retval.reject!{|x| x.nil? || !x.valid?}
-    # retval needed here because reject! returns nil if nothing was rejected
-    retval
+  def busy_cursor( &block )
+    override_cursor( Qt::BusyCursor, &block )
   end
-  
+
 end
 
 end
