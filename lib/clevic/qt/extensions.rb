@@ -1,3 +1,5 @@
+require 'set'
+
 require 'qtext/flags.rb'
 require 'clevic/table_index.rb'
 
@@ -16,5 +18,14 @@ module Qt
   # asking the model and jumping through other unncessary hoops
   class ModelIndex
     include Clevic::TableIndex
+  end
+
+  class ItemSelectionModel
+    # return an array of integer indexes for currently selected rows
+    def row_indexes
+      selected_indexes.inject(Set.new) do |set,index|
+        set << index.row
+      end.to_a
+    end
   end
 end
