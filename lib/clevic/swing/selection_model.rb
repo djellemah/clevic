@@ -9,6 +9,7 @@ can be visualized as a two-dimensional block of cells in a table
 file:///usr/share/doc/qt-4.6.2/html/qitemselectionrange.html#details
 =end
 class SelectionRange
+  # row_range and column_range are Range objects
   def initialize( row_range, column_range )
     @row_range = row_range
     @column_range = column_range
@@ -64,6 +65,7 @@ class SelectionModel
     end
   end
   
+  # return an array of integer indexes for currently selected rows
   def row_indexes
     jtable.selected_rows.to_a
   end
