@@ -1,4 +1,4 @@
-require 'clevic/item_delegate.rb'
+require 'clevic/qt/item_delegate.rb'
 
 module Clevic
 

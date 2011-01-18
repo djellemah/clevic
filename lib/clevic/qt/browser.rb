@@ -1,4 +1,4 @@
-require 'clevic/search_dialog.rb'
+require 'clevic/qt/search_dialog.rb'
 require 'clevic/qt/ui/browser_ui.rb'
 require 'clevic/table_view.rb'
 require 'clevic.rb'
@@ -23,8 +23,8 @@ class Browser < Qt::Widget
     @layout.setup_ui( main_window )
     
     # set icon. MUST come after call to setup_ui
-    icon_path = Pathname.new( __FILE__ ).parent + "ui/icon.png"
-    raise "icon.png not found" unless icon_path.file?
+    icon_path = Pathname.new( __FILE__ ).parent + "../icons/icon.png"
+    Kernel::raise "icon.png not found" unless icon_path.file?
     main_window.window_icon = Qt::Icon.new( icon_path.realpath.to_s )
     
     # add the tables tab

@@ -13,8 +13,10 @@ module Clevic
 class ItemDelegate < Qt::ItemDelegate
   attr_reader :field
   
-  def initialize( parent, field )
-    super( parent )
+  def initialize( field )
+    raise "field is nil" if field.nil?
+    # pass nil as Qt object's parent. Will set parent later.
+    super( nil )
     @field = field
   end
   

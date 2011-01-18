@@ -23,7 +23,6 @@ oparser.on( '-t', '--table TABLE', 'Table to display', String ) { |o| $options[:
 oparser.on( '-d', '--database DATABASE', 'Database name', String ) { |o| $options[:database] = o }
 
 oparser.on( '-s', '--swing', 'Use JRuby Swing' ) { |o| require 'clevic/swing.rb' }
-require 'clevic/swing.rb'
 oparser.on( '-q', '--qt', 'Use Qt-Ruby' ) { |o| require 'clevic/qt.rb' }
 
 oparser.on( '-D', '--debug' ) { |o| $options[:debug] = true }

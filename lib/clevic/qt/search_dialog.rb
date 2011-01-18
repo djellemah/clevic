@@ -1,5 +1,5 @@
 require 'Qt4'
-require 'clevic/ui/search_dialog_ui.rb'
+require 'clevic/qt/ui/search_dialog_ui.rb'
 require 'qtext/flags.rb'
 
 module Clevic

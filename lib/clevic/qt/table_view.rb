@@ -10,7 +10,6 @@ module Clevic
 
 # The view class
 class TableView < Qt::TableView
-  include Clevic::TableView
   include ActionBuilder
   
   # status_text is emitted when this object was to display something in the status bar

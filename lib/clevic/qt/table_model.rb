@@ -19,7 +19,6 @@ including the Clevic::Record module in a ActiveRecord::Base or Sequel::Model sub
 =end
 class TableModel < Qt::AbstractTableModel
   include QtFlags
-  include Clevic::TableModel
   
   signals(
     # index where error occurred, value, message
@@ -160,20 +159,18 @@ class TableModel < Qt::AbstractTableModel
           # the model's collection (and maybe db) when we
           # definitely don't need to
           unless index.meta.type == :boolean
-            value = index.gui_value
-            index.field.do_format( value ) unless value.nil?
+            value = index.display_value
           end
           
         when qt_edit_role
           # see comment for qt_display_role
           unless index.meta.type == :boolean
-            value = index.gui_value
-            index.field.do_edit_format( value ) unless value.nil?
+            value = index.edit_value
           end
           
         when qt_checkstate_role
           if index.meta.type == :boolean
-            index.gui_value ? qt_checked : qt_unchecked
+            index.raw_value ? qt_checked : qt_unchecked
           end
           
         when qt_text_alignment_role

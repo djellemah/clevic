@@ -3,7 +3,7 @@ require 'clevic/table_index.rb'
 
 # convenience methods
 module Qt
-  PasteRole = UserRole + 1
+  PasteRole = UserRole + 1 unless defined?( PasteRole )
   
   class AbstractItemDelegate
     # overridden in EntryDelegate subclasses
