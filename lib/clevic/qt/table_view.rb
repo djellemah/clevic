@@ -123,7 +123,8 @@ class TableView < Qt::TableView
     text = Qt::Application::clipboard.text.chomp
     arr = FasterCSV.parse( text )
     
-    selection_model.selected_indexes.
+    # dunno what was sposed to be here
+    selection_model.selected_indexes.oops!
     return true if selection_model.selection.size != 1
     
     selection_range = selection_model.selection.first
@@ -330,60 +331,17 @@ class TableView < Qt::TableView
     emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
   end
   
-  # ask the question in a dialog. If the user says yes, execute the block
-  def delete_multiple_cells?( question = 'Are you sure you want to delete multiple cells?', &block )
-    sanity_check_read_only
-    
-    # go ahead with delete if there's only 1 cell, or the user says OK
-    delete_ok =
-    if selection_model.selected_indexes.size > 1
-      # confirmation message, until there are undos
-      msg = Qt::MessageBox.new(
-        Qt::MessageBox::Question,
-        'Multiple Delete',
-        question,
-        Qt::MessageBox::Yes | Qt::MessageBox::No,
-        self
-      )
-      msg.exec == Qt::MessageBox::Yes
-    else
-      true
-    end
-    
-    yield if delete_ok
-  end
-  
-  # Ask if multiple cell delete is OK, then replace contents
-  # of selected cells with nil.
-  def delete_cells
-    delete_multiple_cells? do
-      cells_deleted = false
-      
-      # do delete
-      selection_model.selected_indexes.each do |index|
-        index.attribute_value = nil
-        cells_deleted = true
-      end
-      
-      # deletes were done, so call data_changed
-      if cells_deleted
-        # save affected rows
-        selection_model.row_indexes.each do |index|
-          index.entity.save
-        end
-        
-        # emit data changed for all ranges
-        selection_model.selection.each do |selection_range|
-          model.data_changed( selection_range )
-        end
-      end
-    end
-  end
-  
-  def delete_rows
-    delete_multiple_cells?( 'Are you sure you want to delete multiple rows?' ) do
-      model.remove_rows( selection_model.selected_indexes.map{|index| index.row} )
-    end
+  # returns the Qt::MessageBox
+  def confirm_dialog( question, title )
+    msg = Qt::MessageBox.new(
+      Qt::MessageBox::Question,
+      title,
+      question,
+      Qt::MessageBox::Yes | Qt::MessageBox::No,
+      self
+    )
+    msg.exec
+    msg
   end
   
   def keyPressEvent( event )

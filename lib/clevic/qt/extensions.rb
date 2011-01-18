@@ -19,13 +19,30 @@ module Qt
   class ModelIndex
     include Clevic::TableIndex
   end
-
+  
   class ItemSelectionModel
     # return an array of integer indexes for currently selected rows
     def row_indexes
       selected_indexes.inject(Set.new) do |set,index|
         set << index.row
       end.to_a
+    end
+
+    # return a collection of selection ranges
+    # in Qt this means an ItemSelection instance
+    def ranges
+      selection
+    end
+  end
+  
+  # implement accepted? and rejected? for TableView#confirm_dialog and friends
+  class MessageBox
+    def accepted?
+      [ Qt::Dialog::Accepted, Qt::MessageBox::Yes, Qt::MessageBox::Ok ].include?( result )
+    end
+
+    def rejected?
+      [ Qt::Dialog::Rejected, Qt::MessageBox::No, Qt::MessageBox::Cancel ].include?( result )
     end
   end
 end
