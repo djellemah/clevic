@@ -51,9 +51,11 @@ module Clevic
     end
     
     # the underlying entity
+    # TODO caching doesn't help with Qt because ModelIndex objects are
+    # extremely short-lived. Not sure about swing.
     def entity
       return nil if model.nil?
-      @entity ||= model.collection[row]
+      model.collection[row]
     end
     
     attr_writer :entity
