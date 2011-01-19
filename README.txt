@@ -76,7 +76,7 @@ See TODO file.
 * ActiveRecord
 * fastercsv
 * qtext
-* facets
+* hashery
 * gather
 
 === Libraries

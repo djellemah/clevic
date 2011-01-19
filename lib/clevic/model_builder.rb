@@ -1,4 +1,5 @@
-require 'facets/dictionary'
+# TODO not needed for 1.9
+require 'hashery/orderedhash'
 
 require 'clevic/table_model.rb'
 require 'clevic/cache_table.rb'
@@ -371,7 +372,8 @@ class ModelBuilder
     @entity_view = entity_view
     @auto_new = true
     @read_only = false
-    @fields = Dictionary.new
+    # TODO not needed for 1.9
+    @fields = OrderedHash.new
     exec_ui_block( &block )
   end
   
