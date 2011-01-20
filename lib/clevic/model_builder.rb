@@ -40,8 +40,8 @@ which will build a fairly sensible default UI from the
 entity's metadata. Obviously you can use open classes to do
 
   class Position < Sequel::Model
-    has_many :transactions
-    belong_to :account
+    one_to_many :transactions
+    many_to_one :account
   end
 
   class Position
@@ -290,7 +290,7 @@ definition from somewhere else. It may go away and be replaced by remove.
 The attribute symbol is required, and is the first parameter after the field type. It must refer
 to a method already defined in the entity. In other words any of:
 - a db column
-- a relationship (belongs_to, has_many, etc)
+- a relationship (one_to_many, etc)
 - a plain method that takes no parameters.
 
 will work. Named scopes might also work, but I haven't tried them yet.
