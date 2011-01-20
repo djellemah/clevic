@@ -4,7 +4,7 @@ require 'clevic.rb'
 Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=#{$options[:password]}" )
 
 # This is a read-only view, which is currently not implemented
-class Value < ActiveRecord::Base
+class Value < Sequel::Model
   set_table_name 'values'
   
   include Clevic::Record

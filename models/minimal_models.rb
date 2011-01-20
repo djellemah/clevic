@@ -13,7 +13,7 @@ class Entry < Sequel::Model
 end
 
 # minimal definition to get sensible values in combo boxes
-class Account < ActiveRecord::Base
+class Account < Sequel::Model
   include Clevic::Record
   def to_s; name; end
 end
