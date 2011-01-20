@@ -9,6 +9,7 @@ require 'clevic/filter_command.rb'
 module Clevic
 
 # The view class
+# TODO not sure if we still need override_next_index and friends
 class TableView < Qt::TableView
   include ActionBuilder
   
@@ -157,19 +158,6 @@ class TableView < Qt::TableView
     size = Qt::Size.new( 100, 30 )
     # final parameter could be header section
     style.sizeFromContents( Qt::Style::CT_HeaderSection, opt, size );
-  end
-  
-  # TODO is this even used?
-  def relational_delegate( attribute, options )
-    col = model.attributes.index( attribute )
-    delegate = RelationalDelegate.new( self, model.columns[col], options )
-    set_item_delegate_for_column( col, delegate )
-  end
-  
-  def delegate( attribute, delegate_class, options = nil )
-    col = model.attributes.index( attribute )
-    delegate = delegate_class.new( self, attribute, options )
-    set_item_delegate_for_column( col, delegate )
   end
   
   # make sure row size is correct
