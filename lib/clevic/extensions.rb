@@ -73,3 +73,14 @@ def Range
     last - first
   end
 end
+
+# workaround for the date freeze issue, if it exists
+begin
+  Date.new.freeze.to_s
+rescue TypeError
+  class Date
+    def freeze
+      self
+    end
+  end
+end
