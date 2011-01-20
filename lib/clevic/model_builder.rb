@@ -19,15 +19,14 @@ you need it.
 
 To that end, there are 2 ways to define UIs:
 
-- an Embedded View as part of the model (ActiveRecord::Base or Sequel::Model) object (which is useful if you 
+- an Embedded View as part of the model (Sequel::Model) object (which is useful if you 
   want minimal framework overhead). Just show me the data, dammit.
 
 - a Separate View in a separate class (which is useful when you want several 
   diffent views of the same underlying table). I want a neato-nifty UI that does
   (relatively) complex things.
 
-I've tried to consistently refer to an instance of an ActiveRecord::Base or
-Sequel::Model subclass as an 'entity'.
+I've tried to consistently refer to an instance of an Sequel::Model subclass as an 'entity'.
 
 ==Embedded View
 Minimal embedded definition is
@@ -208,7 +207,7 @@ could be defined like this:
 To define a separate ui class, do something like this:
   class Prospect < Clevic::View
     
-    # This is the ActiveRecord::Base or Sequel::Model descendant
+    # This is the Sequel::Model descendant
     entity_class Position
     
     # This must return a ModelBuilder instance, which is made easier
@@ -535,7 +534,7 @@ class ModelBuilder
   # as editable in the table. Any belongs_to relations are used to build
   # combo boxes. Default ordering is the primary key.
   # Subscriber is already defined elsewhere as a subclass
-  # of an ORM class, ie ActiveRecord::Base, Sequel::Model:
+  # of an ORM class ie Sequel::Model:
   #   class Subscriber
   #     include Clevic::Record
   #     define_ui do

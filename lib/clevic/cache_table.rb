@@ -122,7 +122,6 @@ class CacheTable < Array
   
   # make a new instance that has the attributes of this one, but an empty
   # data set. pass in ActiveRecord options to filter.
-  # TODO use Sequel::Dataset
   def renew( args = nil )
     clear
     self.class.new( entity_class, args || find_options )

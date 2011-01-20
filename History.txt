@@ -1,3 +1,10 @@
+== 0.13.0
+* Now has Java Swing support with JRuby
+* new code works with qt4-qtruby-2.0.3
+* All models must now use Sequel. There is some code to ease porting
+  from ActiveRecord
+* preliminary and not yet working support for one_to_many fields in the UI
+  
 == 0.12.3
 * fix closeEditor not moving to the cursor to the correct place
 

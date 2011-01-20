@@ -1,7 +1,7 @@
 module Clevic
 
   # A subclass of Clevic::DefaultView is created by Clevic::Record
-  # when the latter is included in an ActiveRecord::Base or Sequel::Model
+  # when the latter is included in a Sequel::Model
   # subclass.
   # 
   # The Clevic::DefaultView subclass knows how to:

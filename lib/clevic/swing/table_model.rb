@@ -15,7 +15,7 @@ module Clevic
 =begin rdoc
 An instance of Clevic::TableModel is constructed by Clevic::ModelBuilder from the
 UI definition in a Clevic::View, or from the default Clevic::View created by
-including the Clevic::Record module in a ActiveRecord::Base or Sequel::Model subclass.
+including the Clevic::Record module in a Sequel::Model subclass.
 =end
 class TableModel < javax.swing.table.AbstractTableModel
   include Emitter

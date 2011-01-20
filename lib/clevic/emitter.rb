@@ -1,6 +1,7 @@
 require 'set'
 
 module Clevic
+  # This is a quickie emitter for Swing mostly. Qt has this built in.
   module Emitter
     def self.included( base )
       base.extend( ClassMethods )

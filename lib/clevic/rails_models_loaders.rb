@@ -36,7 +36,7 @@ def load_rails_models( root, config, models )
   end
   
   # include the Clevic::Record module in each descendant of
-  # ActiveRecord::Base so that the default views will be created.
+  # the entity class so that the default views will be created.
   subclasses( Clevic.base_entity_class ).each do |model|
     if model.table_exists?
       model.send :include, Clevic::Record unless model.abstract_class?
