@@ -235,14 +235,6 @@ class TableView < Qt::TableView
     resize_columns
   end
   
-  # resize all fields based on heuristics rather
-  # than iterating through the entire data model
-  def resize_columns
-    model.fields.each_with_index do |field, index|
-      auto_size_column( index, field.sample )
-    end
-  end
-  
   def moveCursor( cursor_action, modifiers )
     # TODO use this as a preload indicator
     super
@@ -256,6 +248,7 @@ class TableView < Qt::TableView
   # Paste a CSV array to the index, replacing whatever is at that index
   # and whatever is at other indices matching the size of the pasted
   # csv array. Create new rows if there aren't enough.
+  # TODO this should be irrelevant, see table_view_paste
   def paste_to_index( top_left_index, csv_arr )
     csv_arr.each_with_index do |row,row_index|
       # append row if we need one

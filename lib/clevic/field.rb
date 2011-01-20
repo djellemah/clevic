@@ -366,21 +366,27 @@ EOF
   # Return a sample for the field which can be used to size the UI field widget.
   def sample( *args )
     if !args.empty?
-      @sample = *args
-      return self
-    end
-    
-    if meta.type == :boolean
-      @sample = self.label
+      @sample = args.first
+      self
     else
-      @sample ||= Sampler.new( entity_class, attribute, display ) do |value|
-        do_format( value )
-      end.compute
-      
-      # if we don't know how to figure it out from the data, just return the label size
-      @sample ||= self.label
+      if @sample.nil?
+        if meta.type == :boolean
+          @sample = self.label
+        else
+          begin
+            @sample ||= Sampler.new( entity_class, attribute, display ) do |value|
+              do_format( value )
+            end.compute
+          rescue
+            puts $!
+          ensure
+            # if we don't know how to figure it out from the data, just return the label size
+            @sample ||= self.label
+          end
+        end
+      end
+      @sample
     end
-    @sample
   end
   
   # Called by Clevic::TableModel to get the tooltip value

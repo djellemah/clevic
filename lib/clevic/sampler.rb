@@ -37,7 +37,9 @@ class Sampler
       related_sample
     
     else
-      puts "Sampler#compute can't figure out sample for #{entity_class.name}.#{field_name} because it's a #{meta.type.inspect}"
+      if meta.type != NilClass
+        raise "Sampler#compute can't figure out sample for #{entity_class.name}.#{field_name} because it's a #{meta.type.inspect}"
+      end
     
     end
   end
