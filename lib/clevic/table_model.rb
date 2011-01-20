@@ -159,9 +159,10 @@ class TableModel
     entity = searcher.search( start_index.entity )
     
     # return matched indexes
-    if entity != nil
+    unless entity.nil?
       found_row = collection.index_for_entity( entity )
-      [ create_index( found_row, start_index.column ) ]
+      raise "found_row should find something" if found_row.nil?
+      [ create_index( found_row, start_index.column, 0 ) ]
     else
       []
     end
