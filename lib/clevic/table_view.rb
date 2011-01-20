@@ -263,7 +263,7 @@ class TableView
   end
   
   def search_dialog
-    @search_dialog ||= SearchDialog.new( nil )
+    @search_dialog ||= SearchDialog.new( self )
   end
   
   # display a search dialog, and find the entered text

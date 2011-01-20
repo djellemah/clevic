@@ -2,6 +2,7 @@ require 'set'
 
 require 'qtext/flags.rb'
 require 'clevic/table_index.rb'
+require 'clevic/qt/accept_reject'
 
 # convenience methods
 module Qt
@@ -41,12 +42,6 @@ module Qt
   
   # implement accepted? and rejected? for TableView#confirm_dialog and friends
   class MessageBox
-    def accepted?
-      [ Qt::Dialog::Accepted, Qt::MessageBox::Yes, Qt::MessageBox::Ok ].include?( result )
-    end
-
-    def rejected?
-      [ Qt::Dialog::Rejected, Qt::MessageBox::No, Qt::MessageBox::Cancel ].include?( result )
-    end
+    include Clevic::AcceptReject
   end
 end

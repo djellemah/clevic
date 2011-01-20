@@ -1,14 +1,18 @@
 require 'Qt4'
 require 'clevic/qt/ui/search_dialog_ui.rb'
 require 'qtext/flags.rb'
+require 'clevic/qt/accept_reject.rb'
 
 module Clevic
 
   class SearchDialog
+    include AcceptReject
     include QtFlags
-    attr_reader :match_flags, :layout
     
-    def initialize
+    attr_reader :match_flags, :layout
+    attr_accessor :result
+    
+    def initialize( parent )
       @layout = Ui_SearchDialog.new
       @dialog = Qt::Dialog.new
       @layout.setupUi( @dialog )
@@ -52,14 +56,14 @@ module Clevic
     def exec( text = '' )
       search_combo.edit_text = text.to_s
       search_combo.set_focus
-      retval = @dialog.exec
+      self.result = @dialog.exec
       
       # remember previous searches
       if search_combo.find_text( search_combo.current_text ) == -1
         search_combo.add_item( search_combo.current_text )
       end
       
-      retval
+      self
     end
     
     def search_text
