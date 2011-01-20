@@ -187,15 +187,6 @@ class TableView < Qt::TableView
     error_message.show
   end
   
-  # save record whenever its row is exited
-  def currentChanged( current_index, previous_index )
-    if previous_index.valid? && current_index.row != previous_index.row
-      self.next_index = nil
-      save_row( previous_index )
-    end
-    super
-  end
-  
   # This is to allow entity model UI handlers to tell the view
   # whence to move the cursor when the current editor closes
   # (see closeEditor).
