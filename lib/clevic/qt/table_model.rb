@@ -238,18 +238,18 @@ class TableModel < Qt::AbstractTableModel
         begin
           index.attribute_value =
           case
-            when value.class.name == 'Qt::Date'
-              Date.new( value.year, value.month, value.day )
+            when variant.class.name == 'Qt::Date'
+              Date.new( variant.year, variant.month, variant.day )
               
-            when value.class.name == 'Qt::Time'
-              Time.new( value.hour, value.min, value.sec )
+            when variant.class.name == 'Qt::Time'
+              Time.new( variant.hour, variant.min, variant.sec )
             
             else
-              translate_to_db_object( index, variant.value )
+              index.edit_value = variant.value
           end
           
           # value conversion was successful
-          data_changed( table_index )
+          data_changed( index )
           true
         rescue Exception => e
           puts e.backtrace.join( "\n" )
@@ -261,7 +261,7 @@ class TableModel < Qt::AbstractTableModel
 
       when qt_checkstate_role
         if index.meta.type == :boolean
-          index.entity.toggle( index.attribute )
+          index.attribute_value = !index.attribute_value
           true
         else
           false

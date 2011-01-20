@@ -233,6 +233,8 @@ class TableView < Qt::TableView
     super
     save_current_row if @hiding
   rescue
+    puts $!.message
+    puts $!.backtrace
     show_error "Error saving data from #{editor.inspect}: #{$!.message}"
   end
   
