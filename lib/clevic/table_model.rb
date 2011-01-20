@@ -151,7 +151,7 @@ class TableModel
   # TODO could handle dataset creation better
   def search( start_index, search_criteria )
     ordered_dataset = entity_class.dataset.order( *cache_table.order_attributes.map{|oa| oa.attribute.to_sym.send( oa.direction ) } )
-    searcher = Clevic::TableSearcher.new(
+    searcher = TableSearcher.new(
       ordered_dataset,
       search_criteria,
       start_index.field
