@@ -1,3 +1,5 @@
 coverage
 profiling
 doc
+*_ui.rb
+pkg

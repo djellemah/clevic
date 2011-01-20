@@ -1,6 +1,6 @@
 h1. Clevic
 
-"RDoc":rdoc | "Rubyforge Project":http://rubyforge.org/projects/clevic/
+"RDoc":rdoc | "Rubygems":http://rubygems.org/gems/clevic | "Rubyforge Project":http://rubyforge.org/projects/clevic/
 
 Clevic is a toolkit for building GUIs database tables with useful functionality.
 It works with Qt or Java Swing and Sequel.

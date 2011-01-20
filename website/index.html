@@ -28,11 +28,11 @@
 
 <div id="main">
 	<h1>Clevic</h1>
-	<p><a href="rdoc">RDoc</a> | <a href="http://rubyforge.org/projects/clevic/">Rubyforge Project</a></p>
+	<p><a href="rdoc">RDoc</a> | <a href="http://rubygems.org/gems/clevic">Rubygems</a> | <a href="http://rubyforge.org/projects/clevic/">Rubyforge Project</a></p>
 <p>Clevic is a toolkit for building GUIs database tables with useful functionality.<br />
-It works with Qt and ActiveRecord. In the works are Jruby with Swing for the <span class="caps">GUI</span><br />
-and Sequel for the <span class="caps">ORM</span>. An interesting side-effect of this will be that<br />
-building form-style GUIs will be possible.</p>
+It works with Qt or Java Swing and Sequel.</p>
+<p>An interesting side-effect of this will probably be that<br />
+building form-style GUIs will be possible. Eventually. When the code has been written.</p>
 <p>Screenshot of a fully defined UI with the foreign-key dropdown in place.<br />
 Tabs contain the two tables.</p>
 <p>See <a href="rdoc">RDoc</a> for feature list.<br />
@@ -46,21 +46,17 @@ require 'clevic.rb'
 # see sql/accounts.sql for schema
 
 # db connection
-Clevic::DbOptions.connect do
-  database 'accounts_test'
-  adapter :postgresql
-  username 'accounts'
-end
+Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&amp;password=#{$options[:password]}" )
 
 # minimal definition to get combo boxes to show up
-class Entry &lt; ActiveRecord::Base
+class Entry &lt; Sequel::Model
   include Clevic::Record
-  belongs_to :debit, :class_name =&gt; 'Account', :foreign_key =&gt; 'debit_id'
-  belongs_to :credit, :class_name =&gt; 'Account', :foreign_key =&gt; 'credit_id'
+  many_to_one :debit, :class_name =&gt; 'Account', :foreign_key =&gt; 'debit_id'
+  many_to_one :credit, :class_name =&gt; 'Account', :foreign_key =&gt; 'credit_id'
 end
 
 # minimal definition to get sensible values in combo boxes
-class Account &lt; ActiveRecord::Base
+class Account &lt; Sequel::Model
   include Clevic::Record
   def to_s; name; end
 end
@@ -72,19 +68,15 @@ is found in the table.</p>
 <pre><code>
 require 'clevic.rb'
 
-# db connection
-Clevic::DbOptions.connect( $options ) do
-  # use a different db for testing, so real data doesn't get broken.
-  if options[:database].nil? || options[:database].empty?
-    database( debug? ? :accounts_test : :accounts )
-  else
-    database options[:database]
-  end
-  # for AR
-  #~ adapter :postgresql
-  # for Sequel
-  adapter :postgres
-  username options[:username].blank? ? 'accounts' : options[:username]
+host = ENV['PGHOST'] || 'localhost'
+$options ||= {}
+
+if respond_to?( :'jruby?' ) &amp;&amp; jruby?
+  constring = "jdbc:postgresql://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&amp;password=general"
+  puts "constring: #{constring.inspect}"
+  Sequel.connect( constring )
+else
+  Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&amp;password=general" )
 end
 
 class Entry &lt; Sequel::Model
@@ -108,6 +100,7 @@ class Entry &lt; Sequel::Model
         end
       end
     end
+    distinct :supplier
     relational  :debit, :display =&gt; 'name', :conditions =&gt; 'active = true', :order =&gt; 'lower(name)', :sample =&gt; 'Leilani Member Loan'
     relational  :credit, :display =&gt; 'name', :conditions =&gt; 'active = true', :order =&gt; 'lower(name)', :sample =&gt; 'Leilani Member Loan'
     plain       :amount, :sample =&gt; 999999.99
