@@ -59,49 +59,6 @@ class TableView < Qt::TableView
     end
   end
   
-  # pull in Qt-specific keys
-  def old_init_actions( entity_view )
-    # add model actions, if they're defined
-    list( :model ) do |ab|
-      entity_view.define_actions( self, ab )
-      separator
-    end
-    
-    # list of actions in the edit menu
-    list( :edit ) do
-      #~ new_action :action_cut, 'Cu&t', :shortcut => Qt::KeySequence::Cut
-      action :action_save, '&Save', :shortcut => Qt::KeySequence::Save, :method => :save_current_row
-      action :action_copy, '&Copy', :shortcut => Qt::KeySequence::Copy, :method => :copy_current_selection
-      action :action_paste, '&Paste', :shortcut => Qt::KeySequence::Paste, :method => :paste
-      separator
-      action :action_ditto, '&Ditto', :shortcut => 'Ctrl+\'', :method => :ditto, :tool_tip => 'Copy same field from previous record'
-      action :action_ditto_right, 'Ditto R&ight', :shortcut => 'Ctrl+]', :method => :ditto_right, :tool_tip => 'Copy field one to right from previous record'
-      action :action_ditto_left, '&Ditto L&eft', :shortcut => 'Ctrl+[', :method => :ditto_left, :tool_tip => 'Copy field one to left from previous record'
-      action :action_insert_date, 'Insert Date', :shortcut => 'Ctrl+;', :method => :insert_current_date
-      action :action_open_editor, '&Open Editor', :shortcut => 'F4', :method => :open_editor
-      separator
-      action :action_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :new_row
-      action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
-      action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
-      
-      if $options[:debug]
-        action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
-          puts model.collection[current_index.row].inspect
-        end
-      end
-    end
-    
-    separator
-    
-    # list of actions called search
-    list( :search ) do
-      action :action_find, '&Find', :shortcut => Qt::KeySequence::Find, :method => :find
-      action :action_find_next, 'Find &Next', :shortcut => Qt::KeySequence::FindNext, :method => :find_next
-      action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
-      action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
-    end
-  end
-  
   # return a collection of collections of TableIndex objects
   # indicating the indices of the current selection
   def selected_rows
