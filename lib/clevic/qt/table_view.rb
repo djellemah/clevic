@@ -119,25 +119,6 @@ class TableView < Qt::TableView
     emit status_text( msg )
   end
   
-  def sanity_check_read_only
-    if current_index.field.read_only?
-      emit status_text( 'Can\'t copy into read-only field.' )
-    elsif current_index.entity.readonly?
-      emit status_text( 'Can\'t copy into read-only record.' )
-    else
-      sanity_check_read_only_table
-      return
-    end
-    throw :insane
-  end
-  
-  def sanity_check_read_only_table
-    if model.read_only?
-      emit status_text( 'Can\'t modify a read-only table.' )
-      throw :insane
-    end
-  end
-  
   def open_editor
     edit( current_index )
     delegate = item_delegate( current_index )
@@ -191,16 +172,6 @@ class TableView < Qt::TableView
     set_item_delegate_for_column( col, delegate )
   end
   
-  # is current_index on the last row?
-  def last_row?
-    current_index.row == model.row_count - 1
-  end
-  
-  # is current_index on the bottom_right cell?
-  def last_cell?
-    current_index.row == model.row_count - 1 && current_index.column == model.column_count - 1
-  end
-  
   # make sure row size is correct
   # show error messages for data
   def setModel( model )
@@ -240,44 +211,6 @@ class TableView < Qt::TableView
     super
   end
 
-  # copied from actionpack
-  def pluralize(count, singular, plural = nil)
-    "#{count || 0} " + ((count == 1 || count == '1') ? singular : (plural || singular.pluralize))
-  end
-
-  # Paste a CSV array to the index, replacing whatever is at that index
-  # and whatever is at other indices matching the size of the pasted
-  # csv array. Create new rows if there aren't enough.
-  # TODO this should be irrelevant, see table_view_paste
-  def paste_to_index( top_left_index, csv_arr )
-    csv_arr.each_with_index do |row,row_index|
-      # append row if we need one
-      model.add_new_item if top_left_index.row + row_index >= model.row_count
-      
-      row.each_with_index do |field, field_index|
-        unless top_left_index.column + field_index >= model.column_count
-          # do paste
-          cell_index = top_left_index.choppy {|i| i.row += row_index; i.column += field_index }
-          model.setData( cell_index, field.to_variant, Qt::PasteRole )
-        else
-          emit status_text( "#{pluralize( top_left_index.column + field_index, 'column' )} for pasting data is too large. Truncating." )
-        end
-      end
-      # save records to db
-      model.save( top_left_index.choppy {|i| i.row += row_index; i.column = 0 } )
-    end
-    
-    # make the gui refresh
-    model.data_changed do |change|
-      change.top_left = top_left_index
-      change.bottom_right = top_left_index.choppy do |i|
-        i.row += csv_arr.size - 1
-        i.column += csv_arr.first.size - 1
-      end
-    end
-    emit model.headerDataChanged( Qt::Vertical, top_left_index.row, top_left_index.row + csv_arr.size )
-  end
-  
   # returns the Qt::MessageBox
   def confirm_dialog( question, title )
     msg = Qt::MessageBox.new(
@@ -433,24 +366,6 @@ class TableView < Qt::TableView
     end
   end
   
-  # search_criteria must respond to:
-  # * search_text
-  # * whole_words?
-  # * direction ( :forward, :backward )
-  # * from_start?
-  #
-  # TODO formalise this?
-  def search( search_criteria )
-    indexes = model.search( current_index, search_criteria )
-    if indexes.size > 0
-      emit status_text( "Found #{search_criteria.search_text} at row #{indexes.first.row}" )
-      selection_model.clear
-      self.current_index = indexes.first
-    else
-      emit status_text( "No match found for #{search_criteria.search_text}" )
-    end
-  end
-
   # find the TableView instance for the given entity_view
   # or entity_model. Return nil if no match found.
   # TODO doesn't really belong here because TableView will not always
