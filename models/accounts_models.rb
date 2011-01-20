@@ -8,25 +8,7 @@ if respond_to?( :'jruby?' ) && jruby?
   puts "constring: #{constring.inspect}"
   Sequel.connect( constring )
 else
-  if false
-    # db connection
-    Clevic::DbOptions.connect( $options ) do
-      # use a different db for testing, so real data doesn't get broken.
-      if options[:database].nil? || options[:database].empty?
-        database( debug? ? :accounts_test : :accounts )
-      else
-        database options[:database]
-      end
-      # for AR
-      #~ adapter :postgresql
-      # for Sequel
-      adapter :postgres
-      username options[:username].blank? ? 'accounts' : options[:username]
-    end
-  else
-    require 'sequel'
-    Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general" )
-  end
+  Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general" )
 end
 
 class Entry < Sequel::Model

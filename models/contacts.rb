@@ -12,25 +12,7 @@ if RUBY_PLATFORM == 'java'
   puts "constring: #{constring.inspect}"
   Sequel.connect( constring )
 else
-  if false
-    # db connection
-    Clevic::DbOptions.connect( $options ) do
-      # use a different db for testing, so real data doesn't get broken.
-      if options[:database].nil? || options[:database].empty?
-        database( debug? ? :accounts_test : :accounts )
-      else
-        database options[:database]
-      end
-      # for AR
-      #~ adapter :postgresql
-      # for Sequel
-      adapter :postgres
-      username options[:username].blank? ? 'contacts' : options[:username]
-    end
-  else
-    require 'sequel'
-    Sequel.connect( "postgres://#{$options[:host]}/contacts?user=#{$options[:username] || 'contacts'}" )
-  end
+  Sequel.connect( "postgres://#{$options[:host]}/contacts?user=#{$options[:username] || 'contacts'}" )
 end
 
 # for irb testing when we don't need the UI

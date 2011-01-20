@@ -1,17 +1,11 @@
 require 'clevic.rb'
 
 # db connection
-Clevic::DbOptions.connect( $options ) do
-  database :accounts_test
-  adapter :postgresql
-  username 'accounts'
-end
+Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=#{$options[:password]}" )
 
 # This is a read-only view, which is currently not implemented
 class Value < ActiveRecord::Base
   set_table_name 'values'
-  #~ has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
-  #~ has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   
   include Clevic::Record
   define_ui do

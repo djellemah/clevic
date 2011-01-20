@@ -3,17 +3,13 @@ require 'clevic.rb'
 # see sql/accounts.sql for schema
 
 # db connection
-Clevic::DbOptions.connect do
-  database 'accounts_test'
-  adapter :postgresql
-  username 'accounts'
-end
+Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=#{$options[:password]}" )
 
 # minimal definition to get combo boxes to show up
-class Entry < ActiveRecord::Base
+class Entry < Sequel::Model
   include Clevic::Record
-  belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
-  belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
+  many_to_one :debit, :class_name => 'Account', :foreign_key => 'debit_id'
+  many_to_one :credit, :class_name => 'Account', :foreign_key => 'credit_id'
 end
 
 # minimal definition to get sensible values in combo boxes
