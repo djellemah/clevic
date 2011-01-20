@@ -438,13 +438,13 @@ class ModelBuilder
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {}, &block )
     read_only_default!( attribute, options )
-    field = @fields[attribute] = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    field.delegate = 
-    if field.meta.type == :boolean
-      BooleanDelegate.new( field )
-    else
-      TextDelegate.new( field )
-    end
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    
+    # plain_delegate will be defined in a framework-specific file.
+    # This is becoming a kind of poor man's inheritance. I don't
+    # think I like that.
+    field.delegate = plain_delegate( field )
+    @fields[attribute] = field
   end
   
   # an ordinary field like plain, except that a larger edit area can be used

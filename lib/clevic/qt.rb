@@ -7,6 +7,8 @@ require 'pathname'
 # require these first, so TableModel and TableView get the correct ancestors
 require 'clevic/qt/table_model.rb'
 require 'clevic/qt/table_view.rb'
+
+# all other files in the qt subdirectory
 ( Pathname.new( __FILE__ ).parent + 'qt' ).children.grep( /.rb$/ ).each do |child|
   require child.to_s
 end
