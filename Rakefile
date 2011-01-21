@@ -7,7 +7,7 @@ $hoe = Hoe.new('clevic', Clevic::VERSION::STRING) do |p|
   p.developer('John Anderson', 'panic@semiosix.com')
   p.changes              = p.paragraphs_of("History.txt", 0..1).join("\n\n")
   p.rubyforge_name       = p.name # TODO this is default value
-  p.description          = "SQL table GUI with Qt, Swing, Sequel"
+  p.description          = "SQL table GUI with Qt / Java Swing and Sequel"
   p.extra_deps         = [
     ['activesupport','>= 2.0.2'],
     ['fastercsv', '>=1.2.3'],
