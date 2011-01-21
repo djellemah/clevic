@@ -238,13 +238,12 @@ class TableModel < Qt::AbstractTableModel
         end
         
         begin
-          index.attribute_value =
           case
             when variant.class.name == 'Qt::Date'
-              Date.new( variant.year, variant.month, variant.day )
+              index.attribute_value = Date.new( variant.year, variant.month, variant.day )
               
             when variant.class.name == 'Qt::Time'
-              Time.new( variant.hour, variant.min, variant.sec )
+              index.attribute_value = Time.new( variant.hour, variant.min, variant.sec )
             
             else
               index.edit_value = variant.value
