@@ -42,7 +42,14 @@ class TableView < Qt::TableView
     # TODO might be useful to allow movable vertical rows,
     # but need to change the shortcut ideas of next and previous rows
     self.vertical_header.movable = false
+    self.vertical_header.default_alignment = Qt::AlignTop | Qt::AlignRight
     self.sorting_enabled = false
+    
+    # set fonts
+    Qt::Font.new( font.family, font.point_size * 5 / 6 ).tap do |fnt|
+      self.font = fnt
+      self.horizontal_header.font = fnt
+    end 
     
     self.context_menu_policy = Qt::ActionsContextMenu
   end
@@ -93,28 +100,38 @@ class TableView < Qt::TableView
     self.set_column_width( col, column_size( col, sample ).width )
   end
 
+  def metrics
+    @metrics = Qt::FontMetrics.new( font )
+  end
+  
   # set the size of the column from the string value of the data
   # mostly copied from qheaderview.cpp:2301
   def column_size( col, data )
     opt = Qt::StyleOptionHeader.new
     
     # fetch font size
-    fnt = font
-    fnt.bold = true
-    opt.fontMetrics = Qt::FontMetrics.new( fnt )
+    opt.fontMetrics = metrics
+    opt.rect = opt.fontMetrics.bounding_rect( data.to_s )
     
     # set data
     opt.text = data.to_s
     
-    # icon size. Not needed 
-    #~ variant = d->model->headerData(logicalIndex, d->orientation, Qt::DecorationRole);
-    #~ opt.icon = qvariant_cast<QIcon>(variant);
-    #~ if (opt.icon.isNull())
-        #~ opt.icon = qvariant_cast<QPixmap>(variant);
+    opt.section =
+    case
+      when col == 0
+        Qt::StyleOptionHeader::Beginning
+        
+      when col > 0 && col < model.fields.size - 1
+        Qt::StyleOptionHeader::Middle
+        
+      when col == model.fields.size - 1
+        Qt::StyleOptionHeader::End
+    end
     
-    size = Qt::Size.new( 100, 30 )
+    size = Qt::Size.new( opt.fontMetrics.width( data.to_s ), opt.fontMetrics.height )
+    
     # final parameter could be header section
-    style.sizeFromContents( Qt::Style::CT_HeaderSection, opt, size );
+    style.sizeFromContents( Qt::Style::CT_HeaderSection, opt, size )
   end
   
   # make sure row size is correct
@@ -124,7 +141,8 @@ class TableView < Qt::TableView
     @model = model
     
     # make sure we get nice spacing
-    vertical_header.default_section_size = vertical_header.minimum_section_size
+    vertical_header.default_section_size = metrics.height
+    vertical_header.minimum_section_size = metrics.height
     super
     
     # set delegates
