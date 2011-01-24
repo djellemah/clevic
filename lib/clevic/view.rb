@@ -5,79 +5,130 @@ module Clevic
   # This contains the definition of a particular view of an entity.
   # See Clevic::ModelBuilder.
   class View
-    @order = []
-    def self.order
-      @order
-    end
     
-    # Handle situations where the array passed to 
-    # Clevic::View.order = has ActiveRecord::Base
-    # objects in it. In other words, if there is one, pass back it's
-    # default view class rather than the ActiveRecord::Base subclass.
-    def self.order=( array )
-      @order = array.map do |x|
-        if x.ancestors.include?( ActiveRecord::Base )
-          x.default_view_class
+    class << self
+      def define_ui_block( &block )
+        @define_ui_block ||= block
+      end
+      
+      def order
+        @order ||= []
+      end
+      
+      # sometimes order has duplicates. So this is all unique
+      # defined views in order of definition, or as specified.
+      def views
+        order.uniq
+      end
+      
+      def []( view_name )
+        order.find do |view|
+          view.name =~ /#{view_name.to_s}/i
+        end
+      end
+      
+      # Handle situations where the array passed to 
+      # Clevic::View.order has entity_class
+      # objects in it. In other words, if there is one, pass back it's
+      # default view class rather than the entity_class
+      def order=( array )
+        @order = array.map do |x|
+          if x.ancestors.include?( Clevic.base_entity_class )
+            x.default_view_class
+          else
+            x
+          end
+        end
+      end
+      
+      def entity_class( *args )
+        if args.size == 0
+          @entity_class || raise( "entity_class not specified for #{name}" )
         else
-          x
+          self.entity_class = args.first
+        end
+      end
+      
+      def entity_class=( some_class )
+        @entity_class = some_class
+      end
+      
+      def widget_name( *args )
+        if args.size == 0
+          # the class name by default
+          @widget_name || name
+        else
+          @widget_name = args.first
         end
       end
     end
     
-    def self.entity_class( *args )
-      if args.size == 0
-        @entity_class || raise( "entity_class not specified for #{name}" )
-      else
-        @entity_class = args.first
+    # args can be anything that has a writer method. Often this
+    # will be entity_class
+    # block contains the ModelBuilder DSL
+    def initialize( args = {}, &block )
+      @define_ui_block = block
+      unless args.nil?
+        args.each do |key,value|
+          self.send( "#{key}=", value )
+        end
       end
     end
     
-    def self.entity_class=( some_class )
-      @entity_class = some_class
-    end
-    
-    def self.widget_name( *args )
-      if args.size == 0
-        # the class name by default
-        @widget_name || name
-      else
-        @widget_name = args.first
-      end
+    # use block from constructor, or class ui block from eg Clevic::Record
+    def define_ui_block
+      @define_ui_block || self.class.define_ui_block
     end
     
     # For descendants to override easily
     def entity_class
-      self.class.entity_class
+      @entity_class || self.class.entity_class
     end
+    attr_writer :entity_class
     
     # The title to display, eg in a tab
     def title
-      self.class.name
+      @title || self.class.name
+    end
+    attr_writer :title
+    
+    def fields
+      @fields ||= define_ui.fields
     end
     
-    # used for the Qt object_name when ModelBuilder is constructing a widget
-    # here so it can be overridden by descendants
+    # used by the framework-specific code to name widgets
     def widget_name
-      self.class.widget_name
+      @widget_name || self.class.widget_name
     end
     
-    def model_builder( &block )
-      @model_builder ||= ModelBuilder.new( self )
-      @model_builder.exec_ui_block( &block )
+    def model_builder( value = nil, &block )
+      if value.nil?
+        @model_builder ||= ModelBuilder.new( self )
+        @model_builder.exec_ui_block( &block )
+      else
+        @model_builder
+      end
     end
+    attr_writer :model_builder
     
     # return a default UI constructed from model metadata
     def define_ui
-      model_builder do
-        default_ui
+      if define_ui_block.nil?
+        # use the define_ui from Clevic::View to build a default UI
+        model_builder do
+          default_ui
+        end
+      else
+        # use the provided block
+        model_builder( &define_ui_block )
       end
     end
     
-    # define view/model specific actions
+    # callback for view/model specific actions
     def define_actions( table_view, action_builder )
     end
     
-    # notify 
+    # callback for notify 
     def notify_field( table_view, model_index )
       ndc = model_index.field.notify_data_changed
       case ndc
@@ -91,7 +142,7 @@ module Clevic
     
     # Define data changed events. Default is to call notify_data_changed
     # for each field in the rectangular area defined by top_left and bottom_right
-    # (which are Qt::ModelIndex instances)
+    # (which are include Clevic::TableIndex)
     def notify_data_changed( table_view, top_left, bottom_right )
       if top_left == bottom_right
         # shortcut to just the one, seeing as it's probably the most common
@@ -107,7 +158,7 @@ module Clevic
       end
     end
     
-    # be notified of key presses
+    # callback for key presses
     def notify_key_press( table_view, key_press_event, current_model_index )
     end
     

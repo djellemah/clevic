@@ -3,32 +3,22 @@ require 'clevic/default_view.rb'
 
 module Clevic
 
-  # include this in ActiveRecord::Base instances to
+  # include this in Sequel::Model classes to
   # get embedded view definitions. See ModelBuilder.
   #
   # A Clevic::Default#{model}View class will be created. If
   # a define_ui block is not specified in the entity class, 
   # a default UI will be created.
   module Record
-    # TODO not sure if these are necessary here anymore?
-    def self.db_options=( db_options )
-      @db_options = db_options
-    end
-    
-    def self.db_options
-      @db_options
-    end
-    
     module ClassMethods
       def default_view_class_name
         "::Clevic::Default#{name.gsub('::','')}View"
       end
       
-      #TODO will have to fix modules here
       def create_view_class
         # create the default view class
         # Don't use Class.new because even if you assign
-        # the result to a contstant, there are still anonymous classes
+        # the result to a constant, there are still anonymous classes
         # hanging around, which gives weird results with Clevic::View.subclasses.
         st,line = <<-EOF, __LINE__
           class #{default_view_class_name} < Clevic::DefaultView
@@ -60,11 +50,6 @@ module Clevic
       
       # create the default view class
       base.create_view_class
-
-      # DbOptions instance
-      db_options = nil
-      found = ObjectSpace.each_object( Clevic::DbOptions ){|x| db_options = x}
-      @db_options = db_options
     end
   end
   

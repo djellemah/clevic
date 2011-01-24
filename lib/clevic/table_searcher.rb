@@ -1,165 +1,162 @@
-require 'clevic/sql_dialects.rb'
-
 module Clevic
 
-# TODO possibly use AR scopes for this?
+=begin
+Search for a record in the collection given a set of criteria. One of the
+criteria will be a starting record, and the search method should return
+the matching record next after this.
+=end
 class TableSearcher
-  attr_reader :entity_class, :order_attributes, :search_criteria, :field
+  attr_reader :dataset, :search_criteria, :field
   
-  # entity_class is a descendant of ActiveRecord::Base
-  # order_attributes is a collection of OrderAttribute objects
-  # - field is an instance of Clevic::Field
-  # - search_criteria responds to from_start?, direction, whole_words? and search_text
-  def initialize( entity_class, order_attributes, search_criteria, field )
-    raise "there must be at least one order_attribute" if order_attributes.nil? or order_attributes.empty?
+  # dataset is a Sequel::Dataset, which has an associated Sequel::Model
+  # field is an instance of Clevic::Field
+  # search_criteria responds to from_start?, direction, whole_words? and search_text
+  def initialize( dataset, search_criteria, field )
     raise "field must be specified" if field.nil?
     raise "unknown order #{search_criteria.direction}" unless [:forwards, :backwards].include?( search_criteria.direction )
-    @entity_class = entity_class
-    @order_attributes = order_attributes
+    raise "dataset has no model" unless dataset.respond_to?( :model )
+    
+    # set default dataset ordering if it's not there
+    @dataset =
+    if dataset.opts[:order].nil?
+      dataset.order( dataset.model.primary_key )
+    else
+      dataset
+    end
+    
     @search_criteria = search_criteria
     @field = field
   end
   
   # start_entity is the entity to start from, ie any record found after it will qualify
+  # return the first entity found that matches the criteria
   def search( start_entity = nil )
-    search_field_name = 
-    if field.is_association?
+    search_dataset( start_entity ).first
+  end
+
+protected
+  # return a Sequel expression for the name of the field to use as a comparison
+  def search_field_expression
+    if field.association?
       # for related tables
       unless [String,Symbol].include?( field.display.class )
-        raise( "search field #{field.inspect} cannot have a complex display" ) 
+        raise( "search field #{field.inspect} cannot search lambda display" ) 
       end
+      
+      raise "display not specified for #{field}" if field.display.nil?
       
       # TODO this will only work with a path value with no dots
       # otherwise the SQL gets complicated with joins etc
-      field.display
+      field.related_class \
+        .filter( field.related_class.primary_key.qualify( field.related_class.table_name ) => field.meta.key.qualify( field.entity_class.table_name ) ) \
+        .select( field.display.to_sym )
     else
       # for this table
-      entity_class.connection.quote_column_name( field.attribute.to_s )
+      field.attribute.to_sym
     end
-    
-    # do the conditions for the search value
-    @conditions = search_clause( search_field_name )
+  end
+  
+  # return an expression, or an array or expressions for representing search_criteria.search_text and whole_words?
+  def search_text_expression
+    if search_criteria.whole_words?
+      [
+        "% #{search_criteria.search_text} %",
+        "#{search_criteria.search_text} %",
+        "% #{search_criteria.search_text}",
+        search_criteria.search_text
+      ]
+    else
+      "%#{search_criteria.search_text}%"
+    end
+  end
+  
+  # Add the relevant conditions to use start_entity as the
+  # entity where the search starts, ie the first one after it is found
+  # start_entity is a model instance
+  def find_from( dataset, start_entity )
+    expression = build_recursive_comparison( start_entity )
+    # need expression => true because most databases can't evaluate a
+    # pure boolean expression - they need something to compare it to.
+    dataset.filter( expression => true )
+  end
+  
+  # return a dataset based on @dataset which filters on search_criteria
+  def search_dataset( start_entity )
+    likes = Array[*search_text_expression].map{|ste| Sequel::SQL::StringExpression.like(search_field_expression, ste, {:case_insensitive=>true})}
+    rv = @dataset.filter( Sequel::SQL::BooleanExpression.new(:OR, *likes ) )
     
     # if we're not searching from the start, we need
     # to find the next match. Which is complicated from an SQL point of view.
     unless search_criteria.from_start?
       raise "start_entity cannot be nil when from_start is false" if start_entity.nil?
       # build up the ordering conditions
-      find_from!( start_entity )
+      rv = find_from( rv, start_entity )
     end
     
-    # otherwise ActiveRecord thinks that the % in the string
-    # is for interpolations instead of treating it a the like wildcard
-    conditions_value =
-    if !@params.nil? and @params.size > 0
-      [ @conditions, @params ]
-    else
-      @conditions
-    end
+    # reverse order by direction if necessary
+    rv = rv.reverse if search_criteria.direction == :backwards
     
-    # find the first match
-    entity_class.find(
-      :first,
-      :conditions => conditions_value,
-      :order => order,
-      :joins => ( field.meta.name if field.is_association? )
-    )
-  end
-
-protected
-  include SqlDialects
-  
-  def quote_column( field_name )
-    entity_class.connection.quote_column_name( field_name )
-  end
-  
-  def quote( value )
-    entity_class.connection.quote( value )
+    # return dataset
+    rv
   end
   
   # recursively create a case statement to do the comparison
   # because and ... and ... and filters on *each* one rather than
   # consecutively.
-  # operator is either '<' or '>'
-  def build_recursive_comparison( operator, index = 0 )
+  def build_recursive_comparison( start_entity, index = 0 )
     # end recursion
-    return sql_boolean( false ) if index == order_attributes.size
+    return false if index == order_attributes.size
     
-    # fetch the current attribute
-    attribute = order_attributes[index]
+    # fetch the current order attribute and direction
+    attribute, direction = order_attributes[index]
+    value = start_entity.send( attribute )
     
-    # build case statement, including recusion
-    st = <<-EOF
-case
-  when #{entity_class.table_name}.#{quote_column attribute} #{operator} :#{attribute} then #{sql_boolean true}
-  when #{entity_class.table_name}.#{quote_column attribute} = :#{attribute} then #{build_recursive_comparison( operator, index+1 )}
-  else #{sql_boolean false}
-end
-EOF
-    # indent
-    st.gsub!( /^/, '  ' * index )
+    # build case statement using Sequel expressions, including recursion
+    # pseudo-SQL is
+    # case
+    #   when attribute < value then true
+    #   when attribute = value then #{build_recursive_comparison( operator, index+1 )}
+    #   else false
+    # end
+    
+    {
+      # if values are unequal, comparison levels end here
+      attribute.identifier.send( comparator(direction), value ) => true,
+      # if the values are equal, move on to the next level of comparison
+      { attribute => value } => build_recursive_comparison( start_entity, index+1 )
+    }.case( false ) # the else (default) clause, ie we don't want to see these records
   end
   
-  # Add the relevant conditions to use start_entity as the
-  # entity where the search starts, ie the first one after it is found
-  # start_entity is an AR model instance
-  # sets @params and @conditions
-  def find_from!( start_entity )
-    operator =
+  # return either > or < depending on both search_criteria.direction
+  # and local_direction
+  def comparator( local_direction = 1 )
+    comparator_direction =
     case search_criteria.direction
-      when :forwards; '>'
-      when :backwards; '<'
-    end
+      when :forwards; 1
+      when :backwards; -1
+    end * local_direction
     
-    # build the sql comparison where clause fragment
-    comparison_sql = build_recursive_comparison( operator )
-    
-    # only Postgres seems to understand real booleans
-    # everything else needs the big case statement to be compared
-    # to something
-    unless entity_class.connection.adapter_name == 'PostgreSQL'
-      comparison_sql += " = #{sql_boolean true}"
+    # 1 indexes >, -1 indexes <
+    ['','>','<'][comparator_direction]
+  end
+  
+  # returns a collection of [ attribute, (1|-1) ]
+  # where 1 is forward/asc (>) and -1 is backward/desc (<)
+  def order_attributes
+    if @order_attributes.nil?
+      @order_attributes =
+      @dataset.opts[:order].map do |order_expr|
+        case order_expr
+          when Symbol; [ order_expr, 1 ]
+          when Sequel::SQL::OrderedExpression; [ order_expr.expression, order_expr.descending ? -1 : 1 ]
+          else
+            raise "unknown order_expr: #{order_expr.inspect}"
+        end
+      end
     end
-    
-    # build parameter values
-    @params ||= {}
-    order_attributes.each {|x| @params[x.to_sym] = start_entity.send( x.attribute )}
-    
-    @conditions += " and " + comparison_sql
+    @order_attributes
   end
-  
-  # get the search value parameter, in SQL format
-  def search_clause( field_name )
-    if search_criteria.whole_words?
-      <<-EOF
-      (
-        #{field_name} #{like_operator} #{quote "% #{search_criteria.search_text} %"}
-        or
-        #{field_name} #{like_operator} #{quote "#{search_criteria.search_text} %"}
-        or
-        #{field_name} #{like_operator} #{quote "% #{search_criteria.search_text}"}
-      )
-      EOF
-    else
-      "#{field_name} #{like_operator} #{quote "%#{search_criteria.search_text}%"}"
-    end
-  end
-  
-  def ascending_order
-    order_attributes.map{|x| x.to_sql}.join(',')
-  end
-  
-  def descending_order
-    order_attributes.map{|x| x.to_reverse_sql}.join(',')
-  end
-  
-  def order
-    case search_criteria.direction
-      when :forwards; ascending_order
-      when :backwards; descending_order
-    end
-  end
-  
 end
 
 end
+

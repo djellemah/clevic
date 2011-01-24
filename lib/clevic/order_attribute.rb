@@ -1,6 +1,7 @@
 =begin rdoc
 Store the SQL order_by attributes with ascending and descending values
 =end
+# TODO don't use this anymore
 class OrderAttribute
   attr_reader :direction, :attribute
   
@@ -49,5 +50,14 @@ class OrderAttribute
     @entity_class == other.instance_eval( '@entity_class' ) and
     self.direction == other.direction and
     self.attribute == other.attribute
+  end
+  
+  # return -1 for desc, 1 for asc
+  def to_i
+    case direction
+      when :asc; 1
+      when :desc; -1
+      else; raise "unknown direction #{direction}"
+    end
   end
 end

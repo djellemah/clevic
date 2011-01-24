@@ -4,13 +4,14 @@ http://clevic.rubyforge.org
 
 == DESCRIPTION:
 
-Database framework and Qt Model/View GUI for data capture and
-editing of tables in a pre-existing relational DBMS.
+Database framework and Model/View GUI for data capture and
+editing of tables in a pre-existing relational DBMS. Works with Qt
+and Java Swing.
 
-Using ActiveRecord means Clevic supports Postgresql, Mysql and so on. It's been tested with Postgres and sqlite.
+Using Sequel means Clevic supports Postgresql, Mysql and so on. It's been tested with Postgres and sqlite.
 
-Using Qt means it runs on Linux, Windows and OSX. Thoroughly tested
-in Linux, slightly tested in Windows and OSX.
+Using Qt and Swing means it runs on Linux, Windows and OSX. Qt is thoroughly tested
+in Linux, slightly tested in Windows and OSX. Swing is tested in Linux and OSX.
 
 == FEATURES:
 
@@ -23,7 +24,6 @@ in Linux, slightly tested in Windows and OSX.
 * Filter by current field.
 * search by field contents.
 * cut and paste in CSV format
-* point Clevic at a Rails project and see your models in a GUI
 
 === Shortcuts:
 
@@ -37,7 +37,7 @@ in Linux, slightly tested in Windows and OSX.
 
 === Model definition:
 
-Models and their UI representation must be defined in Ruby. A descendant of ActiveRecord::Base
+Models and their UI representation must be defined in Ruby. A descendant of Sequel::Model
 that includes the Clevic::Record module will provide a minimally functional UI.
 
 Beyond that, the framework provides a DSL for defining more complex and useful behaviour
@@ -54,7 +54,7 @@ For implementation and more extensive comments, see Clevic::ModelBuilder.
 * use blocks to format values for particular fields.
 * sensible caching to handle large data sets without unnecessary memory and cpu usage
 * extensions to various Qt classes to make db programming easier.
-* uses ActiveRecord for data access. Does *not* use the Qt SQL models.
+* uses Sequel for data access.
 * leverages SQL whenever possible to handle large datasets, sorting, filtering
   etc. So it's probably not suitable for talking to a remote db across a slow link.
 
@@ -64,26 +64,21 @@ See TODO file.
 
 == SYNOPSIS:
 
-	clevic model_definition_file.rb
+	clevic [ --qt | --swing ] model_definition_file.rb
 	
-	OR
-	
-	clevic path_to_rails_project [model_tweaks.rb]
-
 == REQUIREMENTS:
 
 === Gems
-* ActiveRecord
+* Sequel
 * fastercsv
 * qtext
-* facets
+* hashery
 * gather
 
 === Libraries
-* qtruby4 >=1.4.9
+* qtruby4 >= 2.0.3
 * bsearch (http://0xcc.net/ruby-bsearch)
-* active_record/dirty (included, for active_record < 2.1.x)
-* db driver (ie postgres-pr)
+* db driver (ie pg)
 * rdbms (ie postgres)
 
 == INSTALL:
@@ -98,7 +93,7 @@ See TODO file.
 
 (The GPL-2 License)
 
-Copyright (C) 2008 John Anderson
+Copyright (C) 2008-2011 John Anderson
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU Library General Public License

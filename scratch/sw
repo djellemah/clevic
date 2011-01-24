@@ -1,0 +1,18 @@
+#! /usr/bin/jruby
+
+require 'rubygems'
+require 'sequel'
+
+require 'clevic/swing'
+
+require File.dirname( __FILE__ ) + '/../models/times_psql_models.rb'
+
+javax.swing.JFrame.new.tap do |frame|
+  view = Clevic::View.order.first.new
+  tv = Clevic::TableView.new( view )
+  frame.content_pane.add( tv )
+  frame.default_close_operation = javax.swing.JFrame::EXIT_ON_CLOSE
+  frame.pack
+  frame.visible = true 
+end
+

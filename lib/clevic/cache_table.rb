@@ -1,15 +1,6 @@
-require 'rubygems'
-require 'active_record'
 require 'clevic/table_searcher.rb'
 require 'clevic/order_attribute.rb'
 require 'bsearch'
-
-begin
-  require 'active_record/dirty.rb'
-rescue MissingSourceFile
-  require 'clevic/dirty.rb'
-end
-
 
 =begin rdoc
 Fetch rows from the db on demand, rather than all up front.
@@ -26,18 +17,20 @@ TODO drop rows when they haven't been accessed for a while
 
 TODO how to handle a quickly-changing underlying table? invalidate cache
 for each call?
+
+TODO use Sequel instead of order_attributes
 =end
 class CacheTable < Array
   # the number of records loaded in one call to the db
   attr_accessor :preload_count
-  attr_reader :options, :entity_class
+  attr_reader :find_options, :entity_class
   
   def initialize( entity_class, find_options = {} )
     @preload_count = 20
     # must be before sanitise_options
     @entity_class = entity_class
     # must be before anything that uses options
-    @options = (find_options||{}).clone
+    @find_options = (find_options || {}).clone
     sanitise_options!
     
     # size the array and fill it with nils. They'll be filled
@@ -49,21 +42,21 @@ class CacheTable < Array
   # The count of the records according to the db, which may be different to
   # the records in the cache
   def sql_count
-    entity_class.count( options.reject{|k,v| k == :order} )
+    entity_class.adaptor.count( find_options.reject{|k,v| k == :order} )
   end
   
   # Return the set of OrderAttribute objects for this collection.
   # If no order attributes are specified, the primary key will be used.
-  # TODO what about compund primary keys?
+  # TODO what about compound primary keys?
   def order_attributes
-    # This is sorted in @options[:order], so use that for the search
+    # This is sorted in @find_options[:order], so use that for the search
     if @order_attributes.nil?
-      @order_attributes = @options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
+      @order_attributes = find_options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
       
       # add the primary key if nothing is specified
       # because we need an ordering of some kind otherwise
       # index_for_entity will not work
-      if !@order_attributes.any? {|x| x.attribute == entity_class.primary_key }
+      unless @order_attributes.any? {|x| x.attribute.to_s == entity_class.primary_key.to_s }
         @order_attributes << OrderAttribute.new( entity_class, entity_class.primary_key )
       end
     end
@@ -71,14 +64,28 @@ class CacheTable < Array
   end
   
   # add an id to options[:order] if it's not in there
-  # also create @order_attributes
+  # make sure options[:conditions] uses db values rather than objects
+  # ie convert { :debit => DebitObject<...> } to { :debit_id => 5 }
   def sanitise_options!
     # make sure we have a string here, even if it's blank
-    options[:order] ||= ''
+    # value would be a ,-separated list of order by fields (expressions?)
+    find_options[:order] ||= ''
     
     # recreate the options[:order] entry to include default
-    # TODO why though? Can't remember
-    options[:order] = order_attributes.map{|x| x.to_sql}.join(',')
+    find_options[:order] = order_attributes.map{|x| x.to_sql}.join(',')
+    
+    # make sure objects are converted to ids
+    if find_options.has_key?( :conditions ) && find_options[:conditions].is_a?( Hash )
+      conditions = find_options[:conditions].map do |key,value|
+        metadata = entity_class.meta[key]
+        if metadata.association?
+          [metadata.key, value.send( value.primary_key )]
+        else
+          [key,value]
+        end
+      end
+      find_options[:conditions] = Hash[ *conditions.flatten ]
+    end
   end
 
   # Execute the block with the specified preload_count,
@@ -100,7 +107,7 @@ class CacheTable < Array
     offset = index < 0 ? index + @row_count : index
     
     # fetch self.preload_count records
-    records = entity_class.find( :all, options.merge( :offset => offset, :limit => preload_count ) )
+    records = entity_class.adaptor.find( :all, find_options.merge( :offset => offset, :limit => preload_count ) )
     records.each_with_index {|x,i| self[i+index] = x if !cached_at?( i+index )}
     
     # return the first one
@@ -115,15 +122,38 @@ class CacheTable < Array
   
   # make a new instance that has the attributes of this one, but an empty
   # data set. pass in ActiveRecord options to filter.
-  # TODO using named scopes might make filtering easier.
   def renew( args = nil )
     clear
-    self.class.new( entity_class, args || options )
+    self.class.new( entity_class, args || find_options )
+  end
+  
+  # key is what we're searching for. candidate
+  # is what the current candidate is. direction is 1
+  # for sorted ascending, and -1 for sorted descending
+  # TODO retrieve nulls first/last from dataset. In sequel (>3.13.0)
+  # this is related to entity_class.filter( :release_date.desc(:nulls=>:first), :name.asc(:nulls=>:last) )
+  def compare( key, candidate, direction )
+    if ( key_nil = key.nil? ) || candidate.nil?
+      if key == candidate
+        # both nil, ie equal
+        0
+      else
+        # assume nil is sorted greater
+        # TODO this should be retrieved from the db
+        # ie candidate(nil) <=> key is 1
+        # and key <=> candidate(nil) is -1
+        key_nil ? -1 : 1
+      end
+    else
+      candidate <=> key
+    end * direction
+    # reverse the result if we're searching a desc attribute,
+    # where direction will be -1
   end
   
   # find the index for the given entity, using a binary search algorithm (bsearch).
   # The order_by ActiveRecord style options are used to do the binary search.
-  # 0 is returned if the entity is nil
+  # nil is returned if the entity is nil
   # nil is returned if the array is empty
   def index_for_entity( entity )
     return nil if size == 0 || entity.nil?
@@ -135,34 +165,27 @@ class CacheTable < Array
       bsearch do |candidate|
         # find using all sort attributes
         order_attributes.inject(0) do |result,attribute|
+          # value from the block should be in [-1,0,1],
+          # similar to candidate <=> entity
           if result == 0
+            # they're equal, so compare attribute values
             method = attribute.attribute.to_sym
+            
             # compare taking ordering direction into account
-            retval =
-            if attribute.direction == :asc
-              # TODO which would be more efficient here?
-              #~ candidate.send( method ) <=> entity.send( method )
-              candidate[method] <=> entity[method]
-            else
-              #~ entity.send( method ) <=> candidate.send( method )
-              entity[method] <=> candidate[method]
-            end
+            retval = compare( entity.send( method ), candidate.send( method ), attribute.to_i )
+            
             # exit now because we have a difference
             next( retval ) if retval != 0
             
             # otherwise try with the next order attribute
             retval
           else
-            # they're equal, so try next order attribute
+            # recurse out because we have a difference already
             result
           end
         end
       end
     end
-  end
-  
-  def search( field, search_criteria, start_entity )
-    Clevic::TableSearcher.new( entity_class, order_attributes, search_criteria, field ).search( start_entity )
   end
 end
 

@@ -12,7 +12,7 @@ def ui_rb_file( ui_file )
 end
 
 # list of .ui files
-UI_FILES = FileList.new( 'lib/clevic/ui/*.ui' )
+UI_FILES = FileList.new( 'lib/clevic/qt/ui/*.ui' )
 CLEAN.include( 'ChangeLog', 'coverage', 'profiling' )
 CLOBBER.include( 'ChangeLog', 'pkg', 'lib/clevic/ui/*_ui.rb' )
 

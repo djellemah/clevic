@@ -1,18 +1,17 @@
 require 'clevic.rb'
 
-# db connection
-Clevic::DbOptions.connect( $options ) do
-  # use a different db for testing, so real data doesn't get broken.
-  if options[:database].nil? || options[:database].empty?
-    database( debug? ? :accounts_test : :accounts )
-  else
-    database options[:database]
-  end
-  adapter :postgresql
-  username options[:username].blank? ? 'accounts' : options[:username]
+host = ENV['PGHOST'] || 'localhost'
+$options ||= {}
+
+if respond_to?( :'jruby?' ) && jruby?
+  constring = "jdbc:postgresql://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general"
+  puts "constring: #{constring.inspect}"
+  Sequel.connect( constring )
+else
+  Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general" )
 end
 
-class Entry < ActiveRecord::Base
+class Entry < Sequel::Model
   belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
   belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
   
@@ -33,6 +32,7 @@ class Entry < ActiveRecord::Base
         end
       end
     end
+    distinct :supplier
     relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
     relational  :credit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
     plain       :amount, :sample => 999999.99
@@ -49,7 +49,7 @@ class Entry < ActiveRecord::Base
   def self.update_from_description( current_index )
     return if current_index.attribute_value.nil?
     # most recent entry, ordered in reverse
-    similar = self.find(
+    similar = self.adaptor.find(
       :first,
       :conditions => ["#{current_index.attribute} = ?", current_index.attribute_value],
       :order => 'date desc'
@@ -69,7 +69,7 @@ class Entry < ActiveRecord::Base
   end
 end
 
-class Account < ActiveRecord::Base
+class Account < Sequel::Model
   has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
   has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
   

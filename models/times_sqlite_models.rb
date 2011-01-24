@@ -1,10 +1,3 @@
 require 'clevic.rb'
-
-# db connection options
-Clevic::DbOptions.connect( $options ) do
-  database :times
-  adapter :sqlite3
-end
-
+Sequel.sqlite( "#{ENV['HOME']}/projects/clevic-sequel/times.sqlite3" )
 require 'times_models.rb'
-

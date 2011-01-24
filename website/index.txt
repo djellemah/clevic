@@ -1,6 +1,12 @@
 h1. Clevic
 
-"RDoc":rdoc | "Rubyforge Project":http://rubyforge.org/projects/clevic/
+"RDoc":rdoc | "Rubygems":http://rubygems.org/gems/clevic | "Rubyforge Project":http://rubyforge.org/projects/clevic/
+
+Clevic is a toolkit for building GUIs database tables with useful functionality.
+It works with Qt or Java Swing and Sequel.
+
+An interesting side-effect of this will probably be that
+building form-style GUIs will be possible. Eventually. When the code has been written.
 
 Screenshot of a fully defined UI with the foreign-key dropdown in place.
 Tabs contain the two tables.

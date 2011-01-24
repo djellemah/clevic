@@ -1,7 +1,5 @@
-require 'clevic.rb'
-
 # model definitions
-class Entry < ActiveRecord::Base
+class Entry < Sequel::Model
   belongs_to :invoice
   belongs_to :activity
   belongs_to :project
@@ -22,11 +20,11 @@ class Entry < ActiveRecord::Base
   end
   
   define_ui do
-    plain       :date, :sample => '28-Dec-08'
+    plain       :date, :sample => '28-WWW-08'
     
     # The project field
-    relational  :project do |field|
-      field.display = 'project'
+    relational :project do |field|
+      field.display = :project
       field.conditions = 'active = true'
       field.order = 'lower(project)'
       
@@ -36,7 +34,7 @@ class Entry < ActiveRecord::Base
         if model_index.entity.invoice.nil?
           entity_view.invoice_from_project( table_view, model_index ) do
             # move here next if the invoice was changed
-            table_view.override_next_index model_index.choppy( :column => :start )
+            table_view.next_index = model_index.choppy( :column => :start )
           end
         end
       end
@@ -153,10 +151,11 @@ class Entry < ActiveRecord::Base
   
 end
 
-class Invoice < ActiveRecord::Base
-  include Clevic::Record
+class Invoice < Sequel::Model
   has_many :entries
 
+  include Clevic::Record
+  
   define_ui do
     plain :date
     distinct :client
@@ -171,10 +170,11 @@ class Invoice < ActiveRecord::Base
   end
 end
 
-class Project < ActiveRecord::Base
-  include Clevic::Record
+class Project < Sequel::Model
   has_many :entries
 
+  include Clevic::Record
+  
   define_ui do
     plain     :project
     plain     :description
@@ -188,7 +188,7 @@ class Project < ActiveRecord::Base
   # Return the latest invoice for this project
   # Not part of the UI.
   def latest_invoice
-    Invoice.find(
+    Invoice.adaptor.find(
       :first,
       :conditions => ["client = ? and status = 'not sent'", self.client],
       :order => 'invoice_number desc'
@@ -197,10 +197,11 @@ class Project < ActiveRecord::Base
 
 end
 
-class Activity < ActiveRecord::Base
-  include Clevic::Record
+class Activity < Sequel::Model
   has_many :entries
 
+  include Clevic::Record
+  
   # define how fields are displayed
   define_ui do
     plain :activity

@@ -1,18 +1,10 @@
-require 'clevic.rb'
-require 'active_support'
-
-# db connection options
 $options ||= {}
-Clevic::DbOptions.connect( $options ) do
-  # use a different db for testing, so real data doesn't get broken.
-  # unless the command-line option is specified
-  if $options[:database].blank?
-    database( debug? ? :times_test : :times )
-  else
-    database $options[:database]
-  end
-  adapter :postgresql
-  username 'times' if $options[:username].blank?
-end
+
+require 'clevic.rb'
+require 'sequel'
+host = ENV['PGHOST'] || 'localhost'
+constring = "jdbc:postgresql://#{host}/times_test?user=#{$options[:username] || 'times'}&password=general"
+puts "constring: #{constring.inspect}"
+Sequel.connect( constring )
 
 require 'times_models.rb'

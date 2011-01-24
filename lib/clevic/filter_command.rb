@@ -7,18 +7,14 @@ module Clevic
       
       # Better make the status message now, before the indexes become invalid
       @status_message =
-      begin
-        "Filtered on #{filter_indexes.first.field.label} = #{filter_indexes.first.gui_value}"
-      rescue
-        "Filtered"
-      end
+      "Filtered on #{filter_indexes.first.field.label} = #{filter_indexes.first.display_value}"
     end
     
     # Do the filtering. Return true if successful, false otherwise.
     def doit
       begin
         # store current AR conditions
-        @stored_conditions = @table_view.model.cache_table.options
+        @stored_conditions = @table_view.model.cache_table.find_options
         
         # store auto_new
         @auto_new = @table_view.model.auto_new

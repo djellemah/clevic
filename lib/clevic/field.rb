@@ -1,4 +1,6 @@
-require 'gather.rb'
+require 'gather'
+require 'clevic/sampler.rb'
+require 'clevic/generic_format.rb'
 
 module Clevic
 
@@ -35,13 +37,20 @@ method in ModelBuilder, whereas ruby attributes are for the internal workings.
 TODO decide whether value_for type methods take an entity and do_something methods
 take a value.
 
+TODO the xxx_for methods are in here because their return values don't change
+by entity. Well, maybe sometimes they do. Anyway, need to find a better location
+for these and a better caching strategy.
+
 TODO this class is a bit confused about whether it handles metadata or record data, or both.
 
-TODO meta needs to handle virtual fields better. Also is_date_time?
+TODO meta needs to handle virtual fields better.
 =end
 class Field
   # For defining properties
   include Gather
+  
+  # for formatting values
+  include GenericFormat
   
   ##
   # The value to be displayed after being optionally format-ed
@@ -62,11 +71,6 @@ class Field
   ##
   # The label to be displayed in the column headings. Defaults to the humanised field name.
   property :label
-  
-  ##
-  # For relational fields, this is the class_name for the related AR entity.
-  # TODO not used anymore?
-  property :class_name
   
   ##
   # One of the alignment specifiers - :left, :centre, :right or :justified.
@@ -168,6 +172,7 @@ class Field
   # The list of properties for ActiveRecord options.
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected.
   # Each element becomes a property.
+  # TODO remove these? That will destroy the migration path.
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
   
@@ -183,7 +188,8 @@ class Field
     end
   end
   
-  # The UI delegate class for the field. In Qt, this is a subclass of AbstractItemDelegate.
+  # The UI delegate class for the field. The delegate class knows how to create a UI
+  # for this field using whatever GUI toolkit is selected
   attr_accessor :delegate
   
   # The attribute on the AR entity that forms the basis for this field.
@@ -193,13 +199,13 @@ class Field
   # would normally have an _id suffix for relationships.
   attr_accessor :attribute
   
-  # The ActiveRecord::Base subclass this field uses to get data from.
+  # The Object Relational Model this field uses to get data from.
   attr_reader :entity_class
   
   # Create a new Field object that displays the contents of a database field in
   # the UI using the given parameters.
   # - attribute is the symbol for the attribute on the entity_class.
-  # - entity_class is the ActiveRecord::Base subclass which this Field talks to.
+  # - entity_class is the Object Relational Model which this Field talks to.
   # - options is a hash of writable attributes in Field, which can be any of the properties defined in this class.
   def initialize( attribute, entity_class, options, &block )
     # sanity checking
@@ -207,12 +213,7 @@ class Field
       raise "attribute #{attribute.inspect} must be a symbol"
     end
     
-    unless entity_class.ancestors.include?( ActiveRecord::Base )
-      raise "entity_class must be a descendant of ActiveRecord::Base"
-    end
-    
-    # TODO AR dependent
-    unless entity_class.has_attribute?( attribute ) or entity_class.instance_methods.include?( attribute.to_s )
+    unless ( entity_class.is_a?( Clevic.base_entity_class ) and entity_class.has_attribute?( attribute ) ) or entity_class.instance_methods.include?( attribute.to_s )
       msg = <<EOF
 #{attribute} not found in #{entity_class.name}. Possibilities are:
 #{entity_class.attribute_names.join("\n")}
@@ -222,7 +223,7 @@ EOF
     
     # instance variables
     @attribute = attribute
-    # default to attribute
+    # default to attribute, can be overwritten later
     @id = attribute
     @entity_class = entity_class
     @visible = true
@@ -239,9 +240,40 @@ EOF
     default_format!
     default_edit_format!
     default_alignment!
+    default_display! if association?
   end
   
-  # Return the attribute value for the given ActiveRecord entity, or nil
+  # x_to_many fields are by definition collections of other entities
+  def many( &block )
+    if block
+      many_view( &block )
+    else
+      many_view do |mb|
+        # TODO should fetch this from one of the field definitions
+        mb.plain related_attribute
+      end
+    end
+  end
+  
+  def many_builder
+    @many_view.builder
+  end
+  
+  def many_fields
+    many_builder.fields
+  end
+  
+  # return an instance of Clevic::View that represents the many items
+  # for this field
+  def many_view( &block )
+    @many_view ||= View.new( :entity_class => related_class, &block )
+  end
+  
+  # The model object (eg TableModel) this field is part of.
+  # Set to TableModel by ModelBuilder#build
+  attr_accessor :model
+  
+  # Return the attribute value for the given Object Relational Model instance, or nil
   # if entity is nil. Will call transform_attribute.
   def value_for( entity )
     begin
@@ -274,44 +306,20 @@ EOF
   end
   
   # return true if this is a field for a related table, false otherwise.
-  def is_association?
-    meta.type == ActiveRecord::Reflection::AssociationReflection
+  def association?
+    meta.andand.association?
   end
   
-  # Return true if the field is a date, datetime, time or timestamp.
-  # If display is nil, the value is calculated, so we need
-  # to check the value. Otherwise use the field metadata.
-  # Cache the result for the first non-nil value.
-  def is_date_time?( value )
-    if value.nil?
-      false
-    else
-      @is_date_time ||=
-      if display.nil?
-        [:time, :date, :datetime, :timestamp].include?( meta.type )
-      else
-        # it's a virtual field, so we need to use the value
-        value.is_a?( Date ) || value.is_a?( Time )
-      end
-    end
-  end
-  
-  # return ActiveRecord::Base.columns_hash[attribute]
-  # in other words an ActiveRecord::ConnectionAdapters::Column object,
-  # or an ActiveRecord::Reflection::AssociationReflection object
+  # ModelColumn object
   def meta
-    @meta ||= @entity_class.columns_hash[attribute.to_s] || @entity_class.reflections[attribute]
+    entity_class.meta[attribute]
   end
   
   # return the type of this attribute. Usually one of :string, :integer, :float
-  # or some entity class (ActiveRecord::Base subclass)
+  # or some entity class
+  # TODO remove
   def attribute_type
-    @attribute_type ||=
-    if meta.kind_of?( ActiveRecord::Reflection::MacroReflection )
-      meta.klass
-    else
-      meta.type
-    end
+    meta.type
   end
 
   # return true if this field can be used in a filter
@@ -321,19 +329,16 @@ EOF
     !meta.nil?
   end
   
-  # Return the name of the database field for this Field, quoted for the dbms.
-  def quoted_field
-    quote_field( meta.name )
-  end
-  
-  # Quote the given string as a field name for SQL.
-  def quote_field( field_name )
-    @entity_class.connection.quote_column_name( field_name )
-  end
-
   # return the result of the attribute + the path
   def column
     [attribute.to_s, path].compact.join('.')
+  end
+  
+  # return the class object of a related class if this is a relational
+  # field, otherwise nil
+  def related_class
+    return nil unless entity_class.meta.has_key?( attribute )
+    @related_class ||= eval( entity_class.meta[attribute].class_name || attribute.to_s.classify )
   end
   
   # return an array of the various attribute parts
@@ -346,33 +351,6 @@ EOF
   # Return true if the field is read-only. Defaults to false.
   def read_only?
     @read_only || false
-  end
-  
-  # apply format to value. Use strftime for date_time types, or % for everything else.
-  # If format is a proc, pass value to it.
-  def do_generic_format( format, value )
-    begin
-      unless format.nil?
-        if format.is_a? Proc
-          format.call( value )
-        else
-          if is_date_time?( value )
-            value.strftime( format )
-          else
-            format % value
-          end
-        end
-      else
-        value
-      end
-    rescue Exception => e
-      puts "format: #{format.inspect}"
-      puts "value.class: #{value.class.inspect}"
-      puts "value: #{value.inspect}"
-      puts e.message
-      puts e.backtrace
-      nil
-    end
   end
   
   # Called by Clevic::Model to format the display value.
@@ -388,39 +366,27 @@ EOF
   # Return a sample for the field which can be used to size the UI field widget.
   def sample( *args )
     if !args.empty?
-      self.sample = *args
-      return
-    end
-    
-    if @sample.nil?
-      self.sample =
-      case meta.type
-        # max width of 40 chars
-        when :string, :text
-          string_sample( 'n'*40 )
-        
-        when :date, :time, :datetime, :timestamp
-          date_time_sample
-        
-        when :numeric, :decimal, :integer, :float
-          numeric_sample
-        
-        # TODO return a width, or something like that
-        when :boolean; 'W'
-        
-        when ActiveRecord::Reflection::AssociationReflection.class
-          related_sample
-        
+      @sample = args.first
+      self
+    else
+      if @sample.nil?
+        if meta.type == :boolean
+          @sample = self.label
         else
-          puts "#{@entity_class.name}.#{attribute} is a #{meta.type.inspect}"
+          begin
+            @sample ||= Sampler.new( entity_class, attribute, display ) do |value|
+              do_format( value )
+            end.compute
+          rescue
+            puts $!
+          ensure
+            # if we don't know how to figure it out from the data, just return the label size
+            @sample ||= self.label
+          end
+        end
       end
-        
-      #~ if $options && $options[:debug]
-        #~ puts "@sample for #{@entity_class.name}.#{attribute} #{meta.type}: #{@sample.inspect}"
-      #~ end
+      @sample
     end
-    # if we don't know how to figure it out from the data, just return the label size
-    @sample || self.label
   end
   
   # Called by Clevic::TableModel to get the tooltip value
@@ -431,19 +397,6 @@ EOF
   # TODO Doesn't do anything useful yet.
   def decoration_for( entity )
     nil
-  end
-
-  # Convert something that responds to to_s into a Qt::Color,
-  # or just return the argument if it's already a Qt::Color
-  def string_or_color( s_or_c )
-    case s_or_c
-    when NilClass
-      nil
-    when Qt::Color
-      s_or_c
-    else
-      Qt::Color.new( s_or_c.to_s )
-    end
   end
   
   # Called by Clevic::TableModel to get the foreground color value
@@ -489,6 +442,10 @@ EOF
     end
   end
   
+  def inspect
+    "#<Clevic::Field id=#{id.inspect}>"
+  end
+  
 protected
 
   # call the conversion_block with the value, or just return the
@@ -524,108 +481,42 @@ protected
 
   # sensible display format defaults if they're not defined.
   def default_format!
-    if @format.nil?
-      @format =
-      case meta.type
-        when :time; '%H:%M'
-        when :date; '%d-%h-%y'
-        when :datetime; '%d-%h-%y %H:%M:%S'
-        when :decimal, :float; "%.2f"
-      end
+    @format ||=
+    case meta.type
+      when :time; '%H:%M'
+      when :date; '%d-%h-%y'
+      when :datetime; '%d-%h-%y %H:%M:%S'
+      when :decimal, :float; "%.2f"
     end
-    @format
   end
   
   # sensible edit format defaults if they're not defined.
   def default_edit_format!
-    if @edit_format.nil?
-      @edit_format =
-      case meta.type
-        when :date; '%d-%h-%Y'
-        when :datetime; '%d-%h-%Y %H:%M:%S'
-      end || default_format!
-    end
-    @edit_format
+    @edit_format ||=
+    case meta.type
+      when :date; '%d-%h-%Y'
+      when :datetime; '%d-%h-%Y %H:%M:%S'
+    end || default_format!
   end
 
   # sensible alignment defaults if they're not defined.
   def default_alignment!
-    if @alignment.nil?
-      @alignment =
-      case meta.type
-        when :decimal, :integer, :float; :right
-        when :boolean; :centre
-      end
+    @alignment ||=
+    case meta.type
+      when :decimal, :integer, :float; :right
+      when :boolean; :centre
+      else :left
     end
   end
 
-private
+  # try to find a sensible display method
+  def default_display!
+    candidates = %W{#{entity_class.name.downcase} name title username to_s}
+    @display ||= candidates.find do |m|
+      related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
+    end || raise( "Can't find one of #{candidates.inspect} in #{related_class.name}" )
+  end
 
-  def format_result( result_set )
-    unless result_set.size == 0
-      obj = result_set[0][attribute]
-      do_format( obj ) unless obj.nil?
-    end
-  end
-  
-  def string_sample( max_sample = nil, entity_class = @entity_class, field_name = meta.name )
-    statement = <<-EOF
-      select distinct #{quote_field field_name}
-      from #{entity_class.table_name}
-      where
-        length( #{quote_field field_name} ) = (
-          select max( length( #{quote_field field_name} ) )
-          from #{entity_class.table_name}
-        )
-    EOF
-    result_set = @entity_class.connection.execute statement
-    unless result_set.entries.size == 0
-      row = result_set[0]
-      result = 
-      case row
-        when Array
-          row[0]
-        when Hash
-          row.values[0]
-      end
-        
-      if max_sample.nil?
-        result
-      else
-        result.length < max_sample.length ? result : max_sample
-      end
-    end
-  end
-  
-  def date_time_sample
-    result_set = @entity_class.find_by_sql <<-EOF
-      select #{quoted_field}
-      from #{@entity_class.table_name}
-      where #{quoted_field} is not null
-      limit 1
-    EOF
-    format_result( result_set )
-  end
-  
-  def numeric_sample
-    # TODO Use precision from metadata, not for integers,
-    # returns nil for floats. So it's probably not useful
-    #~ puts "meta.precision: #{meta.precision.inspect}"
-    result_set = @entity_class.find_by_sql <<-EOF
-      select max( #{quoted_field} )
-      from #{@entity_class.table_name}
-    EOF
-    format_result( result_set )
-  end
-  
-  def related_sample
-    # TODO this isn't really the right way to do this
-    return nil if meta.nil?
-    if meta.klass.attribute_names.include?( attribute_path[1].to_s )
-      string_sample( nil, meta.klass, attribute_path[1] )
-    end
-  end
-  
 end
 
 end

@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/test_helper'
 require 'clevic/order_attribute.rb'
 
-class Dummy < ActiveRecord::Base
+class Dummy < Sequel::Model
 end
 
 # need to set up a test DB, and test data for this

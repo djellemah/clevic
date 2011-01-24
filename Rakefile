@@ -7,14 +7,17 @@ $hoe = Hoe.new('clevic', Clevic::VERSION::STRING) do |p|
   p.developer('John Anderson', 'panic@semiosix.com')
   p.changes              = p.paragraphs_of("History.txt", 0..1).join("\n\n")
   p.rubyforge_name       = p.name # TODO this is default value
-  p.description          = "SQL table GUI"
+  p.description          = "SQL table GUI with Qt / Java Swing and Sequel"
   p.extra_deps         = [
     ['activesupport','>= 2.0.2'],
-    ['qtext', '>=0.6.5'],
-    ['activerecord', '>=2.0.2'],
     ['fastercsv', '>=1.2.3'],
-    ['gather', '>=0.0.4'],
-    ['facets', '>=2.4.1']
+    ['gather', '>=0.0.6'],
+    ['qtext', '>=0.6.6'],
+    ['hashery', '>=1.3.0'],
+    ['andand', '>= 1.3.0'],
+    ['sequel', '>= 3.8.0'],
+    ['hpricot', '>= 0.8.1'],
+    ['io-like', '>= 0.3.0']
     # This isn't always installed from gems
     #~ ['qtruby4', '>=1.4.9']
     # bsearch can't be installed from gems
@@ -31,6 +34,3 @@ end
 
 require 'newgem/tasks' # load /tasks/*.rake
 Dir['tasks/**/*.rake'].each { |t| load t }
-
-# TODO - want other tests/tasks run by default? Add them to the list
-# task :default => [:spec, :features]

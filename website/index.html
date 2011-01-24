@@ -28,7 +28,11 @@
 
 <div id="main">
 	<h1>Clevic</h1>
-	<p><a href="rdoc">RDoc</a> | <a href="http://rubyforge.org/projects/clevic/">Rubyforge Project</a></p>
+	<p><a href="rdoc">RDoc</a> | <a href="http://rubygems.org/gems/clevic">Rubygems</a> | <a href="http://rubyforge.org/projects/clevic/">Rubyforge Project</a></p>
+<p>Clevic is a toolkit for building GUIs database tables with useful functionality.<br />
+It works with Qt or Java Swing and Sequel.</p>
+<p>An interesting side-effect of this will probably be that<br />
+building form-style GUIs will be possible. Eventually. When the code has been written.</p>
 <p>Screenshot of a fully defined UI with the foreign-key dropdown in place.<br />
 Tabs contain the two tables.</p>
 <p>See <a href="rdoc">RDoc</a> for feature list.<br />
@@ -42,21 +46,17 @@ require 'clevic.rb'
 # see sql/accounts.sql for schema
 
 # db connection
-Clevic::DbOptions.connect do
-  database 'accounts_test'
-  adapter :postgresql
-  username 'accounts'
-end
+Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&amp;password=#{$options[:password]}" )
 
 # minimal definition to get combo boxes to show up
-class Entry &lt; ActiveRecord::Base
+class Entry &lt; Sequel::Model
   include Clevic::Record
-  belongs_to :debit, :class_name =&gt; 'Account', :foreign_key =&gt; 'debit_id'
-  belongs_to :credit, :class_name =&gt; 'Account', :foreign_key =&gt; 'credit_id'
+  many_to_one :debit, :class_name =&gt; 'Account', :foreign_key =&gt; 'debit_id'
+  many_to_one :credit, :class_name =&gt; 'Account', :foreign_key =&gt; 'credit_id'
 end
 
 # minimal definition to get sensible values in combo boxes
-class Account &lt; ActiveRecord::Base
+class Account &lt; Sequel::Model
   include Clevic::Record
   def to_s; name; end
 end
@@ -68,19 +68,18 @@ is found in the table.</p>
 <pre><code>
 require 'clevic.rb'
 
-# db connection
-Clevic::DbOptions.connect( $options ) do
-  # use a different db for testing, so real data doesn't get broken.
-  if options[:database].nil? || options[:database].empty?
-    database( debug? ? :accounts_test : :accounts )
-  else
-    database options[:database]
-  end
-  adapter :postgresql
-  username 'accounts'
+host = ENV['PGHOST'] || 'localhost'
+$options ||= {}
+
+if respond_to?( :'jruby?' ) &amp;&amp; jruby?
+  constring = "jdbc:postgresql://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&amp;password=general"
+  puts "constring: #{constring.inspect}"
+  Sequel.connect( constring )
+else
+  Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&amp;password=general" )
 end
 
-class Entry &lt; ActiveRecord::Base
+class Entry &lt; Sequel::Model
   belongs_to :debit, :class_name =&gt; 'Account', :foreign_key =&gt; 'debit_id'
   belongs_to :credit, :class_name =&gt; 'Account', :foreign_key =&gt; 'credit_id'
   
@@ -88,7 +87,20 @@ class Entry &lt; ActiveRecord::Base
   
   define_ui do
     plain       :date, :sample =&gt; '88-WWW-99'
-    distinct    :description, :conditions =&gt; "now() - date &lt;= '1 year'", :sample =&gt; 'm' * 26
+    distinct    :description do |f|
+      f.conditions "now() - date &lt;= '1 year'"
+      f.sample( 'm' * 26 )
+      f.notify_data_changed = lambda do |entity_view, table_view, model_index|
+        if model_index.entity.credit.nil? &amp;&amp; model_index.entity.debit.nil?
+          entity_view.update_from_description( model_index )
+          
+          # move edit cursor to amount field
+          table_view.selection_model.clear
+          table_view.override_next_index( model_index.choppy( :column =&gt; :amount ) )
+        end
+      end
+    end
+    distinct :supplier
     relational  :debit, :display =&gt; 'name', :conditions =&gt; 'active = true', :order =&gt; 'lower(name)', :sample =&gt; 'Leilani Member Loan'
     relational  :credit, :display =&gt; 'name', :conditions =&gt; 'active = true', :order =&gt; 'lower(name)', :sample =&gt; 'Leilani Member Loan'
     plain       :amount, :sample =&gt; 999999.99
@@ -100,50 +112,32 @@ class Entry &lt; ActiveRecord::Base
     records     :order =&gt; 'date, id'
   end
   
-  # called when data is changed in the UI
-  def self.data_changed( top_left, bottom_right, view )
-    if top_left == bottom_right
-      update_credit_debit( top_left, view )
-    else
-      puts "top_left: #{top_left.inspect}"
-      puts "bottom_right: #{bottom_right.inspect}"
-      puts "can't do data_changed for a range"
-    end
-  end
-  
-  # check that the current field is :descriptions, then
-  # copy the values for the credit and debit fields
-  # from the previous similar entry
-  def self.update_credit_debit( current_index, view )
-    return unless current_index.valid?
-    current_field = current_index.attribute
-    if current_field == :description
-      # most recent entry, ordered in reverse
-      similar = self.find(
-        :first,
-        :conditions =&gt; ["#{current_field} = ?", current_index.attribute_value],
-        :order =&gt; 'date desc'
-      )
-      if similar != nil
-        # set the values
-        current_index.entity.debit = similar.debit
-        current_index.entity.credit = similar.credit
-        current_index.entity.category = similar.category
-        
-        # emit signal to update view from top_left to bottom_right
-        top_left_index = current_index.choppy( :column =&gt; 0 )
-        bottom_right_index = current_index.choppy( :column =&gt; view.model.column_count - 1 )
-        view.dataChanged( top_left_index, bottom_right_index )
-        
-        # move edit cursor to amount field
-        view.selection_model.clear
-        view.override_next_index( current_index.choppy( :column =&gt; view.field_column( :amount ) ) )
+  # Copy the values for the credit and debit fields
+  # from the previous similar entry with a similar description
+  def self.update_from_description( current_index )
+    return if current_index.attribute_value.nil?
+    # most recent entry, ordered in reverse
+    similar = self.adaptor.find(
+      :first,
+      :conditions =&gt; ["#{current_index.attribute} = ?", current_index.attribute_value],
+      :order =&gt; 'date desc'
+    )
+    if similar != nil
+      # set the values
+      current_index.entity.debit = similar.debit
+      current_index.entity.credit = similar.credit
+      current_index.entity.category = similar.category
+      
+      # emit signal to that whole row has changed
+      current_index.model.data_changed do |change|
+        change.top_left = current_index.choppy( :column =&gt; 0 )
+        change.bottom_right = current_index.choppy( :column =&gt; current_index.model.column_count - 1 )
       end
     end
   end
 end
 
-class Account &lt; ActiveRecord::Base
+class Account &lt; Sequel::Model
   has_many :debits, :class_name =&gt; 'Entry', :foreign_key =&gt; 'debit_id'
   has_many :credits, :class_name =&gt; 'Entry', :foreign_key =&gt; 'credit_id'
   

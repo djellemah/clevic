@@ -1,28 +1,7 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-class PopulateCachePassengers < ActiveRecord::Migration
-  def self.up
-    Passenger.create :name => 'John Anderson', :flight => Flight.find_by_number('EK211'), :row => 36, :seat => 'A', :nationality => 'UAE'
-    Passenger.create :name => 'Genie', :flight => Flight.find_by_number('CA001'), :row => 1, :seat => 'A', :nationality => 'Canada'
-    Passenger.create :name => 'Aladdin', :flight => Flight.find_by_number('CA001'), :row => 2, :seat => 'A', :nationality => 'Canada'
-  end
-  
-  def self.down
-    Passenger.delete :all
-  end
-end
-
 # need to set up a test DB, and test data for this
 class TestCacheTable < Test::Unit::TestCase
-  def self.startup
-    PopulateCachePassengers.up
-  end
-  
-  def self.shutdown
-    PopulateCachePassengers.down
-  end
-  
-  
   def setup
     @cache_table = CacheTable.new( Passenger )
   end
@@ -49,8 +28,8 @@ class TestCacheTable < Test::Unit::TestCase
     end
     
     # test cache retrieval
-    (0...Passenger.count).each do |i|
-      assert @cache_table[i] == Passenger.find( :first, :offset => i ), "#{i}th cached record is not #{i}th db record"
+    (0...Passenger.count).each do |offset|
+      assert @cache_table[offset] == Passenger.limit(1,offset).first, "#{offset}th cached record is not #{offset}th db record"
     end
   end
   
@@ -68,15 +47,18 @@ class TestCacheTable < Test::Unit::TestCase
     (0...Passenger.count).each do |i|
       assert !@cache_table.cached_at?(i), "record #{i} should not be cached yet"
     end
+    
+    # force retrieval
     @cache_table[0]
+    
     (0...Passenger.count).each do |i|
       assert @cache_table.cached_at?(i), "#{i}th object should not be nil"
     end
   end
   
   should 'have id as a default order attribute' do
-    oa = OrderAttribute.new( Passenger, 'id' )
-    assert_equal oa, @cache_table.order_attributes[0]
+    oa = OrderAttribute.new( Passenger, :id )
+    assert_equal oa, @cache_table.order_attributes.first
   end
   
   def test_parse_order_attributes
@@ -93,23 +75,27 @@ class TestCacheTable < Test::Unit::TestCase
     
   should 'return nil for an empty set' do
     cache_table = @cache_table.renew( :conditions => "nationality = 'nothing'" )
-    assert_nil cache_table.index_for_entity( Passenger.find( :first ) )
+    assert_nil cache_table.index_for_entity( Passenger.first )
+  end
+  
+  should "filter with related objects" do
+    @cache_table = @cache_table.renew( :conditions => { :flight => Flight.first} )
   end
   
   def test_index_for_entity
     # test in ascending order
-    first_passenger = Passenger.find :first
+    first_passenger = Passenger.first
     index = @cache_table.index_for_entity( first_passenger )
     assert_equal 0, index, 'first passenger should have an index of 0'
     
     # test in descending order
     @cache_table = @cache_table.renew( :order => 'id desc' )
-    last_passenger = Passenger.find :first, :order => 'id desc'
+    last_passenger = Passenger.order( :id.desc ).first
     assert_equal 0, @cache_table.index_for_entity( last_passenger ), "last passenger in reverse order should have an index of 0"
     
     # test with two order fields
     @cache_table = @cache_table.renew( :order => 'nationality, row' )
-    passenger = Passenger.find :first, :order => 'nationality, row'
+    passenger = Passenger.order( :nationality, :row ).first
     assert_equal 0, @cache_table.index_for_entity( passenger ), "passenger in (nationality, row) order should have an index of 0"
   end
 end

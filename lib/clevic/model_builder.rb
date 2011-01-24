@@ -1,9 +1,7 @@
-require 'activerecord'
-require 'facets/dictionary'
+# TODO not needed for 1.9
+require 'hashery/orderedhash'
 
 require 'clevic/table_model.rb'
-require 'clevic/delegates.rb'
-require 'clevic/text_delegate.rb'
 require 'clevic/cache_table.rb'
 require 'clevic/field.rb'
 
@@ -21,29 +19,28 @@ you need it.
 
 To that end, there are 2 ways to define UIs:
 
-- an Embedded View as part of the ActiveRecord object (which is useful if you 
+- an Embedded View as part of the model (Sequel::Model) object (which is useful if you 
   want minimal framework overhead). Just show me the data, dammit.
 
 - a Separate View in a separate class (which is useful when you want several 
   diffent views of the same underlying table). I want a neato-nifty UI that does
   (relatively) complex things.
 
-I've tried to consistently refer to an instance of an ActiveRecord::Base subclass
-as an 'entity'.
+I've tried to consistently refer to an instance of an Sequel::Model subclass as an 'entity'.
 
 ==Embedded View
 Minimal embedded definition is
 
-  class Position < ActiveRecord::Base
+  class Position < Sequel::Model
     include Clevic::Record
   end
 
 which will build a fairly sensible default UI from the
 entity's metadata. Obviously you can use open classes to do
 
-  class Position < ActiveRecord::Base
-    has_many :transactions
-    belong_to :account
+  class Position < Sequel::Model
+    one_to_many :transactions
+    many_to_one :account
   end
 
   class Position
@@ -53,7 +50,7 @@ entity's metadata. Obviously you can use open classes to do
 A full-featured UI for an entity called Entry (part of an accounting database)
 could be defined like this:
 
-  class Entry < ActiveRecord::Base
+  class Entry < Sequel::Model
     belongs_to :invoice
     belongs_to :activity
     belongs_to :project
@@ -210,7 +207,7 @@ could be defined like this:
 To define a separate ui class, do something like this:
   class Prospect < Clevic::View
     
-    # This is the ActiveRecord::Base descendant
+    # This is the Sequel::Model descendant
     entity_class Position
     
     # This must return a ModelBuilder instance, which is made easier
@@ -292,7 +289,7 @@ definition from somewhere else. It may go away and be replaced by remove.
 The attribute symbol is required, and is the first parameter after the field type. It must refer
 to a method already defined in the entity. In other words any of:
 - a db column
-- a relationship (belongs_to, has_many, etc)
+- a relationship (one_to_many, etc)
 - a plain method that takes no parameters.
 
 will work. Named scopes might also work, but I haven't tried them yet.
@@ -317,7 +314,7 @@ See Clevic::Field properties for available options.
 
 === Menu Items
 
-You can define view/model specific actions ( an Action is Qt talk for menu items and shortcuts).
+You can define view/model specific menu items.
 These will be added to the Edit menu, show up on context-click in the table
 display, and can have optional keyboard shortcuts:
 
@@ -368,11 +365,14 @@ class ModelBuilder
   
   # Create a definition for entity_view (subclass of Clevic::View).
   # Then execute block using self.instance_eval.
+  # entity_view must respond to entity_class, and if title is called, it
+  # must respond to title.
   def initialize( entity_view, &block )
     @entity_view = entity_view
     @auto_new = true
     @read_only = false
-    @fields = Dictionary.new
+    # TODO not needed for 1.9
+    @fields = OrderedHash.new
     exec_ui_block( &block )
   end
   
@@ -401,7 +401,8 @@ class ModelBuilder
   # The collection of Clevic::Field instances where visible == true.
   # the visible may go away.
   def fields
-    @fields.reject{|id,field| !field.visible}
+    #~ @fields.reject{|id,field| !field.visible}
+    @fields
   end
   
   # return the index of the named field in the collection of fields.
@@ -411,7 +412,7 @@ class ModelBuilder
     retval
   end
   
-  # The ActiveRecord::Base subclass
+  # The ORM class
   def entity_class
     @entity_view.entity_class
   end
@@ -428,18 +429,29 @@ class ModelBuilder
   
   # should this table automatically show a new blank record?
   def auto_new?; @auto_new; end
+  
+  # DSL for changing the title
+  def title( value )
+    entity_view.title = value
+  end
 
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {}, &block )
     read_only_default!( attribute, options )
-    @fields[attribute] = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    
+    # plain_delegate will be defined in a framework-specific file.
+    # This is becoming a kind of poor man's inheritance. I don't
+    # think I like that.
+    field.delegate = plain_delegate( field )
+    @fields[attribute] = field
   end
   
   # an ordinary field like plain, except that a larger edit area can be used
   def text( attribute, options = {}, &block )
     read_only_default!( attribute, options )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    field.delegate = TextDelegate.new( nil, field )
+    field.delegate = TextAreaDelegate.new( field )
     @fields[attribute] = field
   end
   
@@ -447,7 +459,7 @@ class ModelBuilder
   # a combo box containing all values for this field from the table.
   def distinct( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    field.delegate = DistinctDelegate.new( nil, field )
+    field.delegate = DistinctDelegate.new( field )
     @fields[attribute] = field
   end
   
@@ -461,7 +473,7 @@ class ModelBuilder
       field.format ||= lambda{|x| field.set[x]}
     end
     
-    field.delegate = SetDelegate.new( nil, field )
+    field.delegate = SetDelegate.new( field )
     @fields[attribute] = field
   end
 
@@ -470,23 +482,37 @@ class ModelBuilder
     options[:restricted] = true
     combo( attribute, options, &block )
   end
-
-  # for foreign keys. Edited with a combo box using values from the specified
+  
+  # For many_to_one relationships.
+  # Edited with a combo box using values from the specified
   # path on the foreign key model object
   # if options[:format] has a value, it's used either as a block
   # or as a dotted path
   def relational( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    if field.class_name.nil?
-      field.class_name = entity_class.reflections[attribute].class_name || attribute.to_s.classify
-    end
+    field.delegate = RelationalDelegate.new( field )
+    @fields[attribute] = field
+  end
+  
+  def tags( attribute, options = {}, &block )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
     
-    # check after all possible options have been collected
-    raise ":display must be specified" if field.display.nil?
-    field.delegate = RelationalDelegate.new( nil, field )
+    # build a collection setter if necessary
+    unless entity_class.instance_methods.include? "#{attribute}="
+      raise NotImplementedError, "Need to build a collection setter for '#{attribute}='"
+    end
+  
+    field.delegate = TagDelegate.new( field )
     @fields[attribute] = field
   end
 
+  # force a checkbox
+  def check( attribute, options = {}, &block )
+    read_only_default!( attribute, options )
+    field = @fields[attribute] = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    field.delegate = BooleanDelegate.new( field )
+  end
+  
   # mostly used in the new block to define the set of records
   # for the TableModel, but may also be
   # used as an accessor for records.
@@ -508,7 +534,7 @@ class ModelBuilder
   # as editable in the table. Any belongs_to relations are used to build
   # combo boxes. Default ordering is the primary key.
   # Subscriber is already defined elsewhere as a subclass
-  # of ActiveRecord::Base:
+  # of an ORM class ie Sequel::Model:
   #   class Subscriber
   #     include Clevic::Record
   #     define_ui do
@@ -524,51 +550,26 @@ class ModelBuilder
   # * :name
   # * :title
   # * :username
+  # * :to_s
   def default_ui
-    # combine reflections and attributes into one set
-    reflections = entity_class.reflections.keys.map{|x| x.to_s}
-    ui_columns = entity_class.columns.reject{|x| x.name == entity_class.primary_key }.map do |column|
-      # TODO there must be a better way to do this
-      att = column.name.gsub( /_id$/, '' )
-      if reflections.include?( att )
-        att
-      else
-        column.name
-      end
-    end
-    
     # don't create an empty record, because sometimes there are
     # validations that will cause trouble
     auto_new false
     
     # build columns
-    ui_columns.each do |column|
-      if entity_class.reflections.has_key?( column.to_sym )
-        begin
-          reflection = entity_class.reflections[column.to_sym]
-          if reflection.class == ActiveRecord::Reflection::AssociationReflection
-            related_class = reflection.class_name.constantize
-            
-            # try to find a sensible display class. Default to to_s
-            display_method =
-            %w{#{entity_class.name} name title username}.find( lambda{ 'to_s' } ) do |m|
-              related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
-            end
-            
-            # set the display method
-            relational column.to_sym, :display => display_method
-          else
-            plain column.to_sym
-          end
-        rescue
-          puts $!.message
-          puts $!.backtrace
-          # just do a plain
-          puts "Doing plain for #{entity_class}.#{column}"
-          plain column.to_sym
+    entity_class.attributes.each do |column,model_column|
+      begin
+        if model_column.association?
+          relational column
+        else
+          plain column
         end
-      else
-        plain column.to_sym
+      rescue
+        puts $!.message
+        puts $!.backtrace
+        # just do a plain
+        puts "Doing plain for #{entity_class}.#{column}"
+        plain column
       end
     end
     records :order => entity_class.primary_key
@@ -581,22 +582,27 @@ class ModelBuilder
   
   # This takes all the information collected
   # by the other methods, and returns a new TableModel
-  # with the given table_view as its parent.
-  def build( table_view )
+  # with the given parent (usually a TableView) as its parent.
+  def build( parent )
     # build the model with all it's collections
     # using @model here because otherwise the view's
     # reference to this very same model is garbage collected.
-    @model = Clevic::TableModel.new( table_view )
+    @model = Clevic::TableModel.new
     @model.builder = self
     @model.entity_view = entity_view
     @model.fields = @fields.values
     @model.read_only = @read_only
     @model.auto_new = auto_new?
     
-    # setup model
-    table_view.object_name = @object_name
-    # set parent for all delegates
-    fields.each {|id,field| field.delegate.parent = table_view unless field.delegate.nil? }
+    # set view name
+    parent.object_name = @object_name if parent.respond_to? :object_name
+    
+    # set UI parent for all delegates
+    # and model for each field
+    fields.each do |id,field|
+      field.delegate.parent = parent unless field.delegate.nil?
+      field.model = @model
+    end
     
     # the data
     @model.collection = records
@@ -605,19 +611,6 @@ class ModelBuilder
   end
   
 protected
-
-  # Add ActiveRecord :include options for foreign keys, but it takes up too much memory,
-  # and actually takes longer to load a data set.
-  #--
-  # TODO ActiveRecord-2.1 has smarter includes
-  def add_include_options
-    fields.each do |id,field|
-      if field.delegate.class == RelationalDelegate
-        @options[:include] ||= []
-        @options[:include] << field.attribute
-      end
-    end
-  end
 
   # set a sensible read-only value if it isn't already specified in options
   def read_only_default!( attribute, options )
@@ -634,8 +627,7 @@ protected
         
       when entity_class.reflections.include?( attribute )
         # one-to-one relationships can be edited. many-to-one certainly can't
-        reflection = entity_class.reflections[attribute]
-        reflection.macro != :has_one
+        entity_class.meta[attribute].type != :many_to_one
         
       when entity_class.instance_methods.include?( attribute.to_s )
         # read-only if there's no setter for the attribute
@@ -663,7 +655,6 @@ protected
   # Called by records( *args )
   def get_records
     if @records.nil?
-      #~ add_include_options
       @records = CacheTable.new( entity_class, @find_options )
     end
     @records
