@@ -1,4 +1,5 @@
 use Sequel::Dataset for filtering instead of find options
+can't use find on certain fields, ie code in adjustments
 
 export to CSV
 Accounts not landing after Ditto with auto-fill-in
