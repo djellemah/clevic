@@ -584,8 +584,10 @@ class TableView
   # or entity_model. Return nil if no match found.
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
-  def find_table_view( entity_model_or_view )
-    raise "framework responsibility"
+  unless instance_methods.include?( 'find_table_view' )
+    def find_table_view( entity_model_or_view )
+      raise "framework responsibility"
+    end
   end
   
   # execute the block with the TableView instance
@@ -593,15 +595,19 @@ class TableView
   # Don't execute the block if nothing is found.
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
-  def with_table_view( entity_model_or_view, &block )
-    raise "framework responsibility"
+  unless instance_methods.include?( 'with_table_view' )
+    def with_table_view( entity_model_or_view, &block )
+      raise "framework responsibility"
+    end
   end
   
   # make this window visible if it's in a TabWidget
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
-  def raise_widget
-    raise "framework responsibility"
+  unless instance_methods.include?( 'raise_widget' )
+    def raise_widget
+      raise "framework responsibility"
+    end
   end
   
   # set next_index for certain operations. Is only activated when
