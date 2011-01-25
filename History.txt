@@ -1,3 +1,6 @@
+== 0.13.0.b3
+* Squash various buglets as they're found.
+
 == 0.13.0
 * Now has Java Swing support with JRuby
 * new code works with qt4-qtruby-2.0.3
