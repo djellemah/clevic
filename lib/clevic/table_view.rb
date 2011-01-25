@@ -482,7 +482,7 @@ class TableView
   def filter_by_options( args )
     filtered.undo if filtered?
     self.filtered = FilterCommand.new( self, [], args )
-    emit filter_status( filtered.doit )
+    emit_filter_status( filtered.doit )
   end
   
   # Save the current entity, do something, then restore

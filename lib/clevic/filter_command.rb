@@ -1,5 +1,7 @@
 module Clevic
   class FilterCommand
+    # TODO seems like either filter_indexes, filter_conditions can be
+    # passed. Better docs needed, and better api.
     def initialize( table_view, filter_indexes, filter_conditions )
       @table_view = table_view
       @filter_conditions = filter_conditions
@@ -7,7 +9,12 @@ module Clevic
       
       # Better make the status message now, before the indexes become invalid
       @status_message =
-      "Filtered on #{filter_indexes.first.field.label} = #{filter_indexes.first.display_value}"
+      if filter_indexes.empty?
+        # no indexes, so use filter_conditions.
+        "Filtered on #{filter_conditions.inspect}"
+      else
+        "Filtered on #{filter_indexes.first.field.label} = #{filter_indexes.first.display_value}"
+      end
     end
     
     # Do the filtering. Return true if successful, false otherwise.
