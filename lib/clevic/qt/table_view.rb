@@ -348,7 +348,7 @@ class TableView < Qt::TableView
   
   # make this window visible if it's in a TabWidget
   # TODO doesn't really belong here because TableView will not always
-  # be in a TabWidget context.
+  # be in a TabWidget context. Should emit a signal which is a request to raise
   def raise_widget
     # the tab's parent is a StackedWiget, and its parent is TabWidget
     tab_widget = parent.parent
