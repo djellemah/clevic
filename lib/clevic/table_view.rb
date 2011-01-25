@@ -312,7 +312,7 @@ class TableView
   end
   
   def selected_rows_or_current
-    indexes_or_current( selection_model.row_indexes )
+    indexes_or_current( selection_model.row_indexes.map{|row| model.create_index( row, 0 ) } )
   end
   
   # alternative access for auto_size_column
