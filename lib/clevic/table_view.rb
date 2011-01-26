@@ -70,10 +70,10 @@ class TableView
       yield
     end
     
-    rescue Exception => e
-      puts
-      puts "#{model.entity_view.class.name}: #{e.message}"
-      puts e.backtrace
+  rescue Exception => e
+    puts
+    puts "#{model.entity_view.class.name}: #{e.message}"
+    puts e.backtrace
   end
   
   
