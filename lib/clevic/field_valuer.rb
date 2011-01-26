@@ -26,13 +26,19 @@ module Clevic
       self.attribute_value =
       case
         # allow flexibility in entering dates. For example
-        # 16jun, 16-jun, 16 jun, 16 jun 2007 would be accepted here
-        # TODO need to be cleverer about which year to use
-        # for when you're entering 16dec and you're in the next
-        # year
+        # 16jun, 16-jun, 16/jun would be accepted here.
+        # Previous year is used  if data capture is in January
+        # or February, and date.month is aug-dec.
         when [:date,:datetime].include?( field.meta.type ) && value =~ %r{^(\d{1,2})[ /-]?(\w{3})$}
-          Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
-        
+          today = Date.today
+          date = Date.parse( "#$1 #$2 #{Time.now.year.to_s}" )
+          
+          # change year to last year
+          if (1..2).include?( today.month ) and (8..12).include?( date.month )
+            date = Date.civil( Date.today.year - 1, date.month, date.day )
+          end
+          date
+          
         # if a digit only is entered, fetch month and year from
         # previous row
         when [:date,:datetime].include?( field.meta.type ) && value =~ %r{^(\d{1,2})$}
@@ -44,8 +50,10 @@ module Clevic
             value
           end
         
-        # this one is mostly to fix date strings that have come
+        # Mostly to fix date strings that have come
         # out of the db and been formatted
+        # Accepts dd mmm yy.
+        # Assumes 20 as the century.
         when [:date,:datetime].include?( field.meta.type ) && value =~ %r{^(\d{2})[ /-](\w{3})[ /-](\d{2})$}
           Date.parse( "#$1 #$2 20#$3" )
         
@@ -60,6 +68,7 @@ module Clevic
           # do various transforms
           case
             # accept a space or a comma instead of a . for floats
+            # as long as there are only 2 decimal places
             when value =~ /(.*?)(\d)[ ,](\d{2})$/
               "#$1#$2.#$3"
             else
