@@ -558,7 +558,11 @@ class TableView
     
     # create a new index and move to it
     unless found_row.nil?
-      column = model.field_column( column ) if column.is_a? Symbol
+      if column.is_a? Symbol
+        column = model.field_column( column )
+      else
+        raise "column #{column} does not exist" if column >= model.fields.size
+      end
       selection_model.clear
       self.current_index = model.create_index( found_row, column || 0 )
     end
