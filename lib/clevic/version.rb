@@ -3,8 +3,8 @@ module Clevic #:nodoc:
     MAJOR = 0
     MINOR = 13
     TINY  = 0
-    PRE   = 'b3'
+    PRE   = 'b4'
 
-    STRING = [MAJOR, MINOR, TINY, PRE].join('.')
+    STRING = [MAJOR, MINOR, TINY, PRE].compact.join('.')
   end
 end
