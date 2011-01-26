@@ -35,7 +35,15 @@ module ActionBuilder
       unless block.nil?
         action_triggered do
           qt_action.connect SIGNAL( signal_name ) do |active|
-            yield( active )
+            # need this rescue here because otherwise Qt
+            # doesn't catch it and the whole app comes down
+            begin
+              yield( active )
+            rescue
+              # TODO how to display this in the UI?
+              puts $!.message
+              puts $!.backtrace
+            end
           end
         end
       end

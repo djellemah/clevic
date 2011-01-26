@@ -160,6 +160,9 @@ protected
   unless instance_methods.include?( :action_triggered )
     def action_triggered( &someblock )
       yield
+    rescue
+      puts $!.message
+      puts $!.backtrace
     end
   end
   
