@@ -479,7 +479,11 @@ class TableView
     filter_by_indexes( selection_or_current )
   end
   
+  # This is used by entity view classes.
+  # Keep it as a compatibility / deprecated option?
   def filter_by_options( args )
+    puts "#{self.class.name}#filter_by_options is deprecated"
+    raise "not moved to datasets yet"
     filtered.undo if filtered?
     self.filtered = FilterCommand.new( self, [], args )
     emit_filter_status( filtered.doit )

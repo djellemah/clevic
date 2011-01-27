@@ -140,9 +140,9 @@ class TableModel
     emit_data_error( index, nil, $!.message )
   end
   
-  def reload_data( options = nil )
+  def reload_data( &dataset_block )
     # renew cache. All records will be dropped and reloaded.
-    self.collection = self.cache_table.renew( options )
+    self.collection = self.cache_table.renew( &dataset_block )
     # tell the UI we had a major data change
     reset
   end
@@ -151,9 +151,8 @@ class TableModel
   # at the moment this only returns the first index found
   # TODO could handle dataset creation better
   def search( start_index, search_criteria )
-    ordered_dataset = entity_class.dataset.order( *cache_table.order_attributes.map{|oa| oa.attribute.to_sym.send( oa.direction ) } )
     searcher = TableSearcher.new(
-      ordered_dataset,
+      cache_table.dataset,
       search_criteria,
       start_index.field
     )
