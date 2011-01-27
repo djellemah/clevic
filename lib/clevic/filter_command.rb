@@ -2,11 +2,13 @@ module Clevic
   class FilterCommand
     # filter_block will be passed a Dataset to filter.
     # filter_message will be displayed.
-    def initialize( table_view, filter_message, &filter_block )
+    def initialize( table_view, message, &filter_block )
       @table_view = table_view
-      @filter_message = filter_message
+      @message = message
       @filter_block = filter_block
     end
+    
+    attr_reader :message
     
     # Do the filtering. Return true if successful, false otherwise.
     def doit
@@ -33,11 +35,6 @@ module Clevic
       
       # reload cache table with stored AR conditions
       @table_view.model.reload_data( @previous_dataset )
-    end
-    
-    # return a message based on the conditions
-    def status_message
-      @status_message
     end
   end
 end

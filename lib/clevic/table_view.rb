@@ -10,9 +10,13 @@ module Clevic
 class TableView
   include ActionBuilder
   
-  # the current filter command
-  attr_accessor :filtered
-  def filtered?; !@filtered.nil?; end
+  # the current stack of filter commands
+  def filters
+    @filtered ||= []
+  end
+  attr_writer :filters
+  
+  def filtered?; !filters.empty?; end
   
   # Called from the gui-framework adapter code in this class
   # arg is:
@@ -117,6 +121,7 @@ class TableView
       action :action_find, '&Find', :shortcut => 'Ctrl+F', :method => :find
       action :action_find_next, 'Find &Next', :shortcut => 'Ctrl+G', :method => :find_next
       action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
+      action :action_unfilter, '&Un-Filter', :enabled => false, :shortcut => 'Ctrl+K', :method => :unfilter
       action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
     end
   end
@@ -506,54 +511,65 @@ class TableView
     
     retval
   end
+  
+  def unfilter
+    restore_entity do
+      filters.pop.undo
+    end
+    update_filter_status_bar
+  end
+  
+  def unfilter_action
+    search_actions.find{|a| a.object_name == 'action_unfilter' }
+  end
 
+  # update status bar with a message of all filters concatenated
+  def update_filter_status_bar
+    if filters.empty?
+      emit_status_text( nil ) 
+      emit_filter_status( false )
+      unfilter_action.enabled = false
+    else
+      emit_status_text( "Filter: " + filters.map( &:message ).join(' / ') )
+      emit_filter_status( true )
+      unfilter_action.enabled = true
+    end
+  end
+  
   # Filter by the value in the current index.
   # indexes is a collection of TableIndex instances
   def filter_by_indexes( indexes )
     case
-      when filtered?
-        # unfilter
-        restore_entity do
-          filtered.undo
-          self.filtered = nil
-          # update status bar
-          emit_status_text( nil )
-          emit_filter_status( false )
-        end
-        
-      when indexes.empty?
-        emit_status_text( "No field selected for filter" )
-        
-      when !indexes.first.field.filterable?
-        emit_status_text( "Can't filter on #{indexes.first.field.label}" )
+    when indexes.empty?
+      emit_status_text( "No field selected for filter" )
       
-      when indexes.size > 1
-        emit_status_text( "Can't do multiple selection filters yet" )
+    when !indexes.first.field.filterable?
+      emit_status_text( "Can't filter on #{indexes.first.field.label}" )
+    
+    when indexes.size > 1
+      emit_status_text( "Can't do multiple selection filters yet" )
+    
+    when indexes.first.entity.new_record?
+      emit_status_text( "Can't filter on a new row" )
       
-      when indexes.first.entity.new_record?
-        emit_status_text( "Can't filter on a new row" )
-        
-      else
-        message = "Filtered on #{indexes.first.field_name} = #{indexes.first.field_value}."
-        
-        # clean this up and make it work AND for multiple columns, OR for multiple rows
-        self.filtered = FilterCommand.new( self, message) do |dataset|
-          indexes.first.field.with do |field|
-            if field.association?
-              dataset.filter( field.meta.keys => indexes.first.attribute_value.pk )
-            else
-              dataset.filter( indexes.first.field_name.to_sym => indexes.first.raw_value )
-            end
+    else
+      message = "#{indexes.first.field_name} = #{indexes.first.display_value}"
+      
+      # clean this up and make it work AND for multiple columns, OR for multiple rows
+      self.filters << FilterCommand.new( self, message) do |dataset|
+        indexes.first.field.with do |field|
+          if field.association?
+            dataset.filter( field.meta.keys => indexes.first.attribute_value.pk )
+          else
+            dataset.filter( indexes.first.field_name.to_sym => indexes.first.attribute_value )
           end
         end
-        
-        # try to end up on the same entity, even after the filter
-        restore_entity do
-          emit_filter_status( filtered.doit )
-        end
-        
-        # update status bar
-        emit_status_text( filtered.status_message )
+      end
+      
+      # try to end up on the same entity, even after the filter
+      restore_entity { filters.last.doit }
+      
+      update_filter_status_bar
     end
     filtered?
   end
