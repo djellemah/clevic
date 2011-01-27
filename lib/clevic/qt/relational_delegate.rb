@@ -11,13 +11,10 @@ module Clevic
 class RelationalDelegate < ComboDelegate
   def initialize( field )
     super
-    unless find_options[:conditions].nil?
-      find_options[:conditions].gsub!( /true/, field.related_class.adaptor.quoted_true )
-      find_options[:conditions].gsub!( /false/, field.related_class.adaptor.quoted_false )
-    end
   end
   
   def needs_combo?
+    raise "don't use find_options anymore"
     field.related_class.count( :conditions => find_options[:conditions] ) > 0
   end
   
