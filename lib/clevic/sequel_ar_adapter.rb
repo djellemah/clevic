@@ -123,6 +123,7 @@ end
 module Sequel
   class Model
     class << self
+      # for translating class methods for relations
       def translate_options( options )
         options[:key] = options[:foreign_key].andand.to_sym
         options.delete( :foreign_key )
@@ -148,18 +149,6 @@ module Sequel
         else
           one_to_many( name, translate_options( options ), &block )
         end
-      end
-      
-      def table_exists?
-        db.table_exists?( implicit_table_name )
-      end
-      
-      def column_names
-        columns
-      end
-      
-      def reflections
-        association_reflections 
       end
       
       def has_attribute?( attribute )

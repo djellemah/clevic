@@ -6,7 +6,10 @@ module Clevic
   end
 end
 
-require 'clevic/sequel_ar_adapter.rb'
+# TODO should this really be here?
+# There are other inflection gems.
+require 'active_support/inflector.rb'
+
 require 'clevic/sequel_length_validation.rb'
 require 'clevic/record.rb'
 require 'clevic/view.rb'

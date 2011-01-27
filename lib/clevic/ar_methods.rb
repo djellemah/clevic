@@ -48,7 +48,20 @@ module Sequel
                 dataset.limit( options[:limit] || :all, value )
               
               when :order
-                dataset.order( lit_if_string( value ) )
+                orders = value.split(/, */ ).map do |x|
+                  case x
+                  when /(\w+) +(asc|desc)/i
+                    $1.to_sym.send( $2 )
+                    
+                  when /(\w+)/i
+                    x.to_sym
+                  
+                  else
+                    raise "Don't know how to convert #{value} to Sequel. Use a Dataset instead."
+                  end
+                end
+                puts "orders: #{orders.inspect}"
+                dataset.order( *orders )
               
               when :conditions
                 # this is most likely not adequate for all use cases

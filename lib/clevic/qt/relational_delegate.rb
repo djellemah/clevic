@@ -44,7 +44,7 @@ class RelationalDelegate < ComboDelegate
 
   def populate( editor, model_index )
     # add set of all possible related entities
-    field.related_class.adaptor.find( :all, find_options ).each do |x|
+    field.related_class.find_ar( :all, find_options ).each do |x|
       add_to_list( editor, model_index, x )
     end
   end
@@ -78,7 +78,7 @@ class RelationalDelegate < ComboDelegate
       # get the entity it refers to, if there is one
       # use find_by_id so that if it's not found, nil will
       # be returned
-      field.related_class.adaptor.find( item_data.to_int )
+      field.related_class[ item_data.to_int ]
     end
   end
   
