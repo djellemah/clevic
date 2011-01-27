@@ -516,12 +516,17 @@ class ModelBuilder
   # mostly used in the new block to define the set of records
   # for the TableModel, but may also be
   # used as an accessor for records.
-  def records( args = {} )
+  def dataset( args = {} )
     if args.size == 0
-      get_records
+      get_dataset
     else
-      set_records( args )
+      set_dataset( args )
     end
+  end
+  
+  def records( *args )
+    puts "ModelBuilder#records is deprecated. Use ModelBuilder#dataset instead"
+    dataset( *args )
   end
 
   # Tell this field not to show up in the UI.
@@ -632,6 +637,7 @@ protected
       when entity_class.instance_methods.include?( attribute.to_s )
         # read-only if there's no setter for the attribute
         !entity_class.instance_methods.include?( "#{attribute.to_s}=" )
+        
       else
         # default to not read-only
         false
@@ -642,10 +648,17 @@ protected
   # arg can either be a Hash, in which case a new CacheTable
   # is created, or it can be an array.
   # Called by records( *args )
-  def set_records( arg )
-    if arg.class == Hash
-      # need to defer this until all fields are collected
-      @find_options = arg
+  def set_dataset( arg )
+    case arg
+    when Hash
+      puts "calling ModelBuilder#dataset or ModelBuilder#records with a Hash is deprecated. Use a Sequel::Dataset instead."
+      require 'clevic/sequel_ar_adapter.rb'
+      entity_class.plugin :ar_methods
+      @records = CacheTable.new( entity_class, entity_class.translate( arg ) )
+      
+    when Sequel::Dataset
+      @records = CacheTable.new( entity_class, arg )
+      
     else
       @records = arg
     end
@@ -653,9 +666,10 @@ protected
 
   # Return a collection of records. Usually this will be a CacheTable.
   # Called by records( *args )
-  def get_records
+  def get_dataset
     if @records.nil?
-      @records = CacheTable.new( entity_class, @find_options )
+      # default in case records is not called in the view definition
+      @records = CacheTable.new( entity_class )
     end
     @records
   end
