@@ -18,7 +18,7 @@ class RelationalDelegate < ComboDelegate
   end
   
   def needs_combo?
-    field.related_class.adaptor.count( :conditions => find_options[:conditions] ) > 0
+    field.related_class.count( :conditions => find_options[:conditions] ) > 0
   end
   
   def empty_set_message
