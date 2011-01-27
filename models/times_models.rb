@@ -1,8 +1,8 @@
 # model definitions
 class Entry < Sequel::Model
-  belongs_to :invoice
-  belongs_to :activity
-  belongs_to :project
+  many_to_one :invoice
+  many_to_one :activity
+  many_to_one :project
   
   include Clevic::Record
   
@@ -152,7 +152,7 @@ class Entry < Sequel::Model
 end
 
 class Invoice < Sequel::Model
-  has_many :entries
+  one_to_many :entries
 
   include Clevic::Record
   
@@ -171,7 +171,7 @@ class Invoice < Sequel::Model
 end
 
 class Project < Sequel::Model
-  has_many :entries
+  one_to_many :entries
 
   include Clevic::Record
   
@@ -198,7 +198,7 @@ class Project < Sequel::Model
 end
 
 class Activity < Sequel::Model
-  has_many :entries
+  one_to_many :entries
 
   include Clevic::Record
   
