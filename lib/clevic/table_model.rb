@@ -140,9 +140,9 @@ class TableModel
     emit_data_error( index, nil, $!.message )
   end
   
-  def reload_data( &dataset_block )
+  def reload_data( dataset = nil, &dataset_block )
     # renew cache. All records will be dropped and reloaded.
-    self.collection = self.cache_table.renew( &dataset_block )
+    self.collection = self.cache_table.renew( dataset, &dataset_block )
     # tell the UI we had a major data change
     reset
   end

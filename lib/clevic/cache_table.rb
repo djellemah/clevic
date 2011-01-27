@@ -78,13 +78,23 @@ class CacheTable < Array
   end
   
   # Make a new instance based on the current dataset.
-  # Pass the dataset to the block, and use the return
+  # Unless new_dataset is specified, pass the dataset
+  # to the block, and use the return
   # value from the block as the new dataset.
-  def renew( &block )
+  #
+  # This is so that filter of datasets can be based on the
+  # existing one, but it's easy to go back to previous data
+  # sets if necessary.
+  # TODO write tests for both cases.
+  def renew( new_dataset = nil, &block )
+    if new_dataset && block_given?
+      raise "Passing a new dataset and a modification block doesn't make sense."
+    end
+    
     if block_given?
       self.class.new( entity_class, block.call( dataset ) )
     else
-      self.class.new( entity_class, dataset )
+      self.class.new( entity_class, new_dataset )
     end
   end
   

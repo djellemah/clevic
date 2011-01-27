@@ -485,7 +485,7 @@ class TableView
     puts "#{self.class.name}#filter_by_options is deprecated"
     raise "not moved to datasets yet"
     filtered.undo if filtered?
-    self.filtered = FilterCommand.new( self, [], args )
+    self.filtered = FilterCommand.new( self, [], entity_class.translate( args ) )
     emit_filter_status( filtered.doit )
   end
   
@@ -534,11 +534,24 @@ class TableView
         emit_status_text( "Can't filter on a new row" )
         
       else
-        self.filtered = FilterCommand.new( self, indexes, :conditions => { indexes.first.field_name => indexes.first.field_value } )
+        message = "Filtered on #{indexes.first.field_name} = #{indexes.first.field_value}."
+        
+        # clean this up and make it work AND for multiple columns, OR for multiple rows
+        self.filtered = FilterCommand.new( self, message) do |dataset|
+          indexes.first.field.with do |field|
+            if field.association?
+              dataset.filter( field.meta.keys => indexes.first.attribute_value.pk )
+            else
+              dataset.filter( indexes.first.field_name.to_sym => indexes.first.raw_value )
+            end
+          end
+        end
+        
         # try to end up on the same entity, even after the filter
         restore_entity do
           emit_filter_status( filtered.doit )
         end
+        
         # update status bar
         emit_status_text( filtered.status_message )
     end
