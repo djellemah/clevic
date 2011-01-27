@@ -1,3 +1,5 @@
+require 'clevic/ordered_dataset'
+
 module Clevic
 
 =begin
@@ -6,7 +8,8 @@ criteria will be a starting record, and the search method should return
 the matching record next after this.
 =end
 class TableSearcher
-  attr_reader :dataset, :search_criteria, :field
+  include OrderedDataset
+  attr_reader :search_criteria, :field
   
   # dataset is a Sequel::Dataset, which has an associated Sequel::Model
   # field is an instance of Clevic::Field
@@ -14,15 +17,8 @@ class TableSearcher
   def initialize( dataset, search_criteria, field )
     raise "field must be specified" if field.nil?
     raise "unknown order #{search_criteria.direction}" unless [:forwards, :backwards].include?( search_criteria.direction )
-    raise "dataset has no model" unless dataset.respond_to?( :model )
     
-    # set default dataset ordering if it's not there
-    @dataset =
-    if dataset.opts[:order].nil?
-      dataset.order( dataset.model.primary_key )
-    else
-      dataset
-    end
+    self.dataset = dataset
     
     @search_criteria = search_criteria
     @field = field
@@ -38,12 +34,12 @@ protected
   # return a Sequel expression for the name of the field to use as a comparison
   def search_field_expression
     if field.association?
-      # for related tables
+      raise "display not specified for #{field}" if field.display.nil?
+      
+      # for related table displays as procs
       unless [String,Symbol].include?( field.display.class )
         raise( "search field #{field.inspect} cannot search lambda display" ) 
       end
-      
-      raise "display not specified for #{field}" if field.display.nil?
       
       # TODO this will only work with a path value with no dots
       # otherwise the SQL gets complicated with joins etc
@@ -80,10 +76,10 @@ protected
     dataset.filter( expression => true )
   end
   
-  # return a dataset based on @dataset which filters on search_criteria
+  # return a dataset based on dataset which filters on search_criteria
   def search_dataset( start_entity )
     likes = Array[*search_text_expression].map{|ste| Sequel::SQL::StringExpression.like(search_field_expression, ste, {:case_insensitive=>true})}
-    rv = @dataset.filter( Sequel::SQL::BooleanExpression.new(:OR, *likes ) )
+    rv = dataset.filter( Sequel::SQL::BooleanExpression.new(:OR, *likes ) )
     
     # if we're not searching from the start, we need
     # to find the next match. Which is complicated from an SQL point of view.
@@ -140,23 +136,6 @@ protected
     ['','>','<'][comparator_direction]
   end
   
-  # returns a collection of [ attribute, (1|-1) ]
-  # where 1 is forward/asc (>) and -1 is backward/desc (<)
-  def order_attributes
-    if @order_attributes.nil?
-      @order_attributes =
-      @dataset.opts[:order].map do |order_expr|
-        case order_expr
-          when Symbol; [ order_expr, 1 ]
-          when Sequel::SQL::OrderedExpression; [ order_expr.expression, order_expr.descending ? -1 : 1 ]
-          else
-            raise "unknown order_expr: #{order_expr.inspect}"
-        end
-      end
-    end
-    @order_attributes
-  end
 end
 
 end
-

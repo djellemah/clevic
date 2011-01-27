@@ -1,6 +1,8 @@
-require 'clevic/table_searcher.rb'
-require 'clevic/order_attribute.rb'
+require 'clevic/table_searcher'
+require 'clevic/ordered_dataset'
 require 'bsearch'
+
+module Clevic
 
 =begin rdoc
 Fetch rows from the db on demand, rather than all up front.
@@ -17,77 +19,32 @@ TODO drop rows when they haven't been accessed for a while
 
 TODO how to handle a quickly-changing underlying table? invalidate cache
 for each call?
-
-TODO use Sequel instead of order_attributes
 =end
 class CacheTable < Array
+  
+  include OrderedDataset
+  
   # the number of records loaded in one call to the db
   attr_accessor :preload_count
-  attr_reader :find_options, :entity_class
+  attr_reader :entity_class
   
-  def initialize( entity_class, find_options = {} )
-    @preload_count = 20
-    # must be before sanitise_options
+  def initialize( entity_class, dataset = nil )
+    @preload_count = 30
     @entity_class = entity_class
-    # must be before anything that uses options
-    @find_options = (find_options || {}).clone
-    sanitise_options!
+    # defined in OrderAttributes
+    self.dataset = dataset || entity_class.dataset
     
     # size the array and fill it with nils. They'll be filled
     # in by the [] operator
-    @row_count = sql_count
-    super( @row_count )
+    super( sql_count )
   end
   
   # The count of the records according to the db, which may be different to
   # the records in the cache
   def sql_count
-    entity_class.adaptor.count( find_options.reject{|k,v| k == :order} )
+    dataset.count
   end
   
-  # Return the set of OrderAttribute objects for this collection.
-  # If no order attributes are specified, the primary key will be used.
-  # TODO what about compound primary keys?
-  def order_attributes
-    # This is sorted in @find_options[:order], so use that for the search
-    if @order_attributes.nil?
-      @order_attributes = find_options[:order].to_s.split( /, */ ).map{|x| OrderAttribute.new(@entity_class, x)}
-      
-      # add the primary key if nothing is specified
-      # because we need an ordering of some kind otherwise
-      # index_for_entity will not work
-      unless @order_attributes.any? {|x| x.attribute.to_s == entity_class.primary_key.to_s }
-        @order_attributes << OrderAttribute.new( entity_class, entity_class.primary_key )
-      end
-    end
-    @order_attributes
-  end
-  
-  # add an id to options[:order] if it's not in there
-  # make sure options[:conditions] uses db values rather than objects
-  # ie convert { :debit => DebitObject<...> } to { :debit_id => 5 }
-  def sanitise_options!
-    # make sure we have a string here, even if it's blank
-    # value would be a ,-separated list of order by fields (expressions?)
-    find_options[:order] ||= ''
-    
-    # recreate the options[:order] entry to include default
-    find_options[:order] = order_attributes.map{|x| x.to_sql}.join(',')
-    
-    # make sure objects are converted to ids
-    if find_options.has_key?( :conditions ) && find_options[:conditions].is_a?( Hash )
-      conditions = find_options[:conditions].map do |key,value|
-        metadata = entity_class.meta[key]
-        if metadata.association?
-          [metadata.key, value.send( value.primary_key )]
-        else
-          [key,value]
-        end
-      end
-      find_options[:conditions] = Hash[ *conditions.flatten ]
-    end
-  end
-
   # Execute the block with the specified preload_count,
   # and restore the existing one when done.
   # Return the value of the block
@@ -104,14 +61,14 @@ class CacheTable < Array
   # hits on the db
   def fetch_entity( index )
     # calculate negative indices for the SQL offset
-    offset = index < 0 ? index + @row_count : index
+    offset = index < 0 ? index + sql_count : index
     
     # fetch self.preload_count records
-    records = entity_class.adaptor.find( :all, find_options.merge( :offset => offset, :limit => preload_count ) )
+    records = dataset.limit( preload_count, offset )
     records.each_with_index {|x,i| self[i+index] = x if !cached_at?( i+index )}
     
     # return the first one
-    records[0]
+    records.first
   end
   
   # return the entity at the given index. Fetch it from the
@@ -120,11 +77,15 @@ class CacheTable < Array
     super( index ) || fetch_entity( index )
   end
   
-  # make a new instance that has the attributes of this one, but an empty
-  # data set. pass in ActiveRecord options to filter.
-  def renew( args = nil )
-    clear
-    self.class.new( entity_class, args || find_options )
+  # Make a new instance based on the current dataset.
+  # Pass the dataset to the block, and use the return
+  # value from the block as the new dataset.
+  def renew( &block )
+    if block_given?
+      self.class.new( entity_class, block.call( dataset ) )
+    else
+      self.class.new( entity_class, dataset )
+    end
   end
   
   # key is what we're searching for. candidate
@@ -165,14 +126,12 @@ class CacheTable < Array
       bsearch do |candidate|
         # find using all sort attributes
         order_attributes.inject(0) do |result,attribute|
-          # value from the block should be in [-1,0,1],
+          # result from the block should be in [-1,0,1],
           # similar to candidate <=> entity
+          key, direction = attribute
           if result == 0
-            # they're equal, so compare attribute values
-            method = attribute.attribute.to_sym
-            
             # compare taking ordering direction into account
-            retval = compare( entity.send( method ), candidate.send( method ), attribute.to_i )
+            retval = compare( entity.send( key ), candidate.send( key ), direction )
             
             # exit now because we have a difference
             next( retval ) if retval != 0
@@ -187,6 +146,8 @@ class CacheTable < Array
       end
     end
   end
+end
+
 end
 
 # This is part of Array in case the programmer wants to use
