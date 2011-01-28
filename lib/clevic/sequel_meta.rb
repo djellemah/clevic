@@ -15,19 +15,6 @@ module Sequel
       end
       
       module ClassMethods
-        # Copy the necessary class instance variables to the subclass.
-        def inherited(subclass)
-          super
-          #~ store = @cache_store
-          #~ ttl = @cache_ttl
-          #~ cache_ignore_exceptions = @cache_ignore_exceptions
-          #~ subclass.instance_eval do
-            #~ @cache_store = store
-            #~ @cache_ttl = ttl
-            #~ @cache_ignore_exceptions = cache_ignore_exceptions
-          #~ end
-        end
-        
         def meta
           if @meta.nil?
             @meta = {}
@@ -55,22 +42,6 @@ module Sequel
           end
         end
 
-        # This doesn't really belong here, but I don't want to make 
-        # a whole new plugin.
-        def table_exists?
-          db.table_exists?( implicit_table_name )
-        end
-        
-        # Hmm, maybe these need to go in a different plugin
-        def column_names
-          columns
-        end
-        
-        # Getting heavy enough, yet?
-        def reflections
-          association_reflections 
-        end
-        
       end
       
       module InstanceMethods
