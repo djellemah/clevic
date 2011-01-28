@@ -94,7 +94,7 @@ class CacheTable < Array
     if block_given?
       self.class.new( entity_class, block.call( dataset ) )
     else
-      self.class.new( entity_class, new_dataset )
+      self.class.new( entity_class, new_dataset || dataset )
     end
   end
   
