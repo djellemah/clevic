@@ -101,12 +101,8 @@ class TableModel < Qt::AbstractTableModel
           when Qt::Horizontal
             labels[section]
           when Qt::Vertical
-            # don't force a fetch from the db
-            if collection.cached_at?( section )
-              collection[section].id
-            else
-              section
-            end
+            # display record number. Object id is in tooltip.
+            section+1
         end
         
       when qt_text_alignment_role
@@ -128,8 +124,12 @@ class TableModel < Qt::AbstractTableModel
             case
               when !collection[section].errors.empty?
                 'Invalid data'
-              when collection[section].changed?
+              when collection[section].modified?
                 'Unsaved changes'
+              else
+                if collection.cached_at?( section )
+                  collection[section].pk.inspect
+                end
             end
         end
         
