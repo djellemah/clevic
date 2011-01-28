@@ -10,7 +10,8 @@ class Entry < Sequel::Model
   # because they're often the result of typos.
   def time_color
     return if self.end.nil? || start.nil?
-    'darkviolet' if self.end - start > 8.hours
+    # 8 hours
+    'darkviolet' if self.end - start > 8 * 60 * 60
   end
   
   # tooltip for spans of time > 8 hours
