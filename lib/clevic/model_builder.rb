@@ -513,20 +513,34 @@ class ModelBuilder
     field.delegate = BooleanDelegate.new( field )
   end
   
-  # mostly used in the new block to define the set of records
-  # for the TableModel, but may also be
-  # used as an accessor for records.
-  def dataset( args = {} )
-    if args.size == 0
-      get_dataset
-    else
-      set_dataset( args )
+  # Tricky, this. Keeps passing on the dataset and
+  # lets it build up, but keeps the result.
+  class DatasetRoller
+    def initialize( model_builder )
+      @model_builder = model_builder
+      @rolling_dataset = @model_builder.entity_class.dataset
     end
+    
+    def dataset
+      @rolling_dataset
+    end
+    
+    def method_missing(meth, *args, &block)
+      @rolling_dataset = @rolling_dataset.send( meth, *args, &block )
+      self
+    end
+  end
+  
+  # Used in the UI block to make a nice syntax for specifying the dataset
+  def dataset
+    @dataset_roller = DatasetRoller.new( self )
   end
   
   def records( *args )
     puts "ModelBuilder#records is deprecated. Use ModelBuilder#dataset instead"
-    dataset( *args )
+    require 'clevic/sequel_ar_adapter.rb'
+    entity_class.plugin :ar_methods
+    @cache_table = CacheTable.new( entity_class, entity_class.translate( args.first ) )
   end
 
   # Tell this field not to show up in the UI.
@@ -610,7 +624,7 @@ class ModelBuilder
     end
     
     # the data
-    @model.collection = records
+    @model.collection = create_cache_table
     
     @model
   end
@@ -644,36 +658,13 @@ protected
     end
   end
 
-  # The collection of model objects to display in a table
-  # arg can either be a Hash, in which case a new CacheTable
-  # is created, or it can be an array.
-  # Called by records( *args )
-  def set_dataset( arg )
-    case arg
-    when Hash
-      puts "calling ModelBuilder#dataset or ModelBuilder#records with a Hash is deprecated. Use a Sequel::Dataset instead."
-      require 'clevic/sequel_ar_adapter.rb'
-      entity_class.plugin :ar_methods
-      @records = CacheTable.new( entity_class, entity_class.translate( arg ) )
-      
-    when Sequel::Dataset
-      @records = CacheTable.new( entity_class, arg )
-      
-    else
-      @records = arg
+  def create_cache_table
+    if @dataset_roller
+      @cache_table = CacheTable.new( entity_class, @dataset_roller.dataset )
     end
+    # otherwise just default it
+    @cache_table ||= CacheTable.new( entity_class )
   end
-
-  # Return a collection of records. Usually this will be a CacheTable.
-  # Called by records( *args )
-  def get_dataset
-    if @records.nil?
-      # default in case records is not called in the view definition
-      @records = CacheTable.new( entity_class )
-    end
-    @records
-  end
-  
 end
 
 end

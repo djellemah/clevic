@@ -62,7 +62,7 @@ class Entry < Sequel::Model
     plain       :charge, :tooltip => 'Is this time billable?'
     distinct    :person, :default => 'John', :tooltip => 'The person who did the work'
     
-    records     :order => 'date, start, id'
+    dataset.order( :date, :start, :id )
   end
 
   def self.define_actions( view, action_builder )
@@ -166,7 +166,7 @@ class Invoice < Sequel::Model
     plain :quote_amount
     plain :description
     
-    records :order => 'invoice_number'
+    dataset.order( :invoice_number )
   end
 end
 
@@ -182,7 +182,7 @@ class Project < Sequel::Model
     plain     :rate
     plain     :active
     
-    records   :order => 'project'
+    dataset.order( :project )
   end
   
   # Return the latest invoice for this project
@@ -207,6 +207,6 @@ class Activity < Sequel::Model
     plain :activity
     plain :active
     
-    records :order => 'activity'
+    dataset.order( :activity )
   end
 end
