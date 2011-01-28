@@ -42,17 +42,17 @@ module Sequel
               when :order
                 orders = value.split(/, */ ).map do |x|
                   case x
-                  when /(\w+) +(asc|desc)/i
+                  when /^(\w+) +(asc|desc)$/i
                     $1.to_sym.send( $2 )
                     
-                  when /(\w+)/i
+                  when /^\w+$/i
                     x.to_sym
                   
                   else
-                    raise "Don't know how to convert #{value} to Sequel. Use a Dataset instead."
+                    x.lit
+                    
                   end
                 end
-                puts "orders: #{orders.inspect}"
                 dataset.order( *orders )
               
               when :conditions
