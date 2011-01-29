@@ -161,6 +161,10 @@ module Clevic
       end
     end
     
+    def valuer( entity )
+      Valuer.new(field,entity)
+    end
+    
     def self.valuer( field, entity )
       Valuer.new(field,entity)
     end
