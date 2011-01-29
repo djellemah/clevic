@@ -10,6 +10,7 @@ end
 # There are other inflection gems.
 require 'active_support/inflector.rb'
 
+require 'clevic/framework'
 require 'clevic/sequel_length_validation.rb'
 require 'clevic/record.rb'
 require 'clevic/view.rb'
