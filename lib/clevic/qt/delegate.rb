@@ -1,13 +1,5 @@
 require 'Qt4'
 
-module Qt
-  class KeyEvent
-    def inspect
-      "<Qt::KeyEvent text=#{text} key=#{key}"
-    end
-  end
-end
-
 module Clevic
 
 class ItemDelegate < Qt::ItemDelegate

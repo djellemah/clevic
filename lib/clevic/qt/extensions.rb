@@ -13,7 +13,13 @@ module Qt
     def full_edit
     end
   end
-  
+
+  class KeyEvent
+    def inspect
+      "<Qt::KeyEvent text=#{text} key=#{key}"
+    end
+  end
+
   # This provides a bunch of methods to get easy access to the entity
   # and it's values directly from the index without having to keep
   # asking the model and jumping through other unncessary hoops
@@ -44,4 +50,5 @@ module Qt
   class MessageBox
     include Clevic::AcceptReject
   end
+
 end
