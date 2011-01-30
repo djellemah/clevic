@@ -120,7 +120,7 @@ class TableView
     list( :search ) do
       action :action_find, '&Find', :shortcut => 'Ctrl+F', :method => :find
       action :action_find_next, 'Find &Next', :shortcut => 'Ctrl+G', :method => :find_next
-      action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
+      action :action_filter, 'Fil&ter', :shortcut => 'Ctrl+L', :method => :filter_by_current
       action :action_unfilter, '&Un-Filter', :enabled => false, :shortcut => 'Ctrl+K', :method => :unfilter
       action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
     end
@@ -480,7 +480,7 @@ class TableView
   end
   
   # toggle the filter, based on current selection.
-  def filter_by_current( bool_filter )
+  def filter_by_current
     filter_by_indexes( selection_or_current )
   end
   
