@@ -86,7 +86,7 @@ class TableModel < Qt::AbstractTableModel
       retval = item_boolean_flags
     end
     
-    unless model_index.field.read_only? || model_index.entity.andand.readonly? || read_only?
+    unless model_index.field.read_only? || read_only?
       retval |= qt_item_is_editable.to_i 
     end
     retval
@@ -198,7 +198,7 @@ class TableModel < Qt::AbstractTableModel
         
         when qt_foreground_role
           index.field.foreground_for( index.entity ) ||
-          if index.field.read_only? || index.entity.andand.readonly? || read_only?
+          if index.field.read_only? || read_only?
             Qt::Color.new( 'dimgray' )
           end
         
