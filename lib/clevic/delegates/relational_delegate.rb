@@ -5,6 +5,13 @@ module Clevic
 # Display a collection of possible related entities in the combo box.
 # TODO this should be a module
 class RelationalDelegate
+  # TODO use DatasetRoller in Field to set the dataset
+  def dataset
+    require 'clevic/ar_methods'
+    field.related_class.plugin :ar_methods
+    field.related_class.translate( field.find_options )
+  end
+  
   def population
     # dataset contains the set of all possible related entities,
     

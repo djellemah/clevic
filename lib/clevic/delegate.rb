@@ -31,13 +31,6 @@ class Delegate
     field.entity_class
   end
   
-  # TODO use DatasetRoller here
-  def dataset
-    require 'clevic/ar_methods'
-    field.related_class.plugin :ar_methods
-    field.related_class.translate( field.find_options )
-  end
-  
   # assume this is not a combo delegate. That will come later.
   def is_combo?
     false
