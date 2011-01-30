@@ -22,8 +22,13 @@ oparser.on( '-P', '--profile PROFILE', String ) { |o| $options[:profile] = o }
 oparser.on( '-t', '--table TABLE', 'Table to display', String ) { |o| $options[:table] = o }
 oparser.on( '-d', '--database DATABASE', 'Database name', String ) { |o| $options[:database] = o }
 
-oparser.on( '-s', '--swing', 'Use JRuby Swing' ) { |o| require 'clevic/swing.rb' }
-oparser.on( '-q', '--qt', 'Use Qt-Ruby' ) { |o| require 'clevic/qt.rb' }
+oparser.on( '-s', '--swing', 'Use JRuby Swing' ) do |o|
+  require 'clevic/swing.rb'
+end
+
+oparser.on( '-q', '--qt', 'Use Qt-Ruby' ) do |o|
+  require 'clevic/qt.rb'
+end
 
 oparser.on( '-D', '--debug' ) { |o| $options[:debug] = true }
 oparser.on( '-v', '--verbose' ) { |o| $options[:verbose] = true }
@@ -60,23 +65,6 @@ class Pathname
   alias_method :/, :+
 end
 
-def subclasses( base )
-  classes = []
-  ObjectSpace.each_object( Class ) do |x|
-    if x.ancestors.include?( base )
-      case
-        when x == Clevic.base_entity_class; # don't include this
-        else; classes << x
-      end
-    end
-  end
-  classes.sort{|a,b| a.name <=> b.name}
-end
-
-# do nothing ...
-def maybe_load_rails_models
-end
-
 # ... unless this is included
 # require 'clevic/rails_models_loader.rb'
 
@@ -89,7 +77,10 @@ end
 
 def load_models( pathname )
   if pathname.directory?
-    maybe_load_rails_models
+    # load all children
+    pathname.children.grep( /.rb$/ ).each do |child|
+      require child.to_s
+    end
   else
     # assume we have a single file, and try some variations
     load_single_model_file( pathname )
@@ -97,6 +88,7 @@ def load_models( pathname )
 end
 
 begin
+  # pulled in by the clevic/qt or clevic/swing files
   Clevic::Browser.run( args )
 rescue Exception => e
   puts e.message

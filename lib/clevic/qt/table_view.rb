@@ -1,8 +1,5 @@
-require 'rubygems'
-require 'Qt4'
 require 'fastercsv'
 require 'qtext/action_builder.rb'
-
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
 

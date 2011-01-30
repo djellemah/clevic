@@ -1,4 +1,3 @@
-require 'Qt4'
 require 'date'
 
 require 'andand'

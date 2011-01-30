@@ -2,7 +2,7 @@
   Require this file to do Clevic in Swing with JRuby
 =end
 
-require 'pathname'
+require 'clevic/framework'
 
 # This seems to be required for jruby-1.5.x (at least for 1.5.2)
 require 'java'
@@ -12,6 +12,7 @@ require 'clevic/swing/table_model.rb'
 require 'clevic/swing/table_view.rb'
 
 # all other files in the swing subdirectory
+require 'pathname'
 ( Pathname.new( __FILE__ ).parent + 'swing' ).children.grep( /.rb$/ ).each do |child|
   require child.to_s
 end
