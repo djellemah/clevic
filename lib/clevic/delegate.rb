@@ -8,6 +8,7 @@ class Delegate
   include FieldValuer
 
   def initialize( field )
+    super()
     @field = field
   end
   
