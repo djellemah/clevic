@@ -12,8 +12,9 @@ class Delegate < Qt::ItemDelegate
   end
 
   # This catches the event that begins the edit process.
-  def editorEvent ( event, model, style_option_view_item, model_index )
-    parent.before_edit_index = model_index
+  def editorEvent( event, model, style_option_view_item, model_index )
+    # See qt Clevic::TableView
+    parent.respond_to?( "before_edit_index=" ) && parent.before_edit_index = model_index
     super
   end
 
