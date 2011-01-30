@@ -487,7 +487,7 @@ class TableView
   # This is used by entity view classes.
   # Keep it as a compatibility / deprecated option?
   def filter_by_options( args )
-    puts "#{self.class.name}#filter_by_options is deprecated"
+    puts "#{self.class.name}#filter_by_options is deprecated. Use filter( &block ) instead."
     raise "not moved to datasets yet"
     filtered.undo if filtered?
     self.filtered = FilterCommand.new( self, [], entity_class.translate( args ) )
