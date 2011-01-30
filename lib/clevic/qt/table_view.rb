@@ -269,7 +269,7 @@ class TableView < Qt::TableView
     end
     
     rescue Exception => e
-      raise RuntimeError, "#{model.entity_view.class.name}.#{model_index.field.id}: #{e.message}", caller(0)
+      raise RuntimeError, "#{model.entity_view.class.name}.#{model_index.field.id}: #{e.message}", e.backtrace
   end
   
   attr_accessor :before_edit_index
