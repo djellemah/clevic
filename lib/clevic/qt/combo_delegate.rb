@@ -10,6 +10,7 @@ Generally these will be created using a Clevic::ModelBuilder.
 =end
 class ComboDelegate < Clevic::Delegate
   # Convert Qt:: constants from the integer value to a string value.
+  # TODO this really shouldn't be here. qtext, or extensions.rb
   def hint_string( hint )
     hs = String.new
     Qt::AbstractItemDelegate.constants.each do |x|
