@@ -2,7 +2,7 @@ require 'Qt4'
 
 module Clevic
 
-class ItemDelegate < Qt::ItemDelegate
+class Delegate < Qt::ItemDelegate
   attr_reader :field
   
   def initialize( field )

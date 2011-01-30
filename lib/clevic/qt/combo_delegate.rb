@@ -1,4 +1,4 @@
-require 'clevic/qt/item_delegate.rb'
+require 'clevic/qt/delegate.rb'
 
 module Clevic
 
@@ -8,11 +8,7 @@ because ComboBox stupidly doesn't.
 
 Generally these will be created using a Clevic::ModelBuilder.
 =end
-class ComboDelegate < Clevic::ItemDelegate
-  def initialize( field )
-    super
-  end
-  
+class ComboDelegate < Clevic::Delegate
   # Convert Qt:: constants from the integer value to a string value.
   def hint_string( hint )
     hs = String.new
