@@ -5,6 +5,14 @@ module Clevic
 # Display a collection of possible related entities in the combo box.
 # TODO this should be a module
 class RelationalDelegate
+  def needs_combo?
+    dataset.count > 0
+  end
+  
+  def empty_set_message
+    "There must be records in #{field.related_class.name.humanize} for this field to be editable."
+  end
+  
   # TODO use DatasetRoller in Field to set the dataset
   def dataset
     require 'clevic/ar_methods'

@@ -1,10 +1,9 @@
 module Clevic
 
 class Delegate < Qt::ItemDelegate
-  attr_reader :field
-  
   # Figure out where to put the editor widget, taking into
   # account the sizes of the headers
+  # TODO most of the subclasses are probably the same as this
   def updateEditorGeometry( editor, style_option_view_item, model_index )
     rect = style_option_view_item.rect
     rect.set_width( [editor.size_hint.width,rect.width].max )

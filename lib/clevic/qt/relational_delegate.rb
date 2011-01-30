@@ -9,14 +9,6 @@ module Clevic
 # The ids of the model objects are stored in the item data
 # and the item text is fetched from them using attribute_path.
 class RelationalDelegate < ComboDelegate
-  def needs_combo?
-    dataset.count > 0
-  end
-  
-  def empty_set_message
-    "There must be records in #{field.related_class.name.humanize} for this field to be editable."
-  end
-
   def item_to_editor( item )
     [ field.transform_attribute( item ), item.pk.to_variant ]
   end
