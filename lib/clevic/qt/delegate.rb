@@ -1,5 +1,3 @@
-require 'Qt4'
-
 module Clevic
 
 class Delegate < Qt::ItemDelegate
