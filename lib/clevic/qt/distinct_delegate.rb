@@ -1,24 +1,10 @@
 require 'clevic/qt/combo_delegate.rb'
+require 'clevic/qt/simplest_delegate.rb'
 
 module Clevic
 
 class DistinctDelegate < ComboDelegate
-  def translate_from_editor_text( editor, text )
-    text
-  end
-
-  def item_to_editor( item )
-    if item.is_a?( Array )
-      [ item.last, item.first ]
-    else
-      [ item, item ]
-    end
-  end
-  
-  
-  def editor_to_item( data )
-    data.value
-  end
+  include SimplestDelegate
 end
 
 end
