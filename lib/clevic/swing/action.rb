@@ -4,10 +4,17 @@ module Clevic
 
 class Action
   include Gather
-  property :shortcut, :method, :handler, :tool_tip, :visible, :name, :text, :checkable
+  property :shortcut, :method, :handler, :tool_tip, :visible
+  property :name, :text, :checkable, :enabled
+  
+  def enabled=( bool )
+    menu_item.enabled = bool unless menu_item.nil?
+    @enabled = bool
+  end
   
   def initialize( parent, options = {}, &block )
     @parent = parent
+    @enabled = true
     gather( options, &block )
   end
   attr_reader :parent, :menu_item
@@ -49,6 +56,7 @@ class Action
       menu_item.mnemonic = mnemonic if mnemonic
       menu_item.accelerator = parse_shortcut( shortcut ) unless shortcut.nil?
       menu_item.tool_tip_text = tool_tip
+      menu_item.enabled = enabled
       menu_item.add_action_listener do |event|
         handler.call( event )
       end

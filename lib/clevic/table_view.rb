@@ -520,7 +520,7 @@ class TableView
   end
   
   def unfilter_action
-    search_actions.find{|a| puts "a.object_name: #{a.object_name.inspect}"; a.object_name == 'action_unfilter' }
+    search_actions.find{|a| a.object_name == 'action_unfilter' }
   end
   
   def filter_message
@@ -529,15 +529,9 @@ class TableView
 
   # update status bar with a message of all filters concatenated
   def update_filter_status_bar
-    if filters.empty?
-      emit_status_text( nil ) 
-      emit_filter_status( false )
-      unfilter_action.enabled = false
-    else
-      emit_status_text( "Filter: " + filters.map( &:message ).join(' / ') )
-      emit_filter_status( true )
-      unfilter_action.enabled = true
-    end
+    emit_status_text( filter_message )
+    emit_filter_status( filtered? )
+    unfilter_action.enabled = filtered?
   end
   
   # Filter by the value in the current index.
