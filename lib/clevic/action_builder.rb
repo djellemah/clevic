@@ -84,7 +84,7 @@ module ActionBuilder
   # Create and return a list of actions. The actions are grouped together,
   # ie live together on the menu with a separator between groups.
   # A method called "#{group_name}_actions" will be added to self, which will return the
-  # set of Qt::Action instances created in the block.
+  # set of framework-specific Action instances created in the block.
   def list( group_name, &block )
     @group_name = group_name
     group_names << group_name

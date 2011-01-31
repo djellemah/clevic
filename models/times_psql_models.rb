@@ -5,8 +5,8 @@ require 'sequel'
 host = ENV['PGHOST'] || 'localhost'
 
 constring =
-if respond_to?( :'jruby?' ) && jruby?
-  "jdbc:postgresql://#{host}/accounts_test"
+if RUBY_PLATFORM == 'java'
+  "jdbc:postgresql://#{host}/times_test"
 else
   "postgres://#{host}/times_test"
 end

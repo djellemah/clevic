@@ -247,12 +247,7 @@ class Browser < javax.swing.JFrame
       # update the tab, so there's a visual indication of filtering
       filter_title = ( tab.filtered? ? '| ' : '' ) + tab.title
       tables_tab.set_title_at( tables_tab.selected_index, filter_title )
-      
-      if tab.filtered?
-        tables_tab.set_tool_tip_text_at( tables_tab.selected_index, tab.filtered.status_message )
-      else
-        tables_tab.set_tool_tip_text_at( tables_tab.selected_index, nil )
-      end
+      tables_tab.set_tool_tip_text_at( tables_tab.selected_index, tab.filter_message )
     end
   end
   

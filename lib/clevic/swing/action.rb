@@ -16,6 +16,10 @@ class Action
     text.gsub( /&/, '' )
   end
   
+  def object_name
+    name.to_s
+  end
+  
   # find the java.awt.event.KeyEvent::VK constant
   # for the letter after the &. Then set it on the item's
   # mnemonic. Because JMenuItem.setMnemonic won't take a nil

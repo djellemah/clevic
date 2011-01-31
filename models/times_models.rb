@@ -1,3 +1,9 @@
+class Numeric
+  def hours
+    self * 60 * 60
+  end
+end
+
 # model definitions
 class Entry < Sequel::Model
   many_to_one :invoice
@@ -11,7 +17,7 @@ class Entry < Sequel::Model
   def time_color
     return if self.end.nil? || start.nil?
     # 8 hours
-    'darkviolet' if self.end - start > 8 * 60 * 60
+    'darkviolet' if self.end - start > 8.hours
   end
   
   # tooltip for spans of time > 8 hours
