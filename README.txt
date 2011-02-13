@@ -8,10 +8,12 @@ Database framework and Model/View GUI for data capture and
 editing of tables in a pre-existing relational DBMS. Works with Qt
 and Java Swing.
 
-Using Sequel means Clevic supports Postgresql, Mysql and so on. It's been tested with Postgres and sqlite.
+Using Sequel means Clevic supports Postgresql, Mysql and so on. It's been
+tested with Postgres and sqlite.
 
-Using Qt and Swing means it runs on Linux, Windows and OSX. Qt is thoroughly tested
-in Linux, slightly tested in Windows and OSX. Swing is tested in Linux and OSX.
+Using Qt and Swing means it runs on Linux, Windows and OSX. The Qt
+code is thoroughly tested in Linux, slightly tested in Windows and OSX. Swing 
+is tested in Linux and OSX.
 
 == FEATURES:
 
@@ -21,9 +23,9 @@ in Linux, slightly tested in Windows and OSX. Swing is tested in Linux and OSX.
 * in-place combo boxes for choosing values from related tables (foreign keys)
 * distinct combo boxes to list previous values for a field
 * display read-only fields from related tables
-* Filter by current field.
-* search by field contents.
-* cut and paste in CSV format
+* Filter by current field
+* search by field contents
+* cut and paste in CSV
 
 === Shortcuts:
 
@@ -33,7 +35,7 @@ in Linux, slightly tested in Windows and OSX. Swing is tested in Linux and OSX.
 * Ctrl-[ for copy previous record, one field left
 * Ctrl-f to find a record
 * Ctrl-l to filter by current selection
-* cursor keys for movement
+* cursor keys, PgUp PgDown etc for movement
 
 === Model definition:
 
@@ -43,24 +45,25 @@ that includes the Clevic::Record module will provide a minimally functional UI.
 Beyond that, the framework provides a DSL for defining more complex and useful behaviour
 (see Clevic::ModelBuilder).
 
-In the models/ subdirectory, start with minimal_models.rb.
-account_models.rb and times_models.rb provide definitions for more real-world examples.
-Associated SQL schemas are in the sql subdirectory.
+=== Examples
 
-For implementation and more extensive comments, see Clevic::ModelBuilder.
+In the models/ subdirectory, start with minimal_models.rb. account_models.rb 
+and times_models.rb provide definitions for real-world examples. Associated 
+SQL schemas are in the sql subdirectory. For implementation and more extensive 
+comments, see Clevic::ModelBuilder.
 
 === Framework
 
+* uses Sequel for data access.
 * use blocks to format values for particular fields.
 * sensible caching to handle large data sets without unnecessary memory and cpu usage
 * extensions to various Qt classes to make db programming easier.
-* uses Sequel for data access.
 * leverages SQL whenever possible to handle large datasets, sorting, filtering
   etc. So it's probably not suitable for talking to a remote db across a slow link.
 
 == PROBLEMS:
 
-See TODO file.
+There are some tests, but Clevic needs a comprehensive testing framework.
 
 == SYNOPSIS:
 
@@ -72,7 +75,7 @@ See TODO file.
 * Sequel
 * fastercsv
 * qtext
-* hashery
+* hashery (for ruby-1.8.x)
 * gather
 
 === Libraries
@@ -83,11 +86,16 @@ See TODO file.
 
 == INSTALL:
 
+	Get bsearch from http://0xcc.net/ruby-bsearch
+	
+	Install qt bindings from https://github.com/ryanmelt/qtbindings
+	
 	sudo gem install
 
 == THANKS:
 
-* Michelle Riley for help debugging the windows gem
+* Michelle Riley for help debugging under windows
+* Jacob Buys for pointing out the qtbindings gem
 
 == LICENSE:
 
