@@ -38,6 +38,7 @@ module GenericFormat
         value
       end
     rescue Exception => e
+      puts "self: #{self.inspect}"
       puts "format: #{format.inspect}"
       puts "value.class: #{value.class.inspect}"
       puts "value: #{value.inspect}"
