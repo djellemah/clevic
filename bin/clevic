@@ -44,6 +44,12 @@ end
 
 args = oparser.parse( ARGV )
 
+if RUBY_PLATFORM == 'java'
+  require 'clevic/swing'
+else
+  require 'clevic/qt'
+end
+
 if $options[:debug]
   require 'pp'
   pp $options
