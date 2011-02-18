@@ -579,7 +579,15 @@ class ModelBuilder
     entity_class.attributes.each do |column,model_column|
       begin
         if model_column.association?
-          relational column
+          relational column do |f|
+            # TODO this should be tableize or equivalent
+            %W{#{model_column.related_class.name.downcase} name title username}.each do |name|
+              if model_column.related_class.instance_methods.include?( name )
+                f.display = name.to_sym
+                break
+              end
+            end
+          end
         else
           plain column
         end
