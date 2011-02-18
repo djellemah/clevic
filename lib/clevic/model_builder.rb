@@ -599,7 +599,6 @@ class ModelBuilder
         plain column
       end
     end
-    records :order => entity_class.primary_key
   end
   
   # return the named Clevic::Field object
