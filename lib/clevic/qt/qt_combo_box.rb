@@ -44,7 +44,15 @@ module Qt
         nil
       end
     end
-    
+  end
+  
+  # Adding these to Qt::Widget as the superclass
+  # doesn't work for some reason.
+  class ComboBox
+    attr_accessor :delegate
+  end
+
+  class LineEdit
     attr_accessor :delegate
   end
 end

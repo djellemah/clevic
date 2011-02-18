@@ -1,4 +1,5 @@
 require 'clevic/qt/delegate.rb'
+require 'clevic/qt/qt_combo_box.rb'
 
 module Clevic
 
