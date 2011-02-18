@@ -22,3 +22,5 @@ class SetDelegate < ComboDelegate
 end
 
 end
+
+require 'clevic/delegate/set_delegate.rb'

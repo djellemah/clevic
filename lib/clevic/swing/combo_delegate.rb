@@ -6,9 +6,17 @@ module Clevic
 # all this just to format a display item...
 # .... and work around various other Swing stupidities
 class ComboBox < javax.swing.JComboBox
+  attr_accessor :delegate
+  
   def initialize( field )
     super()
     @field = field
+  end
+  
+  # For Clevic::ComboDelegate to call
+  def no_insert=( bool )
+    # Swing doesn't have combo policies like Qt. Fro
+    # what I can see.
   end
   
   # set to true by processKeyBinding when a character
@@ -61,7 +69,7 @@ class ComboDelegate < Delegate
     true
   end
   
-  def create_combo_box
+  def create_combo_box( *args )
     # create a new combo class each time, otherwise
     # we have to get into managing cleaning out the model
     # and so on
@@ -112,7 +120,7 @@ class ComboDelegate < Delegate
     end
   end
   
-  def framework_setup
+  def framework_setup( *args )
     # catch the enter key action event
     editor.editor.editor_component.add_action_listener do |event|
       cell_editor.andand.stopCellEditing
@@ -233,3 +241,5 @@ class ComboDelegate < Delegate
 end
 
 end
+
+require 'clevic/delegates/combo_delegate.rb'

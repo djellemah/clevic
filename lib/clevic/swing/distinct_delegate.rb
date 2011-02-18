@@ -7,11 +7,6 @@ module Clevic
 # :frequency can be set as an option. Boolean. If it's true
 # the options are sorted in order of most frequently used first.
 class DistinctDelegate < ComboDelegate
-  def needs_combo?
-    # works except when there is a '' in the column
-    entity_class.adaptor.count( attribute.to_s, find_options ) > 0
-  end
-  
   # strings are stored in the model
   def display_for( model_value )
     model_value

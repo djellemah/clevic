@@ -35,3 +35,5 @@ class RelationalDelegate < ComboDelegate
 end
 
 end
+
+require 'clevic/delegates/relational_delegate.rb'
