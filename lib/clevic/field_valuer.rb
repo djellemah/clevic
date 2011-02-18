@@ -81,7 +81,7 @@ module Clevic
     end
     
     def find_related( attribute, value )
-      candidates = field.related_class.adaptor.find( :all, :conditions => {attribute => value} )
+      candidates = field.related_class.filter( attribute.to_sym => value ).all
       if candidates.size != 1
         raise "#{candidates.size} != 1 candidates for #{value}: #{candidates.inspect}"
       end
