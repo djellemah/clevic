@@ -333,13 +333,6 @@ EOF
     entity_class.meta[attribute]
   end
   
-  # return the type of this attribute. Usually one of :string, :integer, :float
-  # or some entity class
-  # TODO remove
-  def attribute_type
-    meta.type
-  end
-
   # return true if this field can be used in a filter
   # virtual fields (ie those that don't exist in this field's
   # table) can't be used to filter on.

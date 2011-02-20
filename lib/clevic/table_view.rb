@@ -186,7 +186,7 @@ class TableView
   # from and to are ModelIndex instances. Throws :insane if
   # their fields don't have the same attribute_type.
   def sanity_check_types( from, to )
-    unless from.field.attribute_type == to.field.attribute_type
+    unless from.field.meta.type == to.field.meta.type
       emit_status_text( 'Incompatible data' )
       throw :insane
     end
