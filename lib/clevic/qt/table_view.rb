@@ -43,10 +43,12 @@ class TableView < Qt::TableView
     self.sorting_enabled = false
     
     # set fonts
-    Qt::Font.new( font.family, font.point_size * 5 / 6 ).tap do |fnt|
-      self.font = fnt
-      self.horizontal_header.font = fnt
-    end 
+    # TODO leave this here, but commented so we can see how to do it
+    # properly later.
+    #~ Qt::Font.new( font.family, font.point_size * 5 / 6 ).tap do |fnt|
+      #~ self.font = fnt
+      #~ self.horizontal_header.font = fnt
+    #~ end 
     
     self.context_menu_policy = Qt::ActionsContextMenu
   end
