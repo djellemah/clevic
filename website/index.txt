@@ -2,7 +2,7 @@ h1. Clevic
 
 "RDoc":rdoc | "Rubygems Page":http://rubygems.org/gems/clevic | "Rubyforge Project":http://rubyforge.org/projects/clevic/ | "gitweb":http://gitweb.semiosix.com/clevic | "git clone git://semiosix.com/clevic":git://semiosix.com/clevic
 
-Clevic is a toolkit for building GUIs database tables with useful functionality. It works with Qt or Java/Swing and "Sequel":http://sequel.rubyforge.org.
+Clevic is a relational table GUI toolkit. It works with Qt or Java/Swing and "Sequel":http://sequel.rubyforge.org.
 An interesting side-effect of this will probably be that building form-style GUIs will be possible. Eventually. When the code has been written.
 Lots more in the "RDoc":rdoc pages.
 
