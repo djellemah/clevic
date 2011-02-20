@@ -1,23 +1,18 @@
 h1. Clevic
 
-"RDoc":rdoc | "Rubygems":http://rubygems.org/gems/clevic | "Rubyforge Project":http://rubyforge.org/projects/clevic/
+"RDoc":rdoc | "Rubygems Page":http://rubygems.org/gems/clevic | "Rubyforge Project":http://rubyforge.org/projects/clevic/ | "gitweb":http://gitweb.semiosix.com/clevic | "git clone git://semiosix.com/clevic":git://semiosix.com/clevic
 
-Clevic is a toolkit for building GUIs database tables with useful functionality.
-It works with Qt or Java Swing and Sequel.
+Clevic is a toolkit for building GUIs database tables with useful functionality. It works with Qt or Java/Swing and "Sequel":http://sequel.rubyforge.org.
+An interesting side-effect of this will probably be that building form-style GUIs will be possible. Eventually. When the code has been written.
+Lots more in the "RDoc":rdoc pages.
 
-An interesting side-effect of this will probably be that
-building form-style GUIs will be possible. Eventually. When the code has been written.
+Screenshot of a fully defined UI with the foreign-key dropdown in place. Tabs contain the two tables.
 
-Screenshot of a fully defined UI with the foreign-key dropdown in place.
-Tabs contain the two tables.
-
-See "RDoc":rdoc for feature list.
 See "ModelBuilder":rdoc/Clevic/ModelBuilder.html for how to define views.
 
 !screenshot.png(Screenshot)!
 
-Code for minimal UI definition. Clevic will create a fairly sensible
-UI from the DB metadata.
+Code for minimal UI definition. Clevic will create a fairly sensible UI from the DB metadata.
 
 <pre><code>
 <%= File.read 'models/minimal_models.rb' %>
