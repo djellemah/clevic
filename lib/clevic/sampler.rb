@@ -5,11 +5,12 @@ module Clevic
 
 # Calculate a string sample for a particular Field
 class Sampler
-  def initialize( entity_class, field_name, display, &block )
+  # display is only used for relational fields
+  def initialize( entity_class, field_name, display, &format_block )
     @entity_class = entity_class
     @field_name = field_name
     @display = display
-    @format_block = block
+    @format_block = format_block
   end
   
   attr_reader :entity_class, :field_name, :display
@@ -53,15 +54,20 @@ class Sampler
     'N' * ( entity_class.max( :length.sql_function( field_name ) ).andand.to_i || 20 )
   end
   
-  def date_time_sample
-    sample_date = entity_class \
+  def sample_date_time
+    ds = entity_class \
       .filter( ~{ field_name => nil } ) \
       .select( field_name ) \
-      .limit(1) \
-      .single_value
-    ;
+      .limit(1)
+    # can't use single-value here because the typecast_on_load
+    # isn't called unless we access the value via the entity object
+    ds.first.send( field_name )
+  end
+  
+  def date_time_sample
     # replace all letters with 'N'
-    do_format( sample_date || Date.today ).gsub( /[[:alpha:]]/, 'N' )
+    # and numbers with 8
+    do_format( sample_date_time || Date.today ).andand.gsub( /[[:alpha:]]/, 'N' ).gsub( /\d/, '8' )
   end
   
   def numeric_sample
