@@ -8,6 +8,8 @@ module Clevic
       @message_receivers = Set.new
     end
     
+    # FIXME this must actually show a message, and 
+    # the Qt code must use it too
     def show_message( msg, &block )
       if block_given?
         @message_receivers << block

@@ -513,27 +513,10 @@ class ModelBuilder
     field.delegate = BooleanDelegate.new( field )
   end
   
-  # Tricky, this. Keeps passing on the dataset and
-  # lets it build up, but keeps the result.
-  class DatasetRoller
-    def initialize( model_builder )
-      @model_builder = model_builder
-      @rolling_dataset = @model_builder.entity_class.dataset
-    end
-    
-    def dataset
-      @rolling_dataset
-    end
-    
-    def method_missing(meth, *args, &block)
-      @rolling_dataset = @rolling_dataset.send( meth, *args, &block )
-      self
-    end
-  end
-  
-  # Used in the UI block to make a nice syntax for specifying the dataset
+  # specify the dataset but just calling and chaining, thusly
+  #  dataset.order( :some_field ).filter( :active => true )
   def dataset
-    @dataset_roller = DatasetRoller.new( self )
+    @dataset_roller = DatasetRoller.new( entity_class.dataset )
   end
   
   def records( *args )

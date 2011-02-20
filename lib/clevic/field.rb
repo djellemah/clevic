@@ -1,6 +1,7 @@
 require 'gather'
 require 'clevic/sampler.rb'
 require 'clevic/generic_format.rb'
+require 'clevic/dataset_roller.rb'
 
 module Clevic
 
@@ -168,11 +169,28 @@ class Field
   # Either a proc( clevic_view, table_view, model_index ) or a symbol
   # for a method( view, model_index ) on the Clevic::View object.
   property :notify_data_changed
+
+  ##
+  # This is the dataset of related objects.
+  # Called in configuration for a field that works with a relationship.
+  #  dataset.filter( :blah => 'etc' ).order( :interesting_field )
+  # proc with take the dataset as an argument, and must return a datset.
+  # otherwise it must just return a dataset.
+  def dataset
+    @dataset_roller ||= DatasetRoller.new( related_class.dataset )
+  end
+  
+  # TODO Still getting the Builder/Built conflict
+  def dataset_roller
+    @dataset_roller
+  end
   
   # The list of properties for ActiveRecord options.
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected.
   # Each element becomes a property.
   # TODO remove these? That will destroy the migration path.
+  # TODO deprecate them
+  # TODO warn if these are used together with a dataset call
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
   
@@ -378,6 +396,7 @@ EOF
               do_format( value )
             end.compute
           rescue
+            puts "for #{entity_class.name}"
             puts $!
           ensure
             # if we don't know how to figure it out from the data, just return the label size

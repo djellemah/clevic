@@ -58,12 +58,11 @@ class Entry < Sequel::Model
     # multiline text
     text        :description, :sample => 'This is a long string designed to hold lots of data and description'
     
-    relational :activity do
-      display    'activity'
-      order      'lower(activity)'
-      sample     'Troubleshooting'
-      conditions 'active = true'
-    end
+    relational :activity do |f|
+      f.display    'activity'
+      f.sample     'Troubleshooting'
+      f.dataset.filter( :active => true ).order{ lower(activity) }
+    end 
     
     distinct    :module, :tooltip => 'Module or sub-project'
     plain       :charge, :tooltip => 'Is this time billable?'
