@@ -14,8 +14,6 @@ use rubigen for creating model definition files?
 undoable_command signal for delegates
 
 need a map field (For ie -1 = short, 1 = long). Already in restricted, but it's kinda clunky.
-:records missing in define_ui causes a crash
-:records must take a NamedScope
 
 Add additional :filter record sets that can be selected from menus?
 
@@ -130,7 +128,6 @@ maybe
 -----
 acts_as_shellable looks nice
 consolidate read-only-ness checks 
-Look at DataMapper. Not suitable - need to declare properties.
 ActiveMDB for migrating?
 allow moving of rows
 discontiguous copying of entities/csv
@@ -139,7 +136,6 @@ pasting of csv, into rectangular regions
 collect a set of data requests to the model, and do them in one SQL query. See EntryTableView#moveCursor
 Use SQL cursors for find & find_next?
 Use roo to parse spreadsheets?
-Criteria for SQL statement building http://criteria.rubyforge.org/
 SqlCache
 SqlStatement
 Csv2Sql
