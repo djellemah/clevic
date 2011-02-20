@@ -6,11 +6,11 @@ end
 
 # model definitions
 class Entry < Sequel::Model
+  include Clevic::Record
+
   many_to_one :invoice
   many_to_one :activity
   many_to_one :project
-  
-  include Clevic::Record
   
   # spans of time more than 8 ours are coloured violet
   # because they're often the result of typos.
@@ -32,8 +32,7 @@ class Entry < Sequel::Model
     # The project field
     relational :project do |field|
       field.display = :project
-      field.conditions = 'active = true'
-      field.order = 'lower(project)'
+      field.dataset.filter( :active => true ).order{ lower(project) }
       
       # handle data changed events. In this case,
       # auto-fill-in the invoice field.
@@ -47,7 +46,10 @@ class Entry < Sequel::Model
       end
     end
     
-    relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
+    relational  :invoice do |f|
+      f.display 'invoice_number'
+      f.dataset.filter( :status => 'not sent' ).order( :invoice_number )
+    end
     
     # call time_color method for foreground color value
     plain       :start, :foreground => :time_color, :tooltip => :time_tooltip
@@ -101,7 +103,7 @@ class Entry < Sequel::Model
       previous_item = view.model.collection[current_index.row - 1]
       
       # copy the relevant fields
-      current_index.entity.date = previous_item.date if current_index.entity.date.blank?
+      current_index.entity.date = previous_item.date if current_index.entity.date.nil?
       # depends on previous line
       current_index.entity.start = previous_item.end if current_index.entity.date == previous_item.date
       
@@ -118,7 +120,7 @@ class Entry < Sequel::Model
       
       # move to the first empty time field
       next_field =
-      if current_index.entity.start.blank?
+      if current_index.entity.start.nil?
         :start
       else
         :end
@@ -158,9 +160,9 @@ class Entry < Sequel::Model
 end
 
 class Invoice < Sequel::Model
-  one_to_many :entries
-
   include Clevic::Record
+  
+  one_to_many :entries
   
   define_ui do
     plain :date
@@ -194,11 +196,9 @@ class Project < Sequel::Model
   # Return the latest invoice for this project
   # Not part of the UI.
   def latest_invoice
-    Invoice.adaptor.find(
-      :first,
-      :conditions => ["client = ? and status = 'not sent'", self.client],
-      :order => 'invoice_number desc'
-    )
+    Invoice.filter( :client => self.client, :status => 'not sent' ). \
+      order( :invoice_number.desc ). \
+      first
   end
 
 end

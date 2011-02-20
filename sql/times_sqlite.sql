@@ -10,8 +10,8 @@ CREATE TABLE entries (
     project_id integer,
     activity_id integer,
     date date,
-    "start" time without time zone,
-    "end" time without time zone,
+    "start" time with time zone,
+    "end" time with time zone,
     description text,
     person character varying(30),
     order_number character varying(40),
@@ -29,7 +29,7 @@ CREATE TABLE invoices (
     invoice_number character varying(8),
     status character varying(8),
     billing character varying(15),
-    quote_date timestamp without time zone,
+    quote_date timestamp with time zone,
     quote_amount money,
     description character varying(100)
 );
