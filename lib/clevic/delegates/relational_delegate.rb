@@ -21,6 +21,10 @@ class RelationalDelegate
     # entity is set in init_component
     # field and entity are used by FieldValuer
     
+    # FIXME don't really need this if clause
+    # because attribute_value is what we're interested in
+    # and actually entity won't ever be nil because
+    # the row containing this field won't ever have a nil entity.
     if entity.nil?
       dataset
     else
