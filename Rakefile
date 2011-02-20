@@ -17,9 +17,8 @@ $hoe = Hoe.new('clevic', Clevic::VERSION::STRING) do |p|
     ['andand', '>= 1.3.0'],
     ['sequel', '>= 3.8.0'],
     ['hpricot', '>= 0.8.1'],
-    ['io-like', '>= 0.3.0']
-    # This isn't always installed from gems
-    #~ ['qtruby4', '>=1.4.9']
+    ['io-like', '>= 0.3.0'],
+    #['qtbindings', '>=4.6.3']
     # bsearch can't be installed from gems
   ]
   p.extra_dev_deps = [
