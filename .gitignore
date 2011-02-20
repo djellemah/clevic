@@ -4,3 +4,4 @@ doc
 *_ui.rb
 pkg
 website/rdoc
+models/times.sqlite3
