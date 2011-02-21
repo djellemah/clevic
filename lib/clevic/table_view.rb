@@ -487,11 +487,11 @@ class TableView
   # This is used by entity view classes.
   # Keep it as a compatibility / deprecated option?
   def filter_by_options( args )
-    puts "#{self.class.name}#filter_by_options is deprecated. Use filter( &block ) instead."
-    raise "not moved to datasets yet"
-    filtered.undo if filtered?
-    self.filtered = FilterCommand.new( self, [], entity_class.translate( args ) )
-    emit_filter_status( filtered.doit )
+    puts "#{self.class.name}#filter_by_options is deprecated. Use filter_by_dataset( message, &block ) instead."
+    
+    filter_by_dataset( "#{args.inspect}" ) do |dataset|
+      dataset.translate( args )
+    end
   end
   
   # Save the current entity, do something, then restore
@@ -534,6 +534,17 @@ class TableView
     unfilter_action.enabled = filtered?
   end
   
+  def filter_by_dataset( message, &dataset_block )
+    # clean this up and make it work AND for multiple columns, OR for multiple rows
+    self.filters << FilterCommand.new( self, message, &dataset_block )
+    
+    # try to end up on the same entity, even after the filter
+    restore_entity { filters.last.doit }
+    
+    # make sure status bar shows status
+    update_filter_status_bar
+  end
+  
   # Filter by the value in the current index.
   # indexes is a collection of TableIndex instances
   def filter_by_indexes( indexes )
@@ -552,9 +563,7 @@ class TableView
       
     else
       message = "#{indexes.first.field_name} = #{indexes.first.display_value}"
-      
-      # clean this up and make it work AND for multiple columns, OR for multiple rows
-      self.filters << FilterCommand.new( self, message) do |dataset|
+      filter_by_dataset( message ) do |dataset|
         indexes.first.field.with do |field|
           if field.association?
             dataset.filter( field.meta.keys => indexes.first.attribute_value.pk )
@@ -563,11 +572,6 @@ class TableView
           end
         end
       end
-      
-      # try to end up on the same entity, even after the filter
-      restore_entity { filters.last.doit }
-      
-      update_filter_status_bar
     end
     filtered?
   end
