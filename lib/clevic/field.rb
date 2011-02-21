@@ -178,6 +178,8 @@ class Field
   # proc with take the dataset as an argument, and must return a datset.
   # otherwise it must just return a dataset.
   def dataset
+    # FIXME this is only related_class for relational fields.
+    # distinct fields will need entity_class.dataset
     @dataset_roller ||= DatasetRoller.new( related_class.dataset )
   end
   
