@@ -20,8 +20,9 @@ class Entry < Sequel::Model
   
   define_ui do
     plain       :date, :sample => '88-WWW-99'
-    distinct    :description do |f|
-      f.conditions "now() - date <= '1 year'"
+    distinct    :supplier do |f|
+      #~ f.conditions "now() - date <= '1 year'"
+      f.dataset.filter( "now() - date <= '1 year'" )
       f.sample( 'm' * 26 )
       f.notify_data_changed = lambda do |entity_view, table_view, model_index|
         if model_index.entity.credit.nil? && model_index.entity.debit.nil?
@@ -33,10 +34,10 @@ class Entry < Sequel::Model
         end
       end
     end
-    distinct :supplier
     relational  :debit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
     relational  :credit, :display => 'name', :conditions => 'active = true', :order => 'lower(name)', :sample => 'Leilani Member Loan'
     plain       :amount, :sample => 999999.99
+    distinct    :description
     distinct    :category
     plain       :cheque_number
     plain       :active, :sample => 'WW'

@@ -178,9 +178,8 @@ class Field
   # proc with take the dataset as an argument, and must return a datset.
   # otherwise it must just return a dataset.
   def dataset
-    # FIXME this is only related_class for relational fields.
-    # distinct fields will need entity_class.dataset
-    @dataset_roller ||= DatasetRoller.new( related_class.dataset )
+    # related class if it's an association, entity_class otherwise
+    @dataset_roller ||= DatasetRoller.new( ( association? ? related_class : entity_class ).dataset )
   end
   
   # TODO Still getting the Builder/Built conflict
@@ -191,7 +190,6 @@ class Field
   # The list of properties for ActiveRecord options.
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected.
   # Each element becomes a property.
-  # TODO remove these? That will destroy the migration path.
   # TODO deprecate them
   # TODO warn if these are used together with a dataset call
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]

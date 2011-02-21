@@ -13,22 +13,29 @@ class DistinctDelegate
     dataset.count > 0
   end
   
-  # TODO move away from ar_methods
+  # TODO move away from ar_methods. Partly done.
   # TODO ordering by either recentness, or frequency. OR both.
+  # TODO make sure nil is in the list. And the current item is at the top.
+  # TODO and the current item is in the list, even if it's older
   # we only use the first column, so use the second
   # column to sort by, since SQL requires the order by clause
   # to be in the select list where distinct is involved
-  #~ entity_class.adaptor.attribute_list( attribute, model_index.attribute_value, field.description, field.frequency, find_options ) do |row|
-    #~ value = row[attribute]
-    #~ editor.add_item( value, value.to_variant )
-  #~ end
   def dataset
-    require 'clevic/ar_methods'
-    field.entity_class.plugin :ar_methods
-    field.entity_class. \
-      translate( field.find_options ). \
+    base_dataset =
+    unless field.find_options.empty?
+      puts "conditions and order are deprecated. Use dataset instead."
+      require 'clevic/ar_methods'
+      field.entity_class.plugin :ar_methods
+      field.entity_class.translate( field.find_options )
+    else
+      field.dataset_roller.dataset
+    end
+    
+    # now pull out the field and the distinct values
+    base_dataset. \
       distinct. \
       select( field.attribute ). \
+      order( field.attribute ). \
       naked
   end
   
