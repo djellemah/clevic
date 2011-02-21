@@ -1,8 +1,7 @@
-Put git links on web page
+map / restricted fields: sample not working, mapping not working
 Sort out the whole /bin/clevic vs gem 'clevic', '~> 0.12.0' thing.
 Meta should be related to ModelColumn somehow. Which is pretty messy itself.
 
-use Sequel::Dataset for filtering instead of find options (WIP)
 can't use find on certain fields, ie code in adjustments. Partially fixed.
 
 export to CSV
@@ -61,7 +60,7 @@ hiding of fields
 save context menu settings, filter settings, etc
 filtering by various things. http://doc.trolltech.com/4.3/qsortfilterproxymodel.html
 highlighting by various things
-cut and paste (in model format)
+cut and paste (in model format. Could use indirect format ie table/row/column. Kinda pointless though since references would essentially do the same thing.)
 
 drop cached model objects from CacheTable when they're not in use. WeakRef?
 
