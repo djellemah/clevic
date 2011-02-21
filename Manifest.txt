@@ -31,6 +31,7 @@ lib/clevic/action_builder.rb
 lib/clevic/sequel_naked.rb
 lib/clevic/record.rb
 lib/clevic/icons/icon.png
+lib/clevic/dataset_roller.rb
 lib/clevic/dirty.rb
 lib/clevic/ordered_dataset.rb
 lib/clevic/rails_models_loaders.rb
