@@ -3,17 +3,18 @@ require 'clevic.rb'
 host = ENV['PGHOST'] || 'localhost'
 $options ||= {}
 
-if respond_to?( :'jruby?' ) && jruby?
-  constring = "jdbc:postgresql://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general"
-  puts "constring: #{constring.inspect}"
-  Sequel.connect( constring )
+constring = 
+if RUBY_PLATFORM == 'java'
+  "jdbc:postgresql"
 else
-  Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general" )
-end
+  "postgres"
+end + "://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general"
+
+Sequel.connect constring
 
 class Entry < Sequel::Model
-  belongs_to :debit, :class_name => 'Account', :foreign_key => 'debit_id'
-  belongs_to :credit, :class_name => 'Account', :foreign_key => 'credit_id'
+  many_to_one :debit, :class_name => 'Account', :key => :debit_id
+  many_to_one :credit, :class_name => 'Account', :key => :credit_id
   
   include Clevic::Record
   
@@ -41,7 +42,7 @@ class Entry < Sequel::Model
     plain       :active, :sample => 'WW'
     plain       :vat, :label => 'VAT', :sample => 'WW', :tooltip => 'Does this include VAT?'
     
-    records     :order => 'date, id'
+    dataset.order( :date, :id )
   end
   
   # Copy the values for the credit and debit fields
@@ -49,11 +50,11 @@ class Entry < Sequel::Model
   def self.update_from_description( current_index )
     return if current_index.attribute_value.nil?
     # most recent entry, ordered in reverse
-    similar = self.adaptor.find(
-      :first,
-      :conditions => ["#{current_index.attribute} = ?", current_index.attribute_value],
-      :order => 'date desc'
-    )
+    similar = self. \
+      filter( current_index.attribute.to_sym => current_index.attribute_value ). \
+      order( :date.desc ). \
+      first
+      
     if similar != nil
       # set the values
       current_index.entity.debit = similar.debit
@@ -70,8 +71,8 @@ class Entry < Sequel::Model
 end
 
 class Account < Sequel::Model
-  has_many :debits, :class_name => 'Entry', :foreign_key => 'debit_id'
-  has_many :credits, :class_name => 'Entry', :foreign_key => 'credit_id'
+  one_to_many :debits, :class_name => 'Entry', :key => :debit_id, :order => :date
+  one_to_many :credits, :class_name => 'Entry', :key => :credit_id, :order => :date
   
   include Clevic::Record
   
@@ -84,6 +85,6 @@ class Account < Sequel::Model
     plain       :fringe, :format => "%.1f"
     plain       :active
     
-    records  :order => 'name,account_type'
+    dataset.order( :name, :account_type )
   end
 end
