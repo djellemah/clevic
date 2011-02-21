@@ -8,9 +8,10 @@ if RUBY_PLATFORM == 'java'
   "jdbc:postgresql"
 else
   "postgres"
-end + "://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=general"
+end + "://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&password=#{$options[:password] || 'general'}"
 
-Sequel.connect constring
+db = Sequel.connect constring
+db.test_connection
 
 class Entry < Sequel::Model
   many_to_one :debit, :class_name => 'Account', :key => :debit_id
