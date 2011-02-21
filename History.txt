@@ -1,3 +1,7 @@
+== 0.13.0.b5
+* Bug fixes
+* moved almost all internals to Sequel::Dataset
+
 == 0.13.0.b3
 * WARNING most importantly, support for ActiveRecord style calls now requires
   a require of 'clevic/sequel_ar_adapter.rb' in your model files.
