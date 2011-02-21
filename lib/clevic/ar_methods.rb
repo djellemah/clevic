@@ -2,6 +2,70 @@ require 'active_support'
 require 'active_support/core_ext/array/extract_options.rb'
 
 module Sequel
+  class Dataset
+    # Basically, we're translating from AR's hash options
+    # to Sequel's method algebra, and returning the resulting
+    # dataset.
+    def translate( options )
+      # recursively send key-value pairs to self
+      # and return the result
+      options.inject( self ) do |dataset, (key, value)|
+        case key
+          when :limit; dataset.limit( value, nil )
+          when :offset
+            # workaround for Sequel's refusal to do offset without limit
+            dataset.limit( options[:limit] || :all, value )
+          
+          when :order
+            orders = value.split(/, */ ).map do |x|
+              case x
+              when /^(\w+) +(asc|desc)$/i
+                $1.to_sym.send( $2 )
+                
+              when /^\w+$/i
+                x.to_sym
+              
+              else
+                x.lit
+                
+              end
+            end
+            dataset.order( *orders )
+          
+          when :conditions
+            # this translation is not adequate for all use cases of the AR api
+            # specifically where value contains a SQL expression
+            unless value.nil?
+              possible_literal =
+              if value.is_a?( String )
+                value.lit
+              else
+                value
+              end
+              
+              dataset.filter( possible_literal ) 
+            end
+          
+          when :include
+            # this is the class to join
+            joined_class = eval( reflections[value][:class_name] )
+            dataset.join_table(
+              :inner,
+              joined_class,
+              joined_class.primary_key => reflections[value][:key]
+            ).select( table_name.* )
+            
+          else
+            raise "#{key} not implemented"
+        # make sure at least it's unchanged, in case options is empty
+        end || dataset
+      end
+      
+      rescue Exception => e
+        raise RuntimeError, "#{self.name} #{options.inspect} #{e.message}", caller(0)
+    end
+  end
+  
   module Plugins
     module ArMethods
       # plugin :ar_methods calls this.
@@ -20,63 +84,8 @@ module Sequel
           super
         end
         
-        def lit_if_string( arg )
-          if arg.is_a?( String )
-            arg.lit
-          else
-            arg
-          end
-        end
-        
-        # Basically, we're translating from AR's hash options
-        # to Sequel's method algebra, and returning the resulting
-        # dataset.
         def translate( options )
-          options.inject( dataset ) do |dataset, (key, value)|
-            case key
-              when :limit; dataset.limit( value, nil )
-              when :offset
-                # workaround for Sequel's refusal to do offset without limit
-                dataset.limit( options[:limit] || :all, value )
-              
-              when :order
-                orders = value.split(/, */ ).map do |x|
-                  case x
-                  when /^(\w+) +(asc|desc)$/i
-                    $1.to_sym.send( $2 )
-                    
-                  when /^\w+$/i
-                    x.to_sym
-                  
-                  else
-                    x.lit
-                    
-                  end
-                end
-                dataset.order( *orders )
-              
-              when :conditions
-                # this is most likely not adequate for all use cases
-                # of the AR api
-                dataset.filter( lit_if_string( value ) ) unless value.nil?
-              
-              when :include
-                # this is the class to joing
-                joined_class = eval( reflections[value][:class_name] )
-                dataset.join_table(
-                  :inner,
-                  joined_class,
-                  joined_class.primary_key => reflections[value][:key]
-                ).select( table_name.* )
-                
-              else
-                raise "#{key} not implemented"
-            # make sure at least it's unchanged
-            end || dataset
-          end
-          
-          rescue Exception => e
-            raise RuntimeError, "#{self.name} #{options.inspect} #{e.message}", caller(0)
+          dataset.translate( options )
         end
         
         def find_ar( *args )
@@ -87,19 +96,19 @@ module Sequel
           
           case args.first
             when :first
-              translate(options).first
+              dataset.translate(options).first
               
             when :last
-              translate(options).last
+              dataset.translate(options).last
               
             when :all
-              translate(options).all
+              dataset.translate(options).all
               
             else
               if args.size == 1
-                translate(options).filter( :id.qualify( table_name ) => args.first ).first
+                dataset.translate(options).filter( :id.qualify( table_name ) => args.first ).first
               else
-                translate(options).filter( :id.qualify( table_name ) => args ).all
+                dataset.translate(options).filter( :id.qualify( table_name ) => args ).all
               end
           end
         end
@@ -108,7 +117,7 @@ module Sequel
           options = args.extract_options!
           attribute = args.first
           
-          dataset = translate( options )
+          dataset = dataset.translate( options )
           
           unless attribute.nil?
             dataset = dataset.select( attribute )
