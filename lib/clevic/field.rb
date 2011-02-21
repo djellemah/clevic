@@ -2,6 +2,7 @@ require 'gather'
 require 'clevic/sampler.rb'
 require 'clevic/generic_format.rb'
 require 'clevic/dataset_roller.rb'
+require 'clevic/many_field.rb'
 
 module Clevic
 
@@ -206,6 +207,10 @@ class Field
     end
   end
   
+  # The model object (eg TableModel) this field is part of.
+  # Set to TableModel by ModelBuilder#build
+  attr_accessor :model
+    
   # The UI delegate class for the field. The delegate class knows how to create a UI
   # for this field using whatever GUI toolkit is selected
   attr_accessor :delegate
@@ -260,36 +265,6 @@ EOF
     default_alignment!
     default_display! if association?
   end
-  
-  # x_to_many fields are by definition collections of other entities
-  def many( &block )
-    if block
-      many_view( &block )
-    else
-      many_view do |mb|
-        # TODO should fetch this from one of the field definitions
-        mb.plain related_attribute
-      end
-    end
-  end
-  
-  def many_builder
-    @many_view.builder
-  end
-  
-  def many_fields
-    many_builder.fields
-  end
-  
-  # return an instance of Clevic::View that represents the many items
-  # for this field
-  def many_view( &block )
-    @many_view ||= View.new( :entity_class => related_class, &block )
-  end
-  
-  # The model object (eg TableModel) this field is part of.
-  # Set to TableModel by ModelBuilder#build
-  attr_accessor :model
   
   # Return the attribute value for the given Object Relational Model instance, or nil
   # if entity is nil. Will call transform_attribute.
