@@ -48,12 +48,12 @@ module Sequel
           
           when :include
             # this is the class to join
-            joined_class = eval( reflections[value][:class_name] )
+            joined_class = eval( model.reflections[value][:class_name] )
             dataset.join_table(
               :inner,
               joined_class,
-              joined_class.primary_key => reflections[value][:key]
-            ).select( table_name.* )
+              joined_class.primary_key => model.reflections[value][:key]
+            ).select( model.table_name.* )
             
           else
             raise "#{key} not implemented"
@@ -62,7 +62,7 @@ module Sequel
       end
       
       rescue Exception => e
-        raise RuntimeError, "#{self.name} #{options.inspect} #{e.message}", caller(0)
+        raise RuntimeError, "#{self} #{options.inspect} #{e.message}", caller(0)
     end
   end
   
