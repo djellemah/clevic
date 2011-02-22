@@ -175,16 +175,14 @@ class Field
   # This is the dataset of related objects.
   # Called in configuration for a field that works with a relationship.
   #  dataset.filter( :blah => 'etc' ).order( :interesting_field )
-  # proc with take the dataset as an argument, and must return a datset.
-  # otherwise it must just return a dataset.
   def dataset
-    # related class if it's an association, entity_class otherwise
-    @dataset_roller ||= DatasetRoller.new( ( association? ? related_class : entity_class ).dataset )
+    dataset_roller
   end
   
   # TODO Still getting the Builder/Built conflict
   def dataset_roller
-    @dataset_roller
+    # related class if it's an association, entity_class otherwise
+    @dataset_roller ||= DatasetRoller.new( ( association? ? related_class : entity_class ).dataset )
   end
   
   # The list of properties for ActiveRecord options.
