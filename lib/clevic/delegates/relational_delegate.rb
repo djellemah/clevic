@@ -21,26 +21,18 @@ class RelationalDelegate
     # entity is set in init_component
     # field and entity are used by FieldValuer
     
-    # FIXME don't really need this if clause
-    # because attribute_value is what we're interested in
-    # and actually entity won't ever be nil because
-    # the row containing this field won't ever have a nil entity.
-    if entity.nil?
-      dataset
-    else
-      # including the current entity.
-      # Could also use
-      #  dataset.or( entity_class.primary_key => entity_key.pk )
-      # but that would put current entity in the list somewhere
-      # other than the top, which seems to be the most sensible
-      # place for it. Could also create a special enumerator
-      # which gives back the entity first, followed by the dataset.
-      dataset.all.with do |values|
-        # make sure there's only one instance of the current value,
-        # and make sure it's at the top of the list
-        values.delete( attribute_value )
-        values.unshift( attribute_value )
-      end
+    # including the current entity.
+    # Could also use
+    #  dataset.or( entity_class.primary_key => entity_key.pk )
+    # but that would put current entity in the list somewhere
+    # other than the top, which seems to be the most sensible
+    # place for it. Could also create a special enumerator
+    # which gives back the entity first, followed by the dataset.
+    dataset.all.with do |values|
+      # make sure there's only one instance of the current value,
+      # and make sure it's at the top of the list
+      values.delete( attribute_value )
+      values.unshift( attribute_value )
     end
   end
   
