@@ -19,6 +19,9 @@ TODO drop rows when they haven't been accessed for a while
 
 TODO how to handle a quickly-changing underlying table? invalidate cache
 for each call?
+
+TODO figure out how to handle situations where the character set ordering
+in the db and in Ruby are different.
 =end
 class CacheTable < Array
   

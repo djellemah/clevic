@@ -1,6 +1,7 @@
 module Clevic
   # Provide some SQL dialect differences that aren't in ActiveRecord. Including
   # class must respond to entity_class.
+  # Not used anymore.
   module SqlDialects
     def adapter_name
       connection.adapter_name

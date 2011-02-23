@@ -24,9 +24,9 @@ module Clevic
       system.mime_data.has_html
     end
     
-    # TODO figure out why Qt never has anything other than text
-    # could be because the event loop isn't running when testing
-    # from irb
+    # TODO figure out why Qt never has anything other than text.
+    # Could be because the event loop isn't running when testing
+    # from irb.
     def html
       system.mime_data.html
     end
