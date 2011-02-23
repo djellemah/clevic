@@ -14,6 +14,7 @@ module Sequel
           when :limit; dataset.limit( value, nil )
           when :offset
             # workaround for Sequel's refusal to do offset without limit
+            # not sure we need :all for >= 3.13.0
             dataset.limit( options[:limit] || :all, value )
           
           when :order
