@@ -6,49 +6,72 @@ module Clevic
 # Calculate a string sample for a particular Field
 class Sampler
   # display is only used for relational fields
-  def initialize( entity_class, field_name, display, &format_block )
-    @entity_class = entity_class
-    @field_name = field_name
-    @display = display
+  def initialize( field, &format_block )
+    @field = field
     @format_block = format_block
   end
-  
-  attr_reader :entity_class, :field_name, :display
-  
-  def meta
-    @meta ||= entity_class.meta[field_name]
+  attr_reader :field
+
+  def entity_class
+    field.entity_class
   end
-  
+
+  def field_name
+    field.attribute
+  end
+
+  def display
+    field.display
+  end
+
+  def meta
+    field.meta
+  end
+
   # return a string which is representative of the width of the field
   def compute
-    case meta.type
-    when :string, :text
-      string_sample
-    
-    when :date, :time, :datetime, :timestamp
-      date_time_sample
-    
-    when :numeric, :decimal, :integer, :float
-      numeric_sample
-    
-    # TODO return a width, or something like that
-    when :boolean; 'W'
-    
-    when :many_to_one
-      related_sample
-    
+    if field.set
+      # choose the longest value in the set
+      set = field.set_for( entity_class.first )
+      if set.is_a?( Hash )
+        set.values
+      else
+        set
+      end. \
+      max{|a,b| a.to_s.length <=> b.to_s.length }.upcase
     else
-      if meta.type != NilClass
-        raise "Sampler#compute can't figure out sample for #{entity_class.name}.#{field_name} because it's a #{meta.type.inspect}"
+      # choose samples based on the type of the field
+      case meta.type
+      when :boolean
+        field.label
+
+      when :string, :text
+        string_sample
+
+      when :date, :time, :datetime, :timestamp
+        date_time_sample
+
+      when :numeric, :decimal, :integer, :float
+        numeric_sample
+
+      # TODO return a width, or something like that
+      when :boolean; 'W'
+
+      when :many_to_one
+        related_sample
+
+      else
+        if meta.type != NilClass
+          raise "Sampler#compute can't figure out sample for #{entity_class.name}.#{field_name} because it's a #{meta.type.inspect}"
+        end
       end
-    
     end
   end
-  
+
   def do_format( value )
     @format_block.call( value )
   end
-  
+
   # default to max length of 20
   def string_sample
     'N' * ( entity_class.max( :length.sql_function( field_name ) ).andand.to_i || 20 )

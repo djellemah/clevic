@@ -347,27 +347,23 @@ EOF
     do_generic_format( edit_format, value )
   end
   
-  # Return a sample for the field which can be used to size the UI field widget.
+  # Set or return a sample for the field which can be used to size the UI field widget.
   def sample( *args )
     if !args.empty?
       @sample = args.first
       self
     else
       if @sample.nil?
-        if meta.type == :boolean
-          @sample = self.label
-        else
-          begin
-            @sample ||= Sampler.new( entity_class, attribute, display ) do |value|
-              do_format( value )
-            end.compute
-          rescue
-            puts "for #{entity_class.name}"
-            puts $!
-          ensure
-            # if we don't know how to figure it out from the data, just return the label size
-            @sample ||= self.label
-          end
+        begin
+          @sample ||= Sampler.new( self ) do |value|
+            do_format( value )
+          end.compute
+        rescue
+          puts "for #{entity_class.name}"
+          puts $!
+        ensure
+          # if we don't know how to figure it out from the data, just return the label size
+          @sample ||= self.label
         end
       end
       @sample
