@@ -49,7 +49,6 @@ search with acts_as_searchable and hyperestraier
 
 moving of columns
 /-style keyboard search by selected column, or everything if no column selected
-/-style filtering?
 
 for dates, add year if not specified, with 6 months on either side range. Configurable?
 value parsing not in model
@@ -101,21 +100,18 @@ numeric months
 
 Combos
 ------
-shortlist combos by prefix. See Qt Examples.
+shortlist combos by prefix. See Qt Examples, and Swing code.
 turn on/off smart filters for relational delegates. Like selecting only distincts in the last year.
 context menu for delegates, ie sort order, last used, etc
 
 shortcut sets, depending on which OS you're used. use QKeyEvent::matches ( QKeySequence::StandardKey key )
 
 Doing data capture, sort by id, but unfilter reverts to date/id rather than entry order
-optional warnings for back-dated entries. Highlighting 
+optional warnings for back-dated entries. Highlighting.
 make bsearch easier to install
 
 handle db errors
 easier way to run models, search LOAD_PATH
-
-cache belongs_to associations, during loading, but don't affect ability to pick up
-changes more or less instantly.
 
 preferences
 -----------
