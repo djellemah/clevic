@@ -88,6 +88,7 @@ lib/clevic/many_field.rb
 lib/clevic/attribute_list.rb
 lib/clevic/framework.rb
 lib/clevic/model_column.rb
+lib/clevic/subclasses.rb
 lib/clevic/swing/cell_renderer.rb
 lib/clevic/swing/action_builder.rb
 lib/clevic/swing/cell_editor.rb
