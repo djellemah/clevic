@@ -22,7 +22,6 @@ tasks/rdoc.rake
 test/test_cache_table.rb
 test/test_helper.rb
 test/test_model_index_extensions.rb
-test/test_sql_dialects.rb
 test/test_table_model.rb
 test/test_table_searcher.rb
 lib/clevic.rb
@@ -51,7 +50,6 @@ lib/clevic/delegates/combo_delegate.rb
 lib/clevic/generic_format.rb
 lib/clevic/sequel_meta.rb
 lib/clevic/filter_command.rb
-lib/clevic/sql_dialects.rb
 lib/clevic/extensions.rb
 lib/clevic/view.rb
 lib/clevic/model_builder.rb
