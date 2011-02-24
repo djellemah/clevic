@@ -9,8 +9,6 @@ The main application class. Display one tabs for each descendant of Clevic::View
 in Clevic::View.order. DefaultView classes created by Clevic::Record are included.
 =end
 class Browser < javax.swing.JFrame
-  #~ slots *%w{dump() refresh_table() filter_by_current(bool) next_tab() previous_tab()}
-  
   attr_reader :menu_edit, :menu_search, :menu_table
   
   def initialize
@@ -104,8 +102,6 @@ class Browser < javax.swing.JFrame
     
       # tab navigation
       tables_tab.add_change_listener do |change_event|
-        puts "change_event: #{change_event.source.inspect}"
-        puts "change_event.source.selected_index: #{change_event.source.selected_index.inspect}"
         current_changed
         # TODO tell exiting tab to save currently editing row/cell
       end

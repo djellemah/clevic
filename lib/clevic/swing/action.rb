@@ -118,7 +118,6 @@ class Action
           
         else
           keystring = javax.swing.KeyStroke.getKeyStroke( java.lang.Character.new( last.to_char ), modifier_mask ).toString
-          puts "keystring: #{keystring.inspect}"
           # have to do this conversion for Mac OS X
           javax.swing.KeyStroke.getKeyStroke( keystring.gsub( /typed/, 'pressed' ) )
       end
@@ -129,7 +128,6 @@ class Action
       raise "too many options for #{sequence}: #{found.inspect}" if found.size != 1
       javax.swing.KeyStroke.getKeyStroke( eval( "java.awt.event.KeyEvent::#{found.first}" ), modifier_mask )
     end
-    puts "keystroke: #{keystroke.inspect}"
     keystroke || raise( "unknown keystroke #{sequence} => #{modifiers.inspect} #{last}" )
   end
 end
