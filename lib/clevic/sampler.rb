@@ -104,9 +104,22 @@ class Sampler
     '9' * ( max_length || 5 )
   end
   
+  # Hmm. The first reified exemplar of a relational nested Field
+  class VirtualField
+    def initialize( entity_class, display )
+      @entity_class, @display = entity_class, display
+    end
+    
+    def entity_class; @entity_class; end
+    def attribute; @display; end
+    def display; nil; end
+    def meta; @entity_class.meta[attribute]; end
+    def set; nil; end
+  end
+  
   def related_sample
     if display.respond_to?( :to_sym )
-      Sampler.new( eval( meta.class_name ), display.to_sym, nil, &@format_block ).compute
+      Sampler.new( VirtualField.new( eval( meta.class_name ), display.to_sym ), &@format_block ).compute
     end
   end
 end

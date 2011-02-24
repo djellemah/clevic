@@ -362,7 +362,8 @@ EOF
           end.compute
         rescue
           puts "for #{entity_class.name}"
-          puts $!
+          puts $!.message
+          puts $!.backtrace
         ensure
           # if we don't know how to figure it out from the data, just return the label size
           @sample ||= self.label
