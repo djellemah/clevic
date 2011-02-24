@@ -15,8 +15,8 @@ class ComboBox < javax.swing.JComboBox
   
   # For Clevic::ComboDelegate to call
   def no_insert=( bool )
-    # Swing doesn't have combo policies like Qt. Fro
-    # what I can see.
+    # Swing doesn't have combo policies like Qt.
+    # From what I can see, anyway.
   end
   
   # set to true by processKeyBinding when a character
