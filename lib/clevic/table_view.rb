@@ -108,7 +108,7 @@ class TableView
       action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
       
       if $options[:debug]
-        action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
+        action :action_dump, 'Du&mp', :shortcut => 'Ctrl+Shift+D' do
           puts model.collection[current_index.row].inspect
         end
       end
@@ -122,7 +122,7 @@ class TableView
       action :action_find_next, 'Find &Next', :shortcut => 'Ctrl+G', :method => :find_next
       action :action_filter, 'Fil&ter', :shortcut => 'Ctrl+L', :method => :filter_by_current
       action :action_unfilter, '&Un-Filter', :enabled => false, :shortcut => 'Ctrl+K', :method => :unfilter
-      action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
+      #~ action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
     end
   end
   
