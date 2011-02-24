@@ -19,7 +19,6 @@ sql/times.sql
 sql/times_sqlite.sql
 tasks/clevic.rake
 tasks/rdoc.rake
-tasks/website.rake
 test/test_cache_table.rb
 test/test_helper.rb
 test/test_model_index_extensions.rb
