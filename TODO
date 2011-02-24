@@ -1,3 +1,4 @@
+override_next_index broken again, on ditto
 Sort out the whole /bin/clevic vs gem 'clevic', '~> 0.12.0' thing.
 Meta should be related to ModelColumn somehow. Which is pretty messy itself.
 
