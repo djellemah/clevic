@@ -1,8 +1,5 @@
-require 'rubygems'
-require 'Qt4'
 require 'fastercsv'
 require 'qtext/action_builder.rb'
-
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'
 
@@ -46,10 +43,12 @@ class TableView < Qt::TableView
     self.sorting_enabled = false
     
     # set fonts
-    Qt::Font.new( font.family, font.point_size * 5 / 6 ).tap do |fnt|
-      self.font = fnt
-      self.horizontal_header.font = fnt
-    end 
+    # TODO leave this here, but commented so we can see how to do it
+    # properly later.
+    #~ Qt::Font.new( font.family, font.point_size * 5 / 6 ).tap do |fnt|
+      #~ self.font = fnt
+      #~ self.horizontal_header.font = fnt
+    #~ end 
     
     self.context_menu_policy = Qt::ActionsContextMenu
   end
@@ -205,21 +204,6 @@ class TableView < Qt::TableView
     error_message.show
   end
   
-  # This is to allow entity model UI handlers to tell the view
-  # whence to move the cursor when the current editor closes
-  # (see closeEditor).
-  # TODO not used?
-  def override_next_index( model_index )
-    self.next_index = model_index
-  end
-  
-  # Call set_current_index with next_index ( from override_next_index )
-  # or model_index, in that order. Set next_index to nil afterwards.
-  def set_current_unless_override( model_index )
-    set_current_index( @next_index || model_index )
-    self.next_index = nil
-  end
-  
   # work around situation where an ItemDelegate is open
   # when the surrouding tab is changed, but the right events
   # don't arrive.
@@ -269,7 +253,7 @@ class TableView < Qt::TableView
     end
     
     rescue Exception => e
-      raise RuntimeError, "#{model.entity_view.class.name}.#{model_index.field.id}: #{e.message}", caller(0)
+      raise RuntimeError, "#{model.entity_view.class.name}.#{model_index.field.id}: #{e.message}", e.backtrace
   end
   
   attr_accessor :before_edit_index

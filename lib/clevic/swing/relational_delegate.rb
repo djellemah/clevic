@@ -11,32 +11,12 @@ module Clevic
 class RelationalDelegate < ComboDelegate
   def initialize( field )
     super
-    unless find_options[:conditions].nil?
-      find_options[:conditions].gsub!( /true/, field.related_class.adaptor.quoted_true )
-      find_options[:conditions].gsub!( /false/, field.related_class.adaptor.quoted_false )
-    end
   end
   
   # use the Clevic::ComboBox class because JCombobox is remarkably stupid
   # about far too many things.
   def combo_class
     ComboBox
-  end
-  
-  def needs_combo?
-    field.related_class.adaptor.count( :conditions => find_options[:conditions] ) > 0
-  end
-  
-  def empty_set_message
-    "There must be records in #{field.related_class.name.humanize} for this field to be editable."
-  end
-  
-  def population
-    # add set of all possible related entities,
-    # including the currently selected entity
-    ary = field.related_class.adaptor.find( :all, find_options )
-    ary << attribute_value unless ary.include?( attribute_value )
-    ary
   end
   
   # don't allow new values
@@ -46,3 +26,5 @@ class RelationalDelegate < ComboDelegate
 end
 
 end
+
+require 'clevic/delegates/relational_delegate.rb'

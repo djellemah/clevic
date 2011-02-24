@@ -1,4 +1,3 @@
-require 'Qt4'
 require 'date'
 
 require 'andand'
@@ -86,7 +85,7 @@ class TableModel < Qt::AbstractTableModel
       retval = item_boolean_flags
     end
     
-    unless model_index.field.read_only? || model_index.entity.andand.readonly? || read_only?
+    unless model_index.field.read_only? || read_only?
       retval |= qt_item_is_editable.to_i 
     end
     retval
@@ -101,12 +100,8 @@ class TableModel < Qt::AbstractTableModel
           when Qt::Horizontal
             labels[section]
           when Qt::Vertical
-            # don't force a fetch from the db
-            if collection.cached_at?( section )
-              collection[section].id
-            else
-              section
-            end
+            # display record number. Object id is in tooltip.
+            section+1
         end
         
       when qt_text_alignment_role
@@ -128,8 +123,12 @@ class TableModel < Qt::AbstractTableModel
             case
               when !collection[section].errors.empty?
                 'Invalid data'
-              when collection[section].changed?
+              when collection[section].modified?
                 'Unsaved changes'
+              else
+                if collection.cached_at?( section )
+                  collection[section].pk.inspect
+                end
             end
         end
         
@@ -198,7 +197,7 @@ class TableModel < Qt::AbstractTableModel
         
         when qt_foreground_role
           index.field.foreground_for( index.entity ) ||
-          if index.field.read_only? || index.entity.andand.readonly? || read_only?
+          if index.field.read_only? || read_only?
             Qt::Color.new( 'dimgray' )
           end
         
@@ -271,6 +270,7 @@ class TableModel < Qt::AbstractTableModel
       # user-defined role
       # TODO this only works with single-dotted paths
       when qt_paste_role
+        puts "WARNING Qt::PasteRole Deprecated"
         if index.meta.type == :association
           field = index.field
           candidates = field.related_class.find( :all, :conditions => [ "#{field.attribute_path[1]} = ?", variant.value ] )

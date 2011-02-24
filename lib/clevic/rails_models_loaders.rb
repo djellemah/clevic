@@ -1,5 +1,18 @@
 require 'active_support'
 
+def subclasses( base )
+  classes = []
+  ObjectSpace.each_object( Class ) do |x|
+    if x.ancestors.include?( base )
+      case
+        when x == Clevic.base_entity_class; # don't include this
+        else; classes << x
+      end
+    end
+  end
+  classes.sort{|a,b| a.name <=> b.name}
+end
+
 def load_rails_models( root, config, models )
   # initialize Rails
   load config / 'environment.rb'

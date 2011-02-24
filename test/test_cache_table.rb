@@ -1,9 +1,8 @@
 require File.dirname(__FILE__) + '/test_helper'
 
-# need to set up a test DB, and test data for this
 class TestCacheTable < Test::Unit::TestCase
   def setup
-    @cache_table = CacheTable.new( Passenger )
+    @cache_table = Clevic::CacheTable.new( Passenger )
   end
   
   def teardown
@@ -56,30 +55,21 @@ class TestCacheTable < Test::Unit::TestCase
     end
   end
   
-  should 'have id as a default order attribute' do
-    oa = OrderAttribute.new( Passenger, :id )
-    assert_equal oa, @cache_table.order_attributes.first
-  end
-  
-  def test_parse_order_attributes
-    order_string = 'name desc, passengers.nationality asc, row'
-    ct = CacheTable.new Passenger, :order => order_string
-    assert_equal OrderAttribute.new( Passenger, 'name desc' ), ct.order_attributes[0]
-    assert_equal OrderAttribute.new( Passenger, 'nationality' ), ct.order_attributes[1]
-    assert_equal OrderAttribute.new( Passenger, 'row asc' ), ct.order_attributes[2]
-  end
-  
   should 'return nil for a nil parameter' do
     assert_nil @cache_table.index_for_entity( nil )
   end
     
   should 'return nil for an empty set' do
-    cache_table = @cache_table.renew( :conditions => "nationality = 'nothing'" )
+    cache_table = @cache_table.renew do |dataset|
+      dataset.filter( :nationality => 'nothing' )
+    end
     assert_nil cache_table.index_for_entity( Passenger.first )
   end
   
   should "filter with related objects" do
-    @cache_table = @cache_table.renew( :conditions => { :flight => Flight.first} )
+    @cache_table = @cache_table.renew do |dataset|
+      dataset.filter( :flight_id => Flight.first.id )
+    end
   end
   
   def test_index_for_entity
@@ -89,12 +79,12 @@ class TestCacheTable < Test::Unit::TestCase
     assert_equal 0, index, 'first passenger should have an index of 0'
     
     # test in descending order
-    @cache_table = @cache_table.renew( :order => 'id desc' )
+    @cache_table = @cache_table.renew {|ds| ds.order( :id.desc ) }
     last_passenger = Passenger.order( :id.desc ).first
     assert_equal 0, @cache_table.index_for_entity( last_passenger ), "last passenger in reverse order should have an index of 0"
     
     # test with two order fields
-    @cache_table = @cache_table.renew( :order => 'nationality, row' )
+    @cache_table = @cache_table.renew {|ds| ds.order( :nationality, :row ) }
     passenger = Passenger.order( :nationality, :row ).first
     assert_equal 0, @cache_table.index_for_entity( passenger ), "passenger in (nationality, row) order should have an index of 0"
   end

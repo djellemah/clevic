@@ -1,4 +1,8 @@
 module Clevic
+
+  # Provide a list of entries for a distinct field, ordered
+  # by either value order, or frequency order.
+  # TODO move this into the common DistinctDelegate class.
   class AttributeList
     def initialize( entity_class, attribute, attribute_value, find_options )
       @entity_class = entity_class

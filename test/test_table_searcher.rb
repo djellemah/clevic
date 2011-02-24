@@ -58,11 +58,6 @@ class TestTableSearcher < Test::Unit::TestCase
       end
     end
     
-    should "raise an expection for a naked dataset" do
-      assert_raise( RuntimeError ) do
-        Clevic::TableSearcher.new( Passenger.db[:passengers], @simple_search_criteria, @nationality_field )
-      end
-    end
   end
   
   context "searching" do
@@ -131,6 +126,8 @@ class TestTableSearcher < Test::Unit::TestCase
     
     should 'raise an exception for no display value' do
       @flight_field = Clevic::Field.new( :flight, Passenger, {} )
+      @flight_field.display = nil
+      
       assert_nil @flight_field.display
       assert_raise RuntimeError do
         table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @flight_field )

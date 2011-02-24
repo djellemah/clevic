@@ -8,12 +8,21 @@ class Delegate
   include FieldValuer
 
   def initialize( field )
+    super()
     @field = field
   end
   
-  attr_accessor :entity, :parent
+  # This is the ORM entity instance for which this delegate
+  # is editing a single field. It needs to be the entire entity
+  # so we can set the edited field value on it.
+  attr_accessor :entity
   
+  # The parent widget of this delegate / this delegate's widget
+  attr_accessor :parent
+  
+  # the Clevic::Field instance which this delegate edits.
   attr_reader :field
+  
   def attribute
     field.attribute
   end
@@ -22,10 +31,7 @@ class Delegate
     field.entity_class
   end
   
-  def find_options
-    field.find_options
-  end
-  
+  # assume this is not a combo delegate. That will come later.
   def is_combo?
     false
   end

@@ -15,19 +15,6 @@ module Sequel
       end
       
       module ClassMethods
-        # Copy the necessary class instance variables to the subclass.
-        def inherited(subclass)
-          super
-          #~ store = @cache_store
-          #~ ttl = @cache_ttl
-          #~ cache_ignore_exceptions = @cache_ignore_exceptions
-          #~ subclass.instance_eval do
-            #~ @cache_store = store
-            #~ @cache_ttl = ttl
-            #~ @cache_ignore_exceptions = cache_ignore_exceptions
-          #~ end
-        end
-        
         def meta
           if @meta.nil?
             @meta = {}
@@ -54,6 +41,7 @@ module Sequel
             meta.values.map( &:keys ).include?( [ column ] )
           end
         end
+
       end
       
       module InstanceMethods

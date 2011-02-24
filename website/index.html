@@ -28,18 +28,14 @@
 
 <div id="main">
 	<h1>Clevic</h1>
-	<p><a href="rdoc">RDoc</a> | <a href="http://rubygems.org/gems/clevic">Rubygems</a> | <a href="http://rubyforge.org/projects/clevic/">Rubyforge Project</a></p>
-<p>Clevic is a toolkit for building GUIs database tables with useful functionality.<br />
-It works with Qt or Java Swing and Sequel.</p>
-<p>An interesting side-effect of this will probably be that<br />
-building form-style GUIs will be possible. Eventually. When the code has been written.</p>
-<p>Screenshot of a fully defined UI with the foreign-key dropdown in place.<br />
-Tabs contain the two tables.</p>
-<p>See <a href="rdoc">RDoc</a> for feature list.<br />
-See <a href="rdoc/Clevic/ModelBuilder.html">ModelBuilder</a> for how to define views.</p>
+	<p><a href="rdoc">RDoc</a> | <a href="http://rubygems.org/gems/clevic">Rubygems Page</a> | <a href="http://rubyforge.org/projects/clevic/">Rubyforge Project</a> | <a href="http://gitweb.semiosix.com/clevic">gitweb</a> | <a href="git://semiosix.com/clevic">git clone git://semiosix.com/clevic</a></p>
+<p>Clevic is a relational table <span class="caps">GUI</span> toolkit. It works with Qt or Java/Swing and <a href="http://sequel.rubyforge.org">Sequel</a>.<br />
+An interesting side-effect of this will probably be that building form-style GUIs will be possible. Eventually. When the code has been written.<br />
+Lots more in the <a href="rdoc">RDoc</a> pages.</p>
+<p>Screenshot of a fully defined UI with the foreign-key dropdown in place. Tabs contain the two tables.</p>
+<p>See <a href="rdoc/Clevic/ModelBuilder.html">ModelBuilder</a> for how to define views.</p>
 <p><img src="screenshot.png" title="Screenshot" alt="Screenshot" /></p>
-<p>Code for minimal UI definition. Clevic will create a fairly sensible<br />
-UI from the DB metadata.</p>
+<p>Code for minimal UI definition. Clevic will create a fairly sensible UI from the DB metadata.</p>
 <pre><code>
 require 'clevic.rb'
 
@@ -71,24 +67,27 @@ require 'clevic.rb'
 host = ENV['PGHOST'] || 'localhost'
 $options ||= {}
 
-if respond_to?( :'jruby?' ) &amp;&amp; jruby?
-  constring = "jdbc:postgresql://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&amp;password=general"
-  puts "constring: #{constring.inspect}"
-  Sequel.connect( constring )
+constring = 
+if RUBY_PLATFORM == 'java'
+  "jdbc:postgresql"
 else
-  Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&amp;password=general" )
-end
+  "postgres"
+end + "://#{host}/accounts_test?user=#{$options[:username] || 'accounts'}&amp;password=#{$options[:password] || 'general'}"
+
+db = Sequel.connect constring
+db.test_connection
 
 class Entry &lt; Sequel::Model
-  belongs_to :debit, :class_name =&gt; 'Account', :foreign_key =&gt; 'debit_id'
-  belongs_to :credit, :class_name =&gt; 'Account', :foreign_key =&gt; 'credit_id'
+  many_to_one :debit, :class_name =&gt; 'Account', :key =&gt; :debit_id
+  many_to_one :credit, :class_name =&gt; 'Account', :key =&gt; :credit_id
   
   include Clevic::Record
   
   define_ui do
     plain       :date, :sample =&gt; '88-WWW-99'
-    distinct    :description do |f|
-      f.conditions "now() - date &lt;= '1 year'"
+    distinct    :supplier do |f|
+      #~ f.conditions "now() - date &lt;= '1 year'"
+      f.dataset.filter( "now() - date &lt;= '1 year'" )
       f.sample( 'm' * 26 )
       f.notify_data_changed = lambda do |entity_view, table_view, model_index|
         if model_index.entity.credit.nil? &amp;&amp; model_index.entity.debit.nil?
@@ -100,16 +99,16 @@ class Entry &lt; Sequel::Model
         end
       end
     end
-    distinct :supplier
     relational  :debit, :display =&gt; 'name', :conditions =&gt; 'active = true', :order =&gt; 'lower(name)', :sample =&gt; 'Leilani Member Loan'
     relational  :credit, :display =&gt; 'name', :conditions =&gt; 'active = true', :order =&gt; 'lower(name)', :sample =&gt; 'Leilani Member Loan'
     plain       :amount, :sample =&gt; 999999.99
+    distinct    :description
     distinct    :category
     plain       :cheque_number
     plain       :active, :sample =&gt; 'WW'
     plain       :vat, :label =&gt; 'VAT', :sample =&gt; 'WW', :tooltip =&gt; 'Does this include VAT?'
     
-    records     :order =&gt; 'date, id'
+    dataset.order( :date, :id )
   end
   
   # Copy the values for the credit and debit fields
@@ -117,11 +116,11 @@ class Entry &lt; Sequel::Model
   def self.update_from_description( current_index )
     return if current_index.attribute_value.nil?
     # most recent entry, ordered in reverse
-    similar = self.adaptor.find(
-      :first,
-      :conditions =&gt; ["#{current_index.attribute} = ?", current_index.attribute_value],
-      :order =&gt; 'date desc'
-    )
+    similar = self. \
+      filter( current_index.attribute.to_sym =&gt; current_index.attribute_value ). \
+      order( :date.desc ). \
+      first
+      
     if similar != nil
       # set the values
       current_index.entity.debit = similar.debit
@@ -138,8 +137,8 @@ class Entry &lt; Sequel::Model
 end
 
 class Account &lt; Sequel::Model
-  has_many :debits, :class_name =&gt; 'Entry', :foreign_key =&gt; 'debit_id'
-  has_many :credits, :class_name =&gt; 'Entry', :foreign_key =&gt; 'credit_id'
+  one_to_many :debits, :class_name =&gt; 'Entry', :key =&gt; :debit_id, :order =&gt; :date
+  one_to_many :credits, :class_name =&gt; 'Entry', :key =&gt; :credit_id, :order =&gt; :date
   
   include Clevic::Record
   
@@ -148,11 +147,11 @@ class Account &lt; Sequel::Model
     plain       :name
     restricted  :vat, :label =&gt; 'VAT', :set =&gt; %w{ yes no all }
     restricted  :account_type, :set =&gt; %w{Account Asset Assets Expenses Income Liability Opening Balance Personal Tax VAT}
-    plain       :pastel_number, :alignment =&gt; Qt::AlignRight, :label =&gt; 'Pastel'
+    plain       :pastel_number, :alignment =&gt; :right, :label =&gt; 'Pastel'
     plain       :fringe, :format =&gt; "%.1f"
     plain       :active
     
-    records  :order =&gt; 'name,account_type'
+    dataset.order( :name, :account_type )
   end
 end
 

@@ -123,6 +123,7 @@ end
 module Sequel
   class Model
     class << self
+      # for translating class methods for relations
       def translate_options( options )
         options[:key] = options[:foreign_key].andand.to_sym
         options.delete( :foreign_key )
@@ -150,18 +151,6 @@ module Sequel
         end
       end
       
-      def table_exists?
-        db.table_exists?( implicit_table_name )
-      end
-      
-      def column_names
-        columns
-      end
-      
-      def reflections
-        association_reflections 
-      end
-      
       def has_attribute?( attribute )
         column_names.include?( attribute )
       end
@@ -179,22 +168,6 @@ module Sequel
       # the model class namespace doesn't get filled up with crud
       def adaptor
         @adaptor ||= Clevic::SequelAdaptor.new( self )
-      end
-    end
-    
-    def readonly?
-      false
-    end
-    
-    def changed?
-      modified?
-    end
-    
-    def new_record?; new?; end
-    
-    class Errors
-      def invalid?( field_name )
-        self.has_key?( field_name )
       end
     end
     

@@ -1,4 +1,5 @@
-require 'clevic/qt/item_delegate.rb'
+require 'clevic/qt/delegate.rb'
+require 'clevic/qt/qt_combo_box.rb'
 
 module Clevic
 
@@ -8,12 +9,9 @@ because ComboBox stupidly doesn't.
 
 Generally these will be created using a Clevic::ModelBuilder.
 =end
-class ComboDelegate < Clevic::ItemDelegate
-  def initialize( field )
-    super
-  end
-  
+class ComboDelegate < Clevic::Delegate
   # Convert Qt:: constants from the integer value to a string value.
+  # TODO this really shouldn't be here. qtext, or extensions.rb
   def hint_string( hint )
     hs = String.new
     Qt::AbstractItemDelegate.constants.each do |x|
@@ -38,102 +36,38 @@ class ComboDelegate < Clevic::ItemDelegate
   
   # open the combo box, just like if f4 was pressed
   def full_edit
-    if is_combo?( @editor )
-      @editor.show_popup
-    end
+    editor.show_popup if is_combo?( editor )
   end
   
-  # returns true if the editor allows values outside of a predefined
-  # range, false otherwise.
-  def restricted?
-    false
-  end
-  
-  # TODO fetch this from the model definition
-  def allow_null?
-    true
-  end
-  
-  # Subclasses should override this to fill the combo box
-  # list with values.
-  def populate( editor, model_index )
-    raise "subclass responsibility"
-  end
-  
-  # return true if this delegate needs a combo, false otherwise
-  def needs_combo?
-    raise "subclass responsibility"
-  end
-
   def is_combo?( editor )
-    editor.class == Qt::ComboBox
+    editor.is_a?( Qt::ComboBox )
   end
   
-  # return true if this field has no data (needs_combo? is false)
-  # and is at the same time restricted (ie needs data from somewhere else)
-  def empty_set?
-    !needs_combo? && restricted?
-  end
-  
-  # the message to display if the set is empty, and
-  # the delegate is restricted to a predefined set.
-  def empty_set_message
-    raise "subclass responsibility"
-  end
-  
-  # if this delegate has an empty set, return the message, otherwise
-  # return nil.
-  def if_empty_message
-    if empty_set?
-      empty_set_message
-    end
-  end
-  
-  def populate_current( editor, model_index )
-    # add the current entry, if it isn't there already
-    # TODO add it in the correct order
-    if ( editor.find_data( model_index.display_value.to_variant ) == -1 )
-      editor.add_item( model_index.display_value, model_index.display_value.to_variant )
-    end
-  end
-
-  def add_nil_item( editor )
-    if ( editor.find_data( nil.to_variant ) == -1 )
-      editor.add_item( '', nil.to_variant )
+  def create_combo_box( *args )
+    Qt::ComboBox.new( parent ).tap do |combo|
+      # all combos are editable so that prefix matching will work
+      combo.editable = true
     end
   end
   
   # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
   def createEditor( parent_widget, style_option_view_item, model_index )
-    if needs_combo?
-      @editor = Qt::ComboBox.new( parent_widget )
-      
-      # subclasses fill in the rest of the entries
-      populate( @editor, model_index )
-      
-      # add the current item, if it isn't there already
-      populate_current( @editor, model_index )
-      
-      # create a nil entry
-      add_nil_item( @editor ) if allow_null?
-      
-      # allow prefix matching from the keyboard
-      @editor.editable = true
-      
-      # don't insert if restricted
-      @editor.insert_policy = Qt::ComboBox::NoInsert if restricted?
-    else
-      @editor =
-      if restricted?
-        emit parent.status_text( empty_set_message )
-        nil
-      else
-        Qt::LineEdit.new( model_index.edit_value, parent_widget )
-      end
-    end
-    @editor
+    self.parent = parent_widget
+    self.entity = model_index.entity
+    init_component( parent_widget, style_option_view_item, model_index )
+    editor.delegate = self
+    editor
+  end
+
+  def line_editor( edit_value )
+    @line_editor ||= Qt::LineEdit.new( edit_value, parent )
   end
   
+  def framework_setup( *args )
+    # don't need to do anything here
+    # might need to once prefix-matching is implemented
+  end
+
   # Override the Qt::ItemDelegate method.
   def updateEditorGeometry( editor, style_option_view_item, model_index )
     rect = style_option_view_item.rect
@@ -196,3 +130,5 @@ class ComboDelegate < Clevic::ItemDelegate
 end
 
 end
+
+require 'clevic/delegates/combo_delegate'

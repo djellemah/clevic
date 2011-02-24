@@ -1,6 +1,6 @@
 module Clevic
-  # to be included in something that responds to entity and field
-  # used for getting values from the entity based on the definitions
+  # To be included in something that responds to entity and field methods.
+  # Used for getting values from the entity based on the definitions
   # in the field.
   module FieldValuer
   
@@ -81,7 +81,7 @@ module Clevic
     end
     
     def find_related( attribute, value )
-      candidates = field.related_class.adaptor.find( :all, :conditions => {attribute => value} )
+      candidates = field.related_class.filter( attribute.to_sym => value ).all
       if candidates.size != 1
         raise "#{candidates.size} != 1 candidates for #{value}: #{candidates.inspect}"
       end
@@ -159,6 +159,10 @@ module Clevic
       def initialize( field, entity )
         @field, @entity = field, entity
       end
+    end
+    
+    def valuer( entity )
+      Valuer.new(field,entity)
     end
     
     def self.valuer( field, entity )

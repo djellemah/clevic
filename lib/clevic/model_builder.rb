@@ -76,8 +76,9 @@ could be defined like this:
       # The project field
       relational  :project do |field|
         field.display = 'project'
-        field.conditions = 'active = true'
-        field.order = 'lower(project)'
+        
+        # see Sequel::Dataset docs
+        field.dataset.filter( :active => true ).order{ lower(project) }
         
         # handle data changed events. In this case,
         # auto-fill-in the invoice field.
@@ -266,10 +267,10 @@ is an ordinary editable field. Boolean values are displayed as checkboxes.
 is a multiline editable field.
 
   relational
-displays a set of values pulled from a belongs_to (many-to-one) relationship.
-In other words all the possible related entities that this one could belong_to. Some
+displays a set of values pulled from a many-to-one relationship.
+In other words all the possible related entities that this one could be related to. Some
 concise representation of the related entities are displayed in a combo box.
-:display is mandatory. All options applicable to ActiveRecord::Base#find can also be passed.
+:display is mandatory.
 
   distinct
 fetches the set of values already in the field, so you don't have to re-type them.
@@ -292,7 +293,7 @@ to a method already defined in the entity. In other words any of:
 - a relationship (one_to_many, etc)
 - a plain method that takes no parameters.
 
-will work. Named scopes might also work, but I haven't tried them yet.
+will work.
 
 You can do things like this:
 
@@ -513,15 +514,17 @@ class ModelBuilder
     field.delegate = BooleanDelegate.new( field )
   end
   
-  # mostly used in the new block to define the set of records
-  # for the TableModel, but may also be
-  # used as an accessor for records.
-  def records( args = {} )
-    if args.size == 0
-      get_records
-    else
-      set_records( args )
-    end
+  # specify the dataset but just calling and chaining, thusly
+  #  dataset.order( :some_field ).filter( :active => true )
+  def dataset
+    @dataset_roller = DatasetRoller.new( entity_class.dataset )
+  end
+  
+  def records( *args )
+    puts "ModelBuilder#records is deprecated. Use ModelBuilder#dataset instead"
+    require 'clevic/sequel_ar_adapter.rb'
+    entity_class.plugin :ar_methods
+    @cache_table = CacheTable.new( entity_class, entity_class.translate( args.first ) )
   end
 
   # Tell this field not to show up in the UI.
@@ -560,7 +563,15 @@ class ModelBuilder
     entity_class.attributes.each do |column,model_column|
       begin
         if model_column.association?
-          relational column
+          relational column do |f|
+            # TODO this should be tableize or equivalent
+            %W{#{model_column.related_class.name.downcase} name title username}.each do |name|
+              if model_column.related_class.instance_methods.include?( name )
+                f.display = name.to_sym
+                break
+              end
+            end
+          end
         else
           plain column
         end
@@ -572,7 +583,6 @@ class ModelBuilder
         plain column
       end
     end
-    records :order => entity_class.primary_key
   end
   
   # return the named Clevic::Field object
@@ -605,7 +615,7 @@ class ModelBuilder
     end
     
     # the data
-    @model.collection = records
+    @model.collection = create_cache_table
     
     @model
   end
@@ -632,34 +642,20 @@ protected
       when entity_class.instance_methods.include?( attribute.to_s )
         # read-only if there's no setter for the attribute
         !entity_class.instance_methods.include?( "#{attribute.to_s}=" )
+        
       else
         # default to not read-only
         false
     end
   end
 
-  # The collection of model objects to display in a table
-  # arg can either be a Hash, in which case a new CacheTable
-  # is created, or it can be an array.
-  # Called by records( *args )
-  def set_records( arg )
-    if arg.class == Hash
-      # need to defer this until all fields are collected
-      @find_options = arg
-    else
-      @records = arg
+  def create_cache_table
+    if @dataset_roller
+      @cache_table = CacheTable.new( entity_class, @dataset_roller.dataset )
     end
+    # otherwise just default it
+    @cache_table ||= CacheTable.new( entity_class )
   end
-
-  # Return a collection of records. Usually this will be a CacheTable.
-  # Called by records( *args )
-  def get_records
-    if @records.nil?
-      @records = CacheTable.new( entity_class, @find_options )
-    end
-    @records
-  end
-  
 end
 
 end

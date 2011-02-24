@@ -1,16 +1,16 @@
 require 'gather'
 require 'clevic/sampler.rb'
 require 'clevic/generic_format.rb'
+require 'clevic/dataset_roller.rb'
+require 'clevic/many_field.rb'
 
 module Clevic
 
 =begin rdoc
 This defines a field in the UI, and how it hooks up to a field in the DB.
 
-Many attributes are DSL-style accessors, where the value can be
-set with either an assignment or by passing a parameter. Unfortunately
-rdoc seems to have lost the ability to display these nicely. Anyway, here's
-an example
+Attributes marked [P] are DSL-style accessors, where the value can be
+set with either an assignment or by passing a parameter. For example:
 
   property :ixnay
 
@@ -136,7 +136,7 @@ class Field
   # An Enumerable of allowed values for restricted fields. If each yields
   # two values (like it does for a Hash), the
   # first will be stored in the db, and the second displayed in the UI.
-  # If it's a proc, it must return an Enumerable as above.
+  # If it's a proc, that must return an Enumerable as above.
   property :set
   
   ##
@@ -150,6 +150,7 @@ class Field
   # Only for the distinct field type. The values will be sorted either with the
   # most used values first (:frequency => true) or in
   # alphabetical order (:description => true).
+  # FIXME re-implement this with Dataset
   property :frequency, :description
   
   ##
@@ -160,7 +161,8 @@ class Field
   
   ##
   # The property used for finding the field, ie by TableModel#field_column.
-  # Defaults to the attribute.
+  # Defaults to the attribute. If there are several display fields based on
+  # one db field, their attribute will be the same, but their id must be different.
   property :id
   
   ##
@@ -168,11 +170,26 @@ class Field
   # Either a proc( clevic_view, table_view, model_index ) or a symbol
   # for a method( view, model_index ) on the Clevic::View object.
   property :notify_data_changed
+
+  ##
+  # This is the dataset of related objects.
+  # Called in configuration for a field that works with a relationship.
+  #  dataset.filter( :blah => 'etc' ).order( :interesting_field )
+  def dataset
+    dataset_roller
+  end
+  
+  # TODO Still getting the Builder/Built conflict
+  def dataset_roller
+    # related class if it's an association, entity_class otherwise
+    @dataset_roller ||= DatasetRoller.new( ( association? ? related_class : entity_class ).dataset )
+  end
   
   # The list of properties for ActiveRecord options.
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected.
   # Each element becomes a property.
-  # TODO remove these? That will destroy the migration path.
+  # TODO deprecate these
+  # TODO warn or raise if these are used together with a dataset call
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
   
@@ -188,13 +205,17 @@ class Field
     end
   end
   
+  # The model object (eg TableModel) this field is part of.
+  # Set to TableModel by ModelBuilder#build
+  attr_accessor :model
+    
   # The UI delegate class for the field. The delegate class knows how to create a UI
   # for this field using whatever GUI toolkit is selected
   attr_accessor :delegate
   
-  # The attribute on the AR entity that forms the basis for this field.
+  # The attribute on the entity that forms the basis for this field.
   # Accessing the returned attribute (using send, or the [] method on an entity)
-  # will give a simple value, or another AR entity in the case of relational fields.
+  # will give a simple value, or another entity in the case of relational fields.
   # In other words, this is *not* the same as the name of the field in the DB, which
   # would normally have an _id suffix for relationships.
   attr_accessor :attribute
@@ -243,36 +264,6 @@ EOF
     default_display! if association?
   end
   
-  # x_to_many fields are by definition collections of other entities
-  def many( &block )
-    if block
-      many_view( &block )
-    else
-      many_view do |mb|
-        # TODO should fetch this from one of the field definitions
-        mb.plain related_attribute
-      end
-    end
-  end
-  
-  def many_builder
-    @many_view.builder
-  end
-  
-  def many_fields
-    many_builder.fields
-  end
-  
-  # return an instance of Clevic::View that represents the many items
-  # for this field
-  def many_view( &block )
-    @many_view ||= View.new( :entity_class => related_class, &block )
-  end
-  
-  # The model object (eg TableModel) this field is part of.
-  # Set to TableModel by ModelBuilder#build
-  attr_accessor :model
-  
   # Return the attribute value for the given Object Relational Model instance, or nil
   # if entity is nil. Will call transform_attribute.
   def value_for( entity )
@@ -310,18 +301,11 @@ EOF
     meta.andand.association?
   end
   
-  # ModelColumn object
+  # Clevic::ModelColumn object
   def meta
     entity_class.meta[attribute]
   end
   
-  # return the type of this attribute. Usually one of :string, :integer, :float
-  # or some entity class
-  # TODO remove
-  def attribute_type
-    meta.type
-  end
-
   # return true if this field can be used in a filter
   # virtual fields (ie those that don't exist in this field's
   # table) can't be used to filter on.
@@ -334,14 +318,15 @@ EOF
     [attribute.to_s, path].compact.join('.')
   end
   
-  # return the class object of a related class if this is a relational
-  # field, otherwise nil
+  # Return the class object of a related class if this is a relational
+  # field, otherwise nil.
   def related_class
-    return nil unless entity_class.meta.has_key?( attribute )
+    return nil unless association? && entity_class.meta.has_key?( attribute )
     @related_class ||= eval( entity_class.meta[attribute].class_name || attribute.to_s.classify )
   end
   
   # return an array of the various attribute parts
+  # TODO not used much. Deprecate and remove.
   def attribute_path
     pieces = [ attribute.to_s ]
     pieces.concat( display.to_s.split( '.' ) ) unless display.is_a? Proc
@@ -353,36 +338,37 @@ EOF
     @read_only || false
   end
   
-  # Called by Clevic::Model to format the display value.
+  # Called by Clevic::FieldValuer (and others) to format the display value.
   def do_format( value )
     do_generic_format( format, value )
   end
   
-  # Called by Clevic::Model to format the edit value.
+  # Called by Clevic::FieldValuer to format the field to a string value
+  # that can be used for editing.
   def do_edit_format( value )
     do_generic_format( edit_format, value )
   end
   
-  # Return a sample for the field which can be used to size the UI field widget.
+  # Set or return a sample for the field which can be used to size the UI field widget.
+  # If this is called as an accessor, and there is no value yet, a Clevic::Sampler
+  # instance is created to compute a sample.
   def sample( *args )
     if !args.empty?
       @sample = args.first
       self
     else
       if @sample.nil?
-        if meta.type == :boolean
-          @sample = self.label
-        else
-          begin
-            @sample ||= Sampler.new( entity_class, attribute, display ) do |value|
-              do_format( value )
-            end.compute
-          rescue
-            puts $!
-          ensure
-            # if we don't know how to figure it out from the data, just return the label size
-            @sample ||= self.label
-          end
+        begin
+          @sample ||= Sampler.new( self ) do |value|
+            do_format( value )
+          end.compute
+        rescue
+          puts "for #{entity_class.name}"
+          puts $!.message
+          puts $!.backtrace
+        ensure
+          # if we don't know how to figure it out from the data, just return the label size
+          @sample ||= self.label
         end
       end
       @sample
@@ -442,8 +428,12 @@ EOF
     end
   end
   
+  def to_s
+    "#{entity_class}.#{id}"
+  end
+  
   def inspect
-    "#<Clevic::Field id=#{id.inspect}>"
+    "#<Clevic::Field #{entity_class} id=#{id} attribute=#{attribute}>"
   end
   
 protected
@@ -510,6 +500,7 @@ protected
   end
 
   # try to find a sensible display method
+  # TODO this code shows up in the default UI builder as well.
   def default_display!
     candidates = %W{#{entity_class.name.downcase} name title username to_s}
     @display ||= candidates.find do |m|

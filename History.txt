@@ -1,3 +1,21 @@
+== 0.13.0.b5
+* Lots of Bug fixes
+* moved all internals to Sequel::Dataset
+* bring Swing combos up to date with Qt combos
+* ActionBuilder fixes for Swing
+* fixes for restricted combos with defined sets, sampling and editing.
+
+== 0.13.0.b4
+* Skipped past this release somehow
+
+== 0.13.0.b3
+* WARNING most importantly, support for ActiveRecord style calls now requires
+  a require of 'clevic/sequel_ar_adapter.rb' in your model files.
+* use Dataset in CacheTable and TableSearcher. Allows for ordering
+  to stay correct when filtering views.
+* use of Dataset allows filtering in TableView to keep previous ordering,
+  and filter.
+
 == 0.13.0.b3
 * Squash various buglets as they're found.
 

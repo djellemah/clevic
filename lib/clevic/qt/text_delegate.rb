@@ -1,8 +1,8 @@
-require 'clevic/qt/item_delegate.rb'
+require 'clevic/qt/delegate.rb'
 
 module Clevic
 
-  class TextDelegate < ItemDelegate
+  class TextDelegate < Delegate
     
     # Doesn't do anything useful yet, but I'm leaving
     # it here so I don't have to change other code.

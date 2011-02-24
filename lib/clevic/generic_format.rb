@@ -1,6 +1,9 @@
 module Clevic
 
-#includers must provide meta and display
+# Format values for display / edit. Essentially a common interface
+# for % for Strings and strftime for Dates and Times.
+#
+# includers must provide meta and display
 module GenericFormat
   # Return true if the field is a date, datetime, time or timestamp.
   # If display is nil, the value is calculated, so we need
@@ -38,6 +41,7 @@ module GenericFormat
         value
       end
     rescue Exception => e
+      puts "self: #{self.inspect}"
       puts "format: #{format.inspect}"
       puts "value.class: #{value.class.inspect}"
       puts "value: #{value.inspect}"

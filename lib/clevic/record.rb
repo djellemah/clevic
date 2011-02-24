@@ -30,11 +30,11 @@ module Clevic
         # keep track of the order in which views are
         # defined, so that can be used as the default ordering
         # of the views.
-        Clevic::View.order << default_view_class_name.constantize
+        Clevic::View.order << eval( default_view_class_name )
       end
       
       def default_view_class
-        @default_view_class ||= eval default_view_class_name
+        @default_view_class ||= eval( default_view_class_name )
       end
       
       # Need to defer the execution of the view definition block

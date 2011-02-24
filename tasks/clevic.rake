@@ -52,7 +52,7 @@ end
 desc "Runs Clevic in normal mode, with live database."
 task :run => :ui do |t|
   ARGV.shift()
-  exec "ruby -Ilib bin/clevic #{ARGV.join(' ')}"
+  exec "ruby -Ilib -Imodels bin/clevic #{ARGV.join(' ')}"
 end
 
 desc "Runs Clevic in debug mode, with test databases"
@@ -95,7 +95,7 @@ MODELS_LIST.each do |model_file|
     task short_model( model_file )  => :ui do |t|
       ARGV.shift()
       ARGV.shift() if ARGV[0] == '--'
-      cmd = "ruby -Ilib bin/clevic -D #{model_file} #{ARGV.join(' ')}"
+      cmd = "ruby -Ilib -Imodels bin/clevic -D #{model_file} #{ARGV.join(' ')}"
       puts "cmd: #{cmd.inspect}"
       exec cmd
     end

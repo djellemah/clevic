@@ -10,9 +10,13 @@ module Clevic
 class TableView
   include ActionBuilder
   
-  # the current filter command
-  attr_accessor :filtered
-  def filtered?; !@filtered.nil?; end
+  # the current stack of filter commands
+  def filters
+    @filtered ||= []
+  end
+  attr_writer :filters
+  
+  def filtered?; !filters.empty?; end
   
   # Called from the gui-framework adapter code in this class
   # arg is:
@@ -104,7 +108,7 @@ class TableView
       action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
       
       if $options[:debug]
-        action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
+        action :action_dump, 'Du&mp', :shortcut => 'Ctrl+Shift+D' do
           puts model.collection[current_index.row].inspect
         end
       end
@@ -116,8 +120,9 @@ class TableView
     list( :search ) do
       action :action_find, '&Find', :shortcut => 'Ctrl+F', :method => :find
       action :action_find_next, 'Find &Next', :shortcut => 'Ctrl+G', :method => :find_next
-      action :action_filter, 'Fil&ter', :checkable => true, :shortcut => 'Ctrl+L', :method => :filter_by_current
-      action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
+      action :action_filter, 'Fil&ter', :shortcut => 'Ctrl+L', :method => :filter_by_current
+      action :action_unfilter, '&Un-Filter', :enabled => false, :shortcut => 'Ctrl+K', :method => :unfilter
+      #~ action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
     end
   end
   
@@ -181,7 +186,7 @@ class TableView
   # from and to are ModelIndex instances. Throws :insane if
   # their fields don't have the same attribute_type.
   def sanity_check_types( from, to )
-    unless from.field.attribute_type == to.field.attribute_type
+    unless from.field.meta.type == to.field.meta.type
       emit_status_text( 'Incompatible data' )
       throw :insane
     end
@@ -475,14 +480,18 @@ class TableView
   end
   
   # toggle the filter, based on current selection.
-  def filter_by_current( bool_filter )
+  def filter_by_current
     filter_by_indexes( selection_or_current )
   end
   
+  # This is used by entity view classes.
+  # Keep it as a compatibility / deprecated option?
   def filter_by_options( args )
-    filtered.undo if filtered?
-    self.filtered = FilterCommand.new( self, [], args )
-    emit_filter_status( filtered.doit )
+    puts "#{self.class.name}#filter_by_options is deprecated. Use filter_by_dataset( message, &block ) instead."
+    
+    filter_by_dataset( "#{args.inspect}" ) do |dataset|
+      dataset.translate( args )
+    end
   end
   
   # Save the current entity, do something, then restore
@@ -502,41 +511,67 @@ class TableView
     
     retval
   end
+  
+  def unfilter
+    restore_entity do
+      filters.pop.undo
+    end
+    update_filter_status_bar
+  end
+  
+  def unfilter_action
+    search_actions.find{|a| a.object_name == 'action_unfilter' }
+  end
+  
+  def filter_message
+    "Filter: " + filters.map( &:message ).join(' / ') unless filters.empty?
+  end
 
+  # update status bar with a message of all filters concatenated
+  def update_filter_status_bar
+    emit_status_text( filter_message )
+    emit_filter_status( filtered? )
+    unfilter_action.enabled = filtered?
+  end
+  
+  def filter_by_dataset( message, &dataset_block )
+    # clean this up and make it work AND for multiple columns, OR for multiple rows
+    self.filters << FilterCommand.new( self, message, &dataset_block )
+    
+    # try to end up on the same entity, even after the filter
+    restore_entity { filters.last.doit }
+    
+    # make sure status bar shows status
+    update_filter_status_bar
+  end
+  
   # Filter by the value in the current index.
   # indexes is a collection of TableIndex instances
   def filter_by_indexes( indexes )
     case
-      when filtered?
-        # unfilter
-        restore_entity do
-          filtered.undo
-          self.filtered = nil
-          # update status bar
-          emit_status_text( nil )
-          emit_filter_status( false )
-        end
-        
-      when indexes.empty?
-        emit_status_text( "No field selected for filter" )
-        
-      when !indexes.first.field.filterable?
-        emit_status_text( "Can't filter on #{indexes.first.field.label}" )
+    when indexes.empty?
+      emit_status_text( "No field selected for filter" )
       
-      when indexes.size > 1
-        emit_status_text( "Can't do multiple selection filters yet" )
+    when !indexes.first.field.filterable?
+      emit_status_text( "Can't filter on #{indexes.first.field.label}" )
+    
+    when indexes.size > 1
+      emit_status_text( "Can't do multiple selection filters yet" )
+    
+    when indexes.first.entity.new_record?
+      emit_status_text( "Can't filter on a new row" )
       
-      when indexes.first.entity.new_record?
-        emit_status_text( "Can't filter on a new row" )
-        
-      else
-        self.filtered = FilterCommand.new( self, indexes, :conditions => { indexes.first.field_name => indexes.first.field_value } )
-        # try to end up on the same entity, even after the filter
-        restore_entity do
-          emit_filter_status( filtered.doit )
+    else
+      message = "#{indexes.first.field_name} = #{indexes.first.display_value}"
+      filter_by_dataset( message ) do |dataset|
+        indexes.first.field.with do |field|
+          if field.association?
+            dataset.filter( field.meta.keys => indexes.first.attribute_value.andand.pk )
+          else
+            dataset.filter( indexes.first.field_name.to_sym => indexes.first.attribute_value )
+          end
         end
-        # update status bar
-        emit_status_text( filtered.status_message )
+      end
     end
     filtered?
   end
@@ -618,6 +653,21 @@ class TableView
   # to_next_index is called.
   attr_accessor :next_index
 
+  # This is to allow entity model UI handlers to tell the view
+  # whence to move the cursor when the current editor closes
+  # (see closeEditor).
+  # TODO not used?
+  def override_next_index( model_index )
+    self.next_index = model_index
+  end
+  
+  # Call set_current_index with next_index ( from override_next_index )
+  # or model_index, in that order. Set next_index to nil afterwards.
+  def set_current_unless_override( model_index )
+    set_current_index( @next_index || model_index )
+    self.next_index = nil
+  end
+  
 protected
   
   # show a busy cursor, do the block, back to normal cursor

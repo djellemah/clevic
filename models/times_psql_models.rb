@@ -3,8 +3,14 @@ $options ||= {}
 require 'clevic.rb'
 require 'sequel'
 host = ENV['PGHOST'] || 'localhost'
-constring = "jdbc:postgresql://#{host}/times_test?user=#{$options[:username] || 'times'}&password=general"
-puts "constring: #{constring.inspect}"
-Sequel.connect( constring )
+
+constring =
+if RUBY_PLATFORM == 'java'
+  "jdbc:postgresql://#{host}/times_test"
+else
+  "postgres://#{host}/times_test"
+end
+
+Sequel.connect constring
 
 require 'times_models.rb'

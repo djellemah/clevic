@@ -1,22 +1,15 @@
-class Numeric
-  def hours
-    self * 60 * 60
-  end
-end
-
 # model definitions
 class Entry < Sequel::Model
+  belongs_to :invoice
+  belongs_to :activity
+  belongs_to :project
+  
   include Clevic::Record
-
-  many_to_one :invoice
-  many_to_one :activity
-  many_to_one :project
   
   # spans of time more than 8 ours are coloured violet
   # because they're often the result of typos.
   def time_color
     return if self.end.nil? || start.nil?
-    # 8 hours
     'darkviolet' if self.end - start > 8.hours
   end
   
@@ -32,7 +25,8 @@ class Entry < Sequel::Model
     # The project field
     relational :project do |field|
       field.display = :project
-      field.dataset.filter( :active => true ).order{ lower(project) }
+      field.conditions = 'active = true'
+      field.order = 'lower(project)'
       
       # handle data changed events. In this case,
       # auto-fill-in the invoice field.
@@ -46,10 +40,7 @@ class Entry < Sequel::Model
       end
     end
     
-    relational  :invoice do |f|
-      f.display 'invoice_number'
-      f.dataset.filter( :status => 'not sent' ).order( :invoice_number )
-    end
+    relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
     
     # call time_color method for foreground color value
     plain       :start, :foreground => :time_color, :tooltip => :time_tooltip
@@ -60,17 +51,18 @@ class Entry < Sequel::Model
     # multiline text
     text        :description, :sample => 'This is a long string designed to hold lots of data and description'
     
-    relational :activity do |f|
-      f.display    'activity'
-      f.sample     'Troubleshooting'
-      f.dataset.filter( :active => true ).order{ lower(activity) }
-    end 
+    relational :activity do
+      display    'activity'
+      order      'lower(activity)'
+      sample     'Troubleshooting'
+      conditions 'active = true'
+    end
     
     distinct    :module, :tooltip => 'Module or sub-project'
     plain       :charge, :tooltip => 'Is this time billable?'
     distinct    :person, :default => 'John', :tooltip => 'The person who did the work'
     
-    dataset.order( :date, :start, :id )
+    records     :order => 'date, start, id'
   end
 
   def self.define_actions( view, action_builder )
@@ -103,7 +95,7 @@ class Entry < Sequel::Model
       previous_item = view.model.collection[current_index.row - 1]
       
       # copy the relevant fields
-      current_index.entity.date = previous_item.date if current_index.entity.date.nil?
+      current_index.entity.date = previous_item.date if current_index.entity.date.blank?
       # depends on previous line
       current_index.entity.start = previous_item.end if current_index.entity.date == previous_item.date
       
@@ -120,7 +112,7 @@ class Entry < Sequel::Model
       
       # move to the first empty time field
       next_field =
-      if current_index.entity.start.nil?
+      if current_index.entity.start.blank?
         :start
       else
         :end
@@ -160,9 +152,9 @@ class Entry < Sequel::Model
 end
 
 class Invoice < Sequel::Model
+  has_many :entries
+
   include Clevic::Record
-  
-  one_to_many :entries
   
   define_ui do
     plain :date
@@ -174,12 +166,12 @@ class Invoice < Sequel::Model
     plain :quote_amount
     plain :description
     
-    dataset.order( :invoice_number )
+    records :order => 'invoice_number'
   end
 end
 
 class Project < Sequel::Model
-  one_to_many :entries
+  has_many :entries
 
   include Clevic::Record
   
@@ -190,21 +182,23 @@ class Project < Sequel::Model
     plain     :rate
     plain     :active
     
-    dataset.order( :project )
+    records   :order => 'project'
   end
   
   # Return the latest invoice for this project
   # Not part of the UI.
   def latest_invoice
-    Invoice.filter( :client => self.client, :status => 'not sent' ). \
-      order( :invoice_number.desc ). \
-      first
+    Invoice.adaptor.find(
+      :first,
+      :conditions => ["client = ? and status = 'not sent'", self.client],
+      :order => 'invoice_number desc'
+    )
   end
 
 end
 
 class Activity < Sequel::Model
-  one_to_many :entries
+  has_many :entries
 
   include Clevic::Record
   
@@ -213,6 +207,6 @@ class Activity < Sequel::Model
     plain :activity
     plain :active
     
-    dataset.order( :activity )
+    records :order => 'activity'
   end
 end

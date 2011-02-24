@@ -1,5 +1,8 @@
-use Sequel::Dataset for filtering instead of find options
-can't use find on certain fields, ie code in adjustments
+override_next_index broken again, on ditto
+Sort out the whole /bin/clevic vs gem 'clevic', '~> 0.12.0' thing.
+Meta should be related to ModelColumn somehow. Which is pretty messy itself.
+
+can't use find on certain fields, ie code in adjustments. Partially fixed.
 
 export to CSV
 Accounts not landing after Ditto with auto-fill-in
@@ -10,8 +13,6 @@ use rubigen for creating model definition files?
 undoable_command signal for delegates
 
 need a map field (For ie -1 = short, 1 = long). Already in restricted, but it's kinda clunky.
-:records missing in define_ui causes a crash
-:records must take a NamedScope
 
 Add additional :filter record sets that can be selected from menus?
 
@@ -49,17 +50,15 @@ search with acts_as_searchable and hyperestraier
 
 moving of columns
 /-style keyboard search by selected column, or everything if no column selected
-/-style filtering?
 
 for dates, add year if not specified, with 6 months on either side range. Configurable?
-value parsing not in model
 copy a field from a mouse-selection (ctrl-b maybe)
 hiding of fields
 
 save context menu settings, filter settings, etc
 filtering by various things. http://doc.trolltech.com/4.3/qsortfilterproxymodel.html
 highlighting by various things
-cut and paste (in model format)
+cut and paste (in model format. Could use indirect format ie table/row/column. Kinda pointless though since references would essentially do the same thing.)
 
 drop cached model objects from CacheTable when they're not in use. WeakRef?
 
@@ -101,21 +100,18 @@ numeric months
 
 Combos
 ------
-shortlist combos by prefix. See Qt Examples.
+shortlist combos by prefix. See Qt Examples, and Swing code.
 turn on/off smart filters for relational delegates. Like selecting only distincts in the last year.
 context menu for delegates, ie sort order, last used, etc
 
 shortcut sets, depending on which OS you're used. use QKeyEvent::matches ( QKeySequence::StandardKey key )
 
 Doing data capture, sort by id, but unfilter reverts to date/id rather than entry order
-optional warnings for back-dated entries. Highlighting 
+optional warnings for back-dated entries. Highlighting.
 make bsearch easier to install
 
 handle db errors
 easier way to run models, search LOAD_PATH
-
-cache belongs_to associations, during loading, but don't affect ability to pick up
-changes more or less instantly.
 
 preferences
 -----------
@@ -126,7 +122,6 @@ maybe
 -----
 acts_as_shellable looks nice
 consolidate read-only-ness checks 
-Look at DataMapper. Not suitable - need to declare properties.
 ActiveMDB for migrating?
 allow moving of rows
 discontiguous copying of entities/csv
@@ -135,7 +130,6 @@ pasting of csv, into rectangular regions
 collect a set of data requests to the model, and do them in one SQL query. See EntryTableView#moveCursor
 Use SQL cursors for find & find_next?
 Use roo to parse spreadsheets?
-Criteria for SQL statement building http://criteria.rubyforge.org/
 SqlCache
 SqlStatement
 Csv2Sql
