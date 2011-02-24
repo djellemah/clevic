@@ -270,6 +270,7 @@ class TableModel < Qt::AbstractTableModel
       # user-defined role
       # TODO this only works with single-dotted paths
       when qt_paste_role
+        puts "WARNING Qt::PasteRole Deprecated"
         if index.meta.type == :association
           field = index.field
           candidates = field.related_class.find( :all, :conditions => [ "#{field.attribute_path[1]} = ?", variant.value ] )
