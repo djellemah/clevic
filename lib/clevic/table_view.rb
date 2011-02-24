@@ -566,7 +566,7 @@ class TableView
       filter_by_dataset( message ) do |dataset|
         indexes.first.field.with do |field|
           if field.association?
-            dataset.filter( field.meta.keys => indexes.first.attribute_value.pk )
+            dataset.filter( field.meta.keys => indexes.first.attribute_value.andand.pk )
           else
             dataset.filter( indexes.first.field_name.to_sym => indexes.first.attribute_value )
           end
