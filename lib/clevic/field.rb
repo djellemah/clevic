@@ -9,7 +9,7 @@ module Clevic
 =begin rdoc
 This defines a field in the UI, and how it hooks up to a field in the DB.
 
-Many attributes are DSL-style accessors, where the value can be
+Attributes marked [P] are DSL-style accessors, where the value can be
 set with either an assignment or by passing a parameter. For example:
 
   property :ixnay

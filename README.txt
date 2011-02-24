@@ -2,7 +2,14 @@
 
 http://clevic.rubyforge.org
 
-== DESCRIPTION:
+== Quick Start
+
+For code examples, see Clevic::Examples.
+
+For documentation, see Clevic::ModelBuilder and Clevic::Field.
+
+
+== Description
 
 Database framework and Model/View GUI for data capture and
 editing of tables in a pre-existing relational DBMS. Works with Qt
@@ -20,7 +27,7 @@ Using Qt and Swing means it runs on Linux, Windows and OSX. The Qt
 code is thoroughly tested in Linux, slightly tested in Windows and OSX. Swing 
 is tested in Linux and OSX.
 
-== FEATURES:
+== Features
 
 === User Interface
 
@@ -51,13 +58,6 @@ that includes the Clevic::Record module will provide a minimally functional UI.
 Beyond that, the framework provides a DSL for defining more complex and useful behaviour
 (see Clevic::ModelBuilder).
 
-=== Examples
-
-In the models/ subdirectory, start with minimal_models.rb. account_models.rb 
-and times_models.rb provide definitions for real-world examples. Associated 
-SQL schemas are in the sql subdirectory. For implementation and more extensive 
-comments, see Clevic::ModelBuilder.
-
 === Framework
 
 * uses Sequel for data access.
@@ -67,15 +67,15 @@ comments, see Clevic::ModelBuilder.
 * leverages SQL whenever possible to handle large datasets, sorting, filtering
   etc. So it's probably not suitable for talking to a remote db across a slow link.
 
-== PROBLEMS:
+== Problems
 
 There are some tests for algorithmic code, but Clevic needs a comprehensive testing framework.
 
-== SYNOPSIS:
+== Synopsis
 
 	clevic [ --qt | --swing ] model_definition_file.rb
 	
-== REQUIREMENTS:
+== Requirements
 
 === Gems
 * Sequel
@@ -86,12 +86,11 @@ There are some tests for algorithmic code, but Clevic needs a comprehensive test
 * gather
 
 === Libraries
-* qtruby4 >= 2.0.3
 * bsearch (http://0xcc.net/ruby-bsearch)
 * db driver (ie pg)
 * rdbms (ie postgres)
 
-== INSTALL:
+== Install
 
 	Get bsearch from http://0xcc.net/ruby-bsearch
 	
@@ -99,12 +98,12 @@ There are some tests for algorithmic code, but Clevic needs a comprehensive test
 	
 	sudo gem install
 
-== THANKS:
+== Thanks
 
 * Michelle Riley for help debugging under windows
 * Jacob Buys for pointing out the qtbindings gem
 
-== LICENSE:
+== License
 
 (The GPL-2 License)
 
