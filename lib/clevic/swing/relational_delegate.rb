@@ -19,15 +19,6 @@ class RelationalDelegate < ComboDelegate
     ComboBox
   end
   
-  # TODO this would probably be better with a block
-  def population
-    # add set of all possible related entities,
-    # including the currently selected entity
-    ary = field.related_class.adaptor.find( :all, find_options )
-    ary << attribute_value unless ary.include?( attribute_value )
-    ary
-  end
-  
   # don't allow new values
   def restricted?
     true

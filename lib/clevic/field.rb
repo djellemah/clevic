@@ -321,7 +321,7 @@ EOF
   # return the class object of a related class if this is a relational
   # field, otherwise nil
   def related_class
-    return nil unless entity_class.meta.has_key?( attribute )
+    return nil unless association? && entity_class.meta.has_key?( attribute )
     @related_class ||= eval( entity_class.meta[attribute].class_name || attribute.to_s.classify )
   end
   

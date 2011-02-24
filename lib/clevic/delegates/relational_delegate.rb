@@ -11,7 +11,7 @@ class RelationalDelegate
   end
   
   def empty_set_message
-    "There must be records in #{field.related_class.name.humanize} for this field to be editable."
+    "There must be records in #{field.related_class} for this field to be editable."
   end
   
   def population

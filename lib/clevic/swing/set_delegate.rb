@@ -23,4 +23,4 @@ end
 
 end
 
-require 'clevic/delegate/set_delegate.rb'
+require 'clevic/delegates/set_delegate.rb'

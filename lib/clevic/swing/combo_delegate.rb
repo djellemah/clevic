@@ -121,6 +121,10 @@ class ComboDelegate < Delegate
   end
   
   def framework_setup( *args )
+    # turn on typing the the text field of the combo
+    # otherwise prefix matching doesn't work
+    editor.editable = true
+    
     # catch the enter key action event
     editor.editor.editor_component.add_action_listener do |event|
       cell_editor.andand.stopCellEditing
@@ -230,11 +234,10 @@ class ComboDelegate < Delegate
       if restricted?
         editor.selected_item
       else
-        puts "#{__FILE__}:#{__LINE__}:get the editor's text field value. Take away this output when we know it works. Ie when this gets printed."
         editor.editor.item
       end
     else
-      puts "#{__FILE__}:#{__LINE__}:line item value: #{editor.text}"
+      puts "#{__FILE__}:#{__LINE__}:line item value: #{editor.text}. Take this away when it's printed."
       editor.text
     end
   end

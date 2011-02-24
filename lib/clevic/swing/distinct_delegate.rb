@@ -11,15 +11,8 @@ class DistinctDelegate < ComboDelegate
   def display_for( model_value )
     model_value
   end
-
-  def population
-    # we only use the first column, so use the second
-    # column to sort by, since SQL requires the order by clause
-    # to be in the select list where distinct is involved
-    entity_class.adaptor.attribute_list( attribute, attribute_value, field.description, field.frequency, find_options ) do |row|
-      row[attribute]
-    end
-  end
 end
 
 end
+
+require 'clevic/delegates/distinct_delegate'
