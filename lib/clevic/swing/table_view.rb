@@ -286,7 +286,7 @@ class TableView < javax.swing.JScrollPane
 
   # calculate the size of the column from the string value of the data
   def column_width( col, data )
-    @jtable.getFontMetrics( @jtable.font).stringWidth( data ) + 5
+    @jtable.getFontMetrics( @jtable.font ).stringWidth( data.to_s ) + 5
   end
   
   def trim_middle( value, max = 40 )
