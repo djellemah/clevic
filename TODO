@@ -52,7 +52,6 @@ moving of columns
 /-style keyboard search by selected column, or everything if no column selected
 
 for dates, add year if not specified, with 6 months on either side range. Configurable?
-value parsing not in model
 copy a field from a mouse-selection (ctrl-b maybe)
 hiding of fields
 

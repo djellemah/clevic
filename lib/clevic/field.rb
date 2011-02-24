@@ -138,7 +138,7 @@ class Field
   # An Enumerable of allowed values for restricted fields. If each yields
   # two values (like it does for a Hash), the
   # first will be stored in the db, and the second displayed in the UI.
-  # If it's a proc, it must return an Enumerable as above.
+  # If it's a proc, that must return an Enumerable as above.
   property :set
   
   ##
@@ -152,6 +152,7 @@ class Field
   # Only for the distinct field type. The values will be sorted either with the
   # most used values first (:frequency => true) or in
   # alphabetical order (:description => true).
+  # FIXME re-implement this with Dataset
   property :frequency, :description
   
   ##
@@ -162,7 +163,8 @@ class Field
   
   ##
   # The property used for finding the field, ie by TableModel#field_column.
-  # Defaults to the attribute.
+  # Defaults to the attribute. If there are several display fields based on
+  # one db field, their attribute will be the same, but their id must be different.
   property :id
   
   ##
@@ -188,8 +190,8 @@ class Field
   # The list of properties for ActiveRecord options.
   # There are actually from ActiveRecord::Base.VALID_FIND_OPTIONS, but it's protected.
   # Each element becomes a property.
-  # TODO deprecate them
-  # TODO warn if these are used together with a dataset call
+  # TODO deprecate these
+  # TODO warn or raise if these are used together with a dataset call
   AR_FIND_OPTIONS = [ :conditions, :include, :joins, :limit, :offset, :order, :select, :readonly, :group, :from, :lock ]
   AR_FIND_OPTIONS.each{|x| property x}
   

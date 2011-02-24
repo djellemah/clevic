@@ -1,5 +1,6 @@
 module Clevic
 
+  # Preliminary code for multi-valued fields. Not working yet.
   module ManyField
     # x_to_many fields are by definition collections of other entities
     def many( &block )

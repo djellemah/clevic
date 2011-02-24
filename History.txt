@@ -1,6 +1,12 @@
 == 0.13.0.b5
-* Bug fixes
-* moved almost all internals to Sequel::Dataset
+* Lots of Bug fixes
+* moved all internals to Sequel::Dataset
+* bring Swing combos up to date with Qt combos
+* ActionBuilder fixes for Swing
+* fixes for restricted combos with defined sets, sampling and editing.
+
+== 0.13.0.b4
+* Skipped past this release somehow
 
 == 0.13.0.b3
 * WARNING most importantly, support for ActiveRecord style calls now requires

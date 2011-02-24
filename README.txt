@@ -6,9 +6,14 @@ http://clevic.rubyforge.org
 
 Database framework and Model/View GUI for data capture and
 editing of tables in a pre-existing relational DBMS. Works with Qt
-and Java Swing.
+and Java Swing. Uses SQL to do sorting and filtering wherever possible.
 
-Using Sequel means Clevic supports Postgresql, Mysql and so on. It's been
+Based on the idea of a Field, which contains information to display
+a db field in a UI of some kind. This includes display formatting, edit
+formatting, edit parsing, sets of values for eg foreign keys.
+And lots more.
+
+Using Sequel means Clevic works with Postgresql, Mysql and so on. It's been
 tested with Postgres and sqlite.
 
 Using Qt and Swing means it runs on Linux, Windows and OSX. The Qt
@@ -23,9 +28,9 @@ is tested in Linux and OSX.
 * in-place combo boxes for choosing values from related tables (foreign keys)
 * distinct combo boxes to list previous values for a field
 * display read-only fields from related tables
-* Filter by current field
+* Recursive Filter by current field
 * search by field contents
-* cut and paste in CSV
+* cut and paste in CSV and paste from HTML in the Java framework.
 
 === Shortcuts:
 
@@ -34,7 +39,8 @@ is tested in Linux and OSX.
 * Ctrl-] for copy previous record, one field right
 * Ctrl-[ for copy previous record, one field left
 * Ctrl-f to find a record
-* Ctrl-l to filter by current selection
+* Ctrl-l to add a filter (by current selection)
+* Ctrl-k to remove a filter
 * cursor keys, PgUp PgDown etc for movement
 
 === Model definition:
@@ -55,7 +61,7 @@ comments, see Clevic::ModelBuilder.
 === Framework
 
 * uses Sequel for data access.
-* use blocks to format values for particular fields.
+* can use blocks to format values for particular fields.
 * sensible caching to handle large data sets without unnecessary memory and cpu usage
 * extensions to various Qt classes to make db programming easier.
 * leverages SQL whenever possible to handle large datasets, sorting, filtering
@@ -63,7 +69,7 @@ comments, see Clevic::ModelBuilder.
 
 == PROBLEMS:
 
-There are some tests, but Clevic needs a comprehensive testing framework.
+There are some tests for algorithmic code, but Clevic needs a comprehensive testing framework.
 
 == SYNOPSIS:
 
@@ -76,6 +82,7 @@ There are some tests, but Clevic needs a comprehensive testing framework.
 * fastercsv
 * qtext
 * hashery (for ruby-1.8.x)
+* qtbindings
 * gather
 
 === Libraries

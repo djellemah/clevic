@@ -1,6 +1,6 @@
 module Clevic
-  # to be included in something that responds to entity and field
-  # used for getting values from the entity based on the definitions
+  # To be included in something that responds to entity and field methods.
+  # Used for getting values from the entity based on the definitions
   # in the field.
   module FieldValuer
   

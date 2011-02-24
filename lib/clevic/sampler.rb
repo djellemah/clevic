@@ -3,7 +3,11 @@ require 'andand'
 
 module Clevic
 
-# Calculate a string sample for a particular Field
+# This is used as part of the process of calculating the width
+# of a field in the UI. Since the font is important, this computes
+# a string value for a field that can be given to the font metrics
+# for a framework. Uses various heuristics to compute the string
+# values for different kinds of fields.
 class Sampler
   # display is only used for relational fields
   def initialize( field, &format_block )
