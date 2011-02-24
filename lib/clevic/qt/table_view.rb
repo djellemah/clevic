@@ -204,21 +204,6 @@ class TableView < Qt::TableView
     error_message.show
   end
   
-  # This is to allow entity model UI handlers to tell the view
-  # whence to move the cursor when the current editor closes
-  # (see closeEditor).
-  # TODO not used?
-  def override_next_index( model_index )
-    self.next_index = model_index
-  end
-  
-  # Call set_current_index with next_index ( from override_next_index )
-  # or model_index, in that order. Set next_index to nil afterwards.
-  def set_current_unless_override( model_index )
-    set_current_index( @next_index || model_index )
-    self.next_index = nil
-  end
-  
   # work around situation where an ItemDelegate is open
   # when the surrouding tab is changed, but the right events
   # don't arrive.
