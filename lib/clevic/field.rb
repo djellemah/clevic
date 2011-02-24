@@ -10,9 +10,7 @@ module Clevic
 This defines a field in the UI, and how it hooks up to a field in the DB.
 
 Many attributes are DSL-style accessors, where the value can be
-set with either an assignment or by passing a parameter. Unfortunately
-rdoc seems to have lost the ability to display these nicely. Anyway, here's
-an example
+set with either an assignment or by passing a parameter. For example:
 
   property :ixnay
 
@@ -215,9 +213,9 @@ class Field
   # for this field using whatever GUI toolkit is selected
   attr_accessor :delegate
   
-  # The attribute on the AR entity that forms the basis for this field.
+  # The attribute on the entity that forms the basis for this field.
   # Accessing the returned attribute (using send, or the [] method on an entity)
-  # will give a simple value, or another AR entity in the case of relational fields.
+  # will give a simple value, or another entity in the case of relational fields.
   # In other words, this is *not* the same as the name of the field in the DB, which
   # would normally have an _id suffix for relationships.
   attr_accessor :attribute
@@ -303,7 +301,7 @@ EOF
     meta.andand.association?
   end
   
-  # ModelColumn object
+  # Clevic::ModelColumn object
   def meta
     entity_class.meta[attribute]
   end
@@ -320,14 +318,15 @@ EOF
     [attribute.to_s, path].compact.join('.')
   end
   
-  # return the class object of a related class if this is a relational
-  # field, otherwise nil
+  # Return the class object of a related class if this is a relational
+  # field, otherwise nil.
   def related_class
     return nil unless association? && entity_class.meta.has_key?( attribute )
     @related_class ||= eval( entity_class.meta[attribute].class_name || attribute.to_s.classify )
   end
   
   # return an array of the various attribute parts
+  # TODO not used much. Deprecate and remove.
   def attribute_path
     pieces = [ attribute.to_s ]
     pieces.concat( display.to_s.split( '.' ) ) unless display.is_a? Proc
@@ -339,17 +338,20 @@ EOF
     @read_only || false
   end
   
-  # Called by Clevic::Model to format the display value.
+  # Called by Clevic::FieldValuer (and others) to format the display value.
   def do_format( value )
     do_generic_format( format, value )
   end
   
-  # Called by Clevic::Model to format the edit value.
+  # Called by Clevic::FieldValuer to format the field to a string value
+  # that can be used for editing.
   def do_edit_format( value )
     do_generic_format( edit_format, value )
   end
   
   # Set or return a sample for the field which can be used to size the UI field widget.
+  # If this is called as an accessor, and there is no value yet, a Clevic::Sampler
+  # instance is created to compute a sample.
   def sample( *args )
     if !args.empty?
       @sample = args.first
@@ -426,8 +428,12 @@ EOF
     end
   end
   
+  def to_s
+    "#{entity_class}.#{id}"
+  end
+  
   def inspect
-    "#<Clevic::Field id=#{id.inspect}>"
+    "#<Clevic::Field #{entity_class} id=#{id} attribute=#{attribute}>"
   end
   
 protected
@@ -494,6 +500,7 @@ protected
   end
 
   # try to find a sensible display method
+  # TODO this code shows up in the default UI builder as well.
   def default_display!
     candidates = %W{#{entity_class.name.downcase} name title username to_s}
     @display ||= candidates.find do |m|

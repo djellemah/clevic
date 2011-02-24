@@ -76,8 +76,9 @@ could be defined like this:
       # The project field
       relational  :project do |field|
         field.display = 'project'
-        field.conditions = 'active = true'
-        field.order = 'lower(project)'
+        
+        # see Sequel::Dataset docs
+        field.dataset.filter( :active => true ).order{ lower(project) }
         
         # handle data changed events. In this case,
         # auto-fill-in the invoice field.
@@ -266,10 +267,10 @@ is an ordinary editable field. Boolean values are displayed as checkboxes.
 is a multiline editable field.
 
   relational
-displays a set of values pulled from a belongs_to (many-to-one) relationship.
-In other words all the possible related entities that this one could belong_to. Some
+displays a set of values pulled from a many-to-one relationship.
+In other words all the possible related entities that this one could be related to. Some
 concise representation of the related entities are displayed in a combo box.
-:display is mandatory. All options applicable to ActiveRecord::Base#find can also be passed.
+:display is mandatory.
 
   distinct
 fetches the set of values already in the field, so you don't have to re-type them.
@@ -292,7 +293,7 @@ to a method already defined in the entity. In other words any of:
 - a relationship (one_to_many, etc)
 - a plain method that takes no parameters.
 
-will work. Named scopes might also work, but I haven't tried them yet.
+will work.
 
 You can do things like this:
 
