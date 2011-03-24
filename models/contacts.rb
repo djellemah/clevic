@@ -90,8 +90,8 @@ class ContactTags < Clevic::View
 
   def self.meta
     @meta ||= {
-      :linked, ModelColumn.new( :linked, :type => :boolean ),
-      :contacts, ModelColumn.new( :contacts, :type => :boolean ),
+      :linked => ModelColumn.new( :linked, :type => :boolean ),
+      :contacts => ModelColumn.new( :contacts, :type => :boolean ),
     }
   end
 end

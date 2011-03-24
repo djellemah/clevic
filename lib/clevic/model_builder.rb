@@ -1,5 +1,8 @@
-# TODO not needed for 1.9
-require 'hashery/orderedhash'
+if RUBY_VERSION > '1.9.0'
+  OrderedHash = Hash
+else
+  require 'hashery/orderedhash'
+end
 
 require 'clevic/table_model.rb'
 require 'clevic/cache_table.rb'
