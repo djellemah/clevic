@@ -8,11 +8,10 @@ For code examples, see Clevic::Examples.
 
 For documentation, see Clevic::ModelBuilder and Clevic::Field.
 
-
 == Description
 
-Database framework and Model/View GUI for data capture and
-editing of tables in a pre-existing relational DBMS. Works with Qt
+Database framework and Model/View GUI for editing of table data and
+data capture in a pre-existing reblational DBMS. Works with Qt
 and Java Swing. Uses SQL to do sorting and filtering wherever possible.
 
 Based on the idea of a Field, which contains information to display
@@ -35,20 +34,24 @@ is tested in Linux and OSX.
 * in-place combo boxes for choosing values from related tables (foreign keys)
 * distinct combo boxes to list previous values for a field
 * display read-only fields from related tables
-* Recursive Filter by current field
+* Multi-level filter by current field
 * search by field contents
-* cut and paste in CSV and paste from HTML in the Java framework.
+* cut and paste in CSV, and paste from HTML in the Java framework.
 
 === Shortcuts:
 
-* Ctrl-' for ditto (copy value from previous record)
+* Ctrl-<tt>'</tt> for ditto (copy value from previous record)
 * Ctrl-; for insert current date
-* Ctrl-] for copy previous record, one field right
-* Ctrl-[ for copy previous record, one field left
+* Ctrl-] for copy from previous record, one field right
+* Ctrl-[ for copy from previous record, one field left
 * Ctrl-f to find a record
 * Ctrl-l to add a filter (by current selection)
 * Ctrl-k to remove a filter
 * cursor keys, PgUp PgDown etc for movement
+* shift with movement keys to extend selection
+* Ctrl-Tab and Ctrl-Shift-Tab to move next/previous table views
+* F2 to edit a field
+* F4 to display a combo box for a field, where appropriate
 
 === Model definition:
 
@@ -73,30 +76,16 @@ There are some tests for algorithmic code, but Clevic needs a comprehensive test
 
 == Synopsis
 
-	clevic [ --qt | --swing ] model_definition_file.rb
+	clevic model_definition_file.rb
 	
 == Requirements
 
-=== Gems
-* Sequel
-* fastercsv
-* qtext
-* hashery (for ruby-1.8.x)
-* qtbindings
-* gather
-
-=== Libraries
-* bsearch (http://0xcc.net/ruby-bsearch)
 * db driver (ie pg)
 * rdbms (ie postgres)
 
 == Install
 
-	Get bsearch from http://0xcc.net/ruby-bsearch
-	
-	Install qt bindings from https://github.com/ryanmelt/qtbindings
-	
-	sudo gem install
+	sudo gem install clevic
 
 == Thanks
 

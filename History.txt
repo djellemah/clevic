@@ -1,3 +1,9 @@
+== 0.13.0.b6
+* switch to MrBones
+* Yay! bsearch is a gem. So is qtbindings.
+* dispense with a couple more active_support dependencies
+* make tests work with minitest.
+
 == 0.13.0.b5
 * Lots of Bug fixes
 * moved all internals to Sequel::Dataset
@@ -16,7 +22,7 @@
 * use of Dataset allows filtering in TableView to keep previous ordering,
   and filter.
 
-== 0.13.0.b3
+== 0.13.0.b2
 * Squash various buglets as they're found.
 
 == 0.13.0
@@ -52,7 +58,7 @@
 
 == 0.11.1
 * Define views in separate classes (subclass of Clevic::View) while
-	maintaining view definition inside the ActiveRecord::Base subclass.
+  maintaining view definition inside the ActiveRecord::Base subclass.
 * foreground and background color specifiers for fields
 * better handling of virtual fields
 * more tests

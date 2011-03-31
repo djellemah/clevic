@@ -7,9 +7,10 @@ require 'clevic/many_field.rb'
 module Clevic
 
 =begin rdoc
+
 This defines a field in the UI, and how it hooks up to a field in the DB.
 
-Attributes marked [P] are DSL-style accessors, where the value can be
+Some attributes are DSL-style accessors, where the value can be
 set with either an assignment or by passing a parameter. For example:
 
   property :ixnay
@@ -34,17 +35,10 @@ Generally properties are for options that can be passed to the field creation
 method in ModelBuilder, whereas ruby attributes are for the internal workings.
 
 #--
-TODO decide whether value_for type methods take an entity and do_something methods
-take a value.
-
-TODO the xxx_for methods are in here because their return values don't change
-by entity. Well, maybe sometimes they do. Anyway, need to find a better location
-for these and a better caching strategy.
-
-TODO this class is a bit confused about whether it handles metadata or record data, or both.
-
-TODO meta needs to handle virtual fields better.
+Yes, the blank line before class Field is really necessary.
+And so it the #-- above.
 =end
+
 class Field
   # For defining properties
   include Gather
@@ -53,6 +47,7 @@ class Field
   include GenericFormat
   
   ##
+  # :attr:
   # The value to be displayed after being optionally format-ed
   #
   # Takes a String, a Symbol, or a Proc.
@@ -69,20 +64,24 @@ class Field
   property :display
   
   ##
+  # :attr:
   # The label to be displayed in the column headings. Defaults to the humanised field name.
   property :label
   
   ##
+  # :attr:
   # One of the alignment specifiers - :left, :centre, :right or :justified.
   # Defaults to right for numeric fields, centre for boolean, and left for
   # other values.
   property :alignment
   
   ##
+  # :attr:
   # something to do with the icon that Qt displays. Not implemented yet.
   property :decoration
   
   ##
+  # :attr:
   # This defines how to format the value returned by :display. It takes a string or a Proc.
   # Generally the string is something 
   # that can be understood by strftime (for time and date fields) or understood 
@@ -91,6 +90,7 @@ class Field
   property :format
   
   ##
+  # :attr:
   # This is just like format, except that it's used to format the value just
   # before it's edited. A good use of this is to display dates with a 2-digit year
   # but edit them with a 4 digit year.
@@ -98,10 +98,12 @@ class Field
   property :edit_format
   
   ##
+  # :attr:
   # Whether the field is currently visible or not.
   property :visible
   
   ##
+  # :attr:
   # Sample is used if the programmer wishes to provide a value (that will be converted
   # using to_s) that can be used
   # as the basis for calculating the width of the field. By default this will be
@@ -111,10 +113,12 @@ class Field
   property :sample
   
   ##
+  # :attr:
   # Takes a boolean. Set the field to read-only.
   property :read_only
   
   ##
+  # :attr:
   # The foreground and background colors.
   # Can take a Proc, a string, or a symbol.
   # - A Proc is called with an entity
@@ -126,6 +130,7 @@ class Field
   property :foreground, :background
   
   ##
+  # :attr:
   # Can take a Proc, a string, or a symbol.
   # - A Proc is called with an entity
   # - A String is treated as a constant
@@ -133,6 +138,7 @@ class Field
   property :tooltip
   
   ##
+  # :attr:
   # An Enumerable of allowed values for restricted fields. If each yields
   # two values (like it does for a Hash), the
   # first will be stored in the db, and the second displayed in the UI.
@@ -140,6 +146,7 @@ class Field
   property :set
   
   ##
+  # :attr:
   # When this is true, only the values in the combo may be entered.
   # Otherwise the text-entry part of the combo can be used to enter
   # non-listed values. Default is true if a set is explicitly specified.
@@ -147,6 +154,7 @@ class Field
   property :restricted
   
   ##
+  # :attr:
   # Only for the distinct field type. The values will be sorted either with the
   # most used values first (:frequency => true) or in
   # alphabetical order (:description => true).
@@ -154,18 +162,21 @@ class Field
   property :frequency, :description
   
   ##
+  # :attr:
   # Default value for this field for new records.
   # Can be a Proc or a value. A value will just be
   # set, a proc will be executed with the entity as a parameter.
   property :default
   
   ##
+  # :attr:
   # The property used for finding the field, ie by TableModel#field_column.
   # Defaults to the attribute. If there are several display fields based on
   # one db field, their attribute will be the same, but their id must be different.
   property :id
   
   ##
+  # :attr:
   # Called when the data in this field changes.
   # Either a proc( clevic_view, table_view, model_index ) or a symbol
   # for a method( view, model_index ) on the Clevic::View object.

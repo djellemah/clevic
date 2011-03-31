@@ -365,6 +365,7 @@ the order can be accessed in Clevic::View.order, and specified by
   Clevic::View.order = [Position, Target, Account]
 
 =end
+
 class ModelBuilder
   
   # Create a definition for entity_view (subclass of Clevic::View).

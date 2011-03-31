@@ -39,6 +39,7 @@ See also Clevic::ModelBuilder and Clevic::Field
  :include:models/times_ar_style_models.rb
 
 =end
+
 class Examples
 end
 
