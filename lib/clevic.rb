@@ -11,6 +11,10 @@ end
 # JRuby-1.5.2 raises exception if this require has a .rb on the 
 #~ require 'active_support/inflector'
 
+# for demodulize, tableize, humanize
+require 'sequel'
+require 'sequel/extensions/inflector'
+
 require 'clevic/framework'
 require 'clevic/sequel_length_validation.rb'
 require 'clevic/record.rb'
