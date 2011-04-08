@@ -4,6 +4,7 @@ README.txt
 Rakefile
 TODO
 bin/clevic
+models/examples.rb
 models/accounts_models.rb
 models/minimal_models.rb
 models/times_models.rb

@@ -1,9 +1,5 @@
-task :package => :ui
-
-desc "Update ChangeLog from the SVN log"
-task :changelog do |t|
-  ARGV.shift
-  exec "svn2cl --break-before-msg -o ChangeLog #{ARGV.join(' ')}"
+namespace :gem do
+  task :package => :ui
 end
 
 # generate a _ui.rb filename from a .ui filename
@@ -70,7 +66,7 @@ task :irb do |t|
 end
 
 # generate tasks for all model definition files
-MODELS_LIST = FileList.new( '**/*models.rb' )
+MODELS_LIST = FileList.new( 'models/**/*models.rb' )
 
 def short_model( model_file )
   Pathname.new( model_file ).basename.to_s.gsub( /_models.rb/, '' )
