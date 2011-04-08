@@ -63,7 +63,7 @@ class TestTableSearcher < Test::Unit::TestCase
   context "searching" do
     setup do
       @simple_search_criteria.search_text = CreateFakePassengers::NATIONALITIES[0]
-      @passenger_generator = Generator.new( @all_passengers )
+      @passenger_generator = Enumerator.new( @all_passengers )
       @simple_search_criteria.from_start = true
     end
     

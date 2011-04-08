@@ -1,7 +1,7 @@
 require 'sequel'
 
 require 'faker'
-require 'generator'
+#~ require 'generator'
 
 # Doesn't seem to be a good place to put this
 $db = Sequel.sqlite
