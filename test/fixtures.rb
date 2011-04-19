@@ -1,7 +1,6 @@
 require 'sequel'
 
 require 'faker'
-#~ require 'generator'
 
 # Doesn't seem to be a good place to put this
 $db = Sequel.sqlite
@@ -94,4 +93,3 @@ end
 class Passenger < Sequel::Model
   many_to_one :flight
 end
-

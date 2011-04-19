@@ -42,8 +42,11 @@ Bones do
   depend_on 'qtbindings', '>=4.6.3'
   depend_on 'qtext', '>=0.6.6'
   
+  depend_on 'test-unit', :development => true
   depend_on 'shoulda', :development => true
   depend_on 'faker', :development => true
+  
+  # for 1.8
   depend_on 'generator', :development => true
 
   # read file list from Manifest.txt
@@ -70,4 +73,3 @@ end
 #~ end
 
 #~ Dir['tasks/**/*.rake'].each { |t| load t }
-

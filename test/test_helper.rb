@@ -1,8 +1,15 @@
+gem "test-unit" unless RUBY_VERSION < '1.9.0'
+
 require 'test/unit'
 require 'shoulda'
 
 require File.dirname(__FILE__) + '/../lib/clevic'
 require File.dirname(__FILE__) + '/fixtures.rb'
+
+if RUBY_VERSION < '1.9.0'
+  require 'generator'
+  Enumerator = Generator
+end
 
 # Allow running of startup and shutdown things before
 # an entire suite, instead of just one per test

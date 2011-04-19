@@ -1,5 +1,4 @@
-require 'generator'
-require 'logger'
+#~ require 'logger'
 
 require File.dirname(__FILE__) + '/test_helper.rb'
 require 'clevic/table_searcher.rb'
@@ -126,10 +125,11 @@ class TestTableSearcher < Test::Unit::TestCase
     
     should 'raise an exception for no display value' do
       @flight_field = Clevic::Field.new( :flight, Passenger, {} )
+
       @flight_field.display = nil
-      
       assert_nil @flight_field.display
-      assert_raise RuntimeError do
+
+      assert_raise( RuntimeError ) do
         table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @flight_field )
         table_searcher.search
       end
@@ -171,7 +171,7 @@ class TestTableSearcher < Test::Unit::TestCase
       @simple_search_criteria.whole_words = false
       @simple_search_criteria.from_start = true
       table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @nationality_field )
-      expecteds = Generator.new @should_find
+      expecteds = Enumerator.new @should_find
       last_entity = nil
       while next_entity = table_searcher.search( last_entity )
         assert_equal next_entity, expecteds.next

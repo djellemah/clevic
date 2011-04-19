@@ -34,6 +34,14 @@ module Sequel
           association_reflections 
         end
         
+        def attribute_names
+          columns + reflections.keys
+        end
+        
+        def has_attribute?( attribute )
+          attribute_names.include?( attribute )
+        end
+      
       end
       
       module InstanceMethods

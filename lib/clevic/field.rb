@@ -245,12 +245,16 @@ class Field
       raise "attribute #{attribute.inspect} must be a symbol"
     end
     
-    unless ( entity_class.is_a?( Clevic.base_entity_class ) and entity_class.has_attribute?( attribute ) ) or entity_class.instance_methods.include?( attribute.to_s )
-      msg = <<EOF
-#{attribute} not found in #{entity_class.name}. Possibilities are:
-#{entity_class.attribute_names.join("\n")}
+    unless entity_class.ancestors.include?( Clevic.base_entity_class )
+      raise "#{entity_class} is not a Clevic.base_entity_class: #{Clevic.base_entity_class}"
+    end
+    
+    # TODO this comes down to method_defined, really
+    unless entity_class.has_attribute?( attribute ) or entity_class.method_defined?( attribute )
+      raise <<EOF
+#{attribute.inspect} not found in #{entity_class.name}. Possibilities are:
+#{entity_class.attribute_names.inspect}
 EOF
-      raise msg
     end
     
     # instance variables
@@ -515,7 +519,7 @@ protected
   def default_display!
     candidates = %W{#{entity_class.name.downcase} name title username to_s}
     @display ||= candidates.find do |m|
-      related_class.column_names.include?( m ) || related_class.instance_methods.include?( m )
+      related_class.column_names.include?( m ) || related_class.method_defined?( m )
     end || raise( "Can't find one of #{candidates.inspect} in #{related_class.name}" )
   end
 
