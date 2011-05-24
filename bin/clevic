@@ -49,6 +49,7 @@ if RUBY_PLATFORM == 'java'
 else
   require 'clevic/qt'
 end
+require 'clevic'
 
 if $options[:debug]
   require 'pp'

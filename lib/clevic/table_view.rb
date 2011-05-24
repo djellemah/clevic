@@ -595,6 +595,8 @@ class TableView
     unless found_row.nil?
       if column.is_a? Symbol
         column = model.field_column( column )
+      elsif column.nil?
+        column = 0
       else
         raise "column #{column} does not exist" if column >= model.fields.size
       end

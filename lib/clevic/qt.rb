@@ -5,6 +5,7 @@
 require 'clevic/framework'
 
 require 'Qt4'
+require 'qtext'
 
 # require these first, so TableModel and TableView get the correct ancestors
 require 'clevic/qt/table_model.rb'
