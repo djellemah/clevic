@@ -4,6 +4,7 @@ README.txt
 Rakefile
 TODO
 bin/clevic
+models/examples.rb
 models/accounts_models.rb
 models/minimal_models.rb
 models/times_models.rb
@@ -78,8 +79,6 @@ lib/clevic/qt/combo_delegate.rb
 lib/clevic/qt/browser.rb
 lib/clevic/qt/clipboard.rb
 lib/clevic/qt/text_area_delegate.rb
-lib/clevic/ui/browser_ui.rb
-lib/clevic/ui/search_dialog_ui.rb
 lib/clevic/qt.rb
 lib/clevic/many_field.rb
 lib/clevic/attribute_list.rb

@@ -4,6 +4,7 @@ Field metadata class. Includes information for type, reflections etc.
 Also, it eases the migration from AR to Sequel, which returns metadata as
 a hash instead of a class.
 =end
+
 class ModelColumn
   # these are from AR
   attr_accessor :primary, :scale, :sql_type, :name, :precision, :default, :type, :meta

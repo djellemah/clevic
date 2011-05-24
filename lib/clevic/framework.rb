@@ -10,6 +10,7 @@
   are already defined by the time the framework-neutral
   class definition is executed.
 =end
+
 class Class
   
   # method_name can be a symbol or a string.

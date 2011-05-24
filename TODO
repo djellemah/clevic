@@ -1,3 +1,8 @@
+sorting by header:
+  - See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
+  - layoutChanged
+
+change instance_methods.include? to method_defined?
 override_next_index broken again, on ditto
 Sort out the whole /bin/clevic vs gem 'clevic', '~> 0.12.0' thing.
 Meta should be related to ModelColumn somehow. Which is pretty messy itself.
@@ -31,8 +36,6 @@ has_many :through
 composed_of & aggregates
 generate schema from definition? See rubyforge
 Ctrl-PgDn to last row in this column. Also extend selection
-sorting by header. See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
-- layoutChanged
 
 undo
 - could possibly handle this in the TableModel

@@ -10,6 +10,7 @@ An instance of Clevic::TableModel is constructed by Clevic::ModelBuilder from th
 UI definition in a Clevic::View, or from the default Clevic::View created by
 including the Clevic::Record module in a Sequel::Model subclass.
 =end
+
 class TableModel
   # the CacheTable of Clevic::Record or Sequel::Model objects
   attr_reader :collection

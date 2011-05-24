@@ -14,6 +14,10 @@ end
 require 'sequel/core'
 require 'sequel/extensions/inflector'
 
+# for demodulize, tableize, humanize
+require 'sequel'
+require 'sequel/extensions/inflector'
+
 require 'clevic/framework'
 require 'clevic/sequel_length_validation.rb'
 require 'clevic/record.rb'

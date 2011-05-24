@@ -7,6 +7,9 @@ require 'clevic/framework'
 require 'Qt4'
 require 'qtext'
 
+# needed here for tableize, humanize
+require 'sequel'
+
 # require these first, so TableModel and TableView get the correct ancestors
 require 'clevic/qt/table_model.rb'
 require 'clevic/qt/table_view.rb'

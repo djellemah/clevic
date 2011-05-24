@@ -151,14 +151,6 @@ module Sequel
         end
       end
       
-      def has_attribute?( attribute )
-        column_names.include?( attribute )
-      end
-      
-      def attribute_names
-        columns
-      end
-      
       def columns_hash
         db_schema
       end

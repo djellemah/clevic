@@ -7,6 +7,7 @@ Search for a record in the collection given a set of criteria. One of the
 criteria will be a starting record, and the search method should return
 the matching record next after this.
 =end
+
 class TableSearcher
   include OrderedDataset
   attr_reader :search_criteria, :field
