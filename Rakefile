@@ -46,9 +46,6 @@ Bones do
   depend_on 'shoulda', :development => true
   depend_on 'faker', :development => true
   
-  # for 1.8
-  depend_on 'generator', :development => true
-
   # read file list from Manifest.txt
   gem.files File.new('Manifest.txt').to_a.map( &:chomp )
 
