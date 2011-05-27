@@ -1,8 +1,12 @@
 == 0.13.0.b6
 * switch to MrBones
-* Yay! bsearch is a gem. So is qtbindings.
+* All dependencies are now gems. bsearch is a gem. So is qtbindings.
 * dispense with a couple more active_support dependencies
 * make tests work with minitest.
+* Document attributes better
+* Make sure Models based on a SQL view will work
+* Fix Enumerator / Generator issues
+* testing with both ruby-1.8.7 and ruby-1.9.2
 
 == 0.13.0.b5
 * Lots of Bug fixes
