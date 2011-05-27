@@ -129,10 +129,11 @@ class Browser < Qt::Widget
     views.each do |view_class|
       begin
         view = view_class.new
-        unless view.entity_class.table_exists?
-          puts "No table for #{view.entity_class.inspect}"
-          next
-        end
+        
+        # This will raise an exception if we can't talk to the
+        # table. Returns nil if there is an empty table, which is
+        # also fine.
+        view.entity_class.first
           
         # create the the table_view and the table_model for the entity_class
         tab = Clevic::TableView.new( view )
