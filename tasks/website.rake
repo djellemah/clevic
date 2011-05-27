@@ -13,13 +13,10 @@ task :website_generate => :ruby_env do
   end
 end
 
-desc 'Upload website files to rubyforge'
-task :upload_website do
-  host = "#{rubyforge_username}@rubyforge.org"
-  remote_dir = "/var/www/gforge-projects/#{PATH}/"
-  local_dir = 'website'
-  sh %{rsync -aCv #{local_dir}/ #{host}:#{remote_dir}}
+task :publish => %w{doc website_generate} do
+  `cp -r doc website/doc`
+  `rsync -avr --delete website/* panic@rubyforge.org:/var/www/gforge-projects/clevic/`
 end
 
 desc 'Generate and upload website files'
-task :website => [:website_generate, :website_upload, :publish_docs]
+task :website => [:website_generate, 'rubyforge:doc_release', :publish_doc]
