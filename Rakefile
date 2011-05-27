@@ -40,7 +40,7 @@ Bones do
   
   # for Qt
   depend_on 'qtbindings', '>=4.6.3'
-  depend_on 'qtext', '>=0.6.6'
+  depend_on 'qtext', '>=0.6.7'
   
   depend_on 'test-unit', :development => true
   depend_on 'shoulda', :development => true
