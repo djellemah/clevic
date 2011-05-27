@@ -32,6 +32,7 @@ To that end, there are 2 ways to define UIs:
 I've tried to consistently refer to an instance of an Sequel::Model subclass as an 'entity'.
 
 ==Embedded View
+
 Minimal embedded definition is
 
   class Position < Sequel::Model
