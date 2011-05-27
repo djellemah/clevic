@@ -60,8 +60,9 @@ Bones do
   # List of Regexs to exclude from rdoc processing
   rdoc.exclude %w{^pkg.*}
   
-  # TODO add -W for git browser here
-  #~ rdoc.opts %w{-v}
+  # Include URL for git browser in rdoc output
+  rdoc.opts %w{-W http://gitweb.semiosix.com/gitweb.cgi?p=clevic;a=blob;f=%s;hb=HEAD}
+
   rdoc.main 'README.txt'
   #~ rdoc.external true
 end
