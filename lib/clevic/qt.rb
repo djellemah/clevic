@@ -16,7 +16,7 @@ require 'clevic/qt/table_view.rb'
 
 # all other files in the qt subdirectory
 require 'pathname'
-( Pathname.new( __FILE__ ).parent + 'qt' ).children.grep( /.rb$/ ).each do |child|
+( Pathname.new( __FILE__ ).parent + 'qt' ).children.select{|x| x.to_s =~ /.rb$/ }.each do |child|
   require child.to_s
 end
 
