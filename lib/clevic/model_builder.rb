@@ -395,7 +395,9 @@ class ModelBuilder
     end
 
     unless block.nil?
-      if block.arity == -1
+      if RUBY_VERSION && RUBY_VERSION >= '1.9.0' && block.arity == 0
+        instance_eval( &block )
+      elsif block.arity == -1
         instance_eval( &block )
       else
         block.call( self )
