@@ -14,6 +14,25 @@ class Object
   def with( &block )
     yield( self )
   end
+
+  # return a list of the subclasses of a class
+  # from Matt Williams
+  # http://matthewkwilliams.com/index.php/2008/08/22/rubys-objectspace-subclasses/
+  def self.subclasses(direct = false)
+    classes = []
+    if direct
+      ObjectSpace.each_object(Class) do |c|
+        next unless c.superclass == self
+        classes << c
+      end
+    else
+      ObjectSpace.each_object(Class) do |c|
+        next unless c.ancestors.include?(self) and (c != self)
+        classes << c
+      end
+    end
+    classes
+  end
 end
 
 class String
