@@ -52,7 +52,7 @@ Bones do
   # List of files to generate rdoc from
   # Not the same as the rdoc -i which is list of files
   # to search for include directives
-  rdoc.include %w{README.txt ^lib/clevic/.*\.rb$ models/examples.rb History.txt TODO}
+  rdoc.include %w{README.rdoc ^lib/clevic/.*\.rb$ models/examples.rb History.txt TODO}
   
   # List of Regexs to exclude from rdoc processing
   rdoc.exclude %w{^pkg.*}
