@@ -318,7 +318,7 @@ EOF
   
   # Clevic::ModelColumn object
   def meta
-    entity_class.meta[attribute]
+    entity_class.meta[attribute] || ModelColumn.new( attribute, {} )
   end
   
   # return true if this field can be used in a filter
@@ -487,7 +487,7 @@ protected
   # sensible display format defaults if they're not defined.
   def default_format!
     @format ||=
-    case meta.type
+    case meta.andand.type
       when :time; '%H:%M'
       when :date; '%d-%h-%y'
       when :datetime; '%d-%h-%y %H:%M:%S'
@@ -498,7 +498,7 @@ protected
   # sensible edit format defaults if they're not defined.
   def default_edit_format!
     @edit_format ||=
-    case meta.type
+    case meta.andand.type
       when :date; '%d-%h-%Y'
       when :datetime; '%d-%h-%Y %H:%M:%S'
     end || default_format!
@@ -507,7 +507,7 @@ protected
   # sensible alignment defaults if they're not defined.
   def default_alignment!
     @alignment ||=
-    case meta.type
+    case meta.andand.type
       when :decimal, :integer, :float; :right
       when :boolean; :centre
       else :left
