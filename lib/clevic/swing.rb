@@ -13,7 +13,7 @@ require 'clevic/swing/table_view.rb'
 
 # all other files in the swing subdirectory
 require 'pathname'
-( Pathname.new( __FILE__ ).parent + 'swing' ).children.grep( /.rb$/ ).each do |child|
+( Pathname.new( __FILE__ ).parent + 'swing' ).children.select{|x| x.to_s =~ /.rb$/ }.each do |child|
   require child.to_s
 end
 
