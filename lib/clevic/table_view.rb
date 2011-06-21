@@ -1,4 +1,9 @@
-require 'fastercsv'
+if defined?( RUBY_VERSION ) && RUBY_VERSION >= '1.9.0'
+  require 'csv'
+else
+  require 'fastercsv'
+end
+
 require 'stringio'
 
 require 'clevic/model_builder.rb'
