@@ -85,7 +85,10 @@ There are some tests for algorithmic code, but Clevic needs a comprehensive test
 
 == Install
 
-	sudo gem install clevic
+ sudo gem install clevic
+
+Note that clevic depends on qtbindings, which takes a while
+to compile native code.
 
 == Thanks
 
