@@ -625,31 +625,19 @@ class TableView
   # or entity_model. Return nil if no match found.
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
-  unless instance_methods.include?( 'find_table_view' )
-    def find_table_view( entity_model_or_view )
-      raise "framework responsibility"
-    end
-  end
+  framework_responsibility :find_table_view
   
   # execute the block with the TableView instance
   # currently handling the entity_model_or_view.
   # Don't execute the block if nothing is found.
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
-  unless instance_methods.include?( 'with_table_view' )
-    def with_table_view( entity_model_or_view, &block )
-      raise "framework responsibility"
-    end
-  end
+  framework_responsibility :with_table_view
   
   # make this window visible if it's in a TabWidget
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
-  unless instance_methods.include?( 'raise_widget' )
-    def raise_widget
-      raise "framework responsibility"
-    end
-  end
+  framework_responsibility :raise_widget
   
   # set next_index for certain operations. Is only activated when
   # to_next_index is called.
@@ -672,10 +660,9 @@ class TableView
   
 protected
   
-  # show a busy cursor, do the block, back to normal cursor
+  # Show a busy cursor, do the block, back to normal cursor
   # return value of block
-  # TODO implement generic way of indicating framework responsibility
-  # :busy_cursor
+  framework_responsibility :busy_cursor
   
   # return either the set of indexes with all invalid indexes
   # remove, or the current selection.

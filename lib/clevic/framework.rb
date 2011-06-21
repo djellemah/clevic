@@ -20,9 +20,9 @@ class Class
   # and exception. Otherwise if the named method already
   # exists, just leave it alone.
   def framework_responsibility( method_name )
-    unless instance_methods.include?( method_name.to_s )
+    unless method_defined?( method_name.to_sym )
       define_method method_name do
-        raise "Framework-specific code has not defined for for #{self.class}##{method_name}"
+        raise "Framework-specific code not defined for #{self.class}##{method_name}"
       end
     end
   end
