@@ -42,7 +42,7 @@ class Sampler
       else
         set
       end. \
-      max{|a,b| a.to_s.length <=> b.to_s.length }.upcase
+      max{|a,b| a.to_s.length <=> b.to_s.length }.to_s.upcase
     else
       # choose samples based on the type of the field
       case meta.type
