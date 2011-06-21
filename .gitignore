@@ -5,3 +5,4 @@ doc
 pkg
 website/rdoc
 models/times.sqlite3
+.yardoc
