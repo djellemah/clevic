@@ -539,8 +539,8 @@ class TableView
     unfilter_action.enabled = filtered?
   end
   
-  def filter_by_dataset( message, &dataset_block )
-    # clean this up and make it work AND for multiple columns, OR for multiple rows
+  def filter_by_dataset( message = nil, &dataset_block )
+    # TODO clean this up and make it work AND for multiple columns, OR for multiple rows
     self.filters << FilterCommand.new( self, message, &dataset_block )
     
     # try to end up on the same entity, even after the filter

@@ -2,9 +2,9 @@ module Clevic
   class FilterCommand
     # filter_block will be passed a Dataset to filter.
     # filter_message will be displayed.
-    def initialize( table_view, message, &filter_block )
+    def initialize( table_view, message = nil, &filter_block )
       @table_view = table_view
-      @message = message
+      @message = message || 'filtered'
       @filter_block = filter_block
     end
     
