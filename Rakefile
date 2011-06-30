@@ -25,7 +25,7 @@ Bones do
   gem.need_tar false
   
   depend_on 'fastercsv', '>=1.2.3'
-  depend_on 'gather', '>=0.0.6'
+  depend_on 'gather', '>=0.0.8'
   depend_on 'andand', '>= 1.3.0'
   depend_on 'sequel', '>= 3.8.0'
   depend_on 'bsearch', '>=1.5.0'
