@@ -180,11 +180,13 @@ class TableView
   def ditto
     sanity_check_ditto
     sanity_check_read_only
-    one_up_index = current_index.choppy { |i| i.row -= 1 }
-    previous_value = one_up_index.attribute_value
-    if current_index.attribute_value != previous_value
-      current_index.attribute_value = previous_value
-      model.data_changed( current_index )
+    selection_model.selected_indexes.each do |index|
+      one_up_index = index.choppy { |i| i.row -= 1 }
+      previous_value = one_up_index.attribute_value
+      if index.attribute_value != previous_value
+        index.attribute_value = previous_value
+        model.data_changed( index )
+      end
     end
   end
   
