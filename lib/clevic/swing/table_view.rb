@@ -1,4 +1,8 @@
-require 'fastercsv'
+if defined?( RUBY_VERSION ) && RUBY_VERSION >= '1.9.0'
+  require 'csv'
+else
+  require 'fastercsv'
+end
 
 require 'clevic/swing/action_builder.rb'
 require 'clevic/swing/cell_editor.rb'

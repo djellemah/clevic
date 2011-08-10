@@ -95,10 +95,10 @@ class TableView
     
     case text
       when /\t/
-        paste_array( FasterCSV.parse( text, :col_sep => "\t" ) )
+        paste_array( CSV.parse( text, :col_sep => "\t" ) )
       # assume multi-line text, or text with commas, is csv
       when /[,\n]/
-        paste_array( FasterCSV.parse( text, :col_sep => ',' ) )
+        paste_array( CSV.parse( text, :col_sep => ',' ) )
       else
         paste_value_to_selection( text )
     end
