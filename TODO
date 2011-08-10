@@ -1,3 +1,5 @@
+finish fixing the CSV vs FasterCSV issue in various table_view files
+
 sorting by header:
   - See void QAbstractItemModel::sort ( int column, Qt::SortOrder order = Qt::AscendingOrder )
   - layoutChanged
