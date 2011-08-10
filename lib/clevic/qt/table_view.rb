@@ -1,4 +1,9 @@
-require 'fastercsv'
+if defined?( RUBY_VERSION ) && RUBY_VERSION >= '1.9.0'
+  require 'csv'
+else
+  require 'fastercsv'
+end
+
 require 'qtext/action_builder.rb'
 require 'clevic/model_builder.rb'
 require 'clevic/filter_command.rb'

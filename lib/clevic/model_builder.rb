@@ -646,9 +646,9 @@ protected
         # one-to-one relationships can be edited. many-to-one certainly can't
         entity_class.meta[attribute].type != :many_to_one
         
-      when entity_class.instance_methods.include?( attribute.to_s )
+      when entity_class.method_defined?( attribute )
         # read-only if there's no setter for the attribute
-        !entity_class.instance_methods.include?( "#{attribute.to_s}=" )
+        !entity_class.method_defined?( "#{attribute.to_s}=" )
         
       else
         # default to not read-only

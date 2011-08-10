@@ -23,7 +23,8 @@ class DistinctDelegate
   def dataset
     base_dataset =
     unless field.find_options.empty?
-      puts "conditions and order are deprecated. Use dataset instead."
+      puts "#{field.entity_class.name}:#{field.attribute} conditions and order are deprecated. Use dataset instead."
+      puts caller
       require 'clevic/ar_methods'
       field.entity_class.plugin :ar_methods
       field.entity_class.translate( field.find_options )
