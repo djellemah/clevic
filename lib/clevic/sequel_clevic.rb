@@ -11,49 +11,49 @@ module Sequel
           # store model-related stuff here
         end
       end
-      
+
       module ClassMethods
         # Copy the necessary class instance variables to the subclass.
         def inherited(subclass)
           super
         end
-        
+
         # This doesn't really belong here, but I don't want to make 
         # a whole new plugin.
         def table_exists?
           db.table_exists?( implicit_table_name )
         end
-        
+
         # Hmm, maybe these need to go in a different plugin
         def column_names
           columns
         end
-        
+
         # Getting heavy enough, yet?
         def reflections
           association_reflections 
         end
-        
+
         def attribute_names
           columns + reflections.keys
         end
-        
+
         def has_attribute?( attribute )
           attribute_names.include?( attribute )
         end
-      
+
       end
-      
+
       module InstanceMethods
         # This should also go in another plugin
         def changed?
           modified?
         end
-        
+
         def readonly?
           false
         end
-      
+
         def new_record?
           new?
         end

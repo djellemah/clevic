@@ -13,7 +13,7 @@ def run
     # the table
     view = Clevic::View.order.first.new
     @table_view = Clevic::TableView.new( view )
-    
+
     # display
     frame.content_pane.add( @table_view )
     frame.default_close_operation = javax.swing.JFrame::DISPOSE_ON_CLOSE

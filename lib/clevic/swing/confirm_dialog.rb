@@ -7,17 +7,17 @@ module Clevic
       @results = []
       yield self if block_given?
     end
-    
+
     attr_accessor :names, :results, :question, :title, :dialog_result, :parent
-    
+
     def to_java( arg )
       @options.keys.to_java( arg )
     end
-    
+
     def canonical_results
       @canonical_results ||= [:accept, :reject]
     end
-    
+
     # To create a an Ok button that has the focus, and causes
     # the class to return true from accepted?
     #  dialog['Ok'] = :accept, true
@@ -31,15 +31,15 @@ module Clevic
       results << result.to_sym
       @default = name.to_s if default
     end
-    
+
     def accepted?
       results[dialog_result] == :accept
     end
-    
+
     def rejected?
       results[dialog_result] == :reject
     end
-    
+
     def show
       self.dialog_result = javax.swing.JOptionPane.showOptionDialog(
         parent,

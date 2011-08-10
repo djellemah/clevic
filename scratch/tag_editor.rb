@@ -12,11 +12,11 @@ def run
   @frame = javax.swing.JFrame.new.tap do |frame|
     # the view. Make sure latest definition is loaded
     @view = ContactTags.new
-    
+
     # the editor
     @tag_editor = Clevic::TagEditor.new( @view.fields[:tags] )
     @tag_editor.configureEditor( nil, Contact.first )
-    
+
     # display
     frame.content_pane.add( @tag_editor )
     frame.default_close_operation = javax.swing.JFrame::DISPOSE_ON_CLOSE

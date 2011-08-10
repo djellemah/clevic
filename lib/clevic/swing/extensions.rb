@@ -4,7 +4,7 @@ class BlockRunner < java.lang.Thread
   def initialize(&proc)
     @p = proc
   end
-  
+
   def run
     @p.call
   end
@@ -55,13 +55,13 @@ unless defined? Component
       case obj
       when Clevic::Separator
         add_separator
-      
+
       when Clevic::Action
         add obj.menu_item
-      
+
       when String
         add obj.to_java_string
-      
+
       else
         add obj
       end
@@ -88,13 +88,13 @@ unless defined? JComboBox
     def << ( value )
       model.addElement( value )
     end
-    
+
     def each
       (0...model.size).each do |i|
         yield model.getElementAt( i )
       end
     end
-    
+
     include Enumerable
   end
 end
@@ -103,17 +103,17 @@ unless defined? JTabbedPane
   JTabbedPane = javax.swing.JTabbedPane
   class JTabbedPane
     include Enumerable
-    
+
     def each
       (0...count).each do |index|
         yield getComponentAt( index )
       end
     end
-    
+
     def count
       getTabCount
     end
-    
+
     def current=( component )
       self.selected_component = component
     end
@@ -147,44 +147,44 @@ unless defined? KeyEvent
     def alt?
       modifiers & self.class::ALT_MASK != 0
     end
-    
+
     def ctrl?
       modifiers & self.class::CTRL_MASK != 0
     end
-    
+
     def meta?
       modifiers & self.class::META_MASK != 0
     end
-    
+
     def self.function_keys
       @function_keys ||= (1..24).map{|i| eval( "VK_F#{i}" ) }
     end
-    
+
     def fx?
       self.class.function_keys.include?( key_code )
     end
-    
+
     def del?
       key_code == VK_DELETE
     end
-    
+
     def shift?
       modifiers & self.class::SHIFT_MASK != 0
     end
-    
+
     def plain?
       modifiers == 0
     end
-    
+
     def esc?
       key_code == VK_ESCAPE
     end
-    
+
     # a KEY_TYPED event
     def typed?
       getID == self.class::KEY_TYPED
     end
-    
+
     def inspect
       "<KeyEvent id=#{getID} #{self.class.getKeyText(key_code)} '#{key_char}'>"
     end
@@ -206,15 +206,15 @@ unless defined? MouseEvent
     def pressed?
       getID == MOUSE_PRESSED
     end
-    
+
     def released?
       getID == MOUSE_RELEASED
     end
-    
+
     def clicked?
       getID == MOUSE_CLICKED
     end
-    
+
     #~ def inspect
       #~ <<EOF
 
@@ -233,7 +233,7 @@ unless defined? TableModelEvent
     def inspect
       "#<#{first_row..last_row}, #{column}, #{const_lookup( type )} >"
     end
-    
+
     def updated?
       type == self.class::UPDATE
     end
@@ -245,7 +245,7 @@ unless defined? TableModelEvent
     def inserted?
       type == self.class::INSERT
     end
-    
+
     # returns true if this is a notification to update all
     # rows, ie a fireTableDataChanged() was called
     def all_rows?

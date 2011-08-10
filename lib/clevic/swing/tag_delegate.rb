@@ -13,33 +13,33 @@ class TagDelegate < Delegate
     # This should be a collection of entities from the related table
     @items = attribute_value
   end
-  
+
   # Return the GUI component / widget that is displayed when editing.
   # Usually this will be a combo box widget, but it can be a text editor
   # in some cases.
   attr_reader :editor
-  
+
   # the cell must be selected before the edit can be clicked
   def needs_pre_selection?
     true
   end
-  
+
   # Return a string to be shown to the user.
   # model_value is an item stored in the combo box model.
   def display_for( model_value )
     field.transform_attribute( model_value )
   end
-  
+
   def line_editor( value = nil )
     @line_editor ||= javax.swing.JTextField.new( value ).tap do |line|
       line.font = Clevic.tahoma
     end
   end
-  
+
   def editor
     line_editor
   end
-  
+
   # Recreate the model and fill it with anything in population that
   # matches the prefix first, followed by anything in the population that
   # doesn't match the prefix.
@@ -52,7 +52,7 @@ class TagDelegate < Delegate
       # save text and popup
       save_item = editor.editor.item
       dropdown_visible = editor.popup_visible?
-      
+
       # repopulate based on the prefix
       prefix ||= editor.editor.item
       editor.model = editor.model.class.new
@@ -60,13 +60,13 @@ class TagDelegate < Delegate
       matching, non_matching = population.partition{ |item| display_for( item ) =~ /^#{prefix}/i }
       matching.each {|item| editor << item}
       non_matching.each {|item| editor << item}
-      
+
       # restore text and popup
       editor.editor.item = text || save_item
       editor.popup_visible = dropdown_visible
     end
   end
-    
+
   # make sure we don't react to document change events
   # while we're doing autocompletion. Reentrant
   def autocomplete( &block )
@@ -75,7 +75,7 @@ class TagDelegate < Delegate
   ensure
     @autocompleting = false
   end
-  
+
   # http://www.drdobbs.com/184404457 for autocompletion steps
   def filter_prefix( prefix )
     # search for matching item in the UI display_for for the items in the combo model
@@ -86,7 +86,7 @@ class TagDelegate < Delegate
         autocomplete do
           # set the shortlist, and the text editor value
           repopulate prefix, candidate
-          
+
           # set the suggestion selection
           editor.editor.editor_component.with do |text_edit|
             # highlight the suggested match, and leave caret
@@ -98,7 +98,7 @@ class TagDelegate < Delegate
       end
     end
   end
-  
+
   # open the combo box, just like if F4 was pressed
   # big trouble here with JComboBox firing an comboEdited action
   # (probably) on focusGained
@@ -112,11 +112,11 @@ class TagDelegate < Delegate
       editor.show_popup
     end
   end
-  
+
   # open the text editor component
   #~ def minimal_edit
   #~ end
-  
+
   # return an array of related entity objects, to be
   # passed into the attribute setter
   def value

@@ -12,11 +12,11 @@ class RelationalDelegate < ComboDelegate
   def item_to_editor( item )
     [ field.transform_attribute( item ), item.pk.to_variant ]
   end
-  
+
   def editor_to_item( data )
     entity.related_class[ data ]
   end
-  
+
   # called by Qt when it wants to give the delegate an index to edit
   def setEditorData( editor_widget, model_index )
     if is_combo?( editor_widget )
@@ -26,11 +26,11 @@ class RelationalDelegate < ComboDelegate
       editor_widget.line_edit.andand.select_all
     end
   end
-  
+
   # return an entity object, given a text selection
   def translate_from_editor_text( editor_widget, text )
     item_index = editor_widget.find_text( text )
-    
+
     # fetch record id from editor_widget item_data
     item_data = editor_widget.item_data( item_index )
     if item_data.valid?
@@ -39,7 +39,7 @@ class RelationalDelegate < ComboDelegate
       field.related_class[ item_data.to_int ]
     end
   end
-  
+
 end
 
 end

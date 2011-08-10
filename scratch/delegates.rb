@@ -12,21 +12,21 @@ class ShowDelegates
   def initialize( view_name = :entry )
     @controls = {}
   end
-  
+
   attr_accessor :view_name
-  
+
   def frame
     @frame ||= javax.swing.JFrame.new.tap do |frame|
       frame.layout = javax.swing.BoxLayout.new( frame.content_pane, javax.swing.BoxLayout::PAGE_AXIS )
     end
   end
-  
+
   def view
     @view ||= Clevic::View[view_name].new
   end
-  
+
   attr_reader :controls
-  
+
   def build( entity = entity )
     # add controls
     view.fields.map do |name,field|
@@ -44,15 +44,15 @@ class ShowDelegates
       component
     end
   end
-  
+
   def model
     view.entity_class
   end
-  
+
   def entity
     @entity ||= model[ (model.count * rand ).to_i ] || entity
   end
-  
+
   def show
     # general setup
     frame.default_close_operation = ( $0 == 'jirb' ? javax.swing.JFrame::HIDE_ON_CLOSE : javax.swing.JFrame::EXIT_ON_CLOSE )

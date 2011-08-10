@@ -6,7 +6,7 @@ Sequel.connect( "postgres://#{host}/accounts_test?user=#{$options[:username] || 
 # This is a read-only view, which is currently not implemented
 class Value < Sequel::Model
   set_table_name 'values'
-  
+
   include Clevic::Record
   define_ui do
     read_only!
@@ -19,7 +19,7 @@ class Value < Sequel::Model
     plain       :vat, :label => 'VAT'
     plain       :financial_year
     plain       :month
-    
+
     records :order => 'date'
   end
 end

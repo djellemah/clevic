@@ -10,48 +10,48 @@ module Clevic
       @entity_class = entity_class
       @entity_class.plugin :ar_methods
     end
-    
+
     def quoted_false
       @entity_class.dataset.boolean_constant_sql( false )
     end
-    
+
     def quoted_true
       @entity_class.dataset.boolean_constant_sql( true )
     end
-    
+
     def count( *args )
       @entity_class.count_ar( *args )
     end
-    
+
     def find( *args )
       @entity_class.find_ar( *args )
     end
-    
+
     def attribute_list( attribute, attribute_value, by_description, by_frequency, find_options, &block )
       lister = AttributeList.new( @entity_class, attribute, attribute_value, find_options )
       ds = lister.dataset( by_description, by_frequency )
       ds.map( &block )
     end
   end
-  
+
   class ActiveRecordAdaptor
     def initialize( entity_class )
       @entity_class = entity_class
     end
-    
+
     def quoted_false
       @entity_class.connection.quoted_false
     end
-    
+
     def quoted_true
       @entity_class.connection.quoted_true
     end
-    
+
     # options is a hash
     def count( attribute = nil, options = {} )
       @entity_class.count( attribute, options )
     end
-    
+
     def find( options )
       @entity_class.find( :all, options )
     end
@@ -65,7 +65,7 @@ module Clevic
         order by lower(#{attribute.to_s})
       EOF
     end
-    
+
     def query_order_frequency( attribute, attribute_value, find_options )
       <<-EOF
         select distinct #{attribute.to_s}, count(#{attribute.to_s})
@@ -76,7 +76,7 @@ module Clevic
         order by count(#{attribute.to_s}) desc
       EOF
     end
-    
+
     # values are passed as row objects to block
     def attribute_list( attribute, attribute_value, by_description, by_frequency, find_options, &block )
       query =
@@ -88,7 +88,7 @@ module Clevic
         else
           entity_class.adaptor.query_order_frequency( attribute, attribute_value, find_options )
       end
-        
+
       entity_class.connection.execute( query ).each( &block )
     end
   end
@@ -108,11 +108,11 @@ if defined? ActiveRecord
           false
         end
       end
-      
+
       def self.attribute_names
         ( column_names + reflections.keys.map {|sym| sym.to_s} ).sort
       end
-      
+
       def adaptor
         @adaptor ||= Clevic::ActiveRecordAdaptor.new( self )
       end
@@ -127,12 +127,12 @@ module Sequel
       def translate_options( options )
         options[:key] = options[:foreign_key].andand.to_sym
         options.delete( :foreign_key )
-        
+
         options[:class] = options[:class_name].andand.to_sym
         options.delete( :class_name )
         options
       end
-      
+
       def belongs_to( name, options = nil, &block )
         # work around possible Sequel bug
         if options.nil?
@@ -141,7 +141,7 @@ module Sequel
           many_to_one( name, translate_options( options ), &block )
         end
       end
-      
+
       def has_many( name, options = nil, &block )
         # work around possible Sequel bug
         if options.nil?
@@ -150,11 +150,11 @@ module Sequel
           one_to_many( name, translate_options( options ), &block )
         end
       end
-      
+
       def columns_hash
         db_schema
       end
-      
+
       # return a class containing various db methods. Not sure
       # if this is the right way to do it, but at least this way
       # the model class namespace doesn't get filled up with crud
@@ -162,14 +162,14 @@ module Sequel
         @adaptor ||= Clevic::SequelAdaptor.new( self )
       end
     end
-    
+
     module Associations
       class ManyToOneAssociationReflection
         # return class for this side of the association
         def class_name
           self[:class_name]
         end
-        
+
         # return class for the other side of the association
         def klass
           eval class_name

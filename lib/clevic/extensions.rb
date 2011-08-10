@@ -9,7 +9,7 @@ class Object
       value.nil? ? nil : value.send( att )
     end
   end
-  
+
   # pass self to the block and return the results of the block.
   def with( &block )
     yield( self )
@@ -59,7 +59,7 @@ class Array
       index if include?( index )
     end
   end
-  
+
   def section
     return [] if empty?
     rv = [first]
@@ -69,7 +69,7 @@ class Array
     end
     rv
   end
-  
+
   # group by ascending values
   def group
     parts = []
@@ -81,7 +81,7 @@ class Array
       parts + self[section.size..-1].group
     end
   end
-  
+
   def range
     first..last
   end

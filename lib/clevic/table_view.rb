@@ -14,15 +14,15 @@ module Clevic
 # Various methods common to view classes
 class TableView
   include ActionBuilder
-  
+
   # the current stack of filter commands
   def filters
     @filtered ||= []
   end
   attr_writer :filters
-  
+
   def filtered?; !filters.empty?; end
-  
+
   # Called from the gui-framework adapter code in this class
   # arg is:
   # - an instance of Clevic::View
@@ -33,42 +33,42 @@ class TableView
       when arg.is_a?( TableModel )
         self.model = arg
         init_actions( arg.entity_view )
-      
+
       when arg.is_a?( Clevic::View )
         model_builder = arg.define_ui
         model_builder.exec_ui_block( &block )
-        
+
         # make sure the TableView has a fully-populated TableModel
         # self.model is necessary to invoke the GUI layer
         self.model = model_builder.build( self )
         self.object_name = arg.widget_name
-        
+
         # connect data_changed signals for the entity_class to respond
         connect_view_signals( arg )
-        
+
         init_actions( arg )
-      
+
       else
         raise "Don't know what to do with #{arg.inspect}"
     end
   end
-  
+
   attr_accessor :object_name
-  
+
   def title
     @title ||= model.entity_view.title
   end
-  
+
   # find the row index for the given field id (symbol)
   def field_column( field )
     raise "use model.field_column( field )"
   end
-    
+
   # return menu actions for the model, or an empty array if there aren't any
   def model_actions
     @model_actions ||= []
   end
-  
+
   # hook for the sanity_check_xxx methods
   # called for the actions set up by ActionBuilder
   # it just wraps the action block/method in a catch
@@ -78,14 +78,14 @@ class TableView
     catch :insane do
       yield
     end
-    
+
   rescue Exception => e
     puts
     puts "#{model.entity_view.class.name}: #{e.message}"
     puts e.backtrace
   end
-  
-  
+
+
   # called from framework_init
   def init_actions( entity_view )
     # add model actions, if they're defined
@@ -93,7 +93,7 @@ class TableView
       entity_view.define_actions( self, ab )
       separator unless collect_actions.empty?
     end
-    
+
     # list of actions in the edit menu
     list( :edit ) do
       action :action_save, '&Save', :shortcut => 'Ctrl+S', :method => :save_current_rows
@@ -111,16 +111,16 @@ class TableView
       action :action_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :new_row
       action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
       action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
-      
+
       if $options[:debug]
         action :action_dump, 'Du&mp', :shortcut => 'Ctrl+Shift+D' do
           puts model.collection[current_index.row].inspect
         end
       end
     end
-    
+
     separator
-    
+
     # list of actions for search
     list( :search ) do
       action :action_find, '&Find', :shortcut => 'Ctrl+F', :method => :find
@@ -130,7 +130,7 @@ class TableView
       #~ action :action_highlight, '&Highlight', :visible => false, :shortcut => 'Ctrl+H'
     end
   end
-  
+
   def clipboard
     # Clipboard will be a framework-specific class
     @clipboard = Clipboard.new
@@ -141,7 +141,7 @@ class TableView
   def copy_current_selection
     clipboard.text = current_selection_csv
   end
-  
+
   # return the current selection as csv
   def current_selection_csv
     buffer = StringIO.new
@@ -150,14 +150,14 @@ class TableView
     end
     buffer.string
   end
-  
+
   def sanity_check_ditto
     if current_index.row == 0
       emit_status_text( 'No previous record to copy.' )
       throw :insane
     end
   end
-  
+
   def sanity_check_read_only
     if current_index.field.read_only?
       emit_status_text( 'Can\'t copy into read-only field.' )
@@ -169,14 +169,14 @@ class TableView
     end
     throw :insane
   end
-  
+
   def sanity_check_read_only_table
     if model.read_only?
       emit_status_text( 'Can\'t modify a read-only table.' )
       throw :insane
     end
   end
-  
+
   def ditto
     sanity_check_ditto
     sanity_check_read_only
@@ -189,7 +189,7 @@ class TableView
       end
     end
   end
-  
+
   # from and to are ModelIndex instances. Throws :insane if
   # their fields don't have the same attribute_type.
   def sanity_check_types( from, to )
@@ -198,7 +198,7 @@ class TableView
       throw :insane
     end
   end
-  
+
   def ditto_right
     sanity_check_ditto
     sanity_check_read_only
@@ -211,7 +211,7 @@ class TableView
       model.data_changed( current_index )
     end
   end
-  
+
   def ditto_left
     sanity_check_ditto
     sanity_check_read_only
@@ -224,22 +224,22 @@ class TableView
       model.data_changed( current_index )
     end
   end
-  
+
   def insert_current_date
     sanity_check_read_only
     current_index.attribute_value = Time.now
     model.data_changed( current_index )
   end
-  
+
   def open_editor
     # tell the table to edit here
     edit( current_index )
-    
+
     # tell the editing component to do full edit, eg if it's a combo
     # box to open the list.
     current_index.field.delegate.full_edit
   end
-  
+
   # Add a new row and move to it, provided we're not in a read-only view.
   def new_row
     sanity_check_read_only_table
@@ -247,7 +247,7 @@ class TableView
     selection_model.clear
     self.current_index = model.create_index( model.row_count - 1, 0 )
   end
-  
+
   # Delete the current selection. If it's a set of rows, just delete
   # them. If it's a rectangular selection, set the cells to nil.
   # TODO make sure all affected rows are saved.
@@ -255,7 +255,7 @@ class TableView
     busy_cursor do
       begin
         sanity_check_read_only
-        
+
         # TODO translate from ModelIndex objects to row indices
         puts "#{__FILE__}:#{__LINE__}:implement vertical_header for delete_selection"
         #~ rows = vertical_header.selection_model.selected_rows.map{|x| x.row}
@@ -272,15 +272,15 @@ class TableView
       end
     end
   end
-  
+
   def search_dialog
     @search_dialog ||= SearchDialog.new( self )
   end
-  
+
   # display a search dialog, and find the entered text
   def find
     result = search_dialog.exec( current_index.display_value )
-    
+
     busy_cursor do
       case
         when result.accepted?
@@ -292,7 +292,7 @@ class TableView
       end
     end
   end
-  
+
   def find_next
     # yes, this must be an @ otherwise it lazy-creates
     # and will never be nil
@@ -307,7 +307,7 @@ class TableView
       end
     end
   end
-  
+
   # force a complete reload of the current tab's data
   def refresh
     busy_cursor do
@@ -316,27 +316,27 @@ class TableView
       end
     end
   end
-  
+
   # return an array of the current selection, or the
   # current index in an array if the selection is empty
   def selection_or_current
     indexes_or_current( selection_model.selected_indexes )
   end
-  
+
   def selected_rows_or_current
     indexes_or_current( selection_model.row_indexes.map{|row| model.create_index( row, 0 ) } )
   end
-  
+
   # alternative access for auto_size_column
   def auto_size_attribute( attribute, sample )
     auto_size_column( model.attributes.index( attribute ), sample )
   end
-  
+
   # is current_index on the last row?
   def last_row?
     current_index.row == model.row_count - 1
   end
-  
+
   # is current_index on the bottom_right cell?
   def last_cell?
     current_index.row == model.row_count - 1 && current_index.column == model.column_count - 1
@@ -349,7 +349,7 @@ class TableView
       auto_size_column( index, field.sample )
     end
   end
-  
+
   # copied from actionpack
   def pluralize(count, singular, plural = nil)
     "#{count || 0} " + ((count == 1 || count == '1') ? singular : (plural || singular.pluralize))
@@ -358,7 +358,7 @@ class TableView
   # ask the question in a dialog. If the user says yes, execute the block
   def delete_multiple_cells?( question = 'Are you sure you want to delete multiple cells?', &block )
     sanity_check_read_only
-    
+
     # go ahead with delete if there's only 1 cell, or the user says OK
     delete_ok =
     if selection_model.selected_indexes.size > 1
@@ -366,29 +366,29 @@ class TableView
     else
       true
     end
-    
+
     yield if delete_ok
   end
-  
+
   # Ask if multiple cell delete is OK, then replace contents
   # of selected cells with nil.
   def delete_cells
     delete_multiple_cells? do
       cells_deleted = false
-      
+
       # do delete
       selection_model.selected_indexes.each do |index|
         index.attribute_value = nil
         cells_deleted = true
       end
-      
+
       # deletes were done, so call data_changed
       if cells_deleted
         # save affected rows
         selection_model.row_indexes.each do |row_index|
           save_row( model.create_index( row_index, 0 ) )
         end
-        
+
         # emit data changed for all ranges
         selection_model.ranges.each do |selection_range|
           model.data_changed( selection_range )
@@ -396,7 +396,7 @@ class TableView
       end
     end
   end
-  
+
   def delete_rows
     delete_multiple_cells?( "Are you sure you want to delete #{selection_model.row_indexes.size} rows?" ) do
       begin
@@ -408,7 +408,7 @@ class TableView
       end
     end
   end
-  
+
   # handle certain key combinations that aren't shortcuts
   # TODO what is returned from here?
   def handle_key_press( event )
@@ -421,7 +421,7 @@ class TableView
         puts e.backtrace
         show_error( "Error in shortcut handler for #{model.entity_view.name}: #{e.message}" )
       end
-      
+
       # thrown by the sanity_check_xxx methods
       catch :insane do
         case
@@ -429,17 +429,17 @@ class TableView
         # add a new row
         when event.down? && last_row?
           new_row
-          
+
         # on the right-bottom cell, and tab is pressed
         # then add a new row
         when event.tab? && last_cell?
           new_row
-          
+
         # add new record and go to it
         # TODO this is actually a shortcut
         when event.ctrl? && event.return?
           new_row
-        
+
         else
           #~ puts event.inspect
         end
@@ -450,13 +450,13 @@ class TableView
       show_error( "handle_key_press #{__FILE__}:#{__LINE__} error in #{current_index.attribute.to_s}: \"#{e.message}\"" )
     end
   end
-  
+
   def save_current_rows
     selection_model.row_indexes.each do |row_index|
       save_row( model.create_index( row_index, 0 ) )
     end
   end
-  
+
   # save the entity in the row of the given index
   # actually, model.save will check if the record
   # is really changed before writing to DB.
@@ -469,13 +469,13 @@ class TableView
           abbr_value = trim_middle( index.entity.send(field) )
           "#{field} (#{abbr_value}) #{errors.join(',')}"
         end.join( "\n" )
-        
+
         show_error( "Validation Errors: #{index.rc} #{msg}" )
       end
       saved
     end
   end
-  
+
   # save record whenever its row is exited
   # make this work with framework
   def currentChanged( current_index, previous_index )
@@ -485,22 +485,22 @@ class TableView
     end
     super
   end
-  
+
   # toggle the filter, based on current selection.
   def filter_by_current
     filter_by_indexes( selection_or_current )
   end
-  
+
   # This is used by entity view classes.
   # Keep it as a compatibility / deprecated option?
   def filter_by_options( args )
     puts "#{self.class.name}#filter_by_options is deprecated. Use filter_by_dataset( message, &block ) instead."
-    
+
     filter_by_dataset( "#{args.inspect}" ) do |dataset|
       dataset.translate( args )
     end
   end
-  
+
   # Save the current entity, do something, then restore
   # the cursor position to the entity if possible.
   # Return the result of the block.
@@ -510,26 +510,26 @@ class TableView
       save_entity.save if save_entity.changed?
       save_index = current_index
     end
-    
+
     retval = yield
-    
+
     # find the entity if possible
     select_entity( save_entity, save_index.column ) unless save_entity.nil?
-    
+
     retval
   end
-  
+
   def unfilter
     restore_entity do
       filters.pop.undo
     end
     update_filter_status_bar
   end
-  
+
   def unfilter_action
     search_actions.find{|a| a.object_name == 'action_unfilter' }
   end
-  
+
   def filter_message
     "Filter: " + filters.map( &:message ).join(' / ') unless filters.empty?
   end
@@ -540,34 +540,34 @@ class TableView
     emit_filter_status( filtered? )
     unfilter_action.enabled = filtered?
   end
-  
+
   def filter_by_dataset( message = nil, &dataset_block )
     # TODO clean this up and make it work AND for multiple columns, OR for multiple rows
     self.filters << FilterCommand.new( self, message, &dataset_block )
-    
+
     # try to end up on the same entity, even after the filter
     restore_entity { filters.last.doit }
-    
+
     # make sure status bar shows status
     update_filter_status_bar
   end
-  
+
   # Filter by the value in the current index.
   # indexes is a collection of TableIndex instances
   def filter_by_indexes( indexes )
     case
     when indexes.empty?
       emit_status_text( "No field selected for filter" )
-      
+
     when !indexes.first.field.filterable?
       emit_status_text( "Can't filter on #{indexes.first.field.label}" )
-    
+
     when indexes.size > 1
       emit_status_text( "Can't do multiple selection filters yet" )
-    
+
     when indexes.first.entity.new_record?
       emit_status_text( "Can't filter on a new row" )
-      
+
     else
       message = "#{indexes.first.field_name} = #{indexes.first.display_value}"
       filter_by_dataset( message ) do |dataset|
@@ -582,7 +582,7 @@ class TableView
     end
     filtered?
   end
-  
+
   # Move to the row for the given entity and the given column.
   # If column is a symbol,
   # field_column will be called to find the integer index.
@@ -592,12 +592,12 @@ class TableView
     unless entity.is_a?( model.entity_class )
       raise "entity #{entity.class.name} does not match class #{model.entity_class.name}"
     end
-    
+
     # find the row for the saved entity
     found_row = busy_cursor do
       model.collection.index_for_entity( entity )
     end
-    
+
     # create a new index and move to it
     unless found_row.nil?
       if column.is_a? Symbol
@@ -611,7 +611,7 @@ class TableView
       self.current_index = model.create_index( found_row, column || 0 )
     end
   end
-  
+
   # search_criteria must respond to:
   # * search_text
   # * whole_words?
@@ -633,19 +633,19 @@ class TableView
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
   framework_responsibility :find_table_view
-  
+
   # execute the block with the TableView instance
   # currently handling the entity_model_or_view.
   # Don't execute the block if nothing is found.
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
   framework_responsibility :with_table_view
-  
+
   # make this window visible if it's in a TabWidget
   # TODO doesn't really belong here because TableView will not always
   # be in a TabWidget context.
   framework_responsibility :raise_widget
-  
+
   # set next_index for certain operations. Is only activated when
   # to_next_index is called.
   attr_accessor :next_index
@@ -657,20 +657,20 @@ class TableView
   def override_next_index( model_index )
     self.next_index = model_index
   end
-  
+
   # Call set_current_index with next_index ( from override_next_index )
   # or model_index, in that order. Set next_index to nil afterwards.
   def set_current_unless_override( model_index )
     set_current_index( @next_index || model_index )
     self.next_index = nil
   end
-  
+
 protected
-  
+
   # Show a busy cursor, do the block, back to normal cursor
   # return value of block
   framework_responsibility :busy_cursor
-  
+
   # return either the set of indexes with all invalid indexes
   # remove, or the current selection.
   def indexes_or_current( indexes )
@@ -680,7 +680,7 @@ protected
     else
       indexes
     end
-    
+
     # strip out bad indexes, so other things don't have to check
     # can't use select because copying indexes causes an abort
     # ie retval.select{|x| x != nil && x.valid?}

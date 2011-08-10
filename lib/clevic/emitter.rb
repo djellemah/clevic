@@ -6,14 +6,14 @@ module Clevic
     def self.included( base )
       base.extend( ClassMethods )
     end
-    
+
     module ClassMethods
       def emitter( emitter_name )
         line, st = __LINE__, <<-EOF
           def #{emitter_name}_listeners
             @#{emitter_name}_listeners ||= Set.new
           end
-          
+
           # If msg is provided, yield to stored block.
           # If block is provided, store it for later.
           def emit_#{emitter_name}( *args, &notifier_block )
@@ -26,7 +26,7 @@ module Clevic
               end
             end
           end
-          
+
           def remove_#{emitter_name}( &notifier_block )
             #{emitter_name}_listeners.delete( notifier_block )
           end

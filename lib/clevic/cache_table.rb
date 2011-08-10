@@ -24,30 +24,30 @@ TODO figure out how to handle situations where the character set ordering
 in the db and in Ruby are different.
 =end
 class CacheTable < Array
-  
+
   include OrderedDataset
-  
+
   # the number of records loaded in one call to the db
   attr_accessor :preload_count
   attr_reader :entity_class
-  
+
   def initialize( entity_class, dataset = nil )
     @preload_count = 30
     @entity_class = entity_class
     # defined in OrderAttributes
     self.dataset = dataset || entity_class.dataset
-    
+
     # size the array and fill it with nils. They'll be filled
     # in by the [] operator
     super( sql_count )
   end
-  
+
   # The count of the records according to the db, which may be different to
   # the records in the cache
   def sql_count
     dataset.count
   end
-  
+
   # Execute the block with the specified preload_count,
   # and restore the existing one when done.
   # Return the value of the block
@@ -58,28 +58,28 @@ class CacheTable < Array
     self.preload_count = old_limit
     retval
   end
-  
+
   # Fetch the entity for the given index from the db, and store it
   # in the array. Also, preload preload_count records to avoid subsequent
   # hits on the db
   def fetch_entity( index )
     # calculate negative indices for the SQL offset
     offset = index < 0 ? index + sql_count : index
-    
+
     # fetch self.preload_count records
     records = dataset.limit( preload_count, offset )
     records.each_with_index {|x,i| self[i+index] = x if !cached_at?( i+index )}
-    
+
     # return the first one
     records.first
   end
-  
+
   # return the entity at the given index. Fetch it from the
   # db if it isn't in this array yet
   def []( index )
     super( index ) || fetch_entity( index )
   end
-  
+
   # Make a new instance based on the current dataset.
   # Unless new_dataset is specified, pass the dataset
   # to the block, and use the return
@@ -93,14 +93,14 @@ class CacheTable < Array
     if new_dataset && block_given?
       raise "Passing a new dataset and a modification block doesn't make sense."
     end
-    
+
     if block_given?
       self.class.new( entity_class, block.call( dataset ) )
     else
       self.class.new( entity_class, new_dataset || dataset )
     end
   end
-  
+
   # key is what we're searching for. candidate
   # is what the current candidate is. direction is 1
   # for sorted ascending, and -1 for sorted descending
@@ -124,14 +124,14 @@ class CacheTable < Array
     # reverse the result if we're searching a desc attribute,
     # where direction will be -1
   end
-  
+
   # find the index for the given entity, using a binary search algorithm (bsearch).
   # The order_by ActiveRecord style options are used to do the binary search.
   # nil is returned if the entity is nil
   # nil is returned if the array is empty
   def index_for_entity( entity )
     return nil if size == 0 || entity.nil?
-    
+
     # only load one record at a time, because mostly we only
     # need one for the binary seach. No point in pulling several out.
     preload_limit( 1 ) do
@@ -145,10 +145,10 @@ class CacheTable < Array
           if result == 0
             # compare taking ordering direction into account
             retval = compare( entity.send( key ), candidate.send( key ), direction )
-            
+
             # exit now because we have a difference
             next( retval ) if retval != 0
-            
+
             # otherwise try with the next order attribute
             retval
           else
@@ -170,7 +170,7 @@ class Array
   def cached_at?( index )
     !at(index).nil?
   end
-  
+
   def search
     raise "not implemented"
   end

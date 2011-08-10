@@ -7,7 +7,7 @@ collections of actions more rubyish. It must have
  - separator, which returns something which is_a? Separator
  - create_action( &block ), which creates an Action object
  - action_method_or_block( action, options, &block ) which handles events
-  
+
 Menus are generally made up of a collection of actions.
 
 Once included, it's intended to be called as follows:
@@ -27,14 +27,14 @@ Once included, it's intended to be called as follows:
         action :action_row, 'New Ro&w', :shortcut => 'Ctrl+N', :method => :row
         action :action_refresh, '&Refresh', :shortcut => 'Ctrl+R', :method => :refresh
         action :action_delete_rows, 'Delete Rows', :shortcut => 'Ctrl+Delete', :method => :delete_rows
-        
+
         if $options[:debug]
           action :action_dump, 'D&ump', :shortcut => 'Ctrl+Shift+D' do
             puts model.collection[current_index.row].inspect
           end
         end
       end
-      
+
       separator
     end
   end
@@ -66,7 +66,7 @@ module ActionBuilder
       raise NotImplementedError, "#{including_module.class.name} must have an add_action method"
     end
   end
-  
+
   # Outer block for the build process.
   def build_actions( &block )
     raise 'a block must be present' if block.nil?
@@ -76,11 +76,11 @@ module ActionBuilder
       yield self
     end
   end
-  
+
   def group_names
     @group_names ||= []
   end
-  
+
   # Create and return a list of actions. The actions are grouped together,
   # ie live together on the menu with a separator between groups.
   # A method called "#{group_name}_actions" will be added to self, which will return the
@@ -94,16 +94,16 @@ module ActionBuilder
       end
     end
     self.collect_actions = []
-    
+
     yield( self )
     # copy actions to the right instance variable
     eval "@#{group_name.to_s}_actions = collect_actions"
-    
+
     # reset these, just for cleanliness
     @group_name = nil
     self.collect_actions = []
   end
-  
+
   # Create a new Action and
   # 1. pass it to add_action
   # 1. add it to the collect_actions collection.
@@ -119,7 +119,7 @@ module ActionBuilder
       if options.has_key?( :method ) && !block.nil?
         raise "you can't specify both :method and a block"
       end
-      
+
       create_action do |action|
         action.name = name.to_s
         action.text = text
@@ -131,14 +131,14 @@ module ActionBuilder
             action.send( "#{k.to_s}=", v )
           end
         end
-        
+
         # add action
         add_action action
-        
+
         # add actions for list. Yes, it's a side-effect.
         # TODO is there a better way to do this?
         collect_actions << action
-        
+
         action_method_or_block( action, options, &block )
       end
     end
@@ -150,11 +150,11 @@ protected
   def collect_actions
     @collect_actions ||= []
   end
-  
+
   def collect_actions=( arr )
     @collect_actions = arr
   end
-  
+
   # If parent doesn't define this, add it so that 
   # our action_method_or_block will work.
   unless instance_methods.include?( :action_triggered )
@@ -165,7 +165,7 @@ protected
       puts $!.backtrace
     end
   end
-  
+
 end
 
 end # Clevic

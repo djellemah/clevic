@@ -12,17 +12,17 @@ module Sequel
           # store model-related stuff here
         end
       end
-      
+
       module ClassMethods
         def inherited(subclass)
           super
         end
-        
+
         def naked( *args )
-          
+
         end
       end
-      
+
       module InstanceMethods
       end
     end

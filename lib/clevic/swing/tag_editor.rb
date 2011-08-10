@@ -8,14 +8,14 @@ class TagEditor < javax.swing.JComponent
   def initialize( field )
     super()
     @field = field
-    
+
     create_fields
     init_layout
   end
-  
+
   attr_reader :field
   attr_reader :entity
-  
+
   # Hopefully called by the editor framework
   # might be init_component
   def configureEditor( editor, entity )
@@ -34,7 +34,7 @@ class TagEditor < javax.swing.JComponent
     @add_button = javax.swing.JButton.new
     @remove_button = javax.swing.JButton.new
   end
-  
+
   def init_layout
     # This is mostly cut-n-pasted from the Netbeans Java sources. So don't tweak it.
     text_field.setName("text_field");

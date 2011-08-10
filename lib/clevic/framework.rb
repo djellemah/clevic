@@ -12,7 +12,7 @@
 =end
 
 class Class
-  
+
   # method_name can be a symbol or a string.
   # 
   # If a method of this name doesn't already exist
@@ -26,7 +26,7 @@ class Class
       end
     end
   end
-  
+
   def subclass_responsibility( method_name )
     unless instance_methods.include?( method_name.to_s )
       define_method( method_name ) do
@@ -34,5 +34,5 @@ class Class
       end
     end
   end
-  
+
 end

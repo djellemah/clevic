@@ -12,7 +12,7 @@ module Clevic
       super( newrect )
     end
   end
-  
+
   class TextAreaDelegate < Delegate
     # TODO check that Ctrl-VK_ENTER stops editing
     def init_component( cell_editor )
@@ -21,23 +21,23 @@ module Clevic
       text_component.rows = ( edit_value.andand.count( "\n" ) || 0 ) + 2
       text_component.select_all
     end
-    
+
     def editor
       @editor ||= EditorScrollPane.new( text_component, javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS, javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS )
     end
-    
+
     def text_component
       @text_component ||= javax.swing.JTextArea.new
     end
-    
+
     def value
       text_component.text
     end
-    
+
     def minimal_edit
       text_component.select_all
     end
-    
+
     def needs_pre_selection?
       true
     end

@@ -7,12 +7,12 @@ module Clevic
 # :frequency can be set as an option. Boolean. If it's true
 # the options are sorted in order of most frequently used first.
 class DistinctDelegate
-  
+
   def needs_combo?
     # works except when there is a null in the column
     dataset.count > 0
   end
-  
+
   # TODO move away from ar_methods. Partly done.
   # TODO ordering by either recentness, or frequency. OR both.
   # TODO make sure nil is in the list. And the current item is at the top.
@@ -31,7 +31,7 @@ class DistinctDelegate
     else
       field.dataset_roller.dataset
     end
-    
+
     # now pull out the field and the distinct values
     base_dataset. \
       distinct. \
@@ -39,11 +39,11 @@ class DistinctDelegate
       order( field.attribute ). \
       naked
   end
-  
+
   def population
     dataset.map( field.attribute )
   end
-  
+
 end
 
 end

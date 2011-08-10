@@ -27,21 +27,21 @@ end
 
 class Contact < Sequel::Model
   many_to_many :tags
-  
+
   def tags=( ary )
     to_add = ary - tags
     to_remove = tags - ary
     to_remove.each{|x| remove_tag x}
     to_add.each{|x| add_tag x}
   end
-  
+
 end
 
 class ContactTags < Clevic::View
   entity_class Contact
-  
+
   attr_accessor :entity
-  
+
   def define_ui
     model_builder do |mb|
       mb.plain :date, :sample => '88-WWW-99'
@@ -53,7 +53,7 @@ class ContactTags < Clevic::View
             f.display do |arg|
               arg.include?( f.model.one )
             end
-            
+
             f.class_eval do
               def display=( entity, arg )
                 puts "field display self: #{self.inspect}"
@@ -61,28 +61,28 @@ class ContactTags < Clevic::View
               end
             end
           end
-          
+
           #~ mnb.fields[:contacts] = Clevic::Field.new( :contacts, entity_class, {} ).tap do |f|
             #~ f.delegate = Clevic::BooleanDelegate.new( f )
             #~ f.display do |arg|
               #~ arg.include?( f.model.one )
             #~ end
           #~ end
-          
+
           mnb.plain :name
         end
       end
       mb.text :email
-      
+
       mb.records     :order => 'name, id'
     end
   end
-  
+
   def linked
     puts "linked"
     @linked
   end
-  
+
   def linked=( value )
     puts "linked=#{value}"
     @linked = value
@@ -98,14 +98,14 @@ end
 
 class Tag < Sequel::Model
   many_to_many :contacts
-  
+
   include Clevic::Record
-  
+
   # define how fields are displayed
   define_ui do
     plain       :name
     plain       :category
-    
+
     records  :order => 'category,name'
   end
 

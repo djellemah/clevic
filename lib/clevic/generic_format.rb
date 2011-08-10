@@ -22,7 +22,7 @@ module GenericFormat
       end
     end
   end
-  
+
   # apply format to value. Use strftime for date_time types, or % for everything else.
   # If format is a proc, pass value to it.
   def do_generic_format( format, value )
@@ -50,7 +50,7 @@ module GenericFormat
       nil
     end
   end
-  
+
 end
 
 end

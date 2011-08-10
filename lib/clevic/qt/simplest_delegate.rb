@@ -9,8 +9,8 @@ module SimplestDelegate
       [ item, item ]
     end
   end
-  
-  
+
+
   def editor_to_item( data )
     data.value
   end

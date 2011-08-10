@@ -31,10 +31,10 @@ See also Clevic::ModelBuilder and Clevic::Field
 
 == Work hours database using Sqlite
  :include:models/times_sqlite_models.rb
- 
+
 == Work hours database using Postgres
  :include:models/times_psql_models.rb
- 
+
 == Work hours database using ActiveRecord style models
  :include:models/times_ar_style_models.rb
 

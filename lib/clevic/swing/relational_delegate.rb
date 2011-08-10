@@ -12,13 +12,13 @@ class RelationalDelegate < ComboDelegate
   def initialize( field )
     super
   end
-  
+
   # use the Clevic::ComboBox class because JCombobox is remarkably stupid
   # about far too many things.
   def combo_class
     ComboBox
   end
-  
+
   # don't allow new values
   def restricted?
     true
