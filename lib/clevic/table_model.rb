@@ -136,6 +136,7 @@ class TableModel
       true
     end
   rescue
+    puts "Error saving #{item.inspect}"
     puts $!.message
     puts $!.backtrace
     emit_data_error( index, nil, $!.message )

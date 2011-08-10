@@ -459,7 +459,7 @@ class TableView
   # actually, model.save will check if the record
   # is really changed before writing to DB.
   def save_row( index )
-    if !index.nil? && index.valid?
+    if !index.nil? && index.valid? && index.entity
       saved = model.save( index )
       if !saved
         # construct error message(s)
@@ -468,7 +468,7 @@ class TableView
           "#{field} (#{abbr_value}) #{errors.join(',')}"
         end.join( "\n" )
         
-        show_error( "#{index.rc} #{msg}", "Validation Errors" )
+        show_error( "Validation Errors: #{index.rc} #{msg}" )
       end
       saved
     end

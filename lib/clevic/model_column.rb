@@ -33,6 +33,9 @@ class ModelColumn
   # TODO not sure where these are from
   attr_accessor :order, :class, :conditions
   
+  # a enw one in sequel 3.25.0
+  attr_accessor :block
+  
   # For Sequel many_to_many
   attr_accessor :left_key,
     :left_keys,
