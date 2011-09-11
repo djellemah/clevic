@@ -14,18 +14,18 @@ module Clevic
 
 == View definition
 
-Clevic::ModelBuilder defines the DSL used to create a UI definition (which is 
-actually a set of Clevic::Field instances), including any related tables, 
+Clevic::ModelBuilder defines the DSL used to create a UI definition (which is
+actually a set of Clevic::Field instances), including any related tables,
 restrictions on data entry, formatting and so on. The intention was to make
 specifying a UI as painless as possible, with framework overhead only where
 you need it.
 
 To that end, there are 2 ways to define UIs:
 
-- an Embedded View as part of the model (Sequel::Model) object (which is useful if you 
+- an Embedded View as part of the model (Sequel::Model) object (which is useful if you
   want minimal framework overhead). Just show me the data, dammit.
 
-- a Separate View in a separate class (which is useful when you want several 
+- a Separate View in a separate class (which is useful when you want several
   diffent views of the same underlying table). I want a neato-nifty UI that does
   (relatively) complex things.
 
@@ -58,32 +58,32 @@ could be defined like this:
     belongs_to :invoice
     belongs_to :activity
     belongs_to :project
-    
+
     include Clevic::Record
-    
+
     # spans of time more than 8 ours are coloured violet
     # because they're often the result of typos.
     def time_color
       return if self.end.nil? || start.nil?
       'darkviolet' if self.end - start > 8.hours
     end
-    
+
     # tooltip for spans of time > 8 hours
     def time_tooltip
       return if self.end.nil? || start.nil?
       'Time interval greater than 8 hours' if self.end - start > 8.hours
     end
-    
+
     define_ui do
       plain       :date, :sample => '28-Dec-08'
-      
+
       # The project field
       relational  :project do |field|
         field.display = 'project'
-        
+
         # see Sequel::Dataset docs
         field.dataset.filter( :active => true ).order{ lower(project) }
-        
+
         # handle data changed events. In this case,
         # auto-fill-in the invoice field.
         field.notify_data_changed do |entity_view, table_view, model_index|
@@ -95,29 +95,29 @@ could be defined like this:
           end
         end
       end
-      
+
       relational  :invoice, :display => 'invoice_number', :conditions => "status = 'not sent'", :order => 'invoice_number'
-      
+
       # call time_color method for foreground color value
       plain       :start, :foreground => :time_color, :tooltip => :time_tooltip
-      
+
       # another way to call time_color method for foreground color value
       plain       :end, :foreground => lambda{|x| x.time_color}, :tooltip => :time_tooltip
-      
+
       # multiline text
       text        :description, :sample => 'This is a long string designed to hold lots of data and description'
-      
+
       relational :activity do
         display    'activity'
         order      'lower(activity)'
         sample     'Troubleshooting'
         conditions 'active = true'
       end
-      
+
       distinct    :module, :tooltip => 'Module or sub-project'
       plain       :charge, :tooltip => 'Is this time billable?'
       distinct    :person, :default => 'John', :tooltip => 'The person who did the work'
-      
+
       records     :order => 'date, start, id'
     end
 
@@ -125,11 +125,11 @@ could be defined like this:
       action_builder.action :smart_copy, 'Smart Copy', :shortcut => 'Ctrl+"' do
         smart_copy( view )
       end
-      
+
       action_builder.action :invoice_from_project, 'Invoice from Project', :shortcut => 'Ctrl+Shift+I' do
         invoice_from_project( view, view.current_index ) do
           # execute the block if the invoice is changed
-          
+
           # save this before selection model is cleared
           current_index = view.current_index
           view.selection_model.clear
@@ -137,35 +137,35 @@ could be defined like this:
         end
       end
     end
-    
+
     # do a smart copy from the previous line
     def self.smart_copy( view )
       view.sanity_check_read_only
       view.sanity_check_ditto
-      
+
       # need a reference to current_index here, because selection_model.clear will
       # invalidate view.current_index. And anyway, its shorter and easier to read.
       current_index = view.current_index
       if current_index.row >= 1
         # fetch previous item
         previous_item = view.model.collection[current_index.row - 1]
-        
+
         # copy the relevant fields
         current_index.entity.date = previous_item.date if current_index.entity.date.blank?
         # depends on previous line
         current_index.entity.start = previous_item.end if current_index.entity.date == previous_item.date
-        
+
         # copy rest of fields
         [:project, :invoice, :activity, :module, :charge, :person].each do |attr|
           current_index.entity.send( "#{attr.to_s}=", previous_item.send( attr ) )
         end
-        
+
         # tell view to update
         view.model.data_changed do |change|
           change.top_left = current_index.choppy( :column => 0 )
           change.bottom_right = current_index.choppy( :column => view.model.fields.size - 1 )
         end
-        
+
         # move to the first empty time field
         next_field =
         if current_index.entity.start.blank?
@@ -173,7 +173,7 @@ could be defined like this:
         else
           :end
         end
-        
+
         # next cursor location
         view.selection_model.clear
         view.current_index = current_index.choppy( :column => next_field )
@@ -190,10 +190,10 @@ could be defined like this:
         unless invoice.nil?
           # make a reference to the invoice
           current_index.entity.invoice = invoice
-          
+
           # update view from top_left to bottom_right
           table_view.model.data_changed( current_index.choppy( :column => :invoice ) )
-          
+
           unless block.nil?
             if block.arity == 1
               block.call( invoice )
@@ -204,17 +204,17 @@ could be defined like this:
         end
       end
     end
-    
+
   end
 
 == Separate View
 
 To define a separate ui class, do something like this:
   class Prospect < Clevic::View
-    
+
     # This is the Sequel::Model descendant
     entity_class Position
-    
+
     # This must return a ModelBuilder instance, which is made easier
     # by putting the block in a call to model_builder.
     #
@@ -226,15 +226,15 @@ To define a separate ui class, do something like this:
       model_builder do |mb|
         # use the define_ui block from Position
         mb.exec_ui_block( Position )
-        
+
         # any other ModelBuilder code can go here too
-        
+
         # use a different recordset
         mb.records :conditions => "status in ('prospect','open')", :order => 'date desc,code'
       end
     end
   end
-  
+
 And you can even inherit UIs:
 
   class Extinct < Prospect
@@ -329,13 +329,13 @@ display, and can have optional keyboard shortcuts:
       # view.current_index.entity will return the entity instance.
       smart_copy( view )
     end
-    
+
     action_builder.action :invoice_from_project, 'Invoice from Project', :shortcut => 'Ctrl+Shift+I' do
       # a method in the class containing define_actions
       invoice_from_project( view.current_index, view )
     end
   end
-  
+
 === Notifications
 
 Key presses will be sent here:
@@ -368,7 +368,7 @@ the order can be accessed in Clevic::View.order, and specified by
 =end
 
 class ModelBuilder
-  
+
   # Create a definition for entity_view (subclass of Clevic::View).
   # Then execute block using self.instance_eval.
   # entity_view must respond to entity_class, and if title is called, it
@@ -377,14 +377,13 @@ class ModelBuilder
     @entity_view = entity_view
     @auto_new = true
     @read_only = false
-    # TODO not needed for 1.9
-    @fields = OrderedHash.new
+    @fields = Hash.new
     exec_ui_block( &block )
   end
-  
+
   attr_accessor :entity_view
   attr_accessor :find_options
-  
+
   # execute a block containing method calls understood by Clevic::ModelBuilder
   # arg can be something that responds to define_ui_block,
   # or just the block will be executed. If both are present,
@@ -405,92 +404,96 @@ class ModelBuilder
     end
     self
   end
-  
+
   # The collection of Clevic::Field instances where visible == true.
   # the visible may go away.
   def fields
     #~ @fields.reject{|id,field| !field.visible}
     @fields
   end
-  
+
   # return the index of the named field in the collection of fields.
   def index( field_name_sym )
     retval = nil
     fields.each_with_index{|id,field,i| retval = i if field.attribute == field_name_sym.to_sym }
     retval
   end
-  
+
   # The ORM class
   def entity_class
     @entity_view.entity_class
   end
-  
+
   # set read_only to true
   def read_only!
     @read_only = true
   end
-  
+
   # should this table automatically show a new blank record?
   def auto_new( bool )
     @auto_new = bool
   end
-  
+
   # should this table automatically show a new blank record?
   def auto_new?; @auto_new; end
-  
+
   # DSL for changing the title
   def title( value )
     entity_view.title = value
+  end
+
+  def add_field( field )
+    fields[field.id || field.attribute] = field
   end
 
   # an ordinary field, edited in place with a text box
   def plain( attribute, options = {}, &block )
     read_only_default!( attribute, options )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    
+
     # plain_delegate will be defined in a framework-specific file.
     # This is becoming a kind of poor man's inheritance. I don't
     # think I like that.
     field.delegate = plain_delegate( field )
-    @fields[attribute] = field
+    add_field field
   end
-  
+
   # an ordinary field like plain, except that a larger edit area can be used
   def text( attribute, options = {}, &block )
     read_only_default!( attribute, options )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
     field.delegate = TextAreaDelegate.new( field )
-    @fields[attribute] = field
+    add_field field
   end
-  
+
   # Returns a Clevic::Field with a DistinctDelegate, in other words
   # a combo box containing all values for this field from the table.
   def distinct( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
     field.delegate = DistinctDelegate.new( field )
-    @fields[attribute] = field
+    add_field field
   end
-  
+
   # a combo box with a set of supplied values
   def combo( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    
+
     # TODO this really belongs in a separate 'map' field?
     # or maybe put it in SetDelegate?
     if field.set.is_a? Hash
       field.format ||= lambda{|x| field.set[x]}
     end
-    
+
     field.delegate = SetDelegate.new( field )
-    @fields[attribute] = field
+    add_field field
   end
 
-  # Returns a Clevic::Field with a restricted SetDelegate, 
+  # Returns a Clevic::Field with a restricted SetDelegate,
   def restricted( attribute, options = {}, &block )
     options[:restricted] = true
     combo( attribute, options, &block )
   end
-  
+
   # For many_to_one relationships.
   # Edited with a combo box using values from the specified
   # path on the foreign key model object
@@ -499,34 +502,35 @@ class ModelBuilder
   def relational( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
     field.delegate = RelationalDelegate.new( field )
-    @fields[attribute] = field
+    add_field field
   end
-  
+
   def tags( attribute, options = {}, &block )
     field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
-    
+
     # build a collection setter if necessary
     unless entity_class.instance_methods.include? "#{attribute}="
       raise NotImplementedError, "Need to build a collection setter for '#{attribute}='"
     end
-  
+
     field.delegate = TagDelegate.new( field )
-    @fields[attribute] = field
+    add_field field
   end
 
   # force a checkbox
   def check( attribute, options = {}, &block )
     read_only_default!( attribute, options )
-    field = @fields[attribute] = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
+    field = Clevic::Field.new( attribute.to_sym, entity_class, options, &block )
     field.delegate = BooleanDelegate.new( field )
+    add_field field
   end
-  
+
   # specify the dataset but just calling and chaining, thusly
   #  dataset.order( :some_field ).filter( :active => true )
   def dataset
     @dataset_roller = DatasetRoller.new( entity_class.dataset )
   end
-  
+
   def records( *args )
     puts "ModelBuilder#records is deprecated. Use ModelBuilder#dataset instead"
     require 'clevic/sequel_ar_adapter.rb'
@@ -565,7 +569,7 @@ class ModelBuilder
     # don't create an empty record, because sometimes there are
     # validations that will cause trouble
     auto_new false
-    
+
     # build columns
     entity_class.attributes.each do |column,model_column|
       begin
@@ -591,12 +595,12 @@ class ModelBuilder
       end
     end
   end
-  
+
   # return the named Clevic::Field object
   def field( attribute )
-    @fields.find {|id,field| field.attribute == attribute }
+    fields.find {|id,field| field.attribute == attribute }
   end
-  
+
   # This takes all the information collected
   # by the other methods, and returns a new TableModel
   # with the given parent (usually a TableView) as its parent.
@@ -607,49 +611,49 @@ class ModelBuilder
     @model = Clevic::TableModel.new
     @model.builder = self
     @model.entity_view = entity_view
-    @model.fields = @fields.values
+    @model.fields = fields.values
     @model.read_only = @read_only
     @model.auto_new = auto_new?
-    
+
     # set view name
     parent.object_name = @object_name if parent.respond_to? :object_name
-    
+
     # set UI parent for all delegates
     # and model for each field
     fields.each do |id,field|
       field.delegate.parent = parent unless field.delegate.nil?
       field.model = @model
     end
-    
+
     # the data
     @model.collection = create_cache_table
-    
+
     @model
   end
-  
+
 protected
 
   # set a sensible read-only value if it isn't already specified in options
   def read_only_default!( attribute, options )
     # sensible defaults for read-only-ness
-    options[:read_only] ||= 
+    options[:read_only] ||=
     case
       when options[:display].respond_to?( :call )
         # it's a Proc or a Method, so we can't set it
         true
-        
+
       when entity_class.column_names.include?( options[:display].to_s )
         # it's a DB column, so it's not read only
         false
-        
+
       when entity_class.reflections.include?( attribute )
         # one-to-one relationships can be edited. many-to-one certainly can't
         entity_class.meta[attribute].type != :many_to_one
-        
+
       when entity_class.method_defined?( attribute )
         # read-only if there's no setter for the attribute
         !entity_class.method_defined?( "#{attribute.to_s}=" )
-        
+
       else
         # default to not read-only
         false
