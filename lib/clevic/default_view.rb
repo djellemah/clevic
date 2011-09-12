@@ -17,7 +17,7 @@ module Clevic
         super
       end
     end
-    
+
     def title
       @title ||= entity_class.name.demodulize.tableize.humanize
     end
@@ -32,7 +32,7 @@ module Clevic
         super
       end
     end
-    
+
     def notify_data_changed( table_view, top_left_model_index, bottom_right_model_index )
       if entity_class.respond_to?( :data_changed )
         puts "Deprecated: #{entity_class.name}.data_changed( top_left, bottom_right, table_view ). Use notify_data_changed( table_view, top_left_model_index, bottom_right_model_index ) instead."
@@ -43,7 +43,7 @@ module Clevic
         super
       end
     end
-    
+
     def notify_key_press( table_view, key_press_event, current_model_index )
       if entity_class.respond_to?( :key_press_event )
         puts "Deprecated: #{entity_class.name}.key_press_event( key_press_event, current_model_index, table_view ). Use notify_key_press( table_view, key_press_event, current_model_index ) instead."
@@ -55,5 +55,5 @@ module Clevic
       end
     end
   end
-  
+
 end

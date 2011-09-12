@@ -11,15 +11,15 @@ class SetDelegate
     raise "SetDelegate must have a :set in options" if field.set.nil?
     super
   end
-  
+
   def needs_combo?
     true
   end
-  
+
   def restricted?
     field.restricted || false
   end
-  
+
   # Items here could either be single values,
   # or two-value arrays (from a hash-like set), so use key as db value
   # and value as display value

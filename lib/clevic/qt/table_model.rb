@@ -18,43 +18,43 @@ including the Clevic::Record module in a Sequel::Model subclass.
 =end
 class TableModel < Qt::AbstractTableModel
   include QtFlags
-  
+
   signals(
     # index where error occurred, value, message
     'data_error(QModelIndex,QVariant,QString)'
   )
-  
+
   def emit_data_error( index, data, string )
     emit data_error( index, data.to_variant, string )
   end
-  
+
   def initialize( parent = nil )
     super
   end
-  
+
   # add a new item, and set defaults from the Clevic::View
   def add_new_item_start
     begin_insert_rows( Qt::ModelIndex.invalid, row_count, row_count )
   end
-  
+
   def add_new_item_end
     # notify listeners that the model has changed
     end_insert_rows
   end
-  
+
   def remove_notify( rows, &block )
     begin_remove_rows( Qt::ModelIndex.invalid, rows.first, rows.last )
     # do the removal
     yield
     end_remove_rows
   end
-  
+
   # save the AR model at the given index, if it's dirty
   def update_vertical_header( index )
     raise "preferably use data_changed here, if possible"
     emit headerDataChanged( Qt::Vertical, index.row, index.row )
   end
-  
+
   def rowCount( parent = nil )
     collection.size
   end
@@ -63,34 +63,34 @@ class TableModel < Qt::AbstractTableModel
   def row_count
     collection.size
   end
-  
+
   def columnCount( parent = nil )
     fields.size
   end
-  
+
   # Not looked up or aliased properly by Qt bindings
   def column_count
     fields.size
   end
-  
+
   def flags( model_index )
     retval = super
-    
+
     # sometimes this actually happens. 
     # TODO probably a bug in the combo editor exit code
     return retval if model_index.column >= columnCount
-    
+
     # TODO don't return IsEditable if the model is read-only
     if model_index.meta.type == :boolean
       retval = item_boolean_flags
     end
-    
+
     unless model_index.field.read_only? || read_only?
       retval |= qt_item_is_editable.to_i 
     end
     retval
   end
-  
+
   # values for horizontal and vertical headers
   def headerData( section, orientation, role )
     value = 
@@ -103,22 +103,22 @@ class TableModel < Qt::AbstractTableModel
             # display record number. Object id is in tooltip.
             section+1
         end
-        
+
       when qt_text_alignment_role
         case orientation
           when Qt::Vertical
             Qt::AlignRight | Qt::AlignVCenter
         end
-          
+
       when Qt::SizeHintRole
         # anything other than nil here makes the headers disappear.
         nil
-        
+
       when qt_tooltip_role
         case orientation
           when Qt::Horizontal
             fields[section].tooltip
-            
+
           when Qt::Vertical
             case
               when !collection[section].errors.empty?
@@ -131,7 +131,7 @@ class TableModel < Qt::AbstractTableModel
                 end
             end
         end
-        
+
       when qt_background_role
         if orientation == Qt::Vertical
           item = collection[section]
@@ -144,15 +144,15 @@ class TableModel < Qt::AbstractTableModel
               end
           end
         end
-        
+
       else
         #~ puts "headerData section: #{section}, role: #{const_as_string(role)}" if $options[:debug]
         nil
     end
-    
+
     return value.to_variant
   end
-  
+
   # Provide data to UI.
   def data( index, role = qt_display_role )
     #~ puts "data for index: #{index.inspect}, field #{index.field.attribute.inspect} and role: #{const_as_string role}"
@@ -166,18 +166,18 @@ class TableModel < Qt::AbstractTableModel
           unless index.meta.type == :boolean
             value = index.display_value
           end
-          
+
         when qt_edit_role
           # see comment for qt_display_role
           unless index.meta.type == :boolean
             value = index.edit_value
           end
-          
+
         when qt_checkstate_role
           if index.meta.type == :boolean
             index.raw_value ? qt_checked : qt_unchecked
           end
-          
+
         when qt_text_alignment_role
           case index.field.alignment
             when :left; qt_alignleft
@@ -185,34 +185,34 @@ class TableModel < Qt::AbstractTableModel
             when :centre; qt_aligncenter
             when :justified; qt_alignjustified
           end
-        
+
         # just here to make debug output quieter
         when qt_size_hint_role;
-        
+
         # show field with a red background if there's an error
         when qt_background_role
           index.field.background_for( index.entity ) || Qt::Color.new( 'red' ) if index.has_errors?
-        
+
         when qt_font_role;
-        
+
         when qt_foreground_role
           index.field.foreground_for( index.entity ) ||
           if index.field.read_only? || read_only?
             Qt::Color.new( 'dimgray' )
           end
-        
+
         when qt_decoration_role;
           index.field.decoration_for( index.entity )
-        
+
         when qt_tooltip_role
           index.tooltip
-        
+
         else
           puts "data index: #{index}, role: #{const_as_string(role)}" if $options[:debug]
           nil
       # return the variant
       end.to_variant
-        
+
     rescue Exception => e
       # this can generate a lot of errors from view code, so don't emit data_error every one
       puts "#{entity_view.class.name}.#{index.field.id}: #{index.inspect} for role: #{const_as_string role} #{value.inspect} #{index.entity.inspect}"
@@ -231,23 +231,23 @@ class TableModel < Qt::AbstractTableModel
       when qt_edit_role
         # Don't allow the primary key to be changed
         return false if index.attribute == entity_class.primary_key.to_sym
-        
+
         if ( index.column < 0 || index.column >= column_count )
           raise "invalid column #{index.column}" 
         end
-        
+
         begin
           case
             when variant.class.name == 'Qt::Date'
               index.attribute_value = Date.new( variant.year, variant.month, variant.day )
-              
+
             when variant.class.name == 'Qt::Time'
               index.attribute_value = Time.new( variant.hour, variant.min, variant.sec )
-            
+
             else
               index.edit_value = variant.value
           end
-          
+
           # value conversion was successful
           data_changed( index )
           true
@@ -266,7 +266,7 @@ class TableModel < Qt::AbstractTableModel
         else
           false
         end
-      
+
       # user-defined role
       # TODO this only works with single-dotted paths
       when qt_paste_role
@@ -283,17 +283,17 @@ class TableModel < Qt::AbstractTableModel
           index.attribute_value = variant.value
         end
         true
-        
+
       else
         puts "role: #{role.inspect}"
         true
-        
+
       end
     else
       false
     end
   end
-  
+
   # A rubyish way of doing dataChanged
   # - if args has one element, it's either a single ModelIndex
   #   or something that understands top_left and bottom_right. These
@@ -313,10 +313,10 @@ class TableModel < Qt::AbstractTableModel
           # assume it's a ModelIndex
           emit dataChanged( arg, arg )
         end
-      
+
       when 2
         emit dataChanged( args.first, args.last )
-      
+
       else
         unless block.nil?
           change = DataChange.new
@@ -326,7 +326,7 @@ class TableModel < Qt::AbstractTableModel
         end
     end
   end
-  
+
 end
 
 end #module

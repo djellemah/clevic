@@ -13,7 +13,7 @@ module Sequel
           # store model-related stuff here
         end
       end
-      
+
       module ClassMethods
         def meta
           if @meta.nil?
@@ -21,20 +21,20 @@ module Sequel
             db_schema.each do |key,value|
               @meta[key] = ModelColumn.new( key, value.merge( :association => false ) )
             end
-            
+
             association_reflections.each do |key,value|
               @meta[key] = ModelColumn.new( key, value.merge( :association => true ) )
             end
           end
           @meta
         end
-        
+
         # reload from current metadata
         def meta!
           @meta = nil
           meta
         end
-        
+
         # column and relations, but not keys for defined relations
         def attributes
           meta.reject do |column,model_column|
@@ -43,7 +43,7 @@ module Sequel
         end
 
       end
-      
+
       module InstanceMethods
       end
     end

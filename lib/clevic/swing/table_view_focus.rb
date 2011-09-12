@@ -6,7 +6,7 @@ module Clevic
       @table_view = table_view
       @table_view.focus_cycle_root = true
     end
-    
+
     # Returns the Component that should receive the focus after aComponent.
     # def getComponentAfter(Container aContainer, Component aComponent)
     def getComponentAfter(container, component)
@@ -30,18 +30,18 @@ module Clevic
     def getFirstComponent(container)
       @table_view.jtable
     end
-    
+
     # Returns the Component that should receive the focus when a Window is made visible for the first time.
     # Component 	getInitialComponent(Window window)
     def getInitialComponent(window)
       @table_view.jtable
     end
-    
+
     # Returns the last Component in the traversal cycle.
     # def getLastComponent(Container aContainer)
     def getLastComponent(container)
       @table_view.jtable
     end
   end
-  
+
 end

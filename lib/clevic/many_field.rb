@@ -13,15 +13,15 @@ module Clevic
         end
       end
     end
-    
+
     def many_builder
       @many_view.builder
     end
-    
+
     def many_fields
       many_builder.fields
     end
-    
+
     # return an instance of Clevic::View that represents the many items
     # for this field
     def many_view( &block )

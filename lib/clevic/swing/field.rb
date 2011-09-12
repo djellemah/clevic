@@ -21,7 +21,7 @@ class Field
       end
     end
   end
-  
+
   def swing_alignment
     case alignment
     when :left; javax.swing.SwingConstants::LEFT

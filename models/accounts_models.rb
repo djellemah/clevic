@@ -16,9 +16,9 @@ db.test_connection
 class Entry < Sequel::Model
   many_to_one :debit, :class_name => 'Account', :key => :debit_id
   many_to_one :credit, :class_name => 'Account', :key => :credit_id
-  
+
   include Clevic::Record
-  
+
   define_ui do
     plain       :date, :sample => '88-WWW-99'
     distinct    :supplier do |f|
@@ -28,7 +28,7 @@ class Entry < Sequel::Model
       f.notify_data_changed = lambda do |entity_view, table_view, model_index|
         if model_index.entity.credit.nil? && model_index.entity.debit.nil?
           entity_view.update_from_description( model_index )
-          
+
           # move edit cursor to amount field
           table_view.selection_model.clear
           table_view.override_next_index( model_index.choppy( :column => :amount ) )
@@ -43,10 +43,10 @@ class Entry < Sequel::Model
     plain       :cheque_number
     plain       :active, :sample => 'WW'
     plain       :vat, :label => 'VAT', :sample => 'WW', :tooltip => 'Does this include VAT?'
-    
+
     dataset.order( :date, :id )
   end
-  
+
   # Copy the values for the credit and debit fields
   # from the previous similar entry with a similar description
   def self.update_from_description( current_index )
@@ -56,13 +56,13 @@ class Entry < Sequel::Model
       filter( current_index.attribute.to_sym => current_index.attribute_value ). \
       order( :date.desc ). \
       first
-      
+
     if similar != nil
       # set the values
       current_index.entity.debit = similar.debit
       current_index.entity.credit = similar.credit
       current_index.entity.category = similar.category
-      
+
       # emit signal to that whole row has changed
       current_index.model.data_changed do |change|
         change.top_left = current_index.choppy( :column => 0 )
@@ -75,9 +75,9 @@ end
 class Account < Sequel::Model
   one_to_many :debits, :class_name => 'Entry', :key => :debit_id, :order => :date
   one_to_many :credits, :class_name => 'Entry', :key => :credit_id, :order => :date
-  
+
   include Clevic::Record
-  
+
   # define how fields are displayed
   define_ui do
     plain       :name
@@ -86,7 +86,7 @@ class Account < Sequel::Model
     plain       :pastel_number, :alignment => :right, :label => 'Pastel'
     plain       :fringe, :format => "%.1f"
     plain       :active
-    
+
     dataset.order( :name, :account_type )
   end
 end

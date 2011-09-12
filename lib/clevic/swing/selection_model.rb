@@ -14,19 +14,19 @@ class SelectionRange
     @row_range = row_range
     @column_range = column_range
   end
-  
+
   def height
     @row_range.distance
   end
-  
+
   def width
     @column_range.distance
   end
-  
+
   def top_left
     SwingTableIndex.new( nil, @row_range.first, @column_range.first )
   end
-  
+
   def bottom_right
     SwingTableIndex.new( nil, @row_range.last, @column_range.last )
   end
@@ -36,13 +36,13 @@ class SelectionModel
   def initialize( table_view )
     @table_view = table_view 
   end
-  
+
   attr_reader :table_view
-  
+
   def jtable
     @table_view.jtable
   end
-  
+
   # return a collection of selection ranges
   def ranges
     rv = []
@@ -53,27 +53,27 @@ class SelectionModel
     end
     rv
   end
-  
+
   def single_cell?
     jtable.selected_row_count == 1 && jtable.selected_column_count == 1
   end
-  
+
   def selected?( row, column )
     selected_indexes.first.with do |index|
       index.row == row &&
       index.column == column
     end
   end
-  
+
   # return an array of integer indexes for currently selected rows
   def row_indexes
     jtable.selected_rows.to_a
   end
-  
+
   def clear
     jtable.clear_selection
   end
-  
+
   # return the full set of selected indexes, ordered
   # by row then column
   def selected_indexes

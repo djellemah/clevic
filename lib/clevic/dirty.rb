@@ -46,7 +46,7 @@ module ActiveRecord
     end
 
     private
-    
+
     # Map of change attr => original value.
     def changed_attributes
       @changed_attributes ||= {}

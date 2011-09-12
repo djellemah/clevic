@@ -7,7 +7,7 @@ require 'clevic/qt/accept_reject'
 # convenience methods
 module Qt
   PasteRole = UserRole + 1 unless defined?( PasteRole )
-  
+
   class AbstractItemDelegate
     # overridden in EntryDelegate subclasses
     def full_edit
@@ -26,7 +26,7 @@ module Qt
   class ModelIndex
     include Clevic::TableIndex
   end
-  
+
   class ItemSelectionModel
     # return an array of integer indexes for currently selected rows
     def row_indexes
@@ -40,12 +40,12 @@ module Qt
     def ranges
       selection
     end
-    
+
     def single_cell?
       ranges.size == 1 && ranges.first.single_cell?
     end
   end
-  
+
   # implement accepted? and rejected? for TableView#confirm_dialog and friends
   class MessageBox
     include Clevic::AcceptReject

@@ -9,18 +9,18 @@ class RelationalDelegate
   def needs_combo?
     dataset.count > 0
   end
-  
+
   def empty_set_message
     "There must be records in #{field.related_class} for this field to be editable."
   end
-  
+
   def population
     # dataset contains the set of all possible related entities,
-    
+
     # dataset is defined in Delegate
     # entity is set in init_component
     # field and entity are used by FieldValuer
-    
+
     # including the current entity.
     # Could also use
     #  dataset.or( entity_class.primary_key => entity_key.pk )
@@ -35,7 +35,7 @@ class RelationalDelegate
       values.unshift( attribute_value )
     end
   end
-  
+
   # don't allow new values
   def restricted?; true; end
 
@@ -53,7 +53,7 @@ protected
       field.dataset_roller.dataset
     end
   end
-  
+
 end
 
 end

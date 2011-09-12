@@ -7,16 +7,16 @@ module Clevic
     def initialize( original_dataset )
       @rolling_dataset = original_dataset
     end
-    
+
     def dataset
       @rolling_dataset
     end
-    
+
     def method_missing(meth, *args, &block)
       @rolling_dataset = @rolling_dataset.send( meth, *args, &block )
       self
     end
   end
-  
+
 
 end

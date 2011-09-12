@@ -19,7 +19,7 @@ class ComboDelegate < Clevic::Delegate
     end
     hs
   end
-    
+
   def dump_editor_state( editor )
     if $options[:debug]
       puts "#{self.class.name}"
@@ -33,23 +33,23 @@ class ComboDelegate < Clevic::Delegate
       puts
 		end
   end
-  
+
   # open the combo box, just like if f4 was pressed
   def full_edit
     editor.show_popup if is_combo?( editor )
   end
-  
+
   def is_combo?( editor )
     editor.is_a?( Qt::ComboBox )
   end
-  
+
   def create_combo_box( *args )
     Qt::ComboBox.new( parent ).tap do |combo|
       # all combos are editable so that prefix matching will work
       combo.editable = true
     end
   end
-  
+
   # Override the Qt method. Create a ComboBox widget and fill it with the possible values.
   def createEditor( parent_widget, style_option_view_item, model_index )
     self.parent = parent_widget
@@ -62,7 +62,7 @@ class ComboDelegate < Clevic::Delegate
   def line_editor( edit_value )
     @line_editor ||= Qt::LineEdit.new( edit_value, parent )
   end
-  
+
   def framework_setup( *args )
     # don't need to do anything here
     # might need to once prefix-matching is implemented
@@ -71,7 +71,7 @@ class ComboDelegate < Clevic::Delegate
   # Override the Qt::ItemDelegate method.
   def updateEditorGeometry( editor, style_option_view_item, model_index )
     rect = style_option_view_item.rect
-    
+
     # ask the editor for how much space it wants, and set the editor
     # to that size when it displays in the table
     rect.set_width( [editor.size_hint.width,rect.width].max ) if is_combo?( editor )
@@ -87,19 +87,19 @@ class ComboDelegate < Clevic::Delegate
       editor.text = model_index.edit_value
     end
   end
-  
+
   # This translates the text from the editor into something that is
   # stored in an underlying model. Intended to be overridden by subclasses.
   def translate_from_editor_text( editor, text )
     index = editor.find_text( text )
-    
+
     if index == -1
       text unless restricted?
     else
       editor.item_data( index ).value
     end
   end
-  
+
   # Send the data from the editor to the model. The data will
   # be translated by translate_from_editor_text,
   def setModelData( editor, abstract_item_model, model_index )
@@ -116,11 +116,11 @@ class ComboDelegate < Clevic::Delegate
         # there is a matching completion, so use it
         editor.completer.current_completion
       end
-      
+
       if value != nil
         model_index.attribute_value = translate_from_editor_text( editor, value )
       end
-      
+
     else
       model_index.attribute_value = editor.text
     end

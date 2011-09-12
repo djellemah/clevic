@@ -14,11 +14,11 @@ module ActionBuilder
       collect_actions << action
     end
   end
-  
+
   def create_action( &block )
     Action.new( self ).tap( &block )
   end
-  
+
   # set up the code to be executed when an action is triggered,
   def action_method_or_block( action, options, &block )
     # connect the action to some code

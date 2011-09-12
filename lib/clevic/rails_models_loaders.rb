@@ -20,7 +20,7 @@ def load_rails_models( root, config, models )
   Rails::Initializer.run do |config|
     config.frameworks -= [ :action_mailer, :action_pack, :active_resource ]
   end
-  
+
   # load lib/ files for the rails project
   $: << ( root / 'lib' ).realpath.to_s
   ( root / 'lib' ).children.each do |filename|
@@ -33,7 +33,7 @@ def load_rails_models( root, config, models )
   rescue NameError
     ActiveRecord::Base.send(:include, ActiveRecord::Dirty)
   end
-  
+
   # load models
   models.find do |dir_entry|
     # don't load directory entries
@@ -47,7 +47,7 @@ def load_rails_models( root, config, models )
       puts e.backtrace
     end
   end
-  
+
   # include the Clevic::Record module in each descendant of
   # the entity class so that the default views will be created.
   subclasses( Clevic.base_entity_class ).each do |model|

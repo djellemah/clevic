@@ -4,7 +4,7 @@ def parse_table
   ary = ( doc / :tr ).map do |row|
     ( row / :td ).map do |cell|
       # trim leading and trailing \r\n\t
-      
+
       # check for br
       unless cell.search( '//br' ).empty?
         # treat br as separate lines

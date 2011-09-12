@@ -80,7 +80,7 @@ class Sampler
   def string_sample
     'N' * ( entity_class.max( :length.sql_function( field_name ) ).andand.to_i || 20 )
   end
-  
+
   def sample_date_time
     ds = entity_class \
       .filter( ~{ field_name => nil } ) \
@@ -90,33 +90,33 @@ class Sampler
     # isn't called unless we access the value via the entity object
     ds.first.send( field_name )
   end
-  
+
   def date_time_sample
     # replace all letters with 'N'
     # and numbers with 8
     do_format( sample_date_time || Date.today ).andand.gsub( /[[:alpha:]]/, 'N' ).gsub( /\d/, '8' )
   end
-  
+
   def numeric_sample
     max = entity_class.max( field_name )
     min = entity_class.min( field_name )
     max_length = [ do_format( min ).to_s, do_format( max ).to_s ].map( &:length ).max
     '9' * ( max_length || 5 )
   end
-  
+
   # Hmm. The first reified exemplar of a relational nested Field
   class VirtualField
     def initialize( entity_class, display )
       @entity_class, @display = entity_class, display
     end
-    
+
     def entity_class; @entity_class; end
     def attribute; @display; end
     def display; nil; end
     def meta; @entity_class.meta[attribute]; end
     def set; nil; end
   end
-  
+
   def related_sample
     if display.respond_to?( :to_sym )
       Sampler.new( VirtualField.new( eval( meta.class_name ), display.to_sym ), &@format_block ).compute

@@ -12,7 +12,7 @@ class TableView
   def paste
     busy_cursor do
       sanity_check_read_only
-      
+
       # Try text/html then text/plain as tsv or csv
       # LATER maybe use the java-native-application at some point for
       # cut'n'paste internally?
@@ -28,14 +28,14 @@ class TableView
   rescue PasteError => e
     show_error e.message
   end
-  
+
   # Paste suitable html to the selection
   # Check for presence of tr tags, and make sure there are no colspan or rowspan attributes
   # on td tags.
   def paste_html
     emit_status_text "Fetching data."
     html = clipboard.html
-    
+
     # This should really be factored out somewhere and tested thoroughly
     emit_status_text "Analysing data."
     doc =
@@ -44,7 +44,7 @@ class TableView
     else
       Hpricot.parse( html )
     end
-    
+
     # call the plain text paste if we don't have tabular data
     if doc.search( "//tr" ).size == 0
       paste_text
@@ -62,13 +62,13 @@ class TableView
   #{cell_list}
         EOF
       end
-      
+
       # run through the tabular data and convert to simple array
       emit_status_text "Pasting data."
       ary = ( doc / :tr ).map do |row|
         ( row / :td ).map do |cell|
           # trim leading and trailing \r\n\t
-          
+
           # check for br
           unless cell.search( '//br' ).empty?
             # treat br as separate lines
@@ -79,11 +79,11 @@ class TableView
           end.gsub( /^[\r\n\t]*/, '').gsub( /[\r\n\t]*$/, '')
         end
       end
-      
+
       paste_array ary
     end
   end
-  
+
   # LATER probably need a PasteParser or something, to figure
   # out if a file is tsv or csv
   # Try tsv first, because number formats often have embedded ','.
@@ -92,7 +92,7 @@ class TableView
   # TODO could also heuristically check paste selection area
   def paste_text
     text = clipboard.text
-    
+
     case text
       when /\t/
         paste_array( CSV.parse( text, :col_sep => "\t" ) )
@@ -103,7 +103,7 @@ class TableView
         paste_value_to_selection( text )
     end
   end
-  
+
   # Paste array to either a single selection or a matching multiple selection
   # TODO Check for rectangularness, ie csv_arr.map{|row| row.size}.uniq.size == 1
   def paste_array( arr )
@@ -124,21 +124,21 @@ class TableView
         if selection_model.ranges.size != 1
           raise PasteError, "Can't paste tabular data to multiple selection."
         end
-        
+
         if selection_model.ranges.first.height != arr.size
           raise PasteError, "Height of paste area (#{selection_model.ranges.first.height}) doesn't match height of data (#{arr.size})."
         end
-        
+
         if selection_model.ranges.first.width != arr.first.size
           raise PasteError, "Width of paste area (#{selection_model.ranges.first.width}) doesn't match width of data (#{arr.first.size})."
         end
-        
+
         # size is the same, so do the paste
         paste_to_index( selected_index, arr )
       end
     end
   end
-  
+
   # set all indexes in the selection to the value
   def paste_value_to_selection( value )
     selection_model.selected_indexes.each do |index|
@@ -146,7 +146,7 @@ class TableView
       # save records to db via view, so we get error messages
       save_row( index )
     end
-    
+
     # notify of changed data
     model.data_changed do |change|
       sorted = selection_model.selected_indexes.sort
@@ -154,7 +154,7 @@ class TableView
       change.bottom_right = sorted.last
     end
   end
-  
+
   # Paste an array to the index, replacing whatever is at that index
   # and whatever is at other indices matching the size of the pasted
   # csv array. Create new rows if there aren't enough.
@@ -163,7 +163,7 @@ class TableView
     csv_arr.each_with_index do |row,row_index|
       # append row if we need one
       model.add_new_item if top_left_index.row + row_index >= model.row_count
-      
+
       row.each_with_index do |field, field_index|
         unless top_left_index.column + field_index >= model.column_count
           # do paste
@@ -183,7 +183,7 @@ class TableView
       # save records to db via view, so we get error messages
       save_row( top_left_index.choppy {|i| i.row += row_index; i.column = 0 } )
     end
-    
+
     # make the gui refresh
     model.data_changed do |change|
       change.top_left = top_left_index
@@ -193,7 +193,7 @@ class TableView
       end
     end
   end
-  
+
 end
 
 end
