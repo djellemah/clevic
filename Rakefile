@@ -21,9 +21,9 @@ Bones do
   url  'http://clevic.rubyforge.org'
   version  Clevic::VERSION::STRING
   description "SQL table GUI with Qt / Java Swing and Sequel"
-  
+
   gem.need_tar false
-  
+
   depend_on 'fastercsv', '>=1.2.3'
   depend_on 'gather', '>=0.0.8'
   depend_on 'andand', '>= 1.3.0'
@@ -31,21 +31,21 @@ Bones do
   depend_on 'bsearch', '>=1.5.0'
   # for html paste parsing
   depend_on 'hpricot', '>= 0.8.1'
-  
+
   # for 1.8
   depend_on 'hashery', '>=1.3.0'
 
   # for JRuby clipboard handling
   depend_on 'io-like', '>= 0.3.0'
-  
+
   # for Qt
   depend_on 'qtbindings', '>=4.6.3'
   depend_on 'qtext', '>=0.6.7'
-  
+
   depend_on 'test-unit', :development => true
   depend_on 'shoulda', :development => true
   depend_on 'faker', :development => true
-  
+
   # read file list from Manifest.txt
   gem.files File.new('Manifest.txt').to_a.map( &:chomp )
 
@@ -53,10 +53,10 @@ Bones do
   # Not the same as the rdoc -i which is list of files
   # to search for include directives
   rdoc.include %w{README.rdoc ^lib/clevic/.*\.rb$ models/examples.rb History.txt TODO}
-  
+
   # List of Regexs to exclude from rdoc processing
   rdoc.exclude %w{^pkg.*}
-  
+
   # Include URL for git browser in rdoc output
   rdoc.opts %w{-W http://gitweb.semiosix.com/gitweb.cgi?p=clevic;a=blob;f=%s;hb=HEAD}
 
