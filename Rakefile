@@ -60,7 +60,7 @@ Bones do
   # Include URL for git browser in rdoc output
   rdoc.opts %w{-W http://gitweb.semiosix.com/gitweb.cgi?p=clevic;a=blob;f=%s;hb=HEAD}
 
-  rdoc.main 'README.txt'
+  rdoc.main 'README.rdoc'
   #~ rdoc.external true
 end
 
