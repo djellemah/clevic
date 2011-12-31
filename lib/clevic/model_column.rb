@@ -33,8 +33,12 @@ class ModelColumn
   # TODO not sure where these are from
   attr_accessor :order, :class, :conditions
 
-  # a enw one in sequel 3.25.0
+  # new in sequel 3.25.0
   attr_accessor :block
+
+  # new in sequel 3.30.0
+  attr_accessor :graph_alias_base
+  attr_accessor :qualified_key
 
   # For Sequel many_to_many
   attr_accessor :left_key,
