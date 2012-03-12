@@ -105,7 +105,7 @@ class ComboDelegate < Clevic::Delegate
   def setModelData( editor, abstract_item_model, model_index )
     if is_combo?( editor )
       dump_editor_state( editor )
-      value = 
+      value =
       if editor.completer.current_row == -1
         # item doesn't exist in the list, add it if not restricted
         editor.current_text unless restricted?
