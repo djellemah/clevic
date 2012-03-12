@@ -1,4 +1,5 @@
 $options ||= {}
+$options[:debug] = true
 
 require 'clevic.rb'
 require 'sequel'
