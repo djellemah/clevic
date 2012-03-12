@@ -8,7 +8,12 @@ module Qt
 
     def <<( item )
       text, data = item_to_editor( item )
-      add_item( text, data.to_variant )
+      if data.is_a?( Qt::Variant )
+        add_item( text, data )
+      else
+        puts "#{__FILE__}:#{__LINE__}:warning: #{data} is not a variant"
+        add_item( text, data.to_variant )
+      end
     end
 
     def include?( item )
