@@ -1,3 +1,6 @@
+== 0.13.0.b12
+* fix for qt-4.7 related to variants in combo boxes
+
 == 0.13.0.b11
 * updates for sequel-3.30.0
 
