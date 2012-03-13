@@ -51,4 +51,12 @@ module Qt
     include Clevic::AcceptReject
   end
 
+  # make sure that to_variant doesn't wrap
+  # an existing variant inside another variant.
+  class Variant
+    def to_variant
+      self
+    end
+  end
+
 end
