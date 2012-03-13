@@ -1,3 +1,7 @@
+== 0.14.0
+* out of beta because in 6 months of use I haven't hit any bugs
+* better fix for variant wrapping.
+
 == 0.13.0.b12
 * fix for qt-4.7 related to variants in combo boxes
 
