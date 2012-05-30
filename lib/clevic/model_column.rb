@@ -55,6 +55,9 @@ class ModelColumn
     :graph_join_table_conditions,
     :graph_join_table_join_type
 
+  # from 3.35.0
+  attr_accessor :graph_keys, :key_method, :primary_key_column, :primary_key_columns
+
   # added by us
   attr_accessor :association
   def association?; association; end

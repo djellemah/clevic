@@ -1,3 +1,6 @@
+== 0.14.1
+* update for Sequel-3.35.0
+
 == 0.14.0
 * out of beta because in 6 months of use I haven't hit any bugs
 * better fix for variant wrapping.
