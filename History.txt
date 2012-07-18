@@ -1,5 +1,8 @@
-== 0.14.1
+== 0.14.2
 * Make it more robust wrt internal Sequel metadata changes.
+
+== 0.14.1
+* update for Sequel-3.35.0
 
 == 0.14.0
 * out of beta because in 6 months of use I haven't hit any bugs
