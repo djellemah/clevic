@@ -19,6 +19,7 @@ class ModelColumn < OpenStruct
   end
 
   attr_reader :name
+  def association?; association; end
 
   # if it's not here, it's probably from Sequel, so figure it out from
   # the db_type
