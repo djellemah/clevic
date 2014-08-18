@@ -1,5 +1,5 @@
-== 0.14.3
-* bring up to date: add Gemfile and newer Rakefile
+== 0.14.4
+* bring up to date: add Gemfile, newer Rakefile and current home page.
 
 == 0.14.3
 * bugfix: Make sure association? is defined
