@@ -2,7 +2,7 @@
 
 require 'rubygems'
 require 'sequel'
-require 'andand'
+require 'fastandand'
 require 'clevic/swing'
 require 'clevic/swing/tag_delegate.rb'
 
@@ -21,7 +21,7 @@ def run
     frame.content_pane.add( @tag_editor )
     frame.default_close_operation = javax.swing.JFrame::DISPOSE_ON_CLOSE
     frame.pack
-    frame.visible = true 
+    frame.visible = true
   end
 end
 

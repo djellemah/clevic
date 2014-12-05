@@ -1,5 +1,5 @@
 require 'clevic/generic_format.rb'
-require 'andand'
+require 'fastandand'
 
 module Clevic
 

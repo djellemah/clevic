@@ -2,7 +2,7 @@
 
 require 'rubygems'
 require 'sequel'
-require 'andand'
+require 'fastandand'
 require 'clevic/swing'
 require 'clevic/swing/row_header.rb'
 
@@ -18,7 +18,7 @@ def run
     frame.content_pane.add( @table_view )
     frame.default_close_operation = javax.swing.JFrame::DISPOSE_ON_CLOSE
     frame.pack
-    frame.visible = true 
+    frame.visible = true
   end
 end
 

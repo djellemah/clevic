@@ -1,4 +1,4 @@
-require 'andand'
+require 'fastandand'
 
 module Clevic
 
@@ -74,7 +74,7 @@ class ComboDelegate
       editor.no_insert = restricted?
 
       # set the correct value in the list
-      editor.selected_item = entity.nil? ? nil : attribute_value      
+      editor.selected_item = entity.nil? ? nil : attribute_value
 
       # set up prefix matching when typing in the editor
       configure_prefix

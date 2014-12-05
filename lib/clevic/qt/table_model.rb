@@ -1,6 +1,6 @@
 require 'date'
 
-require 'andand'
+require 'fastandand'
 
 require 'qtext/flags.rb'
 require 'qtext/extensions.rb'
@@ -76,7 +76,7 @@ class TableModel < Qt::AbstractTableModel
   def flags( model_index )
     retval = super
 
-    # sometimes this actually happens. 
+    # sometimes this actually happens.
     # TODO probably a bug in the combo editor exit code
     return retval if model_index.column >= columnCount
 
@@ -86,14 +86,14 @@ class TableModel < Qt::AbstractTableModel
     end
 
     unless model_index.field.read_only? || read_only?
-      retval |= qt_item_is_editable.to_i 
+      retval |= qt_item_is_editable.to_i
     end
     retval
   end
 
   # values for horizontal and vertical headers
   def headerData( section, orientation, role )
-    value = 
+    value =
     case role
       when qt_display_role
         case orientation
@@ -233,7 +233,7 @@ class TableModel < Qt::AbstractTableModel
         return false if index.attribute == entity_class.primary_key.to_sym
 
         if ( index.column < 0 || index.column >= column_count )
-          raise "invalid column #{index.column}" 
+          raise "invalid column #{index.column}"
         end
 
         begin

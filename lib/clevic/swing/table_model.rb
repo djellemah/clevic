@@ -1,6 +1,6 @@
 require 'date'
 
-require 'andand'
+require 'fastandand'
 
 require 'clevic/extensions.rb'
 require 'clevic/swing/extensions.rb'
@@ -37,7 +37,7 @@ class TableModel < javax.swing.table.AbstractTableModel
   end
 
   def add_new_item_end
-    fireTableRowsInserted( collection.size, collection.size ) 
+    fireTableRowsInserted( collection.size, collection.size )
   end
 
   def remove_notify( rows, &block )
@@ -91,7 +91,7 @@ class TableModel < javax.swing.table.AbstractTableModel
   end
 
   def valuer_for( index )
-    case 
+    case
     # pull values from entity at index
     when index.field.entity_class == entity_class
       index

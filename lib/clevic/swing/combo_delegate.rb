@@ -1,4 +1,4 @@
-require 'andand'
+require 'fastandand'
 require 'clevic/swing/delegate'
 
 module Clevic

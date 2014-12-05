@@ -1,3 +1,6 @@
+== 0.14.5
+* replace all require 'andand' with fastandand
+
 == 0.14.4
 * bring up to date: add Gemfile, newer Rakefile and current home page.
 
