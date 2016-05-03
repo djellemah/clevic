@@ -143,6 +143,9 @@ class CacheTable < Array
           # similar to candidate <=> entity
           key, direction = attribute
           if result == 0
+            return nil unless entity.respond_to? key
+            return nil unless candidate.respond_to? key
+
             # compare taking ordering direction into account
             retval = compare( entity.send( key ), candidate.send( key ), direction )
 

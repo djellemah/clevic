@@ -1,3 +1,6 @@
+== 0.14.6
+* handle order attributes that don't map to model methods for Ctrl-L and Ctrl-K
+
 == 0.14.5
 * replace all require 'andand' with fastandand
 

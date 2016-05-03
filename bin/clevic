@@ -33,7 +33,7 @@ oparser.on( '-D', '--debug' ) { |o| $options[:debug] = true }
 oparser.on( '-v', '--verbose' ) { |o| $options[:verbose] = true }
 oparser.on( '-V', '--version' ) do
   require 'clevic/version.rb'
-  puts "clevic-#{Clevic::VERSION::STRING}"
+  puts "clevic-#{Clevic::VERSION}"
   exit 0
 end
 oparser.on( '-h', '-?', '--help' ) do |o|
