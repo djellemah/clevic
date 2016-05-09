@@ -38,5 +38,5 @@ Gem::Specification.new do |spec|
 
   # for Qt
   spec.add_dependency 'qtbindings', '>=4.6.3'
-  spec.add_dependency 'qtext', '>=0.6.7'
+  spec.add_dependency 'qtext', '>=0.6.9'
 end
