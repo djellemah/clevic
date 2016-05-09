@@ -13,12 +13,18 @@ module Fixtures
     Flight.columns
     Passenger.columns
 
+    Fixtures::DB[:passengers].delete
+    CreateFakePassengers.new( Fixtures::DB ).up
+
+    # force Passenger to re-read db_schema
+    Passenger.dataset = Passenger.dataset
   end
 
   def self.down
     PopulateCachePassengers.new( DB ).down
     CreatePassengers.new( DB ).down
     CreateFlights.new( DB ).down
+    CreateFakePassengers.new( Fixtures::DB ).down
   end
 end
 

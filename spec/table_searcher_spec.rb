@@ -20,19 +20,8 @@ class MockSearchCriteria
 end
 
 describe Clevic::TableSearcher do
-  before :all do
-    Fixtures.up
-    Fixtures::DB[:passengers].delete
-    CreateFakePassengers.new( Fixtures::DB ).up
-
-    # force Passenger to re-read db_schema
-    Passenger.dataset = Passenger.dataset
-  end
-
-  after :all do
-    CreateFakePassengers.new( Fixtures::DB ).down
-    Fixtures.down
-  end
+  before :all do Fixtures.up end
+  after :all do Fixtures.down end
 
   before :each do
     @simple_search_criteria = MockSearchCriteria.new
