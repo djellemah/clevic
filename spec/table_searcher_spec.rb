@@ -1,9 +1,9 @@
-# require_relative 'spec_helper.rb'
+require_relative 'spec_helper.rb'
+require_relative 'fixtures.rb'
+
 require 'rspec'
 require 'clevic/table_searcher.rb'
 require "clevic.rb"
-
-require_relative 'fixtures.rb'
 
 class MockSearchCriteria
   def initialize( &block )
@@ -22,7 +22,6 @@ end
 describe Clevic::TableSearcher do
   before :all do
     Fixtures.up
-    #~ Passenger.db.loggers = [Logger.new($stdout)]
     Fixtures::DB[:passengers].delete
     CreateFakePassengers.new( Fixtures::DB ).up
 
@@ -31,7 +30,7 @@ describe Clevic::TableSearcher do
   end
 
   after :all do
-    CreateFakePassengers.new( suite.db ).down
+    CreateFakePassengers.new( Fixtures::DB ).down
     Fixtures.down
   end
 
@@ -174,7 +173,7 @@ describe Clevic::TableSearcher do
       @simple_search_criteria.whole_words = false
       @simple_search_criteria.from_start = true
       table_searcher = Clevic::TableSearcher.new( Passenger.dataset, @simple_search_criteria, @nationality_field )
-      expecteds = Enumerator.new @should_find
+      expecteds = @should_find.to_enum
       last_entity = nil
       while next_entity = table_searcher.search( last_entity )
         next_entity.should == expecteds.next

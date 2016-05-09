@@ -6,15 +6,10 @@ module Clevic
   end
 end
 
-# TODO should this really be here?
-# There are other inflection gems.
+# require 'sequel/core'
+Sequel.extension :core_extensions
 
-# for camelize and friends
-# TODO JRuby-1.5.2 raises exception if this require has a .rb on the 
-require 'sequel/core'
-require 'sequel/extensions/inflector'
-
-# for demodulize, tableize, humanize
+# for demodulize, tableize, humanize, camelize
 require 'sequel'
 require 'sequel/extensions/inflector'
 

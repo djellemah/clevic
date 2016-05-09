@@ -1,10 +1,26 @@
 require 'sequel'
-
 require 'faker'
 
-# Doesn't seem to be a good place to put this
-$db = Sequel.sqlite
-Sequel.extension :migration
+module Fixtures
+  DB = Sequel.sqlite
+  Sequel.extension :migration
+
+  def self.up
+    CreateFlights.new( DB ).up
+    CreatePassengers.new( DB ).up
+    PopulateCachePassengers.new( DB ).up
+
+    Flight.columns
+    Passenger.columns
+
+  end
+
+  def self.down
+    PopulateCachePassengers.new( DB ).down
+    CreatePassengers.new( DB ).down
+    CreateFlights.new( DB ).down
+  end
+end
 
 class CreateFlights < Sequel::Migration
   def up
