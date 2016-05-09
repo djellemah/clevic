@@ -1,3 +1,6 @@
+== 0.14.7
+* convert to rspec
+
 == 0.14.6
 * handle order attributes that don't map to model methods for Ctrl-L and Ctrl-K
 

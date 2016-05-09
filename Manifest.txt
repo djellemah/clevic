@@ -18,12 +18,12 @@ script/txt2html
 sql/accounts.sql
 sql/times.sql
 sql/times_sqlite.sql
+spec/cache_table_spec.rb
+spec/fixtures.rb
+spec/spec_helper.rb
+spec/table_model_spec.rb
+spec/table_searcher_spec.rb
 tasks/clevic.rake
-test/test_cache_table.rb
-test/test_helper.rb
-test/test_model_index_extensions.rb
-test/test_table_model.rb
-test/test_table_searcher.rb
 lib/clevic.rb
 lib/clevic/action_builder.rb
 lib/clevic/sequel_naked.rb
